@@ -71,8 +71,8 @@ export const LandingPage = () => {
     return () => clearInterval(interval);
   }, [ecosystemPaused]);
 
-  // Journey Steps Data
-  const journeySteps = [
+  // Journey Steps Data - Bilingual
+  const journeySteps = isRTL ? [
     {
       title: 'الواقع اليومي للمدرسة',
       subtitle: 'كل مدرسة تنتج آلاف البيانات يوميًا',
@@ -101,10 +101,39 @@ export const LandingPage = () => {
       hakimSays: 'البيانات وحدها لا تغيّر التعليم… لكن القرارات الصحيحة تفعل.',
       icons: [CheckCircle2, Award, Target, TrendingUp],
     },
+  ] : [
+    {
+      title: 'Daily School Reality',
+      subtitle: 'Every school produces thousands of data points daily',
+      content: `Inside the school, a lot happens every day: recording student attendance, evaluating assignments, recording behavior, student participation in class, test results, teacher notes. But this data is often distributed and fragmented across different systems.`,
+      hakimSays: 'Schools generate thousands of data points every day... but few can turn this data into knowledge.',
+      icons: [BarChart3, Calendar, Brain, BookOpen],
+    },
+    {
+      title: 'Data Collection in NASSAQ',
+      subtitle: 'Here is where NASSAQ platform begins',
+      content: `The system collects all this data in one platform: attendance, academic performance, daily behavior, in-class interaction, assignments and assessments. All in one control panel.`,
+      hakimSays: 'My mission is to organize this data and turn it into a clear picture for the school.',
+      icons: [Database, TrendingUp, CheckCircle2, Award],
+    },
+    {
+      title: 'AI Data Analysis',
+      subtitle: 'When AI starts analyzing',
+      content: `NASSAQ analyzes data using AI algorithms: discovering students who need support, analyzing behavioral patterns in classes, tracking academic decline, identifying opportunities for participation improvement.`,
+      hakimSays: "I don't just display numbers... I discover what these numbers mean.",
+      icons: [Brain, Lightbulb, TrendingUp, Target],
+    },
+    {
+      title: 'Decision Making',
+      subtitle: 'From Data... to Decisions',
+      content: `After data analysis, the school has a clear vision to help: support struggling students, improve class performance, make data-driven educational decisions, improve the quality of education.`,
+      hakimSays: "Data alone doesn't change education... but the right decisions do.",
+      icons: [CheckCircle2, Award, Target, TrendingUp],
+    },
   ];
 
-  // AI Capabilities Data
-  const aiCapabilities = [
+  // AI Capabilities Data - Bilingual
+  const aiCapabilities = isRTL ? [
     {
       title: 'عندما تبدأ البيانات بالتحدث',
       subtitle: 'الذكاء الاصطناعي هو العقل الذي يعمل خلف النظام',
@@ -129,10 +158,35 @@ export const LandingPage = () => {
       content: `بدلاً من عرض الأرقام فقط، يقوم النظام بتحويل البيانات إلى رؤى تعليمية واضحة: أداء الفصول، تطور الطلاب، الأنماط السلوكية، جودة المشاركة داخل الحصص.`,
       hakimSays: 'الأرقام وحدها لا تكفي… مهمتي هي تحويلها إلى رؤية تساعد المدرسة على اتخاذ القرار.',
     },
+  ] : [
+    {
+      title: 'When Data Starts Speaking',
+      subtitle: 'AI is the mind that works behind the system',
+      content: `Every interaction in school turns into data: student attendance, in-class participation, assignments, assessments, behavior, teacher notes. This data becomes inputs for system intelligence.`,
+      hakimSays: 'Every day the school generates thousands of data points... my mission is to understand what this data means.',
+    },
+    {
+      title: 'Student Performance Analysis',
+      subtitle: 'Understanding the student before problems appear',
+      content: `AI continuously analyzes student performance: attendance rate, in-class participation, assignment completion, assessment results, classroom behavior.`,
+      hakimSays: 'I can detect a student who needs support... before the problem becomes an educational crisis.',
+    },
+    {
+      title: 'Smart Scheduling',
+      subtitle: 'When scheduling becomes an intelligent process',
+      content: `Creating a balanced school schedule is complex, requiring consideration of: teachers, classes, subjects, rooms, number of sessions, conflicts. AI analyzes all these factors.`,
+      hakimSays: 'I can analyze thousands of possibilities in seconds to build a balanced schedule.',
+    },
+    {
+      title: 'Smart Educational Reports',
+      subtitle: 'Reports you understand... not just read',
+      content: `Instead of just displaying numbers, the system transforms data into clear educational insights: class performance, student progress, behavioral patterns, quality of in-class participation.`,
+      hakimSays: "Numbers alone aren't enough... my mission is to turn them into vision that helps the school make decisions.",
+    },
   ];
 
-  // Ecosystem Roles Data
-  const ecosystemRoles = [
+  // Ecosystem Roles Data - Bilingual
+  const ecosystemRoles = isRTL ? [
     {
       role: 'مدير المدرسة',
       title: 'المدرسة كاملة… في لوحة تحكم واحدة',
@@ -159,6 +213,35 @@ export const LandingPage = () => {
       title: 'متابعة حقيقية لأداء الابن',
       content: `يمكن لولي الأمر متابعة أداء ابنه بسهولة من خلال: الحضور، الواجبات، السلوك، التقييمات. كل ذلك عبر لوحة بسيطة وواضحة.`,
       hakimSays: 'عندما يكون ولي الأمر جزءًا من الصورة… تصبح العملية التعليمية أكثر نجاحًا.',
+      icon: Users,
+    },
+  ] : [
+    {
+      role: 'School Principal',
+      title: 'The entire school... in one dashboard',
+      content: `When the principal enters NASSAQ, they see a complete picture of the school in one moment: student attendance, class performance, teacher activity, student behavior, performance reports.`,
+      hakimSays: 'Instead of searching through dozens of reports... I can display a complete picture of the school on one screen.',
+      icon: Building2,
+    },
+    {
+      role: 'Teacher',
+      title: 'Class management is now smarter',
+      content: `Teachers use NASSAQ to easily manage classes: record attendance, track student interaction, evaluate answers, record behavior, add assessments. All in a simple interface.`,
+      hakimSays: 'During class... I help the teacher understand the level of interaction in the classroom.',
+      icon: UserCheck,
+    },
+    {
+      role: 'Student',
+      title: 'Learning becomes a motivating experience',
+      content: `The student account in NASSAQ is designed to be: simple, motivating, interactive. Students get: participation points, achievements, assignment tracking, progress reports.`,
+      hakimSays: 'When students see their own progress... learning becomes a more motivating experience.',
+      icon: GraduationCap,
+    },
+    {
+      role: 'Parent',
+      title: 'Real follow-up on your child\'s performance',
+      content: `Parents can easily follow their child's performance through: attendance, assignments, behavior, assessments. All through a simple and clear dashboard.`,
+      hakimSays: 'When parents are part of the picture... education becomes more successful.',
       icon: Users,
     },
   ];
