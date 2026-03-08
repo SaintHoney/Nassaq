@@ -17,6 +17,7 @@ import { SubjectsPage } from "./pages/SubjectsPage";
 import { SchedulePage } from "./pages/SchedulePage";
 import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
+import { AttendancePage } from "./pages/AttendancePage";
 
 // Platform Admin Pages
 import { PlatformSchoolsPage } from "./pages/PlatformSchoolsPage";
