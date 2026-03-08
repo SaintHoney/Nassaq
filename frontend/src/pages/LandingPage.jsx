@@ -624,7 +624,7 @@ export const LandingPage = () => {
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-cairo text-4xl md:text-5xl font-bold text-white mb-8">
-            {isRTL ? 'جاهزون للبدء؟' : 'Ready to Start?'}
+            {isRTL ? 'جاهز للبدء؟' : 'Ready to Start?'}
           </h2>
           
           {/* Account Type Cards */}
