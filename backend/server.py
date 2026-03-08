@@ -161,6 +161,10 @@ class DashboardStats(BaseModel):
     active_schools: int = 0
     pending_schools: int = 0
     total_users: int = 0
+    pending_requests: int = 0
+    active_users: int = 0
+    total_classes: int = 0
+    total_subjects: int = 0
 
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
