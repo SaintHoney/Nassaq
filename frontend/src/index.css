@@ -85,13 +85,30 @@
         @apply font-cairo font-bold;
     }
     
-    /* RTL Support */
+    /* RTL/LTR Support - Global Rules */
+    html[dir="rtl"],
+    html[data-direction="rtl"],
     [dir="rtl"] {
         text-align: right;
+        direction: rtl;
     }
     
+    html[dir="ltr"],
+    html[data-direction="ltr"],
     [dir="ltr"] {
         text-align: left;
+        direction: ltr;
+    }
+    
+    /* Ensure all elements inherit direction */
+    html[dir="rtl"] *,
+    [dir="rtl"] * {
+        direction: inherit;
+    }
+    
+    html[dir="ltr"] *,
+    [dir="ltr"] * {
+        direction: inherit;
     }
 }
 
