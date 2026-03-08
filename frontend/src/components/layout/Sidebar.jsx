@@ -113,7 +113,7 @@ export const Sidebar = ({ children }) => {
         roles: ['school_principal', 'school_sub_admin'],
       },
       {
-        icon: Calendar,
+        icon: CalendarCheck,
         label: isRTL ? 'الحضور والغياب' : 'Attendance',
         href: '/admin/attendance',
         roles: ['school_principal', 'school_sub_admin', 'teacher'],
