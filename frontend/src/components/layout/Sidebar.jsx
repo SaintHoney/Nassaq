@@ -33,7 +33,8 @@ export const Sidebar = ({ children }) => {
   const location = useLocation();
 
   const getMenuItems = () => {
-    const baseItems = [
+    // Platform Admin Menu Items
+    const platformAdminItems = [
       {
         icon: LayoutDashboard,
         label: isRTL ? 'نظرة عامة' : 'Overview',
@@ -44,65 +45,124 @@ export const Sidebar = ({ children }) => {
         icon: Building2,
         label: isRTL ? 'المدارس' : 'Schools',
         href: '/admin/schools',
-        roles: ['platform_admin', 'ministry_rep'],
+        roles: ['platform_admin'],
       },
       {
         icon: Users,
         label: isRTL ? 'المستخدمين' : 'Users',
         href: '/admin/users',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: UserCheck,
-        label: isRTL ? 'المعلمون' : 'Teachers',
-        href: '/admin/teachers',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: GraduationCap,
-        label: isRTL ? 'الطلاب' : 'Students',
-        href: '/admin/students',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
-      },
-      {
-        icon: BookOpen,
-        label: isRTL ? 'الفصول' : 'Classes',
-        href: '/admin/classes',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
-      },
-      {
-        icon: MessageSquare,
-        label: isRTL ? 'المواد الدراسية' : 'Subjects',
-        href: '/admin/subjects',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: Calendar,
-        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
-        href: '/admin/schedule',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
+        roles: ['platform_admin'],
       },
       {
         icon: BarChart3,
         label: isRTL ? 'التقارير' : 'Reports',
         href: '/admin/reports',
-        roles: ['platform_admin', 'ministry_rep', 'school_principal'],
+        roles: ['platform_admin', 'ministry_rep'],
       },
       {
         icon: Bell,
         label: isRTL ? 'الإشعارات' : 'Notifications',
         href: '/notifications',
-        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher', 'student', 'parent'],
+        roles: ['platform_admin'],
       },
       {
         icon: Settings,
         label: isRTL ? 'الإعدادات' : 'Settings',
         href: '/settings',
-        roles: ['platform_admin', 'school_principal'],
+        roles: ['platform_admin'],
       },
     ];
 
-    return baseItems.filter((item) => item.roles.includes(user?.role));
+    // School Principal & Sub Admin Menu Items
+    const schoolItems = [
+      {
+        icon: LayoutDashboard,
+        label: isRTL ? 'نظرة عامة' : 'Overview',
+        href: '/school',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: UserCheck,
+        label: isRTL ? 'المعلمون' : 'Teachers',
+        href: '/admin/teachers',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: GraduationCap,
+        label: isRTL ? 'الطلاب' : 'Students',
+        href: '/admin/students',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: BookOpen,
+        label: isRTL ? 'الفصول' : 'Classes',
+        href: '/admin/classes',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: MessageSquare,
+        label: isRTL ? 'المواد الدراسية' : 'Subjects',
+        href: '/admin/subjects',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: Calendar,
+        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
+        href: '/admin/schedule',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: BarChart3,
+        label: isRTL ? 'التقارير' : 'Reports',
+        href: '/admin/reports',
+        roles: ['school_principal'],
+      },
+      {
+        icon: Bell,
+        label: isRTL ? 'الإشعارات' : 'Notifications',
+        href: '/notifications',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: Settings,
+        label: isRTL ? 'الإعدادات' : 'Settings',
+        href: '/settings',
+        roles: ['school_principal'],
+      },
+    ];
+
+    // Teacher Menu Items
+    const teacherItems = [
+      {
+        icon: Calendar,
+        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
+        href: '/admin/schedule',
+        roles: ['teacher'],
+      },
+      {
+        icon: Bell,
+        label: isRTL ? 'الإشعارات' : 'Notifications',
+        href: '/notifications',
+        roles: ['teacher'],
+      },
+    ];
+
+    // Combine all items
+    const allItems = [...platformAdminItems, ...schoolItems, ...teacherItems];
+    
+    // Filter by role and remove duplicates
+    const filteredItems = allItems.filter((item) => item.roles.includes(user?.role));
+    
+    // Remove duplicates by href
+    const uniqueItems = filteredItems.reduce((acc, current) => {
+      const exists = acc.find(item => item.href === current.href);
+      if (!exists) {
+        acc.push(current);
+      }
+      return acc;
+    }, []);
+
+    return uniqueItems;
   };
 
   const menuItems = getMenuItems();
