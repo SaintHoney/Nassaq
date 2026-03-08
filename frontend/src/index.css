@@ -6,34 +6,34 @@
 
 @layer base {
     :root {
-        /* NASSAQ Brand Colors */
-        --brand-navy: 215 73% 21%;
-        --brand-turquoise: 187 71% 37%;
-        --brand-purple: 262 83% 58%;
+        /* NASSAQ Brand Colors - New Palette */
+        --brand-navy: 217 61% 28%;
+        --brand-turquoise: 179 49% 51%;
+        --brand-purple: 255 29% 44%;
         
         /* Light Mode */
-        --background: 210 40% 98%;
-        --foreground: 215 73% 21%;
+        --background: 210 20% 98%;
+        --foreground: 217 61% 28%;
         --card: 0 0% 100%;
-        --card-foreground: 215 73% 21%;
+        --card-foreground: 217 61% 28%;
         --popover: 0 0% 100%;
-        --popover-foreground: 215 73% 21%;
-        --primary: 215 73% 21%;
+        --popover-foreground: 217 61% 28%;
+        --primary: 217 61% 28%;
         --primary-foreground: 0 0% 100%;
-        --secondary: 187 71% 37%;
+        --secondary: 179 49% 51%;
         --secondary-foreground: 0 0% 100%;
-        --muted: 210 40% 96%;
-        --muted-foreground: 215 25% 45%;
-        --accent: 262 83% 58%;
+        --muted: 210 14% 93%;
+        --muted-foreground: 217 25% 45%;
+        --accent: 255 29% 44%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 100%;
         --border: 214 32% 91%;
         --input: 214 32% 91%;
-        --ring: 215 73% 21%;
-        --chart-1: 215 73% 21%;
-        --chart-2: 187 71% 37%;
-        --chart-3: 262 83% 58%;
+        --ring: 217 61% 28%;
+        --chart-1: 217 61% 28%;
+        --chart-2: 179 49% 51%;
+        --chart-3: 255 29% 44%;
         --chart-4: 142 71% 45%;
         --chart-5: 38 92% 50%;
         --radius: 0.75rem;
@@ -47,21 +47,21 @@
         --card-foreground: 210 40% 98%;
         --popover: 222 47% 9%;
         --popover-foreground: 210 40% 98%;
-        --primary: 187 71% 45%;
+        --primary: 179 49% 51%;
         --primary-foreground: 222 47% 6%;
-        --secondary: 262 83% 58%;
+        --secondary: 255 29% 44%;
         --secondary-foreground: 0 0% 100%;
         --muted: 217 33% 17%;
         --muted-foreground: 215 20% 65%;
-        --accent: 262 83% 58%;
+        --accent: 255 29% 44%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 63% 31%;
         --destructive-foreground: 0 0% 100%;
         --border: 217 33% 17%;
         --input: 217 33% 17%;
-        --ring: 187 71% 45%;
-        --chart-1: 187 71% 45%;
-        --chart-2: 262 83% 58%;
+        --ring: 179 49% 51%;
+        --chart-1: 179 49% 51%;
+        --chart-2: 255 29% 44%;
         --chart-3: 142 71% 45%;
         --chart-4: 38 92% 50%;
         --chart-5: 0 84% 60%;

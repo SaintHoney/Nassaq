@@ -23,15 +23,21 @@ module.exports = {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
                 brand: {
-                    navy: '#0F2C59',
-                    'navy-light': '#1a3d70',
-                    'navy-dark': '#0a1f40',
-                    turquoise: '#1B93A4',
-                    'turquoise-light': '#25b0c4',
-                    'turquoise-dark': '#147582',
-                    purple: '#7C3AED',
-                    'purple-light': '#9061f9',
-                    'purple-dark': '#6025d1',
+                    // Primary Blue
+                    navy: '#1C3D74',
+                    'navy-light': '#2a5096',
+                    'navy-dark': '#152d57',
+                    // Purple
+                    purple: '#615090',
+                    'purple-light': '#7a68a8',
+                    'purple-dark': '#4a3d70',
+                    // Turquoise
+                    turquoise: '#46C1BE',
+                    'turquoise-light': '#5fd1ce',
+                    'turquoise-dark': '#38a19e',
+                    // Neutral Colors
+                    black: '#312E2F',
+                    gray: '#EAECED',
                 },
                 card: {
                     DEFAULT: 'hsl(var(--card))',
