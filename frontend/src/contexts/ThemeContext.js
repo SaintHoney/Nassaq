@@ -1,8 +1,49 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const ThemeContext = createContext(null);
 
+// Helper function to apply language direction to DOM
+const applyLanguageDirection = (lang) => {
+  const root = window.document.documentElement;
+  const body = window.document.body;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+  
+  // Apply to HTML element
+  root.dir = dir;
+  root.lang = lang;
+  root.setAttribute('data-language', lang);
+  root.setAttribute('data-direction', dir);
+  
+  // Apply to body element
+  body.dir = dir;
+  body.setAttribute('data-language', lang);
+  body.setAttribute('data-direction', dir);
+  
+  // Update CSS custom properties
+  root.style.setProperty('--direction', dir);
+  root.style.setProperty('--text-align', lang === 'ar' ? 'right' : 'left');
+  root.style.setProperty('--text-align-opposite', lang === 'ar' ? 'left' : 'right');
+  
+  // Store in localStorage
+  localStorage.setItem('nassaq_language', lang);
+  
+  // Update document title
+  document.title = 'NASSAQ | نَسَّق';
+  
+  return dir;
+};
+
+// Helper function to apply theme to DOM
+const applyTheme = (theme) => {
+  const root = window.document.documentElement;
+  root.classList.remove('light', 'dark');
+  root.classList.add(theme);
+  root.setAttribute('data-theme', theme);
+  localStorage.setItem('nassaq_theme', theme);
+};
+
 export const ThemeProvider = ({ children }) => {
+  // Initialize state from localStorage
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('nassaq_theme');
     return stored || 'light';
@@ -13,54 +54,47 @@ export const ThemeProvider = ({ children }) => {
     return stored || 'ar';
   });
 
-  // Apply theme and language to document
+  // Force re-render counter to ensure all components update
+  const [, setForceUpdate] = useState(0);
+
+  // Apply theme and language on mount and changes
   useEffect(() => {
-    const root = window.document.documentElement;
-    const body = window.document.body;
-    
-    // Theme
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('nassaq_theme', theme);
-    
-    // Language direction - apply to both html and body
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
-    root.dir = dir;
-    root.lang = language;
-    body.dir = dir;
-    
-    // Update document title based on language
-    document.title = 'NASSAQ | نَسَّق';
-    
-    // Store language preference
-    localStorage.setItem('nassaq_language', language);
-    
-    // Force re-render of CSS custom properties for RTL/LTR
-    root.style.setProperty('--direction', dir);
-    root.style.setProperty('--text-align', language === 'ar' ? 'right' : 'left');
-    root.style.setProperty('--text-align-opposite', language === 'ar' ? 'left' : 'right');
+    applyTheme(theme);
+    applyLanguageDirection(language);
   }, [theme, language]);
 
+  // Apply on initial mount
+  useEffect(() => {
+    const storedLang = localStorage.getItem('nassaq_language') || 'ar';
+    const storedTheme = localStorage.getItem('nassaq_theme') || 'light';
+    
+    applyTheme(storedTheme);
+    applyLanguageDirection(storedLang);
+    
+    setTheme(storedTheme);
+    setLanguage(storedLang);
+  }, []);
+
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      applyTheme(newTheme);
+      return newTheme;
+    });
   }, []);
 
   const toggleLanguage = useCallback(() => {
     setLanguage((prev) => {
       const newLang = prev === 'ar' ? 'en' : 'ar';
-      // Force immediate update
-      const root = window.document.documentElement;
-      const body = window.document.body;
-      const dir = newLang === 'ar' ? 'rtl' : 'ltr';
-      root.dir = dir;
-      root.lang = newLang;
-      body.dir = dir;
-      localStorage.setItem('nassaq_language', newLang);
+      applyLanguageDirection(newLang);
+      // Force re-render of all consuming components
+      setForceUpdate(n => n + 1);
       return newLang;
     });
   }, []);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     theme,
     setTheme,
     toggleTheme,
@@ -69,7 +103,8 @@ export const ThemeProvider = ({ children }) => {
     toggleLanguage,
     isRTL: language === 'ar',
     isDark: theme === 'dark',
-  };
+    direction: language === 'ar' ? 'rtl' : 'ltr',
+  }), [theme, language, toggleTheme, toggleLanguage]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
