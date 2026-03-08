@@ -112,6 +112,12 @@ export const Sidebar = ({ children }) => {
         roles: ['school_principal', 'school_sub_admin'],
       },
       {
+        icon: Calendar,
+        label: isRTL ? 'الحضور والغياب' : 'Attendance',
+        href: '/admin/attendance',
+        roles: ['school_principal', 'school_sub_admin', 'teacher'],
+      },
+      {
         icon: BarChart3,
         label: isRTL ? 'التقارير' : 'Reports',
         href: '/admin/reports',
