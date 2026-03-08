@@ -123,6 +123,11 @@ export const SchedulePage = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   
+  // Drag and Drop State
+  const [activeSession, setActiveSession] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [movingSession, setMovingSession] = useState(false);
+  
   // Filters
   const [selectedSchool, setSelectedSchool] = useState('');
   const [selectedSchedule, setSelectedSchedule] = useState('');
@@ -135,6 +140,16 @@ export const SchedulePage = () => {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [conflictsSheetOpen, setConflictsSheetOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
   
   // New schedule form
   const [newSchedule, setNewSchedule] = useState({
