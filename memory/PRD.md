@@ -101,6 +101,47 @@
   - [x] إزالة صورة حكيم من صفحة التسجيل
   - [x] تكبير الشعار في صفحة التسجيل
 
+### المرحلة 5: صفحات Platform Admin + الصلاحيات ✅ (2026-03-08)
+- [x] **صفحة إدارة المدارس (PlatformSchoolsPage)**
+  - [x] عرض جميع المدارس مع إحصائيات
+  - [x] إضافة مدرسة جديدة
+  - [x] تعديل حالة المدرسة (نشطة/معلقة/موقوفة)
+  - [x] الدخول لسياق المدرسة (للاطلاع فقط)
+  - [x] فلترة حسب الحالة والبحث
+
+- [x] **صفحة إدارة المستخدمين (PlatformUsersPage)**
+  - [x] عرض جميع مستخدمي المنصة
+  - [x] فلترة حسب الدور والحالة
+  - [x] تفعيل/تعطيل الحساب
+  - [x] عرض تفاصيل المستخدم
+
+- [x] **صفحة التقارير والتحليلات (PlatformReportsPage)**
+  - [x] مؤشرات الأداء الرئيسية (KPIs)
+  - [x] رسوم بيانية للمدارس حسب الحالة
+  - [x] المدارس حسب المنطقة
+  - [x] أكبر المدارس حسب عدد الطلاب
+  - [x] تصدير التقارير
+
+- [x] **صفحة الإشعارات (PlatformNotificationsPage)**
+  - [x] سجل الإشعارات المرسلة
+  - [x] فلترة حسب النوع والحالة
+  - [x] عرض تفاصيل الإشعار
+
+- [x] **صفحة الإعدادات (PlatformSettingsPage)**
+  - [x] الإعدادات العامة (اسم المنصة، اللغة، المنطقة الزمنية)
+  - [x] إعدادات الأمان (مهلة الجلسة، محاولات الدخول، كلمات المرور)
+  - [x] إعدادات البريد الإلكتروني (SMTP)
+  - [x] إعدادات الذكاء الاصطناعي (حكيم)
+  - [x] إعدادات الإشعارات
+  - [x] إعدادات النظام المتقدمة
+
+- [x] **ضبط صلاحيات Platform Admin**
+  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/schedule`
+  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/students`
+  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/classes`
+  - [x] يتم إعادة توجيهه تلقائياً لـ `/admin`
+  - [x] School Principal يستطيع الوصول لجميع صفحات إدارة المدرسة
+
 ---
 
 ## 📊 إحصائيات الاختبار
@@ -109,6 +150,8 @@
 |---------|-------|---------|
 | iteration_7 | Backend (APIs) | 29/29 ✅ (100%) |
 | iteration_8 | Frontend (UI) | 36/36 ✅ (100%) |
+| iteration_9 | Drag & Drop | 100% ✅ |
+| iteration_10 | Platform Admin Pages + Permissions | 13/13 ✅ (100%) |
 
 ---
 
@@ -174,7 +217,7 @@
 ### ملفات مهمة
 ```
 /app/backend/
-├── server.py              # API Routes (2500+ lines)
+├── server.py              # API Routes (2750+ lines)
 ├── models/
 │   └── scheduling.py      # نماذج الجدولة
 ├── services/
@@ -186,9 +229,14 @@
 │   ├── pages/
 │   │   ├── LandingPage.jsx
 │   │   ├── AdminDashboard.jsx
-│   │   ├── SchedulePage.jsx        # NEW
-│   │   ├── TimeSlotsPage.jsx       # NEW
-│   │   └── TeacherAssignmentsPage.jsx  # NEW
+│   │   ├── SchedulePage.jsx              # Drag & Drop
+│   │   ├── TimeSlotsPage.jsx
+│   │   ├── TeacherAssignmentsPage.jsx
+│   │   ├── PlatformSchoolsPage.jsx       # NEW - Platform Admin
+│   │   ├── PlatformUsersPage.jsx         # NEW - Platform Admin
+│   │   ├── PlatformReportsPage.jsx       # NEW - Platform Admin
+│   │   ├── PlatformNotificationsPage.jsx # NEW - Platform Admin
+│   │   └── PlatformSettingsPage.jsx      # NEW - Platform Admin
 │   ├── components/ui/     # Shadcn Components
 │   └── i18n.js           # Translations
 └── package.json
