@@ -30,6 +30,8 @@ import {
   GraduationCap,
   Play,
   RotateCcw,
+  GripVertical,
+  Move,
 } from 'lucide-react';
 import {
   Dialog,
@@ -72,6 +74,18 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
+// Drag and Drop imports
+import {
+  DndContext,
+  DragOverlay,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+} from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 // Days configuration
 const DAYS = [
