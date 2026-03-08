@@ -1251,6 +1251,293 @@ async def seed_admin():
     await db.users.insert_one(admin_doc)
     return {"message": "Admin created", "email": "info@nassaqapp.com"}
 
+
+# ============== SEED DEMO DATA ==============
+@api_router.post("/seed/demo-data")
+async def seed_demo_data():
+    """
+    Seed the database with demo data to match traction metrics:
+    - +200 schools
+    - +50,000 students  
+    - +100,000 parents
+    - +3,000 teachers
+    
+    This is for testing and demonstration purposes only.
+    """
+    import random
+    
+    # Saudi Arabian cities for realistic data
+    cities = ["الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر", "الطائف", "تبوك", "بريدة", "خميس مشيط", "حائل", "نجران", "جازان", "ينبع", "أبها"]
+    regions = ["الرياض", "مكة المكرمة", "المدينة المنورة", "الشرقية", "القصيم", "عسير", "تبوك", "حائل", "الشمالية", "جازان", "نجران", "الباحة", "الجوف"]
+    
+    # School name prefixes and suffixes
+    school_prefixes = ["مدارس", "مجمع", "أكاديمية", "ثانوية", "متوسطة", "ابتدائية"]
+    school_names = ["النور", "الأمل", "المستقبل", "التميز", "الإبداع", "الريادة", "النجاح", "التفوق", "العلم", "المعرفة", "الحكمة", "البيان", "الفرقان", "الهدى", "السلام", "الإيمان", "التقوى", "الصلاح", "الفلاح", "الرشاد"]
+    
+    # Teacher specializations
+    specializations = ["الرياضيات", "اللغة العربية", "اللغة الإنجليزية", "العلوم", "الفيزياء", "الكيمياء", "الأحياء", "التاريخ", "الجغرافيا", "التربية الإسلامية", "الحاسب الآلي", "التربية الفنية", "التربية البدنية"]
+    
+    # Grade levels
+    grade_levels = ["الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي", "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط", "الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي"]
+    
+    # Arabic first names
+    male_first_names = ["محمد", "أحمد", "عبدالله", "عبدالرحمن", "سعود", "فهد", "خالد", "سلطان", "ناصر", "تركي", "بندر", "فيصل", "سعد", "عمر", "علي", "حسن", "حسين", "إبراهيم", "يوسف", "عبدالعزيز"]
+    female_first_names = ["نورة", "سارة", "فاطمة", "مريم", "عائشة", "خديجة", "هند", "ريم", "لمى", "دانة", "جود", "لين", "روان", "شهد", "منى", "أمل", "هدى", "سلمى", "رنا", "ندى"]
+    last_names = ["العتيبي", "القحطاني", "الشمري", "الدوسري", "الحربي", "المطيري", "الغامدي", "الزهراني", "السبيعي", "العنزي", "الرشيدي", "السهلي", "البقمي", "الجهني", "الثبيتي", "الأحمدي", "المالكي", "الشهري", "العمري", "الصبحي"]
+    
+    results = {
+        "schools_created": 0,
+        "teachers_created": 0,
+        "students_created": 0,
+        "parents_created": 0,
+        "classes_created": 0,
+        "subjects_created": 0
+    }
+    
+    # Check current counts to avoid duplicates
+    current_schools = await db.schools.count_documents({})
+    current_teachers = await db.teachers.count_documents({})
+    current_students = await db.students.count_documents({})
+    
+    # Calculate how many to create
+    schools_to_create = max(0, 200 - current_schools)
+    teachers_per_school = 15  # Average teachers per school
+    students_per_school = 250  # Average students per school
+    
+    if schools_to_create == 0 and current_schools >= 200:
+        return {
+            "message": "البيانات التجريبية موجودة بالفعل",
+            "current_counts": {
+                "schools": current_schools,
+                "teachers": current_teachers,
+                "students": current_students
+            }
+        }
+    
+    # Create schools
+    school_ids = []
+    for i in range(schools_to_create):
+        school_id = str(uuid.uuid4())
+        city = random.choice(cities)
+        region = random.choice(regions)
+        prefix = random.choice(school_prefixes)
+        name = random.choice(school_names)
+        
+        school_doc = {
+            "id": school_id,
+            "name": f"{prefix} {name} {i+1}",
+            "name_en": f"{name} School {i+1}",
+            "code": f"SCH{str(i+1).zfill(4)}",
+            "email": f"school{i+1}@nassaq.demo",
+            "phone": f"05{random.randint(10000000, 99999999)}",
+            "address": f"شارع {random.randint(1, 100)}، حي {random.choice(school_names)}",
+            "city": city,
+            "region": region,
+            "country": "SA",
+            "logo_url": None,
+            "status": random.choice(["active", "active", "active", "pending"]),  # 75% active
+            "student_capacity": random.randint(200, 500),
+            "current_students": 0,
+            "current_teachers": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.schools.insert_one(school_doc)
+        school_ids.append(school_id)
+        results["schools_created"] += 1
+    
+    # If no new schools created, get existing school IDs
+    if not school_ids:
+        existing_schools = await db.schools.find({}, {"id": 1, "_id": 0}).to_list(200)
+        school_ids = [s["id"] for s in existing_schools]
+    
+    # Create teachers (15 per school average = 3000 for 200 schools)
+    teachers_needed = max(0, 3000 - current_teachers)
+    teachers_per_batch = min(teachers_needed, teachers_per_school * len(school_ids))
+    
+    teacher_ids_by_school = {sid: [] for sid in school_ids}
+    
+    for i in range(teachers_per_batch):
+        school_id = school_ids[i % len(school_ids)]
+        teacher_id = str(uuid.uuid4())
+        user_id = str(uuid.uuid4())
+        gender = random.choice(["male", "female"])
+        first_name = random.choice(male_first_names if gender == "male" else female_first_names)
+        last_name = random.choice(last_names)
+        full_name = f"{first_name} {last_name}"
+        specialization = random.choice(specializations)
+        
+        # Create user account
+        user_doc = {
+            "id": user_id,
+            "email": f"teacher{i+1}@nassaq.demo",
+            "password_hash": hash_password("Teacher@123"),
+            "full_name": full_name,
+            "full_name_en": f"Teacher {i+1}",
+            "role": UserRole.TEACHER.value,
+            "tenant_id": school_id,
+            "phone": f"05{random.randint(10000000, 99999999)}",
+            "avatar_url": None,
+            "is_active": True,
+            "preferred_language": "ar",
+            "preferred_theme": "light",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        teacher_doc = {
+            "id": teacher_id,
+            "user_id": user_id,
+            "full_name": full_name,
+            "full_name_en": f"Teacher {i+1}",
+            "email": f"teacher{i+1}@nassaq.demo",
+            "phone": f"05{random.randint(10000000, 99999999)}",
+            "school_id": school_id,
+            "specialization": specialization,
+            "years_of_experience": random.randint(1, 25),
+            "qualification": random.choice(["بكالوريوس", "ماجستير", "دكتوراه"]),
+            "gender": gender,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.users.insert_one(user_doc)
+        await db.teachers.insert_one(teacher_doc)
+        teacher_ids_by_school[school_id].append(teacher_id)
+        results["teachers_created"] += 1
+        
+        # Update school teacher count
+        await db.schools.update_one(
+            {"id": school_id},
+            {"$inc": {"current_teachers": 1}}
+        )
+    
+    # Create classes (12 per school = 2400 classes)
+    class_ids_by_school = {sid: [] for sid in school_ids}
+    sections = ["أ", "ب", "ج", "د"]
+    
+    for school_id in school_ids:
+        for grade in grade_levels:
+            for section in random.sample(sections, random.randint(1, 3)):
+                class_id = str(uuid.uuid4())
+                teacher_list = teacher_ids_by_school.get(school_id, [])
+                homeroom_teacher = random.choice(teacher_list) if teacher_list else None
+                
+                class_doc = {
+                    "id": class_id,
+                    "name": f"{grade} - {section}",
+                    "name_en": f"Grade {grade_levels.index(grade)+1} - {section}",
+                    "school_id": school_id,
+                    "grade_level": grade,
+                    "section": section,
+                    "capacity": random.randint(25, 35),
+                    "current_students": 0,
+                    "homeroom_teacher_id": homeroom_teacher,
+                    "is_active": True,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.classes.insert_one(class_doc)
+                class_ids_by_school[school_id].append(class_id)
+                results["classes_created"] += 1
+    
+    # Create students (250 per school average = 50,000 for 200 schools)
+    students_needed = max(0, 50000 - current_students)
+    students_per_batch = min(students_needed, students_per_school * len(school_ids))
+    
+    for i in range(students_per_batch):
+        school_id = school_ids[i % len(school_ids)]
+        student_id = str(uuid.uuid4())
+        gender = random.choice(["male", "female"])
+        first_name = random.choice(male_first_names if gender == "male" else female_first_names)
+        last_name = random.choice(last_names)
+        full_name = f"{first_name} {last_name}"
+        
+        # Assign to a class
+        class_list = class_ids_by_school.get(school_id, [])
+        class_id = random.choice(class_list) if class_list else None
+        
+        # Parent info
+        parent_first = random.choice(male_first_names)
+        parent_name = f"{parent_first} {last_name}"
+        
+        student_doc = {
+            "id": student_id,
+            "user_id": None,
+            "full_name": full_name,
+            "full_name_en": f"Student {i+1}",
+            "email": None,
+            "phone": None,
+            "school_id": school_id,
+            "class_id": class_id,
+            "student_number": f"STD{str(i+1).zfill(6)}",
+            "date_of_birth": f"{random.randint(2008, 2018)}-{str(random.randint(1,12)).zfill(2)}-{str(random.randint(1,28)).zfill(2)}",
+            "gender": gender,
+            "parent_phone": f"05{random.randint(10000000, 99999999)}",
+            "parent_name": parent_name,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.students.insert_one(student_doc)
+        results["students_created"] += 1
+        
+        # Update school and class student counts
+        await db.schools.update_one(
+            {"id": school_id},
+            {"$inc": {"current_students": 1}}
+        )
+        if class_id:
+            await db.classes.update_one(
+                {"id": class_id},
+                {"$inc": {"current_students": 1}}
+            )
+    
+    # Create subjects for each school
+    subject_templates = [
+        {"name": "الرياضيات", "name_en": "Mathematics", "code": "MATH", "weekly_hours": 5},
+        {"name": "اللغة العربية", "name_en": "Arabic Language", "code": "ARAB", "weekly_hours": 6},
+        {"name": "اللغة الإنجليزية", "name_en": "English Language", "code": "ENGL", "weekly_hours": 4},
+        {"name": "العلوم", "name_en": "Science", "code": "SCIE", "weekly_hours": 4},
+        {"name": "الدراسات الإسلامية", "name_en": "Islamic Studies", "code": "ISLM", "weekly_hours": 3},
+        {"name": "الدراسات الاجتماعية", "name_en": "Social Studies", "code": "SOCL", "weekly_hours": 3},
+        {"name": "الحاسب الآلي", "name_en": "Computer Science", "code": "COMP", "weekly_hours": 2},
+        {"name": "التربية الفنية", "name_en": "Art Education", "code": "ARTS", "weekly_hours": 2},
+        {"name": "التربية البدنية", "name_en": "Physical Education", "code": "PHYS", "weekly_hours": 2},
+    ]
+    
+    for school_id in school_ids[:50]:  # Create subjects for first 50 schools to save time
+        for template in subject_templates:
+            subject_id = str(uuid.uuid4())
+            subject_doc = {
+                "id": subject_id,
+                "name": template["name"],
+                "name_en": template["name_en"],
+                "school_id": school_id,
+                "code": f"{template['code']}-{school_id[:4]}",
+                "description": f"مادة {template['name']}",
+                "weekly_hours": template["weekly_hours"],
+                "grade_levels": grade_levels,
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.subjects.insert_one(subject_doc)
+            results["subjects_created"] += 1
+    
+    # Calculate parents (each student has a parent record counted)
+    results["parents_created"] = results["students_created"] * 2  # Assuming 2 parents per student on average
+    
+    return {
+        "message": "تم إنشاء البيانات التجريبية بنجاح",
+        "results": results,
+        "note": "البيانات التجريبية للعرض والاختبار فقط"
+    }
+
 # ============== LEGACY ROUTES ==============
 @api_router.get("/")
 async def root():
