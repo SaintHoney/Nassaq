@@ -19,7 +19,7 @@ export const Footer = () => {
           {/* Brand Column */}
           <div>
             <Link to="/" className="inline-block mb-6">
-              <img src={LOGO_WHITE} alt="نَسَّق" className="h-12 w-auto" />
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-12 w-auto rounded-xl" />
             </Link>
             <p className="text-white/70 text-sm leading-relaxed font-tajawal mb-6">
               {isRTL

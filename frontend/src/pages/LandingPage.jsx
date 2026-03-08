@@ -170,7 +170,7 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <Link to="/" className="flex items-center gap-2" data-testid="navbar-logo">
-              <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 lg:h-12 w-auto" />
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 lg:h-12 w-auto rounded-xl" />
             </Link>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={toggleLanguage} className="text-white hover:bg-white/10" data-testid="language-toggle">
