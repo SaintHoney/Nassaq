@@ -135,11 +135,11 @@ export const LoginPage = () => {
         <div className="absolute inset-0 bg-brand-navy/95" />
         
         <div className="relative z-10 text-center max-w-md">
-          {/* Logo */}
+          {/* Logo - Very Large with Curved Corners */}
           <img
             src={LOGO_WHITE}
             alt="نَسَّق"
-            className="h-20 w-auto mx-auto mb-8"
+            className="h-32 lg:h-40 w-auto mx-auto mb-8 rounded-3xl"
             data-testid="login-logo"
           />
           
