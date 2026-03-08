@@ -145,14 +145,17 @@ export const LoginPage = () => {
           
           {/* Tagline */}
           <h2 className="font-cairo text-4xl font-bold text-white mb-4">
-            نَسَّق
+            {isRTL ? 'نَسَّق' : 'NASSAQ'}
           </h2>
           <p className="text-2xl text-brand-turquoise font-cairo font-semibold mb-8">
-            من البيانات إلى القرار
+            {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
           
           <p className="text-white/60 font-tajawal">
-            سجل دخولك للوصول إلى لوحة التحكم وإدارة مدرستك بذكاء
+            {isRTL 
+              ? 'سجل دخولك للوصول إلى لوحة التحكم وإدارة مدرستك بذكاء'
+              : 'Sign in to access your dashboard and manage your school smartly'
+            }
           </p>
         </div>
       </div>
