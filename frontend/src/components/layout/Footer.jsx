@@ -107,10 +107,11 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-white/10 text-center">
-          <p className="text-white/50 text-sm font-tajawal">
-            {isRTL
-              ? '© 2026 نَسَّق. جميع الحقوق محفوظة.'
-              : '© 2026 NASSAQ. All rights reserved.'}
+          <p className="text-white/70 text-sm font-tajawal mb-2">
+            © 2026 NASSAQ. All rights reserved.
+          </p>
+          <p className="text-white/50 text-xs font-tajawal">
+            {isRTL ? 'عنصر المستقبل - يوفاي في اس' : 'Future Element & UVAII VS'}
           </p>
         </div>
       </div>
