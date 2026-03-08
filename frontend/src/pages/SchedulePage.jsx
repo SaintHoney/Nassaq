@@ -327,6 +327,113 @@ export const SchedulePage = () => {
     }
   };
 
+  // ============== DRAG AND DROP HANDLERS ==============
+  const handleDragStart = (event) => {
+    const { active } = event;
+    const sessionId = active.id;
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      setActiveSession(session);
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveSession(null);
+    setIsDragging(false);
+    
+    if (!over || !active) return;
+    
+    const sessionId = active.id;
+    const [targetDay, targetSlotId] = over.id.split('::');
+    
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    // Check if same position
+    if (session.day_of_week === targetDay && session.time_slot_id === targetSlotId) {
+      return;
+    }
+    
+    // Move session
+    await moveSession(sessionId, targetDay, targetSlotId);
+  };
+
+  const handleDragCancel = () => {
+    setActiveSession(null);
+    setIsDragging(false);
+  };
+
+  const moveSession = async (sessionId, newDay, newSlotId) => {
+    setMovingSession(true);
+    
+    try {
+      const response = await api.put(`/schedule-sessions/${sessionId}/move`, {
+        new_day_of_week: newDay,
+        new_time_slot_id: newSlotId
+      });
+      
+      const { status, message, message_en, conflicts: responseConflicts } = response.data;
+      
+      if (status === 'success') {
+        toast.success(
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <span>{isRTL ? message : message_en}</span>
+          </div>
+        );
+      } else if (status === 'conflict_warning') {
+        toast.warning(
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <span className="font-medium">{isRTL ? message : message_en}</span>
+            </div>
+            {responseConflicts && responseConflicts.length > 0 && (
+              <div className="text-xs opacity-80">
+                {responseConflicts.map((c, i) => (
+                  <p key={i}>{isRTL ? c.message : c.message_en}</p>
+                ))}
+              </div>
+            )}
+          </div>,
+          { duration: 5000 }
+        );
+      } else if (status === 'hard_conflict') {
+        toast.error(
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-500" />
+              <span className="font-medium">{isRTL ? message : message_en}</span>
+            </div>
+            {responseConflicts && responseConflicts.length > 0 && (
+              <div className="text-xs opacity-80">
+                {responseConflicts.map((c, i) => (
+                  <p key={i}>{isRTL ? c.message : c.message_en}</p>
+                ))}
+              </div>
+            )}
+          </div>,
+          { duration: 6000 }
+        );
+      }
+      
+      // Refresh sessions and conflicts
+      await fetchSessions();
+      
+    } catch (error) {
+      toast.error(
+        <div className="flex items-center gap-2">
+          <XCircle className="h-5 w-5 text-red-500" />
+          <span>{error.response?.data?.detail || (isRTL ? 'فشل نقل الحصة' : 'Failed to move session')}</span>
+        </div>
+      );
+    } finally {
+      setMovingSession(false);
+    }
+  };
+
   // Filter sessions
   const filteredSessions = sessions.filter(session => {
     if (filterTeacher !== 'all' && session.teacher_id !== filterTeacher) return false;
