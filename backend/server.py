@@ -1304,7 +1304,7 @@ async def seed_demo_data():
     teachers_per_school = 15  # Average teachers per school
     students_per_school = 250  # Average students per school
     
-    if schools_to_create == 0 and current_schools >= 200:
+    if schools_to_create == 0 and current_schools >= 200 and current_teachers >= 3000 and current_students >= 50000:
         return {
             "message": "البيانات التجريبية موجودة بالفعل",
             "current_counts": {
