@@ -18,6 +18,13 @@ import { SchedulePage } from "./pages/SchedulePage";
 import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 
+// Platform Admin Pages
+import { PlatformSchoolsPage } from "./pages/PlatformSchoolsPage";
+import { PlatformUsersPage } from "./pages/PlatformUsersPage";
+import { PlatformReportsPage } from "./pages/PlatformReportsPage";
+import { PlatformNotificationsPage } from "./pages/PlatformNotificationsPage";
+import { PlatformSettingsPage } from "./pages/PlatformSettingsPage";
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -106,7 +113,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Admin Routes */}
+      {/* Platform Admin Routes */}
       <Route
         path="/admin"
         element={
@@ -119,7 +126,7 @@ function AppRoutes() {
         path="/admin/schools"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
-            <AdminDashboard />
+            <PlatformSchoolsPage />
           </ProtectedRoute>
         }
       />
@@ -127,7 +134,31 @@ function AppRoutes() {
         path="/admin/users"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
-            <AdminDashboard />
+            <PlatformUsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'ministry_rep']}>
+            <PlatformReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher']}>
+            <PlatformNotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal']}>
+            <PlatformSettingsPage />
           </ProtectedRoute>
         }
       />
@@ -142,11 +173,11 @@ function AppRoutes() {
         }
       />
 
-      {/* Management Routes */}
+      {/* School Management Routes - Only for School Principal and Sub Admin (NOT Platform Admin) */}
       <Route
         path="/admin/teachers"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <TeachersPage />
           </ProtectedRoute>
         }
@@ -154,7 +185,7 @@ function AppRoutes() {
       <Route
         path="/admin/students"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <StudentsPage />
           </ProtectedRoute>
         }
@@ -162,7 +193,7 @@ function AppRoutes() {
       <Route
         path="/admin/classes"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <ClassesPage />
           </ProtectedRoute>
         }
@@ -170,17 +201,17 @@ function AppRoutes() {
       <Route
         path="/admin/subjects"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <SubjectsPage />
           </ProtectedRoute>
         }
       />
       
-      {/* Scheduling Routes */}
+      {/* Scheduling Routes - Only for School Principal and Sub Admin (NOT Platform Admin) */}
       <Route
         path="/admin/schedule"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <SchedulePage />
           </ProtectedRoute>
         }
@@ -188,7 +219,7 @@ function AppRoutes() {
       <Route
         path="/admin/time-slots"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <TimeSlotsPage />
           </ProtectedRoute>
         }
@@ -196,7 +227,7 @@ function AppRoutes() {
       <Route
         path="/admin/teacher-assignments"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <TeacherAssignmentsPage />
           </ProtectedRoute>
         }
