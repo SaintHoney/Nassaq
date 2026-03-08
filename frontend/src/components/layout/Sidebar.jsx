@@ -146,6 +146,12 @@ export const Sidebar = ({ children }) => {
         roles: ['teacher'],
       },
       {
+        icon: Calendar,
+        label: isRTL ? 'الحضور والغياب' : 'Attendance',
+        href: '/admin/attendance',
+        roles: ['teacher'],
+      },
+      {
         icon: Bell,
         label: isRTL ? 'الإشعارات' : 'Notifications',
         href: '/notifications',
