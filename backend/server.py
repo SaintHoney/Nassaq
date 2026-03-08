@@ -2730,6 +2730,551 @@ async def seed_test_accounts():
     }
 
 
+# ============== ATTENDANCE ENGINE ==============
+
+# Attendance Status Enum
+class AttendanceStatus(str, Enum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    LATE = "late"
+    EXCUSED = "excused"
+
+# Attendance Models
+class AttendanceRecord(BaseModel):
+    student_id: str
+    class_id: str
+    subject_id: Optional[str] = None
+    teacher_id: str
+    date: str  # Format: YYYY-MM-DD
+    time_slot_id: Optional[str] = None
+    status: AttendanceStatus
+    notes: Optional[str] = None
+    recorded_by: str
+    recorded_at: str
+
+class AttendanceCreate(BaseModel):
+    student_id: str
+    class_id: str
+    subject_id: Optional[str] = None
+    time_slot_id: Optional[str] = None
+    status: AttendanceStatus
+    notes: Optional[str] = None
+
+class BulkAttendanceCreate(BaseModel):
+    class_id: str
+    subject_id: Optional[str] = None
+    time_slot_id: Optional[str] = None
+    date: str  # Format: YYYY-MM-DD
+    records: List[dict]  # List of {student_id, status, notes}
+
+class AttendanceResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    student_id: str
+    student_name: Optional[str] = None
+    class_id: str
+    class_name: Optional[str] = None
+    subject_id: Optional[str] = None
+    subject_name: Optional[str] = None
+    teacher_id: str
+    teacher_name: Optional[str] = None
+    date: str
+    time_slot_id: Optional[str] = None
+    status: AttendanceStatus
+    notes: Optional[str] = None
+    recorded_by: str
+    recorded_at: str
+
+class AttendanceSummary(BaseModel):
+    total_students: int
+    present: int
+    absent: int
+    late: int
+    excused: int
+    attendance_rate: float
+
+class StudentAttendanceHistory(BaseModel):
+    student_id: str
+    student_name: str
+    total_days: int
+    present_days: int
+    absent_days: int
+    late_days: int
+    excused_days: int
+    attendance_rate: float
+    records: List[AttendanceResponse]
+
+class DailyAttendanceReport(BaseModel):
+    date: str
+    class_id: str
+    class_name: str
+    summary: AttendanceSummary
+    records: List[AttendanceResponse]
+
+# ============== ATTENDANCE ENDPOINTS ==============
+
+@api_router.post("/attendance", response_model=AttendanceResponse)
+async def create_attendance(
+    attendance: AttendanceCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a single attendance record"""
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin', 'platform_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized to record attendance")
+    
+    # Get student info
+    student = await db.students.find_one({"id": attendance.student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Get class info
+    class_info = await db.classes.find_one({"id": attendance.class_id}, {"_id": 0})
+    
+    # Get subject info if provided
+    subject_name = None
+    if attendance.subject_id:
+        subject = await db.subjects.find_one({"id": attendance.subject_id}, {"_id": 0})
+        subject_name = subject.get('name') if subject else None
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Check if attendance already exists for this student, class, date
+    existing = await db.attendance.find_one({
+        "student_id": attendance.student_id,
+        "class_id": attendance.class_id,
+        "date": today,
+        "time_slot_id": attendance.time_slot_id
+    })
+    
+    if existing:
+        # Update existing record
+        await db.attendance.update_one(
+            {"id": existing['id']},
+            {"$set": {
+                "status": attendance.status,
+                "notes": attendance.notes,
+                "recorded_by": current_user['id'],
+                "recorded_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        updated = await db.attendance.find_one({"id": existing['id']}, {"_id": 0})
+        updated['student_name'] = student.get('full_name')
+        updated['class_name'] = class_info.get('name') if class_info else None
+        updated['subject_name'] = subject_name
+        updated['teacher_name'] = current_user.get('full_name')
+        return AttendanceResponse(**updated)
+    
+    # Create new record
+    attendance_id = str(uuid.uuid4())
+    attendance_doc = {
+        "id": attendance_id,
+        "student_id": attendance.student_id,
+        "class_id": attendance.class_id,
+        "subject_id": attendance.subject_id,
+        "teacher_id": current_user['id'],
+        "date": today,
+        "time_slot_id": attendance.time_slot_id,
+        "status": attendance.status,
+        "notes": attendance.notes,
+        "recorded_by": current_user['id'],
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "tenant_id": current_user.get('tenant_id')
+    }
+    
+    await db.attendance.insert_one(attendance_doc)
+    
+    # Create attendance event for notifications/analytics
+    event_doc = {
+        "id": str(uuid.uuid4()),
+        "type": "attendance_recorded",
+        "student_id": attendance.student_id,
+        "class_id": attendance.class_id,
+        "status": attendance.status,
+        "recorded_by": current_user['id'],
+        "date": today,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "tenant_id": current_user.get('tenant_id')
+    }
+    await db.events.insert_one(event_doc)
+    
+    return AttendanceResponse(
+        id=attendance_id,
+        student_id=attendance.student_id,
+        student_name=student.get('full_name'),
+        class_id=attendance.class_id,
+        class_name=class_info.get('name') if class_info else None,
+        subject_id=attendance.subject_id,
+        subject_name=subject_name,
+        teacher_id=current_user['id'],
+        teacher_name=current_user.get('full_name'),
+        date=today,
+        time_slot_id=attendance.time_slot_id,
+        status=attendance.status,
+        notes=attendance.notes,
+        recorded_by=current_user['id'],
+        recorded_at=attendance_doc['recorded_at']
+    )
+
+@api_router.post("/attendance/bulk")
+async def create_bulk_attendance(
+    bulk_data: BulkAttendanceCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create multiple attendance records at once (for a whole class)"""
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin', 'platform_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized to record attendance")
+    
+    created_count = 0
+    updated_count = 0
+    errors = []
+    
+    for record in bulk_data.records:
+        try:
+            student_id = record.get('student_id')
+            status = record.get('status', 'present')
+            notes = record.get('notes')
+            
+            # Check if attendance already exists
+            existing = await db.attendance.find_one({
+                "student_id": student_id,
+                "class_id": bulk_data.class_id,
+                "date": bulk_data.date,
+                "time_slot_id": bulk_data.time_slot_id
+            })
+            
+            if existing:
+                # Update existing
+                await db.attendance.update_one(
+                    {"id": existing['id']},
+                    {"$set": {
+                        "status": status,
+                        "notes": notes,
+                        "recorded_by": current_user['id'],
+                        "recorded_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                updated_count += 1
+            else:
+                # Create new
+                attendance_doc = {
+                    "id": str(uuid.uuid4()),
+                    "student_id": student_id,
+                    "class_id": bulk_data.class_id,
+                    "subject_id": bulk_data.subject_id,
+                    "teacher_id": current_user['id'],
+                    "date": bulk_data.date,
+                    "time_slot_id": bulk_data.time_slot_id,
+                    "status": status,
+                    "notes": notes,
+                    "recorded_by": current_user['id'],
+                    "recorded_at": datetime.now(timezone.utc).isoformat(),
+                    "tenant_id": current_user.get('tenant_id')
+                }
+                await db.attendance.insert_one(attendance_doc)
+                created_count += 1
+                
+                # Create event for absent students
+                if status in ['absent', 'late']:
+                    event_doc = {
+                        "id": str(uuid.uuid4()),
+                        "type": f"student_{status}",
+                        "student_id": student_id,
+                        "class_id": bulk_data.class_id,
+                        "date": bulk_data.date,
+                        "recorded_by": current_user['id'],
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "tenant_id": current_user.get('tenant_id')
+                    }
+                    await db.events.insert_one(event_doc)
+                    
+        except Exception as e:
+            errors.append({"student_id": record.get('student_id'), "error": str(e)})
+    
+    return {
+        "message": "تم تسجيل الحضور بنجاح",
+        "message_en": "Attendance recorded successfully",
+        "created": created_count,
+        "updated": updated_count,
+        "errors": errors,
+        "date": bulk_data.date,
+        "class_id": bulk_data.class_id
+    }
+
+@api_router.get("/attendance/class/{class_id}", response_model=List[AttendanceResponse])
+async def get_class_attendance(
+    class_id: str,
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get attendance records for a class on a specific date"""
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    query = {"class_id": class_id, "date": date}
+    if current_user.get('tenant_id'):
+        query['tenant_id'] = current_user['tenant_id']
+    
+    records = await db.attendance.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich with names
+    result = []
+    for record in records:
+        student = await db.students.find_one({"id": record['student_id']}, {"_id": 0})
+        class_info = await db.classes.find_one({"id": record['class_id']}, {"_id": 0})
+        teacher = await db.users.find_one({"id": record['teacher_id']}, {"_id": 0})
+        
+        record['student_name'] = student.get('full_name') if student else None
+        record['class_name'] = class_info.get('name') if class_info else None
+        record['teacher_name'] = teacher.get('full_name') if teacher else None
+        
+        if record.get('subject_id'):
+            subject = await db.subjects.find_one({"id": record['subject_id']}, {"_id": 0})
+            record['subject_name'] = subject.get('name') if subject else None
+        
+        result.append(AttendanceResponse(**record))
+    
+    return result
+
+@api_router.get("/attendance/student/{student_id}", response_model=StudentAttendanceHistory)
+async def get_student_attendance_history(
+    student_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get attendance history for a specific student"""
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    query = {"student_id": student_id}
+    if start_date:
+        query['date'] = {"$gte": start_date}
+    if end_date:
+        if 'date' in query:
+            query['date']['$lte'] = end_date
+        else:
+            query['date'] = {"$lte": end_date}
+    
+    records = await db.attendance.find(query, {"_id": 0}).sort("date", -1).to_list(1000)
+    
+    # Calculate statistics
+    total_days = len(set(r['date'] for r in records))
+    present_days = len([r for r in records if r['status'] == 'present'])
+    absent_days = len([r for r in records if r['status'] == 'absent'])
+    late_days = len([r for r in records if r['status'] == 'late'])
+    excused_days = len([r for r in records if r['status'] == 'excused'])
+    
+    attendance_rate = (present_days + late_days) / total_days * 100 if total_days > 0 else 0
+    
+    # Enrich records
+    enriched_records = []
+    for record in records:
+        class_info = await db.classes.find_one({"id": record['class_id']}, {"_id": 0})
+        teacher = await db.users.find_one({"id": record.get('teacher_id')}, {"_id": 0})
+        
+        record['student_name'] = student.get('full_name')
+        record['class_name'] = class_info.get('name') if class_info else None
+        record['teacher_name'] = teacher.get('full_name') if teacher else None
+        
+        enriched_records.append(AttendanceResponse(**record))
+    
+    return StudentAttendanceHistory(
+        student_id=student_id,
+        student_name=student.get('full_name', ''),
+        total_days=total_days,
+        present_days=present_days,
+        absent_days=absent_days,
+        late_days=late_days,
+        excused_days=excused_days,
+        attendance_rate=round(attendance_rate, 2),
+        records=enriched_records
+    )
+
+@api_router.get("/attendance/report/daily/{class_id}", response_model=DailyAttendanceReport)
+async def get_daily_attendance_report(
+    class_id: str,
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get daily attendance report for a class"""
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    class_info = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    if not class_info:
+        raise HTTPException(status_code=404, detail="Class not found")
+    
+    # Get all students in this class
+    students = await db.students.find({"class_id": class_id}, {"_id": 0}).to_list(100)
+    total_students = len(students)
+    
+    # Get attendance records for this date
+    records = await db.attendance.find({"class_id": class_id, "date": date}, {"_id": 0}).to_list(100)
+    
+    # Calculate summary
+    present = len([r for r in records if r['status'] == 'present'])
+    absent = len([r for r in records if r['status'] == 'absent'])
+    late = len([r for r in records if r['status'] == 'late'])
+    excused = len([r for r in records if r['status'] == 'excused'])
+    
+    recorded_students = present + absent + late + excused
+    attendance_rate = (present + late) / total_students * 100 if total_students > 0 else 0
+    
+    # Enrich records
+    enriched_records = []
+    for record in records:
+        student = await db.students.find_one({"id": record['student_id']}, {"_id": 0})
+        teacher = await db.users.find_one({"id": record.get('teacher_id')}, {"_id": 0})
+        
+        record['student_name'] = student.get('full_name') if student else None
+        record['class_name'] = class_info.get('name')
+        record['teacher_name'] = teacher.get('full_name') if teacher else None
+        
+        enriched_records.append(AttendanceResponse(**record))
+    
+    return DailyAttendanceReport(
+        date=date,
+        class_id=class_id,
+        class_name=class_info.get('name', ''),
+        summary=AttendanceSummary(
+            total_students=total_students,
+            present=present,
+            absent=absent,
+            late=late,
+            excused=excused,
+            attendance_rate=round(attendance_rate, 2)
+        ),
+        records=enriched_records
+    )
+
+@api_router.get("/attendance/report/summary")
+async def get_attendance_summary(
+    class_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get attendance summary for a period"""
+    query = {}
+    
+    if class_id:
+        query['class_id'] = class_id
+    
+    if current_user.get('tenant_id'):
+        query['tenant_id'] = current_user['tenant_id']
+    
+    if start_date:
+        query['date'] = {"$gte": start_date}
+    if end_date:
+        if 'date' in query:
+            query['date']['$lte'] = end_date
+        else:
+            query['date'] = {"$lte": end_date}
+    
+    records = await db.attendance.find(query, {"_id": 0}).to_list(10000)
+    
+    # Group by date
+    dates = list(set(r['date'] for r in records))
+    dates.sort(reverse=True)
+    
+    daily_summaries = []
+    for date in dates[:30]:  # Last 30 days
+        day_records = [r for r in records if r['date'] == date]
+        present = len([r for r in day_records if r['status'] == 'present'])
+        absent = len([r for r in day_records if r['status'] == 'absent'])
+        late = len([r for r in day_records if r['status'] == 'late'])
+        excused = len([r for r in day_records if r['status'] == 'excused'])
+        total = present + absent + late + excused
+        
+        daily_summaries.append({
+            "date": date,
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "late": late,
+            "excused": excused,
+            "attendance_rate": round((present + late) / total * 100, 2) if total > 0 else 0
+        })
+    
+    # Overall summary
+    total_records = len(records)
+    overall_present = len([r for r in records if r['status'] == 'present'])
+    overall_absent = len([r for r in records if r['status'] == 'absent'])
+    overall_late = len([r for r in records if r['status'] == 'late'])
+    overall_excused = len([r for r in records if r['status'] == 'excused'])
+    
+    return {
+        "overall": {
+            "total_records": total_records,
+            "present": overall_present,
+            "absent": overall_absent,
+            "late": overall_late,
+            "excused": overall_excused,
+            "attendance_rate": round((overall_present + overall_late) / total_records * 100, 2) if total_records > 0 else 0
+        },
+        "daily": daily_summaries,
+        "period": {
+            "start": start_date or (dates[-1] if dates else None),
+            "end": end_date or (dates[0] if dates else None)
+        }
+    }
+
+@api_router.get("/attendance/students-for-class/{class_id}")
+async def get_students_for_attendance(
+    class_id: str,
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get students with their attendance status for a class"""
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Get class info
+    class_info = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    if not class_info:
+        raise HTTPException(status_code=404, detail="Class not found")
+    
+    # Get all students in this class
+    students = await db.students.find({"class_id": class_id}, {"_id": 0}).to_list(100)
+    
+    # Get existing attendance records for today
+    existing_records = await db.attendance.find(
+        {"class_id": class_id, "date": date},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Create a map of student_id -> status
+    attendance_map = {r['student_id']: r for r in existing_records}
+    
+    # Build result with attendance status
+    result = []
+    for student in students:
+        student_id = student['id']
+        attendance_record = attendance_map.get(student_id)
+        
+        result.append({
+            "id": student_id,
+            "student_code": student.get('student_code'),
+            "full_name": student.get('full_name'),
+            "full_name_en": student.get('full_name_en'),
+            "avatar_url": student.get('avatar_url'),
+            "gender": student.get('gender'),
+            "attendance_status": attendance_record.get('status') if attendance_record else None,
+            "attendance_notes": attendance_record.get('notes') if attendance_record else None,
+            "attendance_id": attendance_record.get('id') if attendance_record else None
+        })
+    
+    return {
+        "class_id": class_id,
+        "class_name": class_info.get('name'),
+        "date": date,
+        "total_students": len(students),
+        "recorded_count": len(existing_records),
+        "students": result
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
