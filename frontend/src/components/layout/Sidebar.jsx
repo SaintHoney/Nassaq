@@ -78,9 +78,9 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: Calendar,
-        label: isRTL ? 'الجدول' : 'Schedule',
-        href: '/school/schedule',
-        roles: ['school_principal', 'school_sub_admin', 'teacher', 'student'],
+        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
+        href: '/admin/schedule',
+        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
       },
       {
         icon: BarChart3,
