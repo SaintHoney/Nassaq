@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme, useTranslation } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -23,7 +23,6 @@ import {
 // Assets
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
 const BG_PATTERN = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png';
-const HAKIM_CHARACTER = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/bfdsnfxc_Hakim%20Character%20Examples%20and%20Referance%2001.avif';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -86,12 +85,10 @@ export const LoginPage = () => {
       if (result.success) {
         toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
         
-        // Store remember me preference
         if (rememberMe) {
           localStorage.setItem('rememberMe', 'true');
         }
         
-        // Redirect based on role
         switch (result.user.role) {
           case 'platform_admin':
             navigate('/admin');
@@ -126,7 +123,7 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
-      {/* ========== الجانب البصري (Brand / Visual Side) ========== */}
+      {/* ========== الجانب البصري (Brand / Visual Side) - بدون صورة حكيم ========== */}
       <div
         className="hidden lg:flex flex-1 flex-col justify-center items-center p-12 relative"
         style={{
@@ -142,7 +139,7 @@ export const LoginPage = () => {
           <img
             src={LOGO_WHITE}
             alt="نَسَّق"
-            className="h-16 w-auto mx-auto mb-8"
+            className="h-20 w-auto mx-auto mb-8"
             data-testid="login-logo"
           />
           
@@ -154,19 +151,8 @@ export const LoginPage = () => {
             من البيانات إلى القرار
           </p>
           
-          {/* Hakim Character */}
-          <div className="w-56 h-56 mx-auto relative">
-            <div className="absolute inset-0 bg-brand-purple/30 rounded-full blur-3xl" />
-            <img
-              src={HAKIM_CHARACTER}
-              alt="حكيم - المساعد الذكي"
-              className="relative z-10 w-full h-full object-contain animate-float"
-              style={{ filter: 'drop-shadow(0 0 25px rgba(97, 80, 144, 0.4))' }}
-            />
-          </div>
-          
-          <p className="text-white/60 font-tajawal mt-6">
-            سجل دخولك للوصول إلى لوحة التحكم وإدارة مدرستك بذكاء مع حكيم
+          <p className="text-white/60 font-tajawal">
+            سجل دخولك للوصول إلى لوحة التحكم وإدارة مدرستك بذكاء
           </p>
         </div>
       </div>
@@ -175,7 +161,6 @@ export const LoginPage = () => {
       <div className="flex-1 flex flex-col bg-background">
         {/* Top Navigation Bar */}
         <div className="flex items-center justify-between p-4 border-b border-border/50">
-          {/* Back to Website Button */}
           <Button
             variant="ghost"
             asChild
@@ -190,7 +175,6 @@ export const LoginPage = () => {
             </Link>
           </Button>
           
-          {/* Language Toggle Button */}
           <Button
             variant="outline"
             onClick={toggleLanguage}
@@ -204,15 +188,6 @@ export const LoginPage = () => {
 
         {/* Login Form Container */}
         <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-12">
-          {/* Mobile Logo */}
-          <Link to="/" className="lg:hidden mb-8">
-            <img
-              src={LOGO_WHITE}
-              alt="نَسَّق"
-              className="h-12 w-auto"
-            />
-          </Link>
-
           <Card className="w-full max-w-md card-nassaq" data-testid="login-card">
             <CardHeader className="text-center pb-2">
               <h1 className="font-cairo text-2xl font-bold text-foreground">
@@ -226,7 +201,6 @@ export const LoginPage = () => {
             </CardHeader>
             
             <CardContent className="pt-4">
-              {/* Error Message */}
               {error && (
                 <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-tajawal text-center">
                   {error}
@@ -234,7 +208,6 @@ export const LoginPage = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email Field */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-tajawal">
                     {isRTL ? 'البريد الإلكتروني' : 'Email'}
@@ -261,7 +234,6 @@ export const LoginPage = () => {
                   )}
                 </div>
 
-                {/* Password Field */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="password" className="font-tajawal">
@@ -306,7 +278,6 @@ export const LoginPage = () => {
                   )}
                 </div>
 
-                {/* Remember Me */}
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="rememberMe"
@@ -320,7 +291,6 @@ export const LoginPage = () => {
                   </Label>
                 </div>
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
                   className="w-full h-12 rounded-xl bg-brand-navy hover:bg-brand-navy-light font-cairo text-base"
@@ -341,7 +311,6 @@ export const LoginPage = () => {
                 </Button>
               </form>
 
-              {/* Register Link */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground font-tajawal">
                   {isRTL ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
