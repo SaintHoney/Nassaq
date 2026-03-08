@@ -12,6 +12,7 @@ import {
   UserCheck,
   BookOpen,
   Calendar,
+  CalendarCheck,
   BarChart3,
   Settings,
   ChevronRight,
