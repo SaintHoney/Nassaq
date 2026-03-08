@@ -269,7 +269,7 @@ export const RegisterPage = () => {
           <img
             src={LOGO_WHITE}
             alt="نَسَّق"
-            className="h-16 w-auto mx-auto mb-8"
+            className="h-32 lg:h-40 w-auto mx-auto mb-8 rounded-3xl"
             data-testid="register-logo"
           />
           
@@ -280,17 +280,6 @@ export const RegisterPage = () => {
           <p className="text-2xl text-brand-turquoise font-cairo font-semibold mb-8">
             {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
-          
-          {/* Hakim Character */}
-          <div className="w-56 h-56 mx-auto relative">
-            <div className="absolute inset-0 bg-brand-turquoise/30 rounded-full blur-3xl" />
-            <img
-              src={HAKIM_CHARACTER}
-              alt={isRTL ? 'حكيم - المساعد الذكي' : 'Hakim - AI Assistant'}
-              className="relative z-10 w-full h-full object-contain animate-float"
-              style={{ filter: 'drop-shadow(0 0 25px rgba(70, 193, 190, 0.4))' }}
-            />
-          </div>
           
           <p className="text-white/60 font-tajawal mt-6">
             {isRTL 
