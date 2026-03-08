@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Footer } from '../components/layout/Footer';
 import { HakimAssistant } from '../components/hakim/HakimAssistant';
@@ -31,7 +31,6 @@ import {
 // Assets
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
 const BG_PATTERN = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png';
-// New Hakim Character Image
 const HAKIM_CHARACTER = 'https://customer-assets.emergentagent.com/job_nassaq-school/artifacts/mtvfci3y_HAKIM%201.png';
 
 export const LandingPage = () => {
@@ -204,16 +203,23 @@ export const LandingPage = () => {
             <Sparkles className="h-8 w-8 text-brand-turquoise" />
           </div>
           
+          {/* LOGO - Bigger with Curved Corners */}
           <div className="mb-8">
-            <img src={LOGO_WHITE} alt="نَسَّق" className="h-20 lg:h-28 w-auto mx-auto" data-testid="hero-logo" />
+            <img 
+              src={LOGO_WHITE} 
+              alt="نَسَّق" 
+              className="h-32 lg:h-44 w-auto mx-auto rounded-3xl" 
+              data-testid="hero-logo" 
+            />
           </div>
           
           <p className="text-2xl md:text-3xl lg:text-4xl text-brand-turquoise font-cairo font-semibold mb-6">
             من البيانات إلى القرار
           </p>
           
+          {/* Updated Description - Shorter */}
           <p className="text-lg text-white/70 font-tajawal mb-10 max-w-2xl mx-auto leading-relaxed">
-            منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي لتحويل بيانات المدرسة اليومية إلى رؤى واضحة تساعد الإدارة والمعلمين على اتخاذ قرارات تعليمية أفضل.
+            منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي
           </p>
           
           <div className="flex items-center justify-center gap-4 mb-10">
@@ -236,12 +242,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 2: رحلة المدرسة نحو النظام الذكي ========== */}
-      <section 
-        className="py-20 lg:py-28 bg-background" 
-        data-testid="journey-section"
-        onMouseEnter={() => setJourneyPaused(true)}
-        onMouseLeave={() => setJourneyPaused(false)}
-      >
+      <section className="py-20 lg:py-28 bg-background" data-testid="journey-section">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -260,7 +261,7 @@ export const LandingPage = () => {
               onMouseLeave={() => setJourneyPaused(false)}
             >
               <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0" />
-              <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1 min-h-[120px]">
+              <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1 h-[120px] overflow-hidden">
                 <p className="text-foreground text-sm leading-relaxed font-tajawal">
                   <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
                   {journeySteps[activeJourneyStep].hakimSays}
@@ -270,11 +271,11 @@ export const LandingPage = () => {
             
             {/* Content Card - Fixed Height */}
             <Card 
-              className="card-nassaq p-8 transition-all duration-500 min-h-[320px] flex flex-col order-1 lg:order-2"
+              className="card-nassaq p-8 transition-all duration-500 h-[380px] flex flex-col order-1 lg:order-2 overflow-hidden"
               onMouseEnter={() => setJourneyPaused(true)}
               onMouseLeave={() => setJourneyPaused(false)}
             >
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-3 mb-4">
                 {journeySteps[activeJourneyStep].icons.map((Icon, i) => (
                   <div key={i} className="w-10 h-10 rounded-xl bg-brand-turquoise/10 flex items-center justify-center">
                     <Icon className="h-5 w-5 text-brand-turquoise" />
@@ -285,15 +286,15 @@ export const LandingPage = () => {
               <h3 className="font-cairo text-xl font-bold text-foreground mb-2">
                 {journeySteps[activeJourneyStep].title}
               </h3>
-              <p className="text-brand-turquoise font-cairo font-semibold mb-4 text-sm">
+              <p className="text-brand-turquoise font-cairo font-semibold mb-3 text-sm">
                 {journeySteps[activeJourneyStep].subtitle}
               </p>
-              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm flex-1 min-h-[80px]">
+              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm flex-1 overflow-hidden">
                 {journeySteps[activeJourneyStep].content}
               </p>
               
               {/* Progress Dots */}
-              <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-border/30">
+              <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-border/30">
                 {journeySteps.map((_, i) => (
                   <div
                     key={i}
@@ -309,12 +310,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 3: الذكاء الاصطناعي داخل نَسَّق ========== */}
-      <section 
-        className="py-20 lg:py-28 bg-brand-navy relative overflow-hidden" 
-        data-testid="ai-section"
-        onMouseEnter={() => setAIPaused(true)}
-        onMouseLeave={() => setAIPaused(false)}
-      >
+      <section className="py-20 lg:py-28 bg-brand-navy relative overflow-hidden" data-testid="ai-section">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${BG_PATTERN})`, backgroundSize: 'cover' }} />
         
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -328,10 +324,10 @@ export const LandingPage = () => {
             </h2>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <div className="grid lg:grid-cols-2 gap-10 items-stretch">
             {/* Content Card - Fixed Height */}
             <Card 
-              className="bg-white/5 border-white/10 rounded-2xl p-8 transition-all duration-500 min-h-[400px] flex flex-col"
+              className="bg-white/5 border-white/10 rounded-2xl p-8 transition-all duration-500 h-[420px] flex flex-col overflow-hidden"
               onMouseEnter={() => setAIPaused(true)}
               onMouseLeave={() => setAIPaused(false)}
             >
@@ -341,21 +337,21 @@ export const LandingPage = () => {
               <p className="text-brand-turquoise font-cairo text-sm mb-4">
                 {aiCapabilities[activeAIStep].subtitle}
               </p>
-              <p className="text-white/70 font-tajawal leading-relaxed text-sm mb-6 flex-1">
+              <p className="text-white/70 font-tajawal leading-relaxed text-sm mb-4 flex-1 overflow-hidden">
                 {aiCapabilities[activeAIStep].content}
               </p>
               
               {/* Hakim Quote */}
-              <div className="flex items-start gap-3 bg-brand-purple/20 rounded-xl p-4">
+              <div className="flex items-start gap-3 bg-brand-purple/20 rounded-xl p-4 h-[80px] overflow-hidden">
                 <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-turquoise flex-shrink-0" />
-                <p className="text-white text-sm font-tajawal">
+                <p className="text-white text-sm font-tajawal overflow-hidden">
                   <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
                   {aiCapabilities[activeAIStep].hakimSays}
                 </p>
               </div>
               
               {/* Progress Dots */}
-              <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-white/10">
+              <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-white/10">
                 {aiCapabilities.map((_, i) => (
                   <div
                     key={i}
@@ -369,7 +365,7 @@ export const LandingPage = () => {
             
             {/* Visual Side - Fixed Height */}
             <div 
-              className="flex justify-center items-center min-h-[400px]"
+              className="flex justify-center items-center h-[420px]"
               onMouseEnter={() => setAIPaused(true)}
               onMouseLeave={() => setAIPaused(false)}
             >
@@ -385,12 +381,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 4: عندما يعمل الجميع داخل نظام واحد ========== */}
-      <section 
-        className="py-20 lg:py-28 bg-background" 
-        data-testid="ecosystem-section"
-        onMouseEnter={() => setEcosystemPaused(true)}
-        onMouseLeave={() => setEcosystemPaused(false)}
-      >
+      <section className="py-20 lg:py-28 bg-background" data-testid="ecosystem-section">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -410,11 +401,11 @@ export const LandingPage = () => {
             {ecosystemRoles.map((role, i) => (
               <Card
                 key={i}
-                className={`card-nassaq p-5 transition-all duration-300 min-h-[140px] flex flex-col justify-center ${
+                className={`card-nassaq p-5 transition-all duration-300 h-[160px] flex flex-col justify-center overflow-hidden ${
                   activeEcosystemRole === i ? 'ring-2 ring-brand-turquoise scale-[1.02]' : 'opacity-60'
                 }`}
               >
-                <div className="w-12 h-12 rounded-2xl bg-brand-navy/10 flex items-center justify-center mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-brand-navy/10 flex items-center justify-center mb-3 flex-shrink-0">
                   <role.icon className="h-6 w-6 text-brand-navy" />
                 </div>
                 <h3 className="font-cairo text-base font-bold text-foreground">{role.role}</h3>
@@ -425,23 +416,23 @@ export const LandingPage = () => {
 
           {/* Active Role Details - Fixed Height */}
           <Card 
-            className="card-nassaq p-8 min-h-[300px]"
+            className="card-nassaq p-8 h-[320px] overflow-hidden"
             onMouseEnter={() => setEcosystemPaused(true)}
             onMouseLeave={() => setEcosystemPaused(false)}
           >
-            <div className="grid lg:grid-cols-2 gap-8 items-start">
-              <div className="flex flex-col min-h-[200px]">
-                <h3 className="font-cairo text-xl font-bold text-foreground mb-4">
+            <div className="grid lg:grid-cols-2 gap-8 items-start h-full">
+              <div className="flex flex-col h-full overflow-hidden">
+                <h3 className="font-cairo text-xl font-bold text-foreground mb-4 flex-shrink-0">
                   {ecosystemRoles[activeEcosystemRole].title}
                 </h3>
-                <p className="text-muted-foreground font-tajawal leading-relaxed text-sm mb-6 flex-1">
+                <p className="text-muted-foreground font-tajawal leading-relaxed text-sm mb-4 flex-1 overflow-hidden">
                   {ecosystemRoles[activeEcosystemRole].content}
                 </p>
                 
                 {/* Hakim Quote */}
-                <div className="flex items-start gap-3 bg-brand-purple/10 rounded-xl p-4">
+                <div className="flex items-start gap-3 bg-brand-purple/10 rounded-xl p-4 h-[80px] flex-shrink-0 overflow-hidden">
                   <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-purple flex-shrink-0" />
-                  <p className="text-foreground text-sm font-tajawal">
+                  <p className="text-foreground text-sm font-tajawal overflow-hidden">
                     <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
                     {ecosystemRoles[activeEcosystemRole].hakimSays}
                   </p>
@@ -449,7 +440,7 @@ export const LandingPage = () => {
               </div>
               
               {/* Visual Icons */}
-              <div className="flex flex-wrap justify-center gap-4 items-center min-h-[200px]">
+              <div className="flex flex-wrap justify-center gap-4 items-center h-full">
                 {ecosystemRoles.map((role, i) => (
                   <div
                     key={i}
@@ -468,7 +459,7 @@ export const LandingPage = () => {
             </div>
             
             {/* Progress Dots */}
-            <div className="flex justify-center gap-2 mt-8 pt-4 border-t border-border/30">
+            <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-border/30">
               {ecosystemRoles.map((_, i) => (
                 <div
                   key={i}
