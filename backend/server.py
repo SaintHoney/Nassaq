@@ -452,16 +452,24 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         active_schools = await db.schools.count_documents({"status": "active"})
         pending_schools = await db.schools.count_documents({"status": "pending"})
         total_users = await db.users.count_documents({})
-        total_students = await db.users.count_documents({"role": "student"})
-        total_teachers = await db.users.count_documents({"role": "teacher"})
+        active_users = await db.users.count_documents({"is_active": True})
+        total_students = await db.students.count_documents({})
+        total_teachers = await db.teachers.count_documents({})
+        total_classes = await db.classes.count_documents({})
+        total_subjects = await db.subjects.count_documents({})
+        pending_requests = await db.registration_requests.count_documents({"status": "pending"})
     else:
         tenant_id = current_user.get("tenant_id")
         total_schools = 1
         active_schools = 1
         pending_schools = 0
         total_users = await db.users.count_documents({"tenant_id": tenant_id})
-        total_students = await db.users.count_documents({"tenant_id": tenant_id, "role": "student"})
-        total_teachers = await db.users.count_documents({"tenant_id": tenant_id, "role": "teacher"})
+        active_users = await db.users.count_documents({"tenant_id": tenant_id, "is_active": True})
+        total_students = await db.students.count_documents({"school_id": tenant_id})
+        total_teachers = await db.teachers.count_documents({"school_id": tenant_id})
+        total_classes = await db.classes.count_documents({"school_id": tenant_id})
+        total_subjects = await db.subjects.count_documents({"school_id": tenant_id})
+        pending_requests = 0
     
     return DashboardStats(
         total_schools=total_schools,
@@ -469,7 +477,11 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_teachers=total_teachers,
         active_schools=active_schools,
         pending_schools=pending_schools,
-        total_users=total_users
+        total_users=total_users,
+        active_users=active_users,
+        pending_requests=pending_requests,
+        total_classes=total_classes,
+        total_subjects=total_subjects
     )
 
 # ============== AI ASSISTANT (HAKIM) ==============
