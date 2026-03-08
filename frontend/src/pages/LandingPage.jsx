@@ -252,10 +252,25 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <div className="grid lg:grid-cols-2 gap-10 items-stretch">
+            {/* Hakim Side - Fixed Height */}
+            <div 
+              className="flex items-start gap-4 order-2 lg:order-1"
+              onMouseEnter={() => setJourneyPaused(true)}
+              onMouseLeave={() => setJourneyPaused(false)}
+            >
+              <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0" />
+              <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1 min-h-[120px]">
+                <p className="text-foreground text-sm leading-relaxed font-tajawal">
+                  <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
+                  {journeySteps[activeJourneyStep].hakimSays}
+                </p>
+              </Card>
+            </div>
+            
             {/* Content Card - Fixed Height */}
             <Card 
-              className="card-nassaq p-8 transition-all duration-500 min-h-[380px] flex flex-col"
+              className="card-nassaq p-8 transition-all duration-500 min-h-[320px] flex flex-col order-1 lg:order-2"
               onMouseEnter={() => setJourneyPaused(true)}
               onMouseLeave={() => setJourneyPaused(false)}
             >
@@ -273,7 +288,7 @@ export const LandingPage = () => {
               <p className="text-brand-turquoise font-cairo font-semibold mb-4 text-sm">
                 {journeySteps[activeJourneyStep].subtitle}
               </p>
-              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm flex-1">
+              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm flex-1 min-h-[80px]">
                 {journeySteps[activeJourneyStep].content}
               </p>
               
@@ -289,21 +304,6 @@ export const LandingPage = () => {
                 ))}
               </div>
             </Card>
-            
-            {/* Hakim Side - Fixed Height */}
-            <div 
-              className="flex items-start gap-4 min-h-[380px]"
-              onMouseEnter={() => setJourneyPaused(true)}
-              onMouseLeave={() => setJourneyPaused(false)}
-            >
-              <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0" />
-              <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1">
-                <p className="text-foreground text-sm leading-relaxed font-tajawal">
-                  <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
-                  {journeySteps[activeJourneyStep].hakimSays}
-                </p>
-              </Card>
-            </div>
           </div>
         </div>
       </section>
