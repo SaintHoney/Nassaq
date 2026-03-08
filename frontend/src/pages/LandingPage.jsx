@@ -335,10 +335,10 @@ export const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
-              رحلة المدرسة نحو النظام الذكي
+              {isRTL ? 'رحلة المدرسة نحو النظام الذكي' : "The School's Journey to Smart Systems"}
             </h2>
             <p className="text-xl text-brand-turquoise font-cairo font-semibold">
-              من البيانات إلى القرارات
+              {isRTL ? 'من البيانات إلى القرارات' : 'From Data to Decisions'}
             </p>
           </div>
 
@@ -352,7 +352,7 @@ export const LandingPage = () => {
               <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0" />
               <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1 h-[120px] overflow-hidden">
                 <p className="text-foreground text-sm leading-relaxed font-tajawal">
-                  <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
+                  <span className="text-brand-purple font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
                   {journeySteps[activeJourneyStep].hakimSays}
                 </p>
               </Card>
@@ -406,10 +406,10 @@ export const LandingPage = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-purple/20 border border-brand-purple/30 rounded-full px-4 py-2 mb-6">
               <Brain className="h-4 w-4 text-brand-turquoise" />
-              <span className="text-white/80 text-sm font-tajawal">الذكاء الاصطناعي</span>
+              <span className="text-white/80 text-sm font-tajawal">{isRTL ? 'الذكاء الاصطناعي' : 'Artificial Intelligence'}</span>
             </div>
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-white mb-4">
-              الذكاء الاصطناعي داخل نَسَّق
+              {isRTL ? 'الذكاء الاصطناعي داخل نَسَّق' : 'AI Inside NASSAQ'}
             </h2>
           </div>
 
@@ -432,9 +432,9 @@ export const LandingPage = () => {
               
               {/* Hakim Quote */}
               <div className="flex items-start gap-3 bg-brand-purple/20 rounded-xl p-4 h-[80px] overflow-hidden">
-                <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-turquoise flex-shrink-0" />
+                <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-10 h-10 rounded-full object-cover border border-brand-turquoise flex-shrink-0" />
                 <p className="text-white text-sm font-tajawal overflow-hidden">
-                  <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
+                  <span className="text-brand-turquoise font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
                   {aiCapabilities[activeAIStep].hakimSays}
                 </p>
               </div>
@@ -474,10 +474,10 @@ export const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
-              عندما يعمل الجميع داخل نظام واحد
+              {isRTL ? 'عندما يعمل الجميع داخل نظام واحد' : 'When Everyone Works in One System'}
             </h2>
             <p className="text-muted-foreground text-lg font-tajawal">
-              منصة واحدة. نظام بيئي تعليمي واحد.
+              {isRTL ? 'منصة واحدة. نظام بيئي تعليمي واحد.' : 'One platform. One educational ecosystem.'}
             </p>
           </div>
 
@@ -520,9 +520,9 @@ export const LandingPage = () => {
                 
                 {/* Hakim Quote */}
                 <div className="flex items-start gap-3 bg-brand-purple/10 rounded-xl p-4 h-[80px] flex-shrink-0 overflow-hidden">
-                  <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-purple flex-shrink-0" />
+                  <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-10 h-10 rounded-full object-cover border border-brand-purple flex-shrink-0" />
                   <p className="text-foreground text-sm font-tajawal overflow-hidden">
-                    <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
+                    <span className="text-brand-purple font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
                     {ecosystemRoles[activeEcosystemRole].hakimSays}
                   </p>
                 </div>
@@ -572,41 +572,50 @@ export const LandingPage = () => {
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-cairo text-4xl md:text-5xl font-bold text-white mb-8">
-            جاهزون للبدء؟
+            {isRTL ? 'جاهزون للبدء؟' : 'Ready to Start?'}
           </h2>
           
           {/* Account Type Cards */}
           <div className="grid md:grid-cols-2 gap-6 mb-10">
             <Card className="bg-white/10 border-white/20 rounded-2xl p-6 text-start hover:bg-white/15 transition-all">
               <Building2 className="h-10 w-10 text-brand-turquoise mb-4" />
-              <h3 className="font-cairo text-xl font-bold text-white mb-2">إذا كنت مدرسة</h3>
+              <h3 className="font-cairo text-xl font-bold text-white mb-2">{isRTL ? 'إذا كنت مدرسة' : 'If you are a school'}</h3>
               <p className="text-white/70 text-sm font-tajawal">
-                اجعل مدرستك أكثر تنظيمًا ووضوحًا مع منصة نَسَّق.
+                {isRTL 
+                  ? 'اجعل مدرستك أكثر تنظيمًا ووضوحًا مع منصة نَسَّق.'
+                  : 'Make your school more organized and clear with NASSAQ platform.'
+                }
               </p>
             </Card>
             <Card className="bg-white/10 border-white/20 rounded-2xl p-6 text-start hover:bg-white/15 transition-all">
               <UserCheck className="h-10 w-10 text-brand-turquoise mb-4" />
-              <h3 className="font-cairo text-xl font-bold text-white mb-2">إذا كنت معلمًا</h3>
+              <h3 className="font-cairo text-xl font-bold text-white mb-2">{isRTL ? 'إذا كنت معلمًا' : 'If you are a teacher'}</h3>
               <p className="text-white/70 text-sm font-tajawal">
-                ابدأ تنظيم حصصك الآن واجعل إدارة الفصل أكثر سهولة وذكاءً.
+                {isRTL 
+                  ? 'ابدأ تنظيم حصصك الآن واجعل إدارة الفصل أكثر سهولة وذكاءً.'
+                  : 'Start organizing your classes now and make classroom management easier and smarter.'
+                }
               </p>
             </Card>
           </div>
 
           {/* Hakim Message - Inline with Avatar */}
           <div className="flex items-center justify-center gap-4 mb-10">
-            <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-turquoise shadow-lg flex-shrink-0" />
+            <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-14 h-14 rounded-full object-cover border-2 border-brand-turquoise shadow-lg flex-shrink-0" />
             <div className="text-start">
               <p className="text-white font-tajawal">
-                <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
-                التعليم الجيد يبدأ بقرار جيد… والقرار الجيد يبدأ ببيانات واضحة. دعني أساعدك في تنظيم مدرستك.
+                <span className="text-brand-turquoise font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
+                {isRTL 
+                  ? 'التعليم الجيد يبدأ بقرار جيد… والقرار الجيد يبدأ ببيانات واضحة. دعني أساعدك في تنظيم مدرستك.'
+                  : 'Good education starts with good decisions... and good decisions start with clear data. Let me help you organize your school.'
+                }
               </p>
             </div>
           </div>
 
           <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-12 text-xl font-cairo shadow-xl" data-testid="cta-register-btn">
             <Link to="/register" className="flex items-center gap-3">
-              سجل الآن
+              {isRTL ? 'سجل الآن' : 'Register Now'}
               <ArrowLeft className="h-6 w-6" />
             </Link>
           </Button>
