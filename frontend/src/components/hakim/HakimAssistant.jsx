@@ -7,7 +7,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Card } from '../ui/card';
 import { MessageSquare, X, Send, Sparkles, Loader2 } from 'lucide-react';
 
-const HAKIM_AVATAR = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/bfdsnfxc_Hakim%20Character%20Examples%20and%20Referance%2001.avif';
+const HAKIM_AVATAR = 'https://customer-assets.emergentagent.com/job_nassaq-school/artifacts/mtvfci3y_HAKIM%201.png';
 
 export const HakimAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
