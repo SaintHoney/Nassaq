@@ -1,0 +1,134 @@
+{
+  "project_name": "NASSAQ - Enterprise School Management System",
+  "design_philosophy": {
+    "core_values": [
+      "Trustworthy & Institutional (Ministry/Enterprise grade)",
+      "Modern & Intelligent (AI-driven)",
+      "Cultural Resonance (Arabic-first, RTL native)",
+      "Clarity & Efficiency (Dense data, clear hierarchy)"
+    ],
+    "visual_style": "Modern Enterprise SaaS. Clean lines, soft shadows, rounded corners, high readability. 'Hakim' (AI) adds a layer of friendly intelligence to the rigid admin interface.",
+    "rtl_strategy": "CRITICAL: All layouts must be RTL-first. Use logical properties (ps-*, pe-*, ms-*, me-*) instead of physical (pl-*, pr-*, ml-*, mr-*) to ensure bidirectional support."
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Cairo, sans-serif",
+      "body": "Tajawal, sans-serif",
+      "mono": "IBM Plex Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl md:text-4xl font-bold",
+      "h3": "text-2xl font-semibold",
+      "body_lg": "text-lg leading-relaxed",
+      "body": "text-base leading-relaxed",
+      "caption": "text-sm text-muted-foreground"
+    },
+    "instructions": "Import 'Cairo' and 'Tajawal' from Google Fonts. Apply 'Cairo' to all headings (h1-h6) and 'Tajawal' to body text. Ensure font weights are distinct (Bold for heads, Regular/Medium for body)."
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "name": "Nassaq Navy",
+        "hex": "#0F2C59",
+        "usage": "Main brand color, primary buttons, active states, sidebar backgrounds"
+      },
+      "secondary": {
+        "name": "Smart Turquoise",
+        "hex": "#1B93A4",
+        "usage": "Highlights, success states, positive indicators, secondary actions"
+      },
+      "accent": {
+        "name": "AI Purple",
+        "hex": "#7C3AED",
+        "usage": "AI features, 'Hakim' interactions, analytics insights"
+      },
+      "background": {
+        "light": "#F8FAFC",
+        "dark": "#020617"
+      },
+      "surface": {
+        "light": "#FFFFFF",
+        "dark": "#0F172A"
+      }
+    },
+    "tailwind_config_extension": {
+      "colors": {
+        "brand": {
+          "navy": "#0F2C59",
+          "turquoise": "#1B93A4",
+          "purple": "#7C3AED"
+        }
+      }
+    }
+  },
+  "layout": {
+    "grid_system": "Use 'Bento' grids for dashboards. 12-column base. Sidebar fixed width (280px) on desktop.",
+    "spacing": "Generous padding inside cards (p-6 or p-8). Tight gaps in data tables. Use 'gap-6' for dashboard widgets.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "radius": "rounded-xl (12px) for cards, rounded-lg (8px) for inputs/buttons. Avoid sharp edges."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-brand-navy text-white hover:bg-brand-navy/90 shadow-md rounded-lg h-10 px-6",
+      "secondary": "bg-brand-turquoise/10 text-brand-turquoise hover:bg-brand-turquoise/20 border-0",
+      "outline": "border-2 border-brand-navy/20 text-brand-navy hover:bg-brand-navy/5"
+    },
+    "cards": {
+      "style": "bg-card text-card-foreground rounded-xl border shadow-sm hover:shadow-md transition-shadow duration-200",
+      "dashboard_widget": "p-6 flex flex-col justify-between h-full"
+    },
+    "inputs": {
+      "style": "h-11 rounded-lg border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "navigation": {
+      "sidebar": "bg-brand-navy text-white w-72 fixed inset-y-0 right-0 (for RTL) z-50 flex flex-col",
+      "sidebar_item": "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors hover:bg-white/10 data-[active=true]:bg-brand-turquoise data-[active=true]:text-white"
+    }
+  },
+  "assets": {
+    "logos": {
+      "light_bg": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/a2a1b0lv_Nassaq%20LinkedIn%20Logo.png",
+      "dark_bg": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png"
+    },
+    "backgrounds": {
+      "pattern": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png"
+    },
+    "characters": {
+      "hakim_ai": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/bfdsnfxc_Hakim%20Character%20Examples%20and%20Referance%2001.avif"
+    },
+    "stock_images": {
+      "hero_students": "https://images.pexels.com/photos/33846282/pexels-photo-33846282.jpeg",
+      "teachers_working": "https://images.unsplash.com/photo-1594256347468-5cd43df8fbaf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxtaWRkbGUlMjBlYXN0ZXJuJTIwdGVhY2hlciUyMHVzaW5nJTIwbGFwdG9wJTIwZWR1Y2F0aW9ufGVufDB8fHx8MTc3Mjk3OTc3MHww&ixlib=rb-4.1.0&q=85"
+    }
+  },
+  "page_strategies": {
+    "landing_page": {
+      "hero": "Use the 'Background Pattern' as a subtle overlay on a Navy gradient. Place 'Hakim' (AI Character) floating or interacting with a UI element. Headline in Cairo Bold.",
+      "features": "Bento grid layout. Use icons + short Arabic text. Hover effects: Card lifts, border glows Turquoise.",
+      "testimonials": "Horizontal scroll or marquee. Use circular avatars.",
+      "cta": "High contrast. Navy background, White text, Turquoise button."
+    },
+    "auth_pages": {
+      "layout": "Split screen. Right side (RTL): Form. Left side: Branding + Hakim AI illustration + Testimonial.",
+      "form": "Clean, stacked inputs. 'Forgot Password' prominent."
+    },
+    "dashboard": {
+      "layout": "Sidebar layout (Right aligned for RTL). Top header for search/notifications/profile.",
+      "widgets": "White cards with soft shadow. Headers in Cairo. Data in Tajawal/Numbers in Mono.",
+      "ai_panel": "Floating action button (FAB) or persistent sidebar widget featuring Hakim's face. Clicking opens a chat interface."
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure text on Navy background is Pure White. Text on Turquoise must be Dark Navy.",
+    "rtl": "Add 'dir=rtl' to the html tag. Use 'text-right' as default alignment for Arabic.",
+    "focus": "Visible focus rings (ring-2 ring-brand-turquoise) on all interactive elements."
+  },
+  "universal_guidelines": [
+    "Use 'sonner' for toasts.",
+    "All interactive elements must have 'data-testid'.",
+    "Do not use generic gradients. Use the provided background pattern.",
+    "Avoid 'Inter' font. Use Cairo/Tajawal.",
+    "Dark mode is mandatory. Ensure colors adapt (Navy becomes darker, White becomes Slate-900)."
+  ]
+}
