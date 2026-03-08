@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Footer } from '../components/layout/Footer';
 import { HakimAssistant } from '../components/hakim/HakimAssistant';
@@ -30,7 +30,6 @@ import {
 
 // Assets
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
-const LOGO_LIGHT = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/a2a1b0lv_Nassaq%20LinkedIn%20Logo.png';
 const BG_PATTERN = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png';
 // New Hakim Character Image
 const HAKIM_CHARACTER = 'https://customer-assets.emergentagent.com/job_nassaq-school/artifacts/mtvfci3y_HAKIM%201.png';
@@ -40,30 +39,38 @@ export const LandingPage = () => {
   const [activeJourneyStep, setActiveJourneyStep] = useState(0);
   const [activeAIStep, setActiveAIStep] = useState(0);
   const [activeEcosystemRole, setActiveEcosystemRole] = useState(0);
+  
+  // Hover pause states
+  const [journeyPaused, setJourneyPaused] = useState(false);
+  const [aiPaused, setAIPaused] = useState(false);
+  const [ecosystemPaused, setEcosystemPaused] = useState(false);
 
-  // Auto-rotate Journey Steps every 2 seconds
+  // Auto-rotate Journey Steps every 2 seconds (pause on hover)
   useEffect(() => {
+    if (journeyPaused) return;
     const interval = setInterval(() => {
       setActiveJourneyStep((prev) => (prev + 1) % 4);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [journeyPaused]);
 
-  // Auto-rotate AI Steps every 2 seconds
+  // Auto-rotate AI Steps every 2 seconds (pause on hover)
   useEffect(() => {
+    if (aiPaused) return;
     const interval = setInterval(() => {
       setActiveAIStep((prev) => (prev + 1) % 4);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [aiPaused]);
 
-  // Auto-rotate Ecosystem Roles every 2 seconds
+  // Auto-rotate Ecosystem Roles every 2 seconds (pause on hover)
   useEffect(() => {
+    if (ecosystemPaused) return;
     const interval = setInterval(() => {
       setActiveEcosystemRole((prev) => (prev + 1) % 4);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [ecosystemPaused]);
 
   // Journey Steps Data
   const journeySteps = [
@@ -72,7 +79,7 @@ export const LandingPage = () => {
       subtitle: 'كل مدرسة تنتج آلاف البيانات يوميًا',
       content: `داخل المدرسة يحدث الكثير كل يوم: تسجيل حضور الطلاب، تقييم الواجبات، تسجيل السلوك، مشاركة الطلاب داخل الفصل، نتائج الاختبارات، ملاحظات المعلمين. لكن هذه البيانات غالبًا تكون موزعة ومجزأة داخل أنظمة مختلفة.`,
       hakimSays: 'المدارس تولد آلاف البيانات كل يوم… لكن القليل منها يستطيع تحويل هذه البيانات إلى معرفة.',
-      icons: [BarChart3, Calendar, Brain, BookOpen, Target, Bell],
+      icons: [BarChart3, Calendar, Brain, BookOpen],
     },
     {
       title: 'جمع البيانات داخل نَسَّق',
@@ -101,20 +108,20 @@ export const LandingPage = () => {
   const aiCapabilities = [
     {
       title: 'عندما تبدأ البيانات بالتحدث',
-      subtitle: 'الذكاء الاصطناعي ليس ميزة إضافية في نَسَّق بل هو العقل الذي يعمل خلف النظام.',
-      content: `كل تفاعل يحدث داخل المدرسة يتحول إلى بيانات: حضور الطلاب، مشاركة الطلاب داخل الحصة، الواجبات، التقييمات، السلوك، ملاحظات المعلمين. هذه البيانات لا تبقى مجرد أرقام… بل تتحول إلى مدخلات لذكاء النظام.`,
+      subtitle: 'الذكاء الاصطناعي هو العقل الذي يعمل خلف النظام',
+      content: `كل تفاعل يحدث داخل المدرسة يتحول إلى بيانات: حضور الطلاب، مشاركة الطلاب داخل الحصة، الواجبات، التقييمات، السلوك، ملاحظات المعلمين. هذه البيانات تتحول إلى مدخلات لذكاء النظام.`,
       hakimSays: 'كل يوم تولد المدرسة آلاف البيانات… مهمتي هي أن أفهم ما تعنيه هذه البيانات.',
     },
     {
       title: 'تحليل أداء الطلاب',
       subtitle: 'فهم الطالب قبل أن تظهر المشكلة',
-      content: `يقوم الذكاء الاصطناعي داخل نَسَّق بتحليل أداء الطالب بشكل مستمر، ويأخذ في الاعتبار عدة عوامل: نسبة الحضور، المشاركة داخل الحصة، إنجاز الواجبات، نتائج التقييمات، السلوك داخل الفصل.`,
+      content: `يقوم الذكاء الاصطناعي بتحليل أداء الطالب بشكل مستمر: نسبة الحضور، المشاركة داخل الحصة، إنجاز الواجبات، نتائج التقييمات، السلوك داخل الفصل.`,
       hakimSays: 'يمكنني اكتشاف الطالب الذي يحتاج دعمًا… قبل أن تتحول المشكلة إلى أزمة تعليمية.',
     },
     {
       title: 'الجداول الدراسية الذكية',
       subtitle: 'عندما تصبح الجداول الدراسية عملية ذكية',
-      content: `إنشاء جدول مدرسي متوازن عملية معقدة تتطلب مراعاة: المعلمين، الفصول، المواد الدراسية، القاعات، عدد الحصص، التعارضات. يقوم الذكاء الاصطناعي داخل نَسَّق بتحليل كل هذه العوامل لبناء جدول متوازن وفعال.`,
+      content: `إنشاء جدول مدرسي متوازن عملية معقدة تتطلب مراعاة: المعلمين، الفصول، المواد الدراسية، القاعات، عدد الحصص، التعارضات. الذكاء الاصطناعي يحلل كل هذه العوامل.`,
       hakimSays: 'يمكنني تحليل آلاف الاحتمالات في ثوانٍ لبناء جدول دراسي متوازن.',
     },
     {
@@ -137,7 +144,7 @@ export const LandingPage = () => {
     {
       role: 'المعلم',
       title: 'إدارة الحصة أصبحت أكثر ذكاءً',
-      content: `يستخدم المعلم نَسَّق لإدارة الحصة بسهولة: تسجيل الحضور، متابعة تفاعل الطلاب، تقييم الإجابات، تسجيل السلوك، إضافة التقييمات. كل ذلك أثناء الحصة في واجهة بسيطة.`,
+      content: `يستخدم المعلم نَسَّق لإدارة الحصة بسهولة: تسجيل الحضور، متابعة تفاعل الطلاب، تقييم الإجابات، تسجيل السلوك، إضافة التقييمات. كل ذلك في واجهة بسيطة.`,
       hakimSays: 'أثناء الحصة… أساعد المعلم على فهم مستوى التفاعل داخل الفصل.',
       icon: UserCheck,
     },
@@ -163,48 +170,20 @@ export const LandingPage = () => {
       <header className="absolute top-0 left-0 right-0 z-50 bg-transparent" data-testid="header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2" data-testid="navbar-logo">
-              <img
-                src={LOGO_WHITE}
-                alt="نَسَّق"
-                className="h-10 lg:h-12 w-auto"
-              />
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 lg:h-12 w-auto" />
             </Link>
-
-            {/* Actions */}
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleLanguage}
-                className="text-white hover:bg-white/10"
-                data-testid="language-toggle"
-              >
+              <Button variant="ghost" size="icon" onClick={toggleLanguage} className="text-white hover:bg-white/10" data-testid="language-toggle">
                 <Globe className="h-5 w-5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className="text-white hover:bg-white/10"
-                data-testid="theme-toggle"
-              >
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-white hover:bg-white/10" data-testid="theme-toggle">
                 {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
-              <Button
-                variant="ghost"
-                asChild
-                className="text-white hover:bg-white/10"
-                data-testid="login-link"
-              >
+              <Button variant="ghost" asChild className="text-white hover:bg-white/10" data-testid="login-link">
                 <Link to="/login">{isRTL ? 'تسجيل الدخول' : 'Login'}</Link>
               </Button>
-              <Button
-                asChild
-                className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-xl"
-                data-testid="register-link"
-              >
+              <Button asChild className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-xl" data-testid="register-link">
                 <Link to="/register">{isRTL ? 'إنشاء حساب' : 'Register'}</Link>
               </Button>
             </div>
@@ -215,49 +194,30 @@ export const LandingPage = () => {
       {/* ========== HERO SECTION ========== */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: `url(${BG_PATTERN})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        style={{ backgroundImage: `url(${BG_PATTERN})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         data-testid="hero-section"
       >
         <div className="absolute inset-0 bg-brand-navy/95" />
         
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 text-center">
-          {/* AI Icon - Animated */}
           <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-2xl bg-brand-purple/20 border border-brand-purple/30 animate-pulse">
             <Sparkles className="h-8 w-8 text-brand-turquoise" />
           </div>
           
-          {/* NASSAQ Logo */}
           <div className="mb-8">
-            <img
-              src={LOGO_WHITE}
-              alt="نَسَّق"
-              className="h-20 lg:h-28 w-auto mx-auto"
-              data-testid="hero-logo"
-            />
+            <img src={LOGO_WHITE} alt="نَسَّق" className="h-20 lg:h-28 w-auto mx-auto" data-testid="hero-logo" />
           </div>
           
-          {/* Tagline */}
           <p className="text-2xl md:text-3xl lg:text-4xl text-brand-turquoise font-cairo font-semibold mb-6">
             من البيانات إلى القرار
           </p>
           
-          {/* Description */}
           <p className="text-lg text-white/70 font-tajawal mb-10 max-w-2xl mx-auto leading-relaxed">
             منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي لتحويل بيانات المدرسة اليومية إلى رؤى واضحة تساعد الإدارة والمعلمين على اتخاذ قرارات تعليمية أفضل.
           </p>
           
-          {/* Hakim Chat Guide */}
           <div className="flex items-center justify-center gap-4 mb-10">
-            <img
-              src={HAKIM_CHARACTER}
-              alt="حكيم"
-              className="w-12 h-12 rounded-full object-cover border-2 border-brand-turquoise shadow-lg"
-              data-testid="hakim-avatar"
-            />
+            <img src={HAKIM_CHARACTER} alt="حكيم" className="w-12 h-12 rounded-full object-cover border-2 border-brand-turquoise shadow-lg" data-testid="hakim-avatar" />
             <Card className="bg-brand-purple/20 backdrop-blur-sm border-brand-purple/30 rounded-2xl px-4 py-3 max-w-md">
               <p className="text-white text-sm font-tajawal text-start">
                 <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
@@ -266,13 +226,7 @@ export const LandingPage = () => {
             </Card>
           </div>
           
-          {/* CTA Button */}
-          <Button
-            asChild
-            size="lg"
-            className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-10 text-lg font-cairo shadow-lg"
-            data-testid="hero-cta-btn"
-          >
+          <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-10 text-lg font-cairo shadow-lg" data-testid="hero-cta-btn">
             <Link to="/login" className="flex items-center gap-2">
               الدخول إلى المنصة
               <ArrowLeft className="h-5 w-5" />
@@ -282,9 +236,13 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 2: رحلة المدرسة نحو النظام الذكي ========== */}
-      <section className="py-20 lg:py-28 bg-background" data-testid="journey-section">
+      <section 
+        className="py-20 lg:py-28 bg-background" 
+        data-testid="journey-section"
+        onMouseEnter={() => setJourneyPaused(true)}
+        onMouseLeave={() => setJourneyPaused(false)}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
               رحلة المدرسة نحو النظام الذكي
@@ -294,16 +252,16 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          {/* Auto-rotating Content */}
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            {/* Content Card */}
-            <Card className="card-nassaq p-8 transition-all duration-500">
+          <div className="grid lg:grid-cols-2 gap-10 items-start">
+            {/* Content Card - Fixed Height */}
+            <Card 
+              className="card-nassaq p-8 transition-all duration-500 min-h-[380px] flex flex-col"
+              onMouseEnter={() => setJourneyPaused(true)}
+              onMouseLeave={() => setJourneyPaused(false)}
+            >
               <div className="flex flex-wrap gap-3 mb-6">
                 {journeySteps[activeJourneyStep].icons.map((Icon, i) => (
-                  <div
-                    key={i}
-                    className="w-10 h-10 rounded-xl bg-brand-turquoise/10 flex items-center justify-center"
-                  >
+                  <div key={i} className="w-10 h-10 rounded-xl bg-brand-turquoise/10 flex items-center justify-center">
                     <Icon className="h-5 w-5 text-brand-turquoise" />
                   </div>
                 ))}
@@ -315,12 +273,12 @@ export const LandingPage = () => {
               <p className="text-brand-turquoise font-cairo font-semibold mb-4 text-sm">
                 {journeySteps[activeJourneyStep].subtitle}
               </p>
-              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm">
+              <p className="text-muted-foreground font-tajawal leading-relaxed text-sm flex-1">
                 {journeySteps[activeJourneyStep].content}
               </p>
               
               {/* Progress Dots */}
-              <div className="flex justify-center gap-2 mt-6">
+              <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-border/30">
                 {journeySteps.map((_, i) => (
                   <div
                     key={i}
@@ -332,13 +290,13 @@ export const LandingPage = () => {
               </div>
             </Card>
             
-            {/* Hakim Side */}
-            <div className="flex items-start gap-4">
-              <img
-                src={HAKIM_CHARACTER}
-                alt="حكيم"
-                className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0"
-              />
+            {/* Hakim Side - Fixed Height */}
+            <div 
+              className="flex items-start gap-4 min-h-[380px]"
+              onMouseEnter={() => setJourneyPaused(true)}
+              onMouseLeave={() => setJourneyPaused(false)}
+            >
+              <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-purple shadow-lg flex-shrink-0" />
               <Card className="bg-brand-purple/10 border-brand-purple/20 rounded-2xl p-5 flex-1">
                 <p className="text-foreground text-sm leading-relaxed font-tajawal">
                   <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
@@ -351,17 +309,15 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 3: الذكاء الاصطناعي داخل نَسَّق ========== */}
-      <section className="py-20 lg:py-28 bg-brand-navy relative overflow-hidden" data-testid="ai-section">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `url(${BG_PATTERN})`,
-            backgroundSize: 'cover',
-          }}
-        />
+      <section 
+        className="py-20 lg:py-28 bg-brand-navy relative overflow-hidden" 
+        data-testid="ai-section"
+        onMouseEnter={() => setAIPaused(true)}
+        onMouseLeave={() => setAIPaused(false)}
+      >
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${BG_PATTERN})`, backgroundSize: 'cover' }} />
         
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-purple/20 border border-brand-purple/30 rounded-full px-4 py-2 mb-6">
               <Brain className="h-4 w-4 text-brand-turquoise" />
@@ -372,27 +328,26 @@ export const LandingPage = () => {
             </h2>
           </div>
 
-          {/* Auto-rotating Content */}
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            {/* Content Card */}
-            <Card className="bg-white/5 border-white/10 rounded-2xl p-8 transition-all duration-500">
+          <div className="grid lg:grid-cols-2 gap-10 items-start">
+            {/* Content Card - Fixed Height */}
+            <Card 
+              className="bg-white/5 border-white/10 rounded-2xl p-8 transition-all duration-500 min-h-[400px] flex flex-col"
+              onMouseEnter={() => setAIPaused(true)}
+              onMouseLeave={() => setAIPaused(false)}
+            >
               <h3 className="font-cairo text-xl font-bold text-white mb-2">
                 {aiCapabilities[activeAIStep].title}
               </h3>
               <p className="text-brand-turquoise font-cairo text-sm mb-4">
                 {aiCapabilities[activeAIStep].subtitle}
               </p>
-              <p className="text-white/70 font-tajawal leading-relaxed text-sm mb-6">
+              <p className="text-white/70 font-tajawal leading-relaxed text-sm mb-6 flex-1">
                 {aiCapabilities[activeAIStep].content}
               </p>
               
               {/* Hakim Quote */}
               <div className="flex items-start gap-3 bg-brand-purple/20 rounded-xl p-4">
-                <img
-                  src={HAKIM_CHARACTER}
-                  alt="حكيم"
-                  className="w-10 h-10 rounded-full object-cover border border-brand-turquoise flex-shrink-0"
-                />
+                <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-turquoise flex-shrink-0" />
                 <p className="text-white text-sm font-tajawal">
                   <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
                   {aiCapabilities[activeAIStep].hakimSays}
@@ -400,7 +355,7 @@ export const LandingPage = () => {
               </div>
               
               {/* Progress Dots */}
-              <div className="flex justify-center gap-2 mt-6">
+              <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-white/10">
                 {aiCapabilities.map((_, i) => (
                   <div
                     key={i}
@@ -412,8 +367,12 @@ export const LandingPage = () => {
               </div>
             </Card>
             
-            {/* Visual Side */}
-            <div className="flex justify-center">
+            {/* Visual Side - Fixed Height */}
+            <div 
+              className="flex justify-center items-center min-h-[400px]"
+              onMouseEnter={() => setAIPaused(true)}
+              onMouseLeave={() => setAIPaused(false)}
+            >
               <div className="relative">
                 <div className="w-48 h-48 rounded-full bg-brand-purple/30 blur-3xl absolute inset-0 animate-pulse" />
                 <div className="relative w-48 h-48 rounded-2xl bg-gradient-to-br from-brand-purple/20 to-brand-turquoise/20 border border-white/10 flex items-center justify-center">
@@ -426,9 +385,13 @@ export const LandingPage = () => {
       </section>
 
       {/* ========== SECTION 4: عندما يعمل الجميع داخل نظام واحد ========== */}
-      <section className="py-20 lg:py-28 bg-background" data-testid="ecosystem-section">
+      <section 
+        className="py-20 lg:py-28 bg-background" 
+        data-testid="ecosystem-section"
+        onMouseEnter={() => setEcosystemPaused(true)}
+        onMouseLeave={() => setEcosystemPaused(false)}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="font-cairo text-3xl md:text-4xl font-bold text-foreground mb-4">
               عندما يعمل الجميع داخل نظام واحد
@@ -438,12 +401,16 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          {/* Role Cards - Auto-rotating */}
-          <div className="grid md:grid-cols-4 gap-4 mb-10">
+          {/* Role Cards - Fixed Height */}
+          <div 
+            className="grid md:grid-cols-4 gap-4 mb-10"
+            onMouseEnter={() => setEcosystemPaused(true)}
+            onMouseLeave={() => setEcosystemPaused(false)}
+          >
             {ecosystemRoles.map((role, i) => (
               <Card
                 key={i}
-                className={`card-nassaq p-5 transition-all duration-300 ${
+                className={`card-nassaq p-5 transition-all duration-300 min-h-[140px] flex flex-col justify-center ${
                   activeEcosystemRole === i ? 'ring-2 ring-brand-turquoise scale-[1.02]' : 'opacity-60'
                 }`}
               >
@@ -451,29 +418,29 @@ export const LandingPage = () => {
                   <role.icon className="h-6 w-6 text-brand-navy" />
                 </div>
                 <h3 className="font-cairo text-base font-bold text-foreground">{role.role}</h3>
-                <p className="text-xs text-muted-foreground font-tajawal mt-1">{role.title}</p>
+                <p className="text-xs text-muted-foreground font-tajawal mt-1 line-clamp-2">{role.title}</p>
               </Card>
             ))}
           </div>
 
-          {/* Active Role Details */}
-          <Card className="card-nassaq p-8">
+          {/* Active Role Details - Fixed Height */}
+          <Card 
+            className="card-nassaq p-8 min-h-[300px]"
+            onMouseEnter={() => setEcosystemPaused(true)}
+            onMouseLeave={() => setEcosystemPaused(false)}
+          >
             <div className="grid lg:grid-cols-2 gap-8 items-start">
-              <div>
+              <div className="flex flex-col min-h-[200px]">
                 <h3 className="font-cairo text-xl font-bold text-foreground mb-4">
                   {ecosystemRoles[activeEcosystemRole].title}
                 </h3>
-                <p className="text-muted-foreground font-tajawal leading-relaxed text-sm mb-6">
+                <p className="text-muted-foreground font-tajawal leading-relaxed text-sm mb-6 flex-1">
                   {ecosystemRoles[activeEcosystemRole].content}
                 </p>
                 
                 {/* Hakim Quote */}
                 <div className="flex items-start gap-3 bg-brand-purple/10 rounded-xl p-4">
-                  <img
-                    src={HAKIM_CHARACTER}
-                    alt="حكيم"
-                    className="w-10 h-10 rounded-full object-cover border border-brand-purple flex-shrink-0"
-                  />
+                  <img src={HAKIM_CHARACTER} alt="حكيم" className="w-10 h-10 rounded-full object-cover border border-brand-purple flex-shrink-0" />
                   <p className="text-foreground text-sm font-tajawal">
                     <span className="text-brand-purple font-bold font-cairo">حكيم: </span>
                     {ecosystemRoles[activeEcosystemRole].hakimSays}
@@ -482,7 +449,7 @@ export const LandingPage = () => {
               </div>
               
               {/* Visual Icons */}
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-4 items-center min-h-[200px]">
                 {ecosystemRoles.map((role, i) => (
                   <div
                     key={i}
@@ -501,7 +468,7 @@ export const LandingPage = () => {
             </div>
             
             {/* Progress Dots */}
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-2 mt-8 pt-4 border-t border-border/30">
               {ecosystemRoles.map((_, i) => (
                 <div
                   key={i}
@@ -518,11 +485,7 @@ export const LandingPage = () => {
       {/* ========== CALL TO ACTION SECTION ========== */}
       <section
         className="py-20 lg:py-28 relative overflow-hidden"
-        style={{
-          backgroundImage: `url(${BG_PATTERN})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        style={{ backgroundImage: `url(${BG_PATTERN})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         data-testid="cta-section"
       >
         <div className="absolute inset-0 bg-brand-navy/95" />
@@ -552,11 +515,7 @@ export const LandingPage = () => {
 
           {/* Hakim Message - Inline with Avatar */}
           <div className="flex items-center justify-center gap-4 mb-10">
-            <img
-              src={HAKIM_CHARACTER}
-              alt="حكيم"
-              className="w-14 h-14 rounded-full object-cover border-2 border-brand-turquoise shadow-lg flex-shrink-0"
-            />
+            <img src={HAKIM_CHARACTER} alt="حكيم" className="w-14 h-14 rounded-full object-cover border-2 border-brand-turquoise shadow-lg flex-shrink-0" />
             <div className="text-start">
               <p className="text-white font-tajawal">
                 <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
@@ -565,12 +524,7 @@ export const LandingPage = () => {
             </div>
           </div>
 
-          <Button
-            asChild
-            size="lg"
-            className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-12 text-xl font-cairo shadow-xl"
-            data-testid="cta-register-btn"
-          >
+          <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-12 text-xl font-cairo shadow-xl" data-testid="cta-register-btn">
             <Link to="/register" className="flex items-center gap-3">
               سجل الآن
               <ArrowLeft className="h-6 w-6" />
