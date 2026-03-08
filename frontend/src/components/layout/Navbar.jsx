@@ -37,9 +37,7 @@ export const Navbar = ({ variant = 'default' }) => {
   const isLanding = location.pathname === '/';
 
   const navLinks = [
-    { href: '/#features', label: t('features') },
-    { href: '/#pricing', label: t('pricing') },
-    { href: '/#contact', label: t('contact') },
+    // روابط التنقل الرئيسية فقط - تم إزالة المميزات والأسعار
   ];
 
   const handleLogout = () => {
