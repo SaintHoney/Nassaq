@@ -616,6 +616,592 @@ async def update_registration_request_status(
         raise HTTPException(status_code=404, detail="طلب التسجيل غير موجود")
     return {"message": "تم تحديث حالة الطلب"}
 
+# ============== TEACHERS, STUDENTS, CLASSES MODELS ==============
+class TeacherCreate(BaseModel):
+    full_name: str
+    full_name_en: Optional[str] = None
+    email: EmailStr
+    phone: Optional[str] = None
+    school_id: str
+    specialization: str
+    years_of_experience: Optional[int] = 0
+    qualification: Optional[str] = None
+    gender: Optional[str] = None  # male/female
+
+class TeacherResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    full_name: str
+    full_name_en: Optional[str] = None
+    email: str
+    phone: Optional[str] = None
+    school_id: str
+    specialization: str
+    years_of_experience: int
+    qualification: Optional[str] = None
+    gender: Optional[str] = None
+    is_active: bool
+    created_at: str
+
+class StudentCreate(BaseModel):
+    full_name: str
+    full_name_en: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    school_id: str
+    class_id: Optional[str] = None
+    student_number: str
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = None
+    parent_phone: Optional[str] = None
+    parent_name: Optional[str] = None
+
+class StudentResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: Optional[str] = None
+    full_name: str
+    full_name_en: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    school_id: str
+    class_id: Optional[str] = None
+    class_name: Optional[str] = None
+    student_number: str
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = None
+    parent_phone: Optional[str] = None
+    parent_name: Optional[str] = None
+    is_active: bool
+    created_at: str
+
+class ClassCreate(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    school_id: str
+    grade_level: str  # e.g., "الأول الابتدائي", "الثاني المتوسط"
+    section: Optional[str] = None  # e.g., "أ", "ب", "ج"
+    capacity: int = 30
+    homeroom_teacher_id: Optional[str] = None
+
+class ClassResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    school_id: str
+    grade_level: str
+    section: Optional[str] = None
+    capacity: int
+    current_students: int
+    homeroom_teacher_id: Optional[str] = None
+    homeroom_teacher_name: Optional[str] = None
+    is_active: bool
+    created_at: str
+
+class SubjectCreate(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    school_id: str
+    code: str
+    description: Optional[str] = None
+    weekly_hours: int = 4
+    grade_levels: List[str] = []
+
+class SubjectResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    school_id: str
+    code: str
+    description: Optional[str] = None
+    weekly_hours: int
+    grade_levels: List[str]
+    is_active: bool
+    created_at: str
+
+# ============== TEACHERS ROUTES ==============
+@api_router.post("/teachers", response_model=TeacherResponse)
+async def create_teacher(
+    teacher_data: TeacherCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Create a new teacher"""
+    # Check if email already exists
+    existing = await db.users.find_one({"email": teacher_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="البريد الإلكتروني مسجل مسبقاً")
+    
+    # Create user account for teacher
+    user_id = str(uuid.uuid4())
+    teacher_id = str(uuid.uuid4())
+    
+    user_doc = {
+        "id": user_id,
+        "email": teacher_data.email,
+        "password_hash": hash_password("Teacher@123"),  # Default password
+        "full_name": teacher_data.full_name,
+        "full_name_en": teacher_data.full_name_en,
+        "role": UserRole.TEACHER.value,
+        "tenant_id": teacher_data.school_id,
+        "phone": teacher_data.phone,
+        "avatar_url": None,
+        "is_active": True,
+        "preferred_language": "ar",
+        "preferred_theme": "light",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    teacher_doc = {
+        "id": teacher_id,
+        "user_id": user_id,
+        "full_name": teacher_data.full_name,
+        "full_name_en": teacher_data.full_name_en,
+        "email": teacher_data.email,
+        "phone": teacher_data.phone,
+        "school_id": teacher_data.school_id,
+        "specialization": teacher_data.specialization,
+        "years_of_experience": teacher_data.years_of_experience or 0,
+        "qualification": teacher_data.qualification,
+        "gender": teacher_data.gender,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    await db.teachers.insert_one(teacher_doc)
+    
+    # Update school teacher count
+    await db.schools.update_one(
+        {"id": teacher_data.school_id},
+        {"$inc": {"current_teachers": 1}}
+    )
+    
+    return TeacherResponse(**teacher_doc)
+
+@api_router.get("/teachers", response_model=List[TeacherResponse])
+async def get_teachers(
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all teachers or filter by school"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    teachers = await db.teachers.find(query, {"_id": 0}).to_list(1000)
+    return [TeacherResponse(**t) for t in teachers]
+
+@api_router.get("/teachers/{teacher_id}", response_model=TeacherResponse)
+async def get_teacher(teacher_id: str, current_user: dict = Depends(get_current_user)):
+    """Get teacher by ID"""
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    return TeacherResponse(**teacher)
+
+@api_router.put("/teachers/{teacher_id}")
+async def update_teacher(
+    teacher_id: str,
+    teacher_data: TeacherCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Update teacher"""
+    result = await db.teachers.update_one(
+        {"id": teacher_id},
+        {"$set": {
+            "full_name": teacher_data.full_name,
+            "full_name_en": teacher_data.full_name_en,
+            "phone": teacher_data.phone,
+            "specialization": teacher_data.specialization,
+            "years_of_experience": teacher_data.years_of_experience,
+            "qualification": teacher_data.qualification,
+            "gender": teacher_data.gender,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    return {"message": "تم تحديث بيانات المعلم"}
+
+@api_router.delete("/teachers/{teacher_id}")
+async def delete_teacher(
+    teacher_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete teacher (soft delete)"""
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    
+    await db.teachers.update_one({"id": teacher_id}, {"$set": {"is_active": False}})
+    await db.users.update_one({"id": teacher.get("user_id")}, {"$set": {"is_active": False}})
+    
+    # Update school teacher count
+    await db.schools.update_one(
+        {"id": teacher.get("school_id")},
+        {"$inc": {"current_teachers": -1}}
+    )
+    
+    return {"message": "تم حذف المعلم"}
+
+# ============== STUDENTS ROUTES ==============
+@api_router.post("/students", response_model=StudentResponse)
+async def create_student(
+    student_data: StudentCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Create a new student"""
+    student_id = str(uuid.uuid4())
+    
+    student_doc = {
+        "id": student_id,
+        "user_id": None,  # Students may not have user accounts initially
+        "full_name": student_data.full_name,
+        "full_name_en": student_data.full_name_en,
+        "email": student_data.email,
+        "phone": student_data.phone,
+        "school_id": student_data.school_id,
+        "class_id": student_data.class_id,
+        "student_number": student_data.student_number,
+        "date_of_birth": student_data.date_of_birth,
+        "gender": student_data.gender,
+        "parent_phone": student_data.parent_phone,
+        "parent_name": student_data.parent_name,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.students.insert_one(student_doc)
+    
+    # Update school student count
+    await db.schools.update_one(
+        {"id": student_data.school_id},
+        {"$inc": {"current_students": 1}}
+    )
+    
+    # Update class student count if assigned
+    if student_data.class_id:
+        await db.classes.update_one(
+            {"id": student_data.class_id},
+            {"$inc": {"current_students": 1}}
+        )
+    
+    # Get class name for response
+    class_name = None
+    if student_data.class_id:
+        class_doc = await db.classes.find_one({"id": student_data.class_id}, {"_id": 0})
+        if class_doc:
+            class_name = class_doc.get("name")
+    
+    return StudentResponse(**student_doc, class_name=class_name)
+
+@api_router.get("/students", response_model=List[StudentResponse])
+async def get_students(
+    school_id: Optional[str] = None,
+    class_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all students or filter by school/class"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    if class_id:
+        query["class_id"] = class_id
+    
+    students = await db.students.find(query, {"_id": 0}).to_list(1000)
+    
+    # Get class names
+    class_ids = list(set([s.get("class_id") for s in students if s.get("class_id")]))
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
+    class_map = {c.get("id"): c.get("name") for c in classes}
+    
+    result = []
+    for s in students:
+        s["class_name"] = class_map.get(s.get("class_id"))
+        result.append(StudentResponse(**s))
+    
+    return result
+
+@api_router.get("/students/{student_id}", response_model=StudentResponse)
+async def get_student(student_id: str, current_user: dict = Depends(get_current_user)):
+    """Get student by ID"""
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    
+    class_name = None
+    if student.get("class_id"):
+        class_doc = await db.classes.find_one({"id": student.get("class_id")}, {"_id": 0})
+        if class_doc:
+            class_name = class_doc.get("name")
+    
+    return StudentResponse(**student, class_name=class_name)
+
+@api_router.put("/students/{student_id}")
+async def update_student(
+    student_id: str,
+    student_data: StudentCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Update student"""
+    result = await db.students.update_one(
+        {"id": student_id},
+        {"$set": {
+            "full_name": student_data.full_name,
+            "full_name_en": student_data.full_name_en,
+            "email": student_data.email,
+            "phone": student_data.phone,
+            "class_id": student_data.class_id,
+            "date_of_birth": student_data.date_of_birth,
+            "gender": student_data.gender,
+            "parent_phone": student_data.parent_phone,
+            "parent_name": student_data.parent_name,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    return {"message": "تم تحديث بيانات الطالب"}
+
+@api_router.delete("/students/{student_id}")
+async def delete_student(
+    student_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete student (soft delete)"""
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    
+    await db.students.update_one({"id": student_id}, {"$set": {"is_active": False}})
+    
+    # Update school student count
+    await db.schools.update_one(
+        {"id": student.get("school_id")},
+        {"$inc": {"current_students": -1}}
+    )
+    
+    # Update class student count if assigned
+    if student.get("class_id"):
+        await db.classes.update_one(
+            {"id": student.get("class_id")},
+            {"$inc": {"current_students": -1}}
+        )
+    
+    return {"message": "تم حذف الطالب"}
+
+# ============== CLASSES ROUTES ==============
+@api_router.post("/classes", response_model=ClassResponse)
+async def create_class(
+    class_data: ClassCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Create a new class"""
+    class_id = str(uuid.uuid4())
+    
+    class_doc = {
+        "id": class_id,
+        "name": class_data.name,
+        "name_en": class_data.name_en,
+        "school_id": class_data.school_id,
+        "grade_level": class_data.grade_level,
+        "section": class_data.section,
+        "capacity": class_data.capacity,
+        "current_students": 0,
+        "homeroom_teacher_id": class_data.homeroom_teacher_id,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.classes.insert_one(class_doc)
+    
+    # Get homeroom teacher name
+    teacher_name = None
+    if class_data.homeroom_teacher_id:
+        teacher = await db.teachers.find_one({"id": class_data.homeroom_teacher_id}, {"_id": 0})
+        if teacher:
+            teacher_name = teacher.get("full_name")
+    
+    return ClassResponse(**class_doc, homeroom_teacher_name=teacher_name)
+
+@api_router.get("/classes", response_model=List[ClassResponse])
+async def get_classes(
+    school_id: Optional[str] = None,
+    grade_level: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all classes or filter by school/grade"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    if grade_level:
+        query["grade_level"] = grade_level
+    
+    classes = await db.classes.find(query, {"_id": 0}).to_list(1000)
+    
+    # Get teacher names
+    teacher_ids = list(set([c.get("homeroom_teacher_id") for c in classes if c.get("homeroom_teacher_id")]))
+    teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
+    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
+    
+    result = []
+    for c in classes:
+        c["homeroom_teacher_name"] = teacher_map.get(c.get("homeroom_teacher_id"))
+        result.append(ClassResponse(**c))
+    
+    return result
+
+@api_router.get("/classes/{class_id}", response_model=ClassResponse)
+async def get_class(class_id: str, current_user: dict = Depends(get_current_user)):
+    """Get class by ID"""
+    class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    if not class_doc:
+        raise HTTPException(status_code=404, detail="الفصل غير موجود")
+    
+    teacher_name = None
+    if class_doc.get("homeroom_teacher_id"):
+        teacher = await db.teachers.find_one({"id": class_doc.get("homeroom_teacher_id")}, {"_id": 0})
+        if teacher:
+            teacher_name = teacher.get("full_name")
+    
+    return ClassResponse(**class_doc, homeroom_teacher_name=teacher_name)
+
+@api_router.put("/classes/{class_id}")
+async def update_class(
+    class_id: str,
+    class_data: ClassCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Update class"""
+    result = await db.classes.update_one(
+        {"id": class_id},
+        {"$set": {
+            "name": class_data.name,
+            "name_en": class_data.name_en,
+            "grade_level": class_data.grade_level,
+            "section": class_data.section,
+            "capacity": class_data.capacity,
+            "homeroom_teacher_id": class_data.homeroom_teacher_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الفصل غير موجود")
+    return {"message": "تم تحديث بيانات الفصل"}
+
+@api_router.delete("/classes/{class_id}")
+async def delete_class(
+    class_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete class (soft delete)"""
+    class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    if not class_doc:
+        raise HTTPException(status_code=404, detail="الفصل غير موجود")
+    
+    await db.classes.update_one({"id": class_id}, {"$set": {"is_active": False}})
+    return {"message": "تم حذف الفصل"}
+
+# ============== SUBJECTS ROUTES ==============
+@api_router.post("/subjects", response_model=SubjectResponse)
+async def create_subject(
+    subject_data: SubjectCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Create a new subject"""
+    subject_id = str(uuid.uuid4())
+    
+    subject_doc = {
+        "id": subject_id,
+        "name": subject_data.name,
+        "name_en": subject_data.name_en,
+        "school_id": subject_data.school_id,
+        "code": subject_data.code,
+        "description": subject_data.description,
+        "weekly_hours": subject_data.weekly_hours,
+        "grade_levels": subject_data.grade_levels,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.subjects.insert_one(subject_doc)
+    return SubjectResponse(**subject_doc)
+
+@api_router.get("/subjects", response_model=List[SubjectResponse])
+async def get_subjects(
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all subjects or filter by school"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    subjects = await db.subjects.find(query, {"_id": 0}).to_list(1000)
+    return [SubjectResponse(**s) for s in subjects]
+
+@api_router.get("/subjects/{subject_id}", response_model=SubjectResponse)
+async def get_subject(subject_id: str, current_user: dict = Depends(get_current_user)):
+    """Get subject by ID"""
+    subject = await db.subjects.find_one({"id": subject_id}, {"_id": 0})
+    if not subject:
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+    return SubjectResponse(**subject)
+
+@api_router.put("/subjects/{subject_id}")
+async def update_subject(
+    subject_id: str,
+    subject_data: SubjectCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """Update subject"""
+    result = await db.subjects.update_one(
+        {"id": subject_id},
+        {"$set": {
+            "name": subject_data.name,
+            "name_en": subject_data.name_en,
+            "code": subject_data.code,
+            "description": subject_data.description,
+            "weekly_hours": subject_data.weekly_hours,
+            "grade_levels": subject_data.grade_levels,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+    return {"message": "تم تحديث بيانات المادة"}
+
+@api_router.delete("/subjects/{subject_id}")
+async def delete_subject(
+    subject_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete subject (soft delete)"""
+    subject = await db.subjects.find_one({"id": subject_id}, {"_id": 0})
+    if not subject:
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+    
+    await db.subjects.update_one({"id": subject_id}, {"$set": {"is_active": False}})
+    return {"message": "تم حذف المادة"}
+
 # ============== SEED DATA ==============
 @api_router.post("/seed/admin")
 async def seed_admin():
