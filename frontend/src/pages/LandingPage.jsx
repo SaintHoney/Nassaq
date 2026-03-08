@@ -297,27 +297,33 @@ export const LandingPage = () => {
           </div>
           
           <p className="text-2xl md:text-3xl lg:text-4xl text-brand-turquoise font-cairo font-semibold mb-6">
-            من البيانات إلى القرار
+            {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
           
           {/* Updated Description - Shorter */}
           <p className="text-lg text-white/70 font-tajawal mb-10 max-w-2xl mx-auto leading-relaxed">
-            منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي
+            {isRTL 
+              ? 'منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي'
+              : 'A comprehensive school management platform with modern educational standards, powered by AI'
+            }
           </p>
           
           <div className="flex items-center justify-center gap-4 mb-10">
-            <img src={HAKIM_CHARACTER} alt="حكيم" className="w-12 h-12 rounded-full object-cover border-2 border-brand-turquoise shadow-lg" data-testid="hakim-avatar" />
+            <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-12 h-12 rounded-full object-cover border-2 border-brand-turquoise shadow-lg" data-testid="hakim-avatar" />
             <Card className="bg-brand-purple/20 backdrop-blur-sm border-brand-purple/30 rounded-2xl px-4 py-3 max-w-md">
               <p className="text-white text-sm font-tajawal text-start">
-                <span className="text-brand-turquoise font-bold font-cairo">حكيم: </span>
-                مرحبًا! أنا هنا لأساعدك في اكتشاف كيف يمكن للذكاء الاصطناعي تحسين مدرستك.
+                <span className="text-brand-turquoise font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
+                {isRTL 
+                  ? 'مرحبًا! أنا هنا لأساعدك في اكتشاف كيف يمكن للذكاء الاصطناعي تحسين مدرستك.'
+                  : "Hello! I'm here to help you discover how AI can improve your school."
+                }
               </p>
             </Card>
           </div>
           
           <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-10 text-lg font-cairo shadow-lg" data-testid="hero-cta-btn">
             <Link to="/login" className="flex items-center gap-2">
-              الدخول إلى المنصة
+              {isRTL ? 'الدخول إلى المنصة' : 'Enter the Platform'}
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
