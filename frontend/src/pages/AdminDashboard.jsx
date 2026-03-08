@@ -442,14 +442,13 @@ export const AdminDashboard = () => {
                       <Calendar className="h-5 w-5 text-brand-navy" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">{isRTL ? 'الحصص المنعقدة' : 'Classes Held'}</p>
+                      <p className="text-sm text-muted-foreground">{dailyActivity.classes_count.label}</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold">{dailyActivity.classes_held.value}</p>
-                        <span className="text-xs text-green-600">{dailyActivity.classes_held.change}</span>
+                        <p className="text-2xl font-bold">{dailyActivity.classes_count.value}</p>
                       </div>
                     </div>
                   </div>
-                  <Progress value={75} className="h-2" />
+                  <Progress value={dailyActivity.classes_count.value > 0 ? 100 : 0} className="h-2" />
                 </CardContent>
               </Card>
               
@@ -460,14 +459,13 @@ export const AdminDashboard = () => {
                       <ClipboardList className="h-5 w-5 text-brand-turquoise" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">{isRTL ? 'سجلات الحضور' : 'Attendance Records'}</p>
+                      <p className="text-sm text-muted-foreground">{dailyActivity.subjects_count.label}</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold">{dailyActivity.attendance_records.value.toLocaleString()}</p>
-                        <span className="text-xs text-green-600">{dailyActivity.attendance_records.change}</span>
+                        <p className="text-2xl font-bold">{dailyActivity.subjects_count.value}</p>
                       </div>
                     </div>
                   </div>
-                  <Progress value={88} className="h-2" />
+                  <Progress value={dailyActivity.subjects_count.value > 0 ? 100 : 0} className="h-2" />
                 </CardContent>
               </Card>
               
@@ -478,14 +476,13 @@ export const AdminDashboard = () => {
                       <FileText className="h-5 w-5 text-brand-purple" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">{isRTL ? 'الدرجات المسجلة' : 'Grades Entered'}</p>
+                      <p className="text-sm text-muted-foreground">{dailyActivity.teachers_count.label}</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold">{dailyActivity.grades_entered.value.toLocaleString()}</p>
-                        <span className="text-xs text-green-600">{dailyActivity.grades_entered.change}</span>
+                        <p className="text-2xl font-bold">{dailyActivity.teachers_count.value}</p>
                       </div>
                     </div>
                   </div>
-                  <Progress value={62} className="h-2" />
+                  <Progress value={dailyActivity.teachers_count.value > 0 ? 100 : 0} className="h-2" />
                 </CardContent>
               </Card>
               
@@ -496,14 +493,13 @@ export const AdminDashboard = () => {
                       <Activity className="h-5 w-5 text-green-500" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">{isRTL ? 'المستخدمون النشطون' : 'Active Users'}</p>
+                      <p className="text-sm text-muted-foreground">{dailyActivity.students_count.label}</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold">{dailyActivity.active_users.value}</p>
-                        <span className="text-xs text-green-600">{dailyActivity.active_users.change}</span>
+                        <p className="text-2xl font-bold">{dailyActivity.students_count.value}</p>
                       </div>
                     </div>
                   </div>
-                  <Progress value={92} className="h-2" />
+                  <Progress value={dailyActivity.students_count.value > 0 ? 100 : 0} className="h-2" />
                 </CardContent>
               </Card>
             </div>
