@@ -108,6 +108,95 @@ const SUBJECT_COLORS = [
   'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-300 dark:border-indigo-700 text-indigo-800 dark:text-indigo-200',
 ];
 
+// ============== DRAGGABLE SESSION COMPONENT ==============
+const DraggableSession = ({ session, hasConflict, cellConflicts, subjectColor, isRTL, onClick }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: session.id,
+    data: { session },
+  });
+  
+  const style = transform ? {
+    transform: CSS.Translate.toString(transform),
+  } : undefined;
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
+            className={`p-2 rounded-xl border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-md ${
+              isDragging ? 'opacity-50 shadow-lg scale-105' : ''
+            } ${
+              hasConflict 
+                ? 'border-red-400 dark:border-red-600 bg-red-100 dark:bg-red-900/30' 
+                : subjectColor
+            }`}
+            onClick={(e) => {
+              if (!isDragging) {
+                e.stopPropagation();
+                onClick();
+              }
+            }}
+            data-testid={`session-${session.id}`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-1">
+                <GripVertical className="h-3 w-3 opacity-50 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{session.subject_name}</p>
+                  <p className="text-xs opacity-75 truncate">{session.teacher_name}</p>
+                  <p className="text-xs opacity-60 truncate mt-1">{session.class_name}</p>
+                </div>
+              </div>
+              {hasConflict && (
+                <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+              )}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="space-y-1">
+            <p className="font-medium">{session.subject_name}</p>
+            <p className="text-xs">{isRTL ? 'المعلم:' : 'Teacher:'} {session.teacher_name}</p>
+            <p className="text-xs">{isRTL ? 'الفصل:' : 'Class:'} {session.class_name}</p>
+            <p className="text-xs text-brand-turquoise">{isRTL ? '↔️ اسحب لنقل الحصة' : '↔️ Drag to move session'}</p>
+            {hasConflict && (
+              <p className="text-xs text-red-500 font-medium">
+                {cellConflicts[0]?.message_ar || cellConflicts[0]?.message}
+              </p>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+// ============== DROPPABLE CELL COMPONENT ==============
+const DroppableCell = ({ id, day, slot, hasConflict, isDragging, children }) => {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  
+  return (
+    <td
+      ref={setNodeRef}
+      className={`p-2 border-b min-h-[80px] align-top transition-colors ${
+        hasConflict ? 'bg-red-50 dark:bg-red-900/10' : ''
+      } ${
+        isOver ? 'bg-brand-turquoise/20 ring-2 ring-brand-turquoise ring-inset' : ''
+      } ${
+        isDragging && !isOver ? 'bg-muted/30' : ''
+      }`}
+      data-testid={`cell-${day.key}-${slot.slot_number}`}
+    >
+      {children}
+    </td>
+  );
+};
+
 export const SchedulePage = () => {
   const { user, api } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
