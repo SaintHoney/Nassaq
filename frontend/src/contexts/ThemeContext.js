@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const ThemeContext = createContext(null);
 
@@ -13,27 +13,52 @@ export const ThemeProvider = ({ children }) => {
     return stored || 'ar';
   });
 
+  // Apply theme and language to document
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
     
     // Theme
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     localStorage.setItem('nassaq_theme', theme);
     
-    // Language direction
-    root.dir = language === 'ar' ? 'rtl' : 'ltr';
+    // Language direction - apply to both html and body
+    const dir = language === 'ar' ? 'rtl' : 'ltr';
+    root.dir = dir;
     root.lang = language;
+    body.dir = dir;
+    
+    // Update document title based on language
+    document.title = 'NASSAQ | نَسَّق';
+    
+    // Store language preference
     localStorage.setItem('nassaq_language', language);
+    
+    // Force re-render of CSS custom properties for RTL/LTR
+    root.style.setProperty('--direction', dir);
+    root.style.setProperty('--text-align', language === 'ar' ? 'right' : 'left');
+    root.style.setProperty('--text-align-opposite', language === 'ar' ? 'left' : 'right');
   }, [theme, language]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  }, []);
 
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === 'ar' ? 'en' : 'ar'));
-  };
+  const toggleLanguage = useCallback(() => {
+    setLanguage((prev) => {
+      const newLang = prev === 'ar' ? 'en' : 'ar';
+      // Force immediate update
+      const root = window.document.documentElement;
+      const body = window.document.body;
+      const dir = newLang === 'ar' ? 'rtl' : 'ltr';
+      root.dir = dir;
+      root.lang = newLang;
+      body.dir = dir;
+      localStorage.setItem('nassaq_language', newLang);
+      return newLang;
+    });
+  }, []);
 
   const value = {
     theme,
