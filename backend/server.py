@@ -531,19 +531,108 @@ async def chat_with_hakim(message: HakimMessage):
             suggestions=["تعرف على النظام", "إدارة المدارس", "إدارة المستخدمين"]
         )
 
+# ============== REGISTRATION REQUESTS MODELS ==============
+class RegistrationRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+class RegistrationRequest(BaseModel):
+    full_name: str
+    phone: str
+    account_type: str  # 'school' or 'teacher'
+    status: RegistrationRequestStatus = RegistrationRequestStatus.PENDING
+    # School fields
+    school_name: Optional[str] = None
+    school_email: Optional[str] = None
+    school_phone: Optional[str] = None
+    school_city: Optional[str] = None
+    school_address: Optional[str] = None
+    student_capacity: Optional[str] = None
+    # Teacher fields
+    email: Optional[str] = None
+    school_code: Optional[str] = None
+    specialization: Optional[str] = None
+    years_of_experience: Optional[str] = None
+
+class RegistrationRequestResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    full_name: str
+    phone: str
+    account_type: str
+    status: str
+    created_at: str
+
+# ============== REGISTRATION REQUESTS ROUTES ==============
+@api_router.post("/registration-requests", response_model=RegistrationRequestResponse)
+async def create_registration_request(request_data: RegistrationRequest):
+    """Create a new registration request for admin review"""
+    request_id = str(uuid.uuid4())
+    request_doc = {
+        "id": request_id,
+        **request_data.model_dump(),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.registration_requests.insert_one(request_doc)
+    
+    return RegistrationRequestResponse(
+        id=request_id,
+        full_name=request_data.full_name,
+        phone=request_data.phone,
+        account_type=request_data.account_type,
+        status="pending",
+        created_at=request_doc["created_at"]
+    )
+
+@api_router.get("/registration-requests", response_model=List[RegistrationRequestResponse])
+async def get_registration_requests(
+    status: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get all registration requests (admin only)"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    requests = await db.registration_requests.find(query, {"_id": 0}).to_list(1000)
+    return [RegistrationRequestResponse(**r) for r in requests]
+
+@api_router.put("/registration-requests/{request_id}/status")
+async def update_registration_request_status(
+    request_id: str,
+    status: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update registration request status (admin only)"""
+    result = await db.registration_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="طلب التسجيل غير موجود")
+    return {"message": "تم تحديث حالة الطلب"}
+
 # ============== SEED DATA ==============
 @api_router.post("/seed/admin")
 async def seed_admin():
     """Create initial platform admin if not exists"""
-    existing = await db.users.find_one({"email": "admin@nassaq.sa"})
+    # Check for old admin and delete
+    await db.users.delete_one({"email": "admin@nassaq.sa"})
+    
+    # Check if new admin exists
+    existing = await db.users.find_one({"email": "info@nassaqapp.com"})
     if existing:
-        return {"message": "Admin already exists", "email": "admin@nassaq.sa"}
+        return {"message": "Admin already exists", "email": "info@nassaqapp.com"}
     
     admin_id = str(uuid.uuid4())
     admin_doc = {
         "id": admin_id,
-        "email": "admin@nassaq.sa",
-        "password_hash": hash_password("Admin@123"),
+        "email": "info@nassaqapp.com",
+        "password_hash": hash_password("NassaqAdmin2026!##$$HBJ"),
         "full_name": "مدير المنصة",
         "full_name_en": "Platform Admin",
         "role": UserRole.PLATFORM_ADMIN.value,
@@ -558,7 +647,7 @@ async def seed_admin():
     }
     
     await db.users.insert_one(admin_doc)
-    return {"message": "Admin created", "email": "admin@nassaq.sa", "password": "Admin@123"}
+    return {"message": "Admin created", "email": "info@nassaqapp.com"}
 
 # ============== LEGACY ROUTES ==============
 @api_router.get("/")
