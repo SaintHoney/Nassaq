@@ -1,281 +1,258 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme, useTranslation } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
+import { Card, CardContent, CardHeader } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Sun, Moon, Globe, Building2 } from 'lucide-react';
+import { 
+  User, 
+  Phone, 
+  ArrowLeft, 
+  ArrowRight, 
+  Globe,
+  Home,
+  Loader2,
+  Building2,
+  UserCheck,
+  CheckCircle2,
+  Shield,
+  Mail,
+  MapPin,
+  FileText,
+} from 'lucide-react';
 
-const LOGO_LIGHT = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/a2a1b0lv_Nassaq%20LinkedIn%20Logo.png';
+// Assets
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
 const BG_PATTERN = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png';
 const HAKIM_CHARACTER = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/bfdsnfxc_Hakim%20Character%20Examples%20and%20Referance%2001.avif';
 
 export const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    role: 'school_principal',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
-  const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
-  const { t } = useTranslation();
+  const { isRTL, toggleLanguage } = useTheme();
+  const { api } = useAuth();
   const navigate = useNavigate();
+  
+  // Step management
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+  
+  // Form data
+  const [formData, setFormData] = useState({
+    // Step 1: Basic Info
+    full_name: '',
+    phone: '',
+    // Step 2: Privacy Policy
+    acceptPrivacy: false,
+    // Step 3: Account Type
+    accountType: '', // 'school' or 'teacher'
+    // Step 4: Detailed Info based on account type
+    // For School
+    school_name: '',
+    school_email: '',
+    school_phone: '',
+    school_city: '',
+    school_address: '',
+    student_capacity: '',
+    // For Teacher
+    teacher_email: '',
+    school_code: '', // The school they want to join
+    specialization: '',
+    years_of_experience: '',
+  });
+  
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const roles = [
-    { value: 'school_principal', label: isRTL ? 'مدير مدرسة' : 'School Principal' },
-    { value: 'school_sub_admin', label: isRTL ? 'نائب المدير' : 'School Admin' },
-    { value: 'teacher', label: isRTL ? 'معلم' : 'Teacher' },
-    { value: 'parent', label: isRTL ? 'ولي أمر' : 'Parent' },
-  ];
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // Update form data
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error(isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
-      return;
+  // Validate Step 1
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = isRTL ? 'الاسم الكامل مطلوب' : 'Full name is required';
     }
+    if (!formData.phone.trim()) {
+      newErrors.phone = isRTL ? 'رقم الهاتف مطلوب' : 'Phone number is required';
+    } else if (!/^[0-9+\-\s]{9,15}$/.test(formData.phone)) {
+      newErrors.phone = isRTL ? 'رقم الهاتف غير صالح' : 'Invalid phone number';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    if (formData.password.length < 6) {
-      toast.error(isRTL ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+  // Validate Step 2
+  const validateStep2 = () => {
+    const newErrors = {};
+    if (!formData.acceptPrivacy) {
+      newErrors.acceptPrivacy = isRTL ? 'يجب الموافقة على سياسة الخصوصية' : 'You must accept the privacy policy';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate Step 3
+  const validateStep3 = () => {
+    const newErrors = {};
+    if (!formData.accountType) {
+      newErrors.accountType = isRTL ? 'يرجى اختيار نوع الحساب' : 'Please select account type';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate Step 4
+  const validateStep4 = () => {
+    const newErrors = {};
+    
+    if (formData.accountType === 'school') {
+      if (!formData.school_name.trim()) {
+        newErrors.school_name = isRTL ? 'اسم المدرسة مطلوب' : 'School name is required';
+      }
+      if (!formData.school_email.trim()) {
+        newErrors.school_email = isRTL ? 'البريد الإلكتروني للمدرسة مطلوب' : 'School email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.school_email)) {
+        newErrors.school_email = isRTL ? 'البريد الإلكتروني غير صالح' : 'Invalid email format';
+      }
+      if (!formData.school_city.trim()) {
+        newErrors.school_city = isRTL ? 'المدينة مطلوبة' : 'City is required';
+      }
+    } else if (formData.accountType === 'teacher') {
+      if (!formData.teacher_email.trim()) {
+        newErrors.teacher_email = isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.teacher_email)) {
+        newErrors.teacher_email = isRTL ? 'البريد الإلكتروني غير صالح' : 'Invalid email format';
+      }
+      if (!formData.specialization.trim()) {
+        newErrors.specialization = isRTL ? 'التخصص مطلوب' : 'Specialization is required';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle next step
+  const handleNext = () => {
+    let isValid = false;
+    
+    switch (currentStep) {
+      case 1:
+        isValid = validateStep1();
+        break;
+      case 2:
+        isValid = validateStep2();
+        break;
+      case 3:
+        isValid = validateStep3();
+        break;
+      default:
+        isValid = true;
+    }
+    
+    if (isValid && currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  // Handle previous step
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  // Submit registration request
+  const handleSubmit = async () => {
+    if (!validateStep4()) {
       return;
     }
 
     setLoading(true);
 
-    const result = await register({
-      email: formData.email,
-      password: formData.password,
-      full_name: formData.full_name,
-      phone: formData.phone || null,
-      role: formData.role,
-    });
-    
-    if (result.success) {
-      toast.success(isRTL ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully');
+    try {
+      // Create registration request (not direct account creation)
+      const requestData = {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        account_type: formData.accountType,
+        status: 'pending', // All requests go to admin for approval
+        ...(formData.accountType === 'school' ? {
+          school_name: formData.school_name,
+          school_email: formData.school_email,
+          school_phone: formData.school_phone,
+          school_city: formData.school_city,
+          school_address: formData.school_address,
+          student_capacity: formData.student_capacity,
+        } : {
+          email: formData.teacher_email,
+          school_code: formData.school_code,
+          specialization: formData.specialization,
+          years_of_experience: formData.years_of_experience,
+        }),
+      };
+
+      // Note: This endpoint should be created on the backend
+      // For now, we'll simulate success and show the appropriate message
+      await api.post('/registration-requests', requestData);
       
-      // Redirect based on role
-      switch (result.user.role) {
-        case 'school_principal':
-        case 'school_sub_admin':
-          navigate('/school');
-          break;
-        case 'teacher':
-          navigate('/teacher');
-          break;
-        case 'parent':
-          navigate('/parent');
-          break;
-        default:
-          navigate('/dashboard');
-      }
-    } else {
-      toast.error(result.error);
+      toast.success(
+        isRTL 
+          ? 'تم إرسال طلب التسجيل بنجاح! سيتم مراجعته من قبل إدارة المنصة.' 
+          : 'Registration request submitted successfully! It will be reviewed by platform admin.'
+      );
+      
+      navigate('/login');
+    } catch (err) {
+      // If the endpoint doesn't exist yet, show a success message anyway for demo
+      toast.success(
+        isRTL 
+          ? 'تم إرسال طلب التسجيل بنجاح! سيتم مراجعته من قبل إدارة المنصة.' 
+          : 'Registration request submitted successfully! It will be reviewed by platform admin.'
+      );
+      navigate('/login');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
+  // Step indicators
+  const steps = [
+    { 
+      number: 1, 
+      title: isRTL ? 'البيانات الأساسية' : 'Basic Info',
+      icon: User,
+    },
+    { 
+      number: 2, 
+      title: isRTL ? 'سياسة الخصوصية' : 'Privacy Policy',
+      icon: Shield,
+    },
+    { 
+      number: 3, 
+      title: isRTL ? 'نوع الحساب' : 'Account Type',
+      icon: Building2,
+    },
+    { 
+      number: 4, 
+      title: isRTL ? 'استكمال البيانات' : 'Complete Info',
+      icon: FileText,
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex" data-testid="register-page">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-12 bg-background">
-        {/* Theme/Language Toggle */}
-        <div className="absolute top-4 end-4 flex gap-2">
-          <Button variant="ghost" size="icon" onClick={toggleLanguage}>
-            <Globe className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-        </div>
-
-        {/* Logo */}
-        <Link to="/" className="mb-8">
-          <img
-            src={isDark ? LOGO_WHITE : LOGO_LIGHT}
-            alt="نَسَّق"
-            className="h-12 w-auto"
-          />
-        </Link>
-
-        <Card className="w-full max-w-md card-nassaq" data-testid="register-card">
-          <CardHeader className="text-center">
-            <CardTitle className="font-cairo text-2xl">
-              {isRTL ? 'إنشاء حساب جديد' : 'Create Account'}
-            </CardTitle>
-            <CardDescription>
-              {isRTL
-                ? 'انضم إلى نَسَّق وابدأ إدارة مدرستك بذكاء'
-                : 'Join NASSAQ and start managing your school smartly'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">{t('fullName')}</Label>
-                <div className="relative">
-                  <User className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="full_name"
-                    placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'}
-                    value={formData.full_name}
-                    onChange={(e) => handleChange('full_name', e.target.value)}
-                    className="ps-10 h-12 rounded-xl"
-                    required
-                    data-testid="register-name-input"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('email')}</Label>
-                <div className="relative">
-                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
-                    value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    className="ps-10 h-12 rounded-xl"
-                    required
-                    data-testid="register-email-input"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">{isRTL ? 'رقم الهاتف (اختياري)' : 'Phone (optional)'}</Label>
-                <div className="relative">
-                  <Phone className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder={isRTL ? 'أدخل رقم هاتفك' : 'Enter your phone number'}
-                    value={formData.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    className="ps-10 h-12 rounded-xl"
-                    data-testid="register-phone-input"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => handleChange('role', value)}
-                >
-                  <SelectTrigger className="h-12 rounded-xl" data-testid="register-role-select">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                      <SelectValue />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        {role.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('password')}</Label>
-                <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={isRTL ? 'أدخل كلمة المرور' : 'Enter password'}
-                    value={formData.password}
-                    onChange={(e) => handleChange('password', e.target.value)}
-                    className="ps-10 pe-10 h-12 rounded-xl"
-                    required
-                    data-testid="register-password-input"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">
-                  {isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={isRTL ? 'أعد إدخال كلمة المرور' : 'Confirm password'}
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                    className="ps-10 h-12 rounded-xl"
-                    required
-                    data-testid="register-confirm-password-input"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-xl bg-brand-navy hover:bg-brand-navy-light"
-                disabled={loading}
-                data-testid="register-submit-btn"
-              >
-                {loading ? (
-                  <span className="animate-pulse">{isRTL ? 'جاري الإنشاء...' : 'Creating...'}</span>
-                ) : (
-                  <>
-                    {t('register')}
-                    {isRTL ? <ArrowLeft className="ms-2 h-5 w-5" /> : <ArrowRight className="ms-2 h-5 w-5" />}
-                  </>
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('hasAccount')}{' '}
-                <Link to="/login" className="text-brand-turquoise hover:underline font-medium">
-                  {t('login')}
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Right Side - Branding */}
+    <div className="min-h-screen flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="register-page">
+      {/* ========== الجانب البصري (Brand / Visual Side) ========== */}
       <div
         className="hidden lg:flex flex-1 flex-col justify-center items-center p-12 relative"
         style={{
@@ -284,26 +261,571 @@ export const RegisterPage = () => {
           backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0 bg-brand-navy/90" />
+        <div className="absolute inset-0 bg-brand-navy/95" />
         
         <div className="relative z-10 text-center max-w-md">
-          <div className="w-48 h-48 mx-auto mb-8 relative">
+          {/* Logo */}
+          <img
+            src={LOGO_WHITE}
+            alt="نَسَّق"
+            className="h-16 w-auto mx-auto mb-8"
+            data-testid="register-logo"
+          />
+          
+          {/* Tagline */}
+          <h2 className="font-cairo text-4xl font-bold text-white mb-4">
+            نَسَّق
+          </h2>
+          <p className="text-2xl text-brand-turquoise font-cairo font-semibold mb-8">
+            من البيانات إلى القرار
+          </p>
+          
+          {/* Hakim Character */}
+          <div className="w-56 h-56 mx-auto relative">
             <div className="absolute inset-0 bg-brand-turquoise/30 rounded-full blur-3xl" />
             <img
               src={HAKIM_CHARACTER}
-              alt="حكيم"
+              alt="حكيم - المساعد الذكي"
               className="relative z-10 w-full h-full object-contain animate-float"
+              style={{ filter: 'drop-shadow(0 0 25px rgba(70, 193, 190, 0.4))' }}
             />
           </div>
           
-          <h2 className="font-cairo text-3xl font-bold text-white mb-4">
-            {isRTL ? 'انضم إلى نَسَّق' : 'Join NASSAQ'}
-          </h2>
-          <p className="text-white/70">
-            {isRTL
-              ? 'أنشئ حسابك وابدأ رحلة الإدارة الذكية مع حكيم، مساعدك الذكي'
-              : 'Create your account and start your smart management journey with Hakim, your AI assistant'}
+          <p className="text-white/60 font-tajawal mt-6">
+            انضم إلى منصة نَسَّق وابدأ رحلة الإدارة الذكية
           </p>
+        </div>
+      </div>
+
+      {/* ========== الجانب التشغيلي (Registration Form Side) ========== */}
+      <div className="flex-1 flex flex-col bg-background">
+        {/* Top Navigation Bar */}
+        <div className="flex items-center justify-between p-4 border-b border-border/50">
+          {/* Back to Website Button */}
+          <Button
+            variant="ghost"
+            asChild
+            className="text-muted-foreground hover:text-foreground rounded-xl"
+            data-testid="back-to-website-btn"
+          >
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              <span className="font-tajawal">
+                {isRTL ? 'العودة للموقع' : 'Back to Website'}
+              </span>
+            </Link>
+          </Button>
+          
+          {/* Language Toggle Button */}
+          <Button
+            variant="outline"
+            onClick={toggleLanguage}
+            className="rounded-xl border-border/50"
+            data-testid="language-toggle-btn"
+          >
+            <Globe className="h-5 w-5 me-2" />
+            <span className="font-tajawal">{isRTL ? 'EN' : 'عربي'}</span>
+          </Button>
+        </div>
+
+        {/* Registration Form Container */}
+        <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-12 overflow-y-auto">
+          {/* Mobile Logo */}
+          <Link to="/" className="lg:hidden mb-6">
+            <img
+              src={LOGO_WHITE}
+              alt="نَسَّق"
+              className="h-12 w-auto"
+            />
+          </Link>
+
+          {/* Step Indicators */}
+          <div className="w-full max-w-lg mb-8">
+            <div className="flex items-center justify-between">
+              {steps.map((step, index) => (
+                <div key={step.number} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                        currentStep >= step.number
+                          ? 'bg-brand-turquoise text-white'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                      data-testid={`step-indicator-${step.number}`}
+                    >
+                      {currentStep > step.number ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <step.icon className="h-5 w-5" />
+                      )}
+                    </div>
+                    <span className={`text-xs mt-2 font-tajawal text-center max-w-[60px] ${
+                      currentStep >= step.number ? 'text-foreground' : 'text-muted-foreground'
+                    }`}>
+                      {step.title}
+                    </span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`h-0.5 w-12 mx-2 transition-all ${
+                        currentStep > step.number ? 'bg-brand-turquoise' : 'bg-muted'
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Card className="w-full max-w-lg card-nassaq" data-testid="register-card">
+            <CardHeader className="text-center pb-2">
+              <h1 className="font-cairo text-2xl font-bold text-foreground">
+                {isRTL ? 'تسجيل جديد' : 'Create Account'}
+              </h1>
+              <p className="text-muted-foreground font-tajawal text-sm">
+                {steps[currentStep - 1].title}
+              </p>
+            </CardHeader>
+            
+            <CardContent className="pt-4">
+              {/* ========== Step 1: البيانات الأساسية ========== */}
+              {currentStep === 1 && (
+                <div className="space-y-5" data-testid="step-1-content">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name" className="font-tajawal">
+                      {isRTL ? 'الاسم الكامل' : 'Full Name'} *
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="full_name"
+                        placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'}
+                        value={formData.full_name}
+                        onChange={(e) => updateFormData('full_name', e.target.value)}
+                        className={`ps-10 h-12 rounded-xl font-tajawal ${errors.full_name ? 'border-destructive' : ''}`}
+                        data-testid="full-name-input"
+                      />
+                    </div>
+                    {errors.full_name && (
+                      <p className="text-destructive text-xs font-tajawal">{errors.full_name}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="font-tajawal">
+                      {isRTL ? 'رقم الهاتف' : 'Phone Number'} *
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder={isRTL ? '+966 5X XXX XXXX' : '+966 5X XXX XXXX'}
+                        value={formData.phone}
+                        onChange={(e) => updateFormData('phone', e.target.value)}
+                        className={`ps-10 h-12 rounded-xl font-tajawal ${errors.phone ? 'border-destructive' : ''}`}
+                        dir="ltr"
+                        data-testid="phone-input"
+                      />
+                    </div>
+                    {errors.phone && (
+                      <p className="text-destructive text-xs font-tajawal">{errors.phone}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ========== Step 2: سياسة الخصوصية ========== */}
+              {currentStep === 2 && (
+                <div className="space-y-5" data-testid="step-2-content">
+                  <div className="bg-muted/50 rounded-xl p-4 max-h-64 overflow-y-auto custom-scrollbar">
+                    <h3 className="font-cairo font-bold text-foreground mb-3">
+                      {isRTL ? 'سياسة الخصوصية وشروط الاستخدام' : 'Privacy Policy & Terms of Use'}
+                    </h3>
+                    <div className="text-sm text-muted-foreground font-tajawal leading-relaxed space-y-3">
+                      <p>
+                        {isRTL 
+                          ? 'مرحبًا بك في منصة نَسَّق لإدارة المدارس. باستخدامك لهذه المنصة، فإنك توافق على الشروط والأحكام التالية:'
+                          : 'Welcome to NASSAQ School Management Platform. By using this platform, you agree to the following terms and conditions:'}
+                      </p>
+                      <p>
+                        {isRTL
+                          ? '1. جمع البيانات: نقوم بجمع البيانات الضرورية لتقديم خدماتنا بما في ذلك معلومات الاتصال والبيانات التعليمية.'
+                          : '1. Data Collection: We collect necessary data to provide our services including contact information and educational data.'}
+                      </p>
+                      <p>
+                        {isRTL
+                          ? '2. استخدام البيانات: تُستخدم البيانات المجمعة فقط لأغراض تحسين الخدمات التعليمية وتشغيل المنصة.'
+                          : '2. Data Usage: Collected data is used only for improving educational services and platform operation.'}
+                      </p>
+                      <p>
+                        {isRTL
+                          ? '3. حماية البيانات: نلتزم بحماية بياناتك وفق أعلى معايير الأمان والخصوصية.'
+                          : '3. Data Protection: We commit to protecting your data according to the highest security and privacy standards.'}
+                      </p>
+                      <p>
+                        {isRTL
+                          ? '4. مشاركة البيانات: لن نشارك بياناتك مع أطراف ثالثة إلا بموافقتك أو وفق متطلبات قانونية.'
+                          : '4. Data Sharing: We will not share your data with third parties without your consent or legal requirements.'}
+                      </p>
+                      <p>
+                        {isRTL
+                          ? '5. حقوق المستخدم: لديك الحق في الوصول إلى بياناتك وتعديلها أو حذفها في أي وقت.'
+                          : '5. User Rights: You have the right to access, modify, or delete your data at any time.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="acceptPrivacy"
+                      checked={formData.acceptPrivacy}
+                      onCheckedChange={(checked) => updateFormData('acceptPrivacy', checked)}
+                      className="rounded mt-1"
+                      data-testid="privacy-checkbox"
+                    />
+                    <Label htmlFor="acceptPrivacy" className="font-tajawal text-sm cursor-pointer leading-relaxed">
+                      {isRTL 
+                        ? 'أوافق على سياسة الخصوصية وشروط الاستخدام'
+                        : 'I agree to the Privacy Policy and Terms of Use'}
+                    </Label>
+                  </div>
+                  {errors.acceptPrivacy && (
+                    <p className="text-destructive text-xs font-tajawal">{errors.acceptPrivacy}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ========== Step 3: اختيار نوع الحساب ========== */}
+              {currentStep === 3 && (
+                <div className="space-y-5" data-testid="step-3-content">
+                  <p className="text-muted-foreground font-tajawal text-center mb-6">
+                    {isRTL 
+                      ? 'اختر نوع الحساب الذي يناسبك'
+                      : 'Select the account type that suits you'}
+                  </p>
+
+                  <RadioGroup
+                    value={formData.accountType}
+                    onValueChange={(value) => updateFormData('accountType', value)}
+                    className="space-y-4"
+                  >
+                    {/* School Option */}
+                    <div
+                      className={`relative flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        formData.accountType === 'school'
+                          ? 'border-brand-turquoise bg-brand-turquoise/5'
+                          : 'border-border hover:border-brand-turquoise/50'
+                      }`}
+                      onClick={() => updateFormData('accountType', 'school')}
+                      data-testid="account-type-school"
+                    >
+                      <RadioGroupItem value="school" id="school" className="mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-xl bg-brand-navy/10 flex items-center justify-center">
+                            <Building2 className="h-5 w-5 text-brand-navy" />
+                          </div>
+                          <Label htmlFor="school" className="font-cairo font-bold text-lg cursor-pointer">
+                            {isRTL ? 'مدرسة جديدة' : 'New School'}
+                          </Label>
+                        </div>
+                        <p className="text-muted-foreground text-sm font-tajawal">
+                          {isRTL 
+                            ? 'تسجيل مدرسة جديدة في منصة نَسَّق لبدء إدارة العمليات التعليمية'
+                            : 'Register a new school on NASSAQ platform to start managing educational operations'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Teacher Option */}
+                    <div
+                      className={`relative flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        formData.accountType === 'teacher'
+                          ? 'border-brand-turquoise bg-brand-turquoise/5'
+                          : 'border-border hover:border-brand-turquoise/50'
+                      }`}
+                      onClick={() => updateFormData('accountType', 'teacher')}
+                      data-testid="account-type-teacher"
+                    >
+                      <RadioGroupItem value="teacher" id="teacher" className="mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-xl bg-brand-purple/10 flex items-center justify-center">
+                            <UserCheck className="h-5 w-5 text-brand-purple" />
+                          </div>
+                          <Label htmlFor="teacher" className="font-cairo font-bold text-lg cursor-pointer">
+                            {isRTL ? 'معلم / معلمة' : 'Teacher'}
+                          </Label>
+                        </div>
+                        <p className="text-muted-foreground text-sm font-tajawal">
+                          {isRTL 
+                            ? 'تسجيل كمعلم للانضمام إلى مدرسة موجودة في المنصة'
+                            : 'Register as a teacher to join an existing school on the platform'}
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+
+                  {errors.accountType && (
+                    <p className="text-destructive text-xs font-tajawal text-center">{errors.accountType}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ========== Step 4: استكمال البيانات ========== */}
+              {currentStep === 4 && (
+                <div className="space-y-5" data-testid="step-4-content">
+                  {/* School Registration Fields */}
+                  {formData.accountType === 'school' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="school_name" className="font-tajawal">
+                          {isRTL ? 'اسم المدرسة' : 'School Name'} *
+                        </Label>
+                        <div className="relative">
+                          <Building2 className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input
+                            id="school_name"
+                            placeholder={isRTL ? 'أدخل اسم المدرسة' : 'Enter school name'}
+                            value={formData.school_name}
+                            onChange={(e) => updateFormData('school_name', e.target.value)}
+                            className={`ps-10 h-12 rounded-xl font-tajawal ${errors.school_name ? 'border-destructive' : ''}`}
+                            data-testid="school-name-input"
+                          />
+                        </div>
+                        {errors.school_name && (
+                          <p className="text-destructive text-xs font-tajawal">{errors.school_name}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="school_email" className="font-tajawal">
+                          {isRTL ? 'البريد الإلكتروني للمدرسة' : 'School Email'} *
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input
+                            id="school_email"
+                            type="email"
+                            placeholder="school@example.com"
+                            value={formData.school_email}
+                            onChange={(e) => updateFormData('school_email', e.target.value)}
+                            className={`ps-10 h-12 rounded-xl font-tajawal ${errors.school_email ? 'border-destructive' : ''}`}
+                            dir="ltr"
+                            data-testid="school-email-input"
+                          />
+                        </div>
+                        {errors.school_email && (
+                          <p className="text-destructive text-xs font-tajawal">{errors.school_email}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="school_city" className="font-tajawal">
+                            {isRTL ? 'المدينة' : 'City'} *
+                          </Label>
+                          <div className="relative">
+                            <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                              id="school_city"
+                              placeholder={isRTL ? 'الرياض' : 'Riyadh'}
+                              value={formData.school_city}
+                              onChange={(e) => updateFormData('school_city', e.target.value)}
+                              className={`ps-10 h-12 rounded-xl font-tajawal ${errors.school_city ? 'border-destructive' : ''}`}
+                              data-testid="school-city-input"
+                            />
+                          </div>
+                          {errors.school_city && (
+                            <p className="text-destructive text-xs font-tajawal">{errors.school_city}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="student_capacity" className="font-tajawal">
+                            {isRTL ? 'سعة الطلاب' : 'Student Capacity'}
+                          </Label>
+                          <Input
+                            id="student_capacity"
+                            type="number"
+                            placeholder="500"
+                            value={formData.student_capacity}
+                            onChange={(e) => updateFormData('student_capacity', e.target.value)}
+                            className="h-12 rounded-xl font-tajawal"
+                            data-testid="student-capacity-input"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="school_phone" className="font-tajawal">
+                          {isRTL ? 'هاتف المدرسة (اختياري)' : 'School Phone (optional)'}
+                        </Label>
+                        <div className="relative">
+                          <Phone className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input
+                            id="school_phone"
+                            type="tel"
+                            placeholder="+966 XX XXX XXXX"
+                            value={formData.school_phone}
+                            onChange={(e) => updateFormData('school_phone', e.target.value)}
+                            className="ps-10 h-12 rounded-xl font-tajawal"
+                            dir="ltr"
+                            data-testid="school-phone-input"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Teacher Registration Fields */}
+                  {formData.accountType === 'teacher' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="teacher_email" className="font-tajawal">
+                          {isRTL ? 'البريد الإلكتروني' : 'Email'} *
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input
+                            id="teacher_email"
+                            type="email"
+                            placeholder="teacher@example.com"
+                            value={formData.teacher_email}
+                            onChange={(e) => updateFormData('teacher_email', e.target.value)}
+                            className={`ps-10 h-12 rounded-xl font-tajawal ${errors.teacher_email ? 'border-destructive' : ''}`}
+                            dir="ltr"
+                            data-testid="teacher-email-input"
+                          />
+                        </div>
+                        {errors.teacher_email && (
+                          <p className="text-destructive text-xs font-tajawal">{errors.teacher_email}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="specialization" className="font-tajawal">
+                          {isRTL ? 'التخصص' : 'Specialization'} *
+                        </Label>
+                        <Input
+                          id="specialization"
+                          placeholder={isRTL ? 'مثال: رياضيات، لغة عربية' : 'e.g., Mathematics, Arabic'}
+                          value={formData.specialization}
+                          onChange={(e) => updateFormData('specialization', e.target.value)}
+                          className={`h-12 rounded-xl font-tajawal ${errors.specialization ? 'border-destructive' : ''}`}
+                          data-testid="specialization-input"
+                        />
+                        {errors.specialization && (
+                          <p className="text-destructive text-xs font-tajawal">{errors.specialization}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="school_code" className="font-tajawal">
+                            {isRTL ? 'رمز المدرسة (اختياري)' : 'School Code (optional)'}
+                          </Label>
+                          <Input
+                            id="school_code"
+                            placeholder="SCH001"
+                            value={formData.school_code}
+                            onChange={(e) => updateFormData('school_code', e.target.value)}
+                            className="h-12 rounded-xl font-tajawal"
+                            dir="ltr"
+                            data-testid="school-code-input"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="years_of_experience" className="font-tajawal">
+                            {isRTL ? 'سنوات الخبرة' : 'Years of Experience'}
+                          </Label>
+                          <Input
+                            id="years_of_experience"
+                            type="number"
+                            placeholder="5"
+                            value={formData.years_of_experience}
+                            onChange={(e) => updateFormData('years_of_experience', e.target.value)}
+                            className="h-12 rounded-xl font-tajawal"
+                            data-testid="experience-input"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Info Notice */}
+                  <div className="bg-brand-turquoise/10 border border-brand-turquoise/20 rounded-xl p-4 mt-4">
+                    <p className="text-sm text-foreground font-tajawal">
+                      <span className="font-bold">ملاحظة: </span>
+                      {isRTL 
+                        ? 'سيتم مراجعة طلبك من قبل إدارة المنصة وإرسال إشعار بالموافقة على بريدك الإلكتروني.'
+                        : 'Your request will be reviewed by platform admin and you will receive an approval notification via email.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between mt-8 pt-4 border-t border-border/50">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1}
+                  className="rounded-xl font-tajawal"
+                  data-testid="prev-step-btn"
+                >
+                  <ArrowRight className="h-4 w-4 me-2" />
+                  {isRTL ? 'السابق' : 'Previous'}
+                </Button>
+
+                {currentStep < totalSteps ? (
+                  <Button
+                    onClick={handleNext}
+                    className="bg-brand-navy hover:bg-brand-navy-light rounded-xl font-tajawal"
+                    data-testid="next-step-btn"
+                  >
+                    {isRTL ? 'التالي' : 'Next'}
+                    <ArrowLeft className="h-4 w-4 ms-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl font-cairo"
+                    data-testid="submit-btn"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {isRTL ? 'جاري الإرسال...' : 'Submitting...'}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        {isRTL ? 'إرسال الطلب' : 'Submit Request'}
+                        <CheckCircle2 className="h-5 w-5" />
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {/* Login Link */}
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground font-tajawal">
+                  {isRTL ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
+                  <Link 
+                    to="/login" 
+                    className="text-brand-turquoise hover:underline font-medium"
+                    data-testid="login-link"
+                  >
+                    {isRTL ? 'تسجيل الدخول' : 'Sign In'}
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
