@@ -196,7 +196,7 @@ export const AdminDashboard = () => {
     },
     {
       title: isRTL ? 'طلبات التسجيل المعلقة' : 'Pending Requests',
-      value: registrationRequests.filter(r => r.status === 'pending').length,
+      value: stats?.pending_requests || 0,
       icon: Clock,
       color: 'yellow-500',
       trend: '',
@@ -204,12 +204,32 @@ export const AdminDashboard = () => {
     },
   ];
 
-  // ============== SECTION 2: Daily Platform Activity (Mock Data) ==============
+  // ============== SECTION 2: Daily Platform Activity (Live Data) ==============
   const dailyActivity = {
-    classes_held: { value: 245, change: '+12%', icon: Calendar },
-    attendance_records: { value: 4582, change: '+8%', icon: ClipboardList },
-    grades_entered: { value: 1247, change: '+15%', icon: FileText },
-    active_users: { value: 892, change: '+22%', icon: Activity },
+    classes_count: { 
+      value: stats?.total_classes || 0, 
+      change: '', 
+      icon: Calendar,
+      label: isRTL ? 'إجمالي الفصول' : 'Total Classes',
+    },
+    subjects_count: { 
+      value: stats?.total_subjects || 0, 
+      change: '', 
+      icon: ClipboardList,
+      label: isRTL ? 'إجمالي المواد' : 'Total Subjects',
+    },
+    teachers_count: { 
+      value: stats?.total_teachers || 0, 
+      change: '', 
+      icon: FileText,
+      label: isRTL ? 'إجمالي المعلمين' : 'Total Teachers',
+    },
+    students_count: { 
+      value: stats?.total_students || 0, 
+      change: '', 
+      icon: Activity,
+      label: isRTL ? 'إجمالي الطلاب' : 'Total Students',
+    },
   };
 
   // ============== SECTION 3: Quick Actions ==============
