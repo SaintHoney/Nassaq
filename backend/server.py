@@ -1538,6 +1538,862 @@ async def seed_demo_data():
         "note": "البيانات التجريبية للعرض والاختبار فقط"
     }
 
+# ============== SCHEDULING ENGINE MODELS ==============
+class TeacherRankEnum(str, Enum):
+    """رتب المعلمين"""
+    EXPERT = "expert"           # معلم خبير
+    ADVANCED = "advanced"       # معلم متقدم
+    PRACTITIONER = "practitioner"  # معلم ممارس
+    ASSISTANT = "assistant"     # معلم / مساعد معلم
+
+class DayOfWeekEnum(str, Enum):
+    """أيام الأسبوع"""
+    SUNDAY = "sunday"
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+
+class SessionStatusEnum(str, Enum):
+    """حالة الحصة"""
+    SCHEDULED = "scheduled"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
+
+class ScheduleStatusEnum(str, Enum):
+    """حالة الجدول"""
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+# Time Slot Models
+class TimeSlotCreate(BaseModel):
+    school_id: str
+    name: str
+    name_en: Optional[str] = None
+    start_time: str
+    end_time: str
+    slot_number: int
+    duration_minutes: int = 45
+    is_break: bool = False
+
+class TimeSlotResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    school_id: str
+    name: str
+    name_en: Optional[str] = None
+    start_time: str
+    end_time: str
+    slot_number: int
+    duration_minutes: int
+    is_break: bool
+    is_active: bool
+    created_at: str
+
+# Teacher Assignment Models
+class TeacherAssignmentCreate(BaseModel):
+    school_id: str
+    teacher_id: str
+    class_id: str
+    subject_id: str
+    weekly_sessions: int = 4
+    academic_year: str = "2026-2027"
+    semester: int = 1
+
+class TeacherAssignmentResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    school_id: str
+    teacher_id: str
+    teacher_name: Optional[str] = None
+    class_id: str
+    class_name: Optional[str] = None
+    subject_id: str
+    subject_name: Optional[str] = None
+    weekly_sessions: int
+    academic_year: str
+    semester: int
+    is_active: bool
+    created_at: str
+
+# Schedule Models
+class SchoolScheduleCreate(BaseModel):
+    school_id: str
+    name: str
+    name_en: Optional[str] = None
+    academic_year: str = "2026-2027"
+    semester: int = 1
+    effective_from: str
+    effective_to: Optional[str] = None
+    working_days: List[str] = ["sunday", "monday", "tuesday", "wednesday", "thursday"]
+
+class SchoolScheduleResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    school_id: str
+    name: str
+    name_en: Optional[str] = None
+    academic_year: str
+    semester: int
+    effective_from: str
+    effective_to: Optional[str] = None
+    working_days: List[str]
+    status: str
+    total_sessions: int = 0
+    created_at: str
+    updated_at: str
+
+# Schedule Session Models
+class ScheduleSessionCreate(BaseModel):
+    school_id: str
+    schedule_id: str
+    assignment_id: str
+    day_of_week: str
+    time_slot_id: str
+    room_id: Optional[str] = None
+
+class ScheduleSessionResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    school_id: str
+    schedule_id: str
+    assignment_id: str
+    teacher_id: Optional[str] = None
+    teacher_name: Optional[str] = None
+    class_id: Optional[str] = None
+    class_name: Optional[str] = None
+    subject_id: Optional[str] = None
+    subject_name: Optional[str] = None
+    day_of_week: str
+    time_slot_id: str
+    time_slot_name: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    room_id: Optional[str] = None
+    status: str
+    created_at: str
+
+# ============== TIME SLOTS ROUTES ==============
+@api_router.post("/time-slots", response_model=TimeSlotResponse)
+async def create_time_slot(
+    slot_data: TimeSlotCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """إنشاء فترة زمنية جديدة"""
+    slot_id = str(uuid.uuid4())
+    slot_doc = {
+        "id": slot_id,
+        "school_id": slot_data.school_id,
+        "name": slot_data.name,
+        "name_en": slot_data.name_en,
+        "start_time": slot_data.start_time,
+        "end_time": slot_data.end_time,
+        "slot_number": slot_data.slot_number,
+        "duration_minutes": slot_data.duration_minutes,
+        "is_break": slot_data.is_break,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.time_slots.insert_one(slot_doc)
+    return TimeSlotResponse(**slot_doc)
+
+@api_router.get("/time-slots", response_model=List[TimeSlotResponse])
+async def get_time_slots(
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """الحصول على الفترات الزمنية"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    slots = await db.time_slots.find(query, {"_id": 0}).sort("slot_number", 1).to_list(50)
+    return [TimeSlotResponse(**s) for s in slots]
+
+@api_router.delete("/time-slots/{slot_id}")
+async def delete_time_slot(
+    slot_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """حذف فترة زمنية"""
+    result = await db.time_slots.update_one({"id": slot_id}, {"$set": {"is_active": False}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الفترة الزمنية غير موجودة")
+    return {"message": "تم حذف الفترة الزمنية"}
+
+# ============== TEACHER ASSIGNMENTS ROUTES ==============
+@api_router.post("/teacher-assignments", response_model=TeacherAssignmentResponse)
+async def create_teacher_assignment(
+    assignment_data: TeacherAssignmentCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """إسناد معلم لفصل ومادة"""
+    # Check if assignment already exists
+    existing = await db.teacher_assignments.find_one({
+        "teacher_id": assignment_data.teacher_id,
+        "class_id": assignment_data.class_id,
+        "subject_id": assignment_data.subject_id,
+        "academic_year": assignment_data.academic_year,
+        "semester": assignment_data.semester,
+        "is_active": True
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا الإسناد موجود بالفعل")
+    
+    assignment_id = str(uuid.uuid4())
+    assignment_doc = {
+        "id": assignment_id,
+        "school_id": assignment_data.school_id,
+        "teacher_id": assignment_data.teacher_id,
+        "class_id": assignment_data.class_id,
+        "subject_id": assignment_data.subject_id,
+        "weekly_sessions": assignment_data.weekly_sessions,
+        "academic_year": assignment_data.academic_year,
+        "semester": assignment_data.semester,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.teacher_assignments.insert_one(assignment_doc)
+    
+    # Get names for response
+    teacher = await db.teachers.find_one({"id": assignment_data.teacher_id}, {"_id": 0, "full_name": 1})
+    class_doc = await db.classes.find_one({"id": assignment_data.class_id}, {"_id": 0, "name": 1})
+    subject = await db.subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1})
+    
+    return TeacherAssignmentResponse(
+        **assignment_doc,
+        teacher_name=teacher.get("full_name") if teacher else None,
+        class_name=class_doc.get("name") if class_doc else None,
+        subject_name=subject.get("name") if subject else None
+    )
+
+@api_router.get("/teacher-assignments", response_model=List[TeacherAssignmentResponse])
+async def get_teacher_assignments(
+    school_id: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    class_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """الحصول على إسنادات المعلمين"""
+    query = {"is_active": True}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    if teacher_id:
+        query["teacher_id"] = teacher_id
+    if class_id:
+        query["class_id"] = class_id
+    
+    assignments = await db.teacher_assignments.find(query, {"_id": 0}).to_list(500)
+    
+    # Get all related entities
+    teacher_ids = list(set(a.get("teacher_id") for a in assignments))
+    class_ids = list(set(a.get("class_id") for a in assignments))
+    subject_ids = list(set(a.get("subject_id") for a in assignments))
+    
+    teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
+    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+    
+    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
+    class_map = {c.get("id"): c.get("name") for c in classes}
+    subject_map = {s.get("id"): s.get("name") for s in subjects}
+    
+    result = []
+    for a in assignments:
+        result.append(TeacherAssignmentResponse(
+            **a,
+            teacher_name=teacher_map.get(a.get("teacher_id")),
+            class_name=class_map.get(a.get("class_id")),
+            subject_name=subject_map.get(a.get("subject_id"))
+        ))
+    
+    return result
+
+@api_router.delete("/teacher-assignments/{assignment_id}")
+async def delete_teacher_assignment(
+    assignment_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """حذف إسناد معلم"""
+    result = await db.teacher_assignments.update_one(
+        {"id": assignment_id},
+        {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الإسناد غير موجود")
+    return {"message": "تم حذف الإسناد"}
+
+# ============== SCHOOL SCHEDULES ROUTES ==============
+@api_router.post("/schedules", response_model=SchoolScheduleResponse)
+async def create_schedule(
+    schedule_data: SchoolScheduleCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """إنشاء جدول مدرسي جديد"""
+    schedule_id = str(uuid.uuid4())
+    schedule_doc = {
+        "id": schedule_id,
+        "school_id": schedule_data.school_id,
+        "name": schedule_data.name,
+        "name_en": schedule_data.name_en,
+        "academic_year": schedule_data.academic_year,
+        "semester": schedule_data.semester,
+        "effective_from": schedule_data.effective_from,
+        "effective_to": schedule_data.effective_to,
+        "working_days": schedule_data.working_days,
+        "status": ScheduleStatusEnum.DRAFT.value,
+        "total_sessions": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.schedules.insert_one(schedule_doc)
+    return SchoolScheduleResponse(**schedule_doc)
+
+@api_router.get("/schedules", response_model=List[SchoolScheduleResponse])
+async def get_schedules(
+    school_id: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """الحصول على الجداول المدرسية"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+        query["school_id"] = current_user.get("tenant_id")
+    
+    if status:
+        query["status"] = status
+    
+    schedules = await db.schedules.find(query, {"_id": 0}).to_list(100)
+    return [SchoolScheduleResponse(**s) for s in schedules]
+
+@api_router.get("/schedules/{schedule_id}", response_model=SchoolScheduleResponse)
+async def get_schedule(schedule_id: str, current_user: dict = Depends(get_current_user)):
+    """الحصول على جدول محدد"""
+    schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    return SchoolScheduleResponse(**schedule)
+
+@api_router.put("/schedules/{schedule_id}/publish")
+async def publish_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """نشر الجدول المدرسي"""
+    result = await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": {"status": ScheduleStatusEnum.PUBLISHED.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    return {"message": "تم نشر الجدول"}
+
+@api_router.delete("/schedules/{schedule_id}")
+async def delete_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """حذف جدول مدرسي"""
+    # Delete all sessions first
+    await db.schedule_sessions.delete_many({"schedule_id": schedule_id})
+    
+    result = await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": {"status": ScheduleStatusEnum.ARCHIVED.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    return {"message": "تم حذف الجدول"}
+
+# ============== SCHEDULE SESSIONS ROUTES ==============
+@api_router.post("/schedule-sessions", response_model=ScheduleSessionResponse)
+async def create_schedule_session(
+    session_data: ScheduleSessionCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """إضافة حصة للجدول"""
+    # Check for conflicts
+    existing = await db.schedule_sessions.find_one({
+        "schedule_id": session_data.schedule_id,
+        "day_of_week": session_data.day_of_week,
+        "time_slot_id": session_data.time_slot_id,
+        "assignment_id": session_data.assignment_id,
+        "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="هذه الحصة موجودة بالفعل")
+    
+    # Get assignment details
+    assignment = await db.teacher_assignments.find_one({"id": session_data.assignment_id}, {"_id": 0})
+    if not assignment:
+        raise HTTPException(status_code=404, detail="الإسناد غير موجود")
+    
+    session_id = str(uuid.uuid4())
+    session_doc = {
+        "id": session_id,
+        "school_id": session_data.school_id,
+        "schedule_id": session_data.schedule_id,
+        "assignment_id": session_data.assignment_id,
+        "day_of_week": session_data.day_of_week,
+        "time_slot_id": session_data.time_slot_id,
+        "room_id": session_data.room_id,
+        "status": SessionStatusEnum.SCHEDULED.value,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.schedule_sessions.insert_one(session_doc)
+    
+    # Update schedule session count
+    await db.schedules.update_one(
+        {"id": session_data.schedule_id},
+        {"$inc": {"total_sessions": 1}}
+    )
+    
+    # Get names for response
+    teacher = await db.teachers.find_one({"id": assignment.get("teacher_id")}, {"_id": 0})
+    class_doc = await db.classes.find_one({"id": assignment.get("class_id")}, {"_id": 0})
+    subject = await db.subjects.find_one({"id": assignment.get("subject_id")}, {"_id": 0})
+    time_slot = await db.time_slots.find_one({"id": session_data.time_slot_id}, {"_id": 0})
+    
+    return ScheduleSessionResponse(
+        **session_doc,
+        teacher_id=assignment.get("teacher_id"),
+        teacher_name=teacher.get("full_name") if teacher else None,
+        class_id=assignment.get("class_id"),
+        class_name=class_doc.get("name") if class_doc else None,
+        subject_id=assignment.get("subject_id"),
+        subject_name=subject.get("name") if subject else None,
+        time_slot_name=time_slot.get("name") if time_slot else None,
+        start_time=time_slot.get("start_time") if time_slot else None,
+        end_time=time_slot.get("end_time") if time_slot else None
+    )
+
+@api_router.get("/schedule-sessions", response_model=List[ScheduleSessionResponse])
+async def get_schedule_sessions(
+    schedule_id: str,
+    day_of_week: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    class_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """الحصول على حصص الجدول"""
+    query = {"schedule_id": schedule_id, "status": {"$ne": SessionStatusEnum.CANCELLED.value}}
+    
+    if day_of_week:
+        query["day_of_week"] = day_of_week
+    
+    sessions = await db.schedule_sessions.find(query, {"_id": 0}).to_list(500)
+    
+    # Get all related data
+    assignment_ids = list(set(s.get("assignment_id") for s in sessions))
+    time_slot_ids = list(set(s.get("time_slot_id") for s in sessions))
+    
+    assignments = await db.teacher_assignments.find({"id": {"$in": assignment_ids}}, {"_id": 0}).to_list(100)
+    time_slots = await db.time_slots.find({"id": {"$in": time_slot_ids}}, {"_id": 0}).to_list(20)
+    
+    assignment_map = {a.get("id"): a for a in assignments}
+    slot_map = {s.get("id"): s for s in time_slots}
+    
+    # Get teacher/class/subject names
+    teacher_ids = list(set(a.get("teacher_id") for a in assignments if a))
+    class_ids = list(set(a.get("class_id") for a in assignments if a))
+    subject_ids = list(set(a.get("subject_id") for a in assignments if a))
+    
+    teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
+    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+    
+    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
+    class_map = {c.get("id"): c.get("name") for c in classes}
+    subject_map = {s.get("id"): s.get("name") for s in subjects}
+    
+    # Filter by teacher/class if specified
+    result = []
+    for s in sessions:
+        assignment = assignment_map.get(s.get("assignment_id"), {})
+        
+        if teacher_id and assignment.get("teacher_id") != teacher_id:
+            continue
+        if class_id and assignment.get("class_id") != class_id:
+            continue
+        
+        slot = slot_map.get(s.get("time_slot_id"), {})
+        
+        result.append(ScheduleSessionResponse(
+            **s,
+            teacher_id=assignment.get("teacher_id"),
+            teacher_name=teacher_map.get(assignment.get("teacher_id")),
+            class_id=assignment.get("class_id"),
+            class_name=class_map.get(assignment.get("class_id")),
+            subject_id=assignment.get("subject_id"),
+            subject_name=subject_map.get(assignment.get("subject_id")),
+            time_slot_name=slot.get("name"),
+            start_time=slot.get("start_time"),
+            end_time=slot.get("end_time")
+        ))
+    
+    return result
+
+@api_router.delete("/schedule-sessions/{session_id}")
+async def delete_schedule_session(
+    session_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """حذف حصة من الجدول"""
+    session = await db.schedule_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    await db.schedule_sessions.update_one(
+        {"id": session_id},
+        {"$set": {"status": SessionStatusEnum.CANCELLED.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Update schedule session count
+    await db.schedules.update_one(
+        {"id": session.get("schedule_id")},
+        {"$inc": {"total_sessions": -1}}
+    )
+    
+    return {"message": "تم حذف الحصة"}
+
+# ============== SCHEDULE GENERATION (AI) ==============
+@api_router.post("/schedules/{schedule_id}/generate")
+async def generate_schedule_auto(
+    schedule_id: str,
+    respect_workload: bool = True,
+    max_iterations: int = 1000,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """توليد الجدول تلقائياً"""
+    import random
+    
+    schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    school_id = schedule.get("school_id")
+    working_days = schedule.get("working_days", ["sunday", "monday", "tuesday", "wednesday", "thursday"])
+    
+    # Get time slots
+    time_slots = await db.time_slots.find(
+        {"school_id": school_id, "is_active": True, "is_break": False},
+        {"_id": 0}
+    ).sort("slot_number", 1).to_list(20)
+    
+    if not time_slots:
+        raise HTTPException(status_code=400, detail="لم يتم تعريف الفترات الزمنية")
+    
+    # Get assignments
+    assignments = await db.teacher_assignments.find({
+        "school_id": school_id,
+        "is_active": True,
+        "academic_year": schedule.get("academic_year"),
+        "semester": schedule.get("semester")
+    }, {"_id": 0}).to_list(500)
+    
+    if not assignments:
+        raise HTTPException(status_code=400, detail="لم يتم العثور على إسنادات للمعلمين")
+    
+    # Clear existing sessions
+    await db.schedule_sessions.delete_many({"schedule_id": schedule_id})
+    
+    # Build sessions to place
+    sessions_to_place = []
+    for assignment in assignments:
+        for i in range(assignment.get("weekly_sessions", 4)):
+            sessions_to_place.append({
+                "assignment_id": assignment.get("id"),
+                "teacher_id": assignment.get("teacher_id"),
+                "class_id": assignment.get("class_id"),
+                "placed": False
+            })
+    
+    random.shuffle(sessions_to_place)
+    
+    # Track placements
+    teacher_schedule = {d: {} for d in working_days}
+    class_schedule = {d: {} for d in working_days}
+    sessions_created = 0
+    conflicts = []
+    
+    for session_req in sessions_to_place:
+        teacher_id = session_req["teacher_id"]
+        class_id = session_req["class_id"]
+        
+        placed = False
+        days = list(working_days)
+        random.shuffle(days)
+        
+        for day in days:
+            if placed:
+                break
+            
+            for slot in time_slots:
+                slot_id = slot.get("id")
+                
+                # Check teacher availability
+                if teacher_schedule[day].get(slot_id) is not None:
+                    if teacher_schedule[day][slot_id] == teacher_id:
+                        continue  # Teacher already busy
+                
+                # Check class availability
+                if class_schedule[day].get(slot_id) is not None:
+                    if class_schedule[day][slot_id] == class_id:
+                        continue  # Class already busy
+                
+                # Place session
+                session_id = str(uuid.uuid4())
+                session_doc = {
+                    "id": session_id,
+                    "school_id": school_id,
+                    "schedule_id": schedule_id,
+                    "assignment_id": session_req["assignment_id"],
+                    "day_of_week": day,
+                    "time_slot_id": slot_id,
+                    "room_id": None,
+                    "status": SessionStatusEnum.SCHEDULED.value,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.schedule_sessions.insert_one(session_doc)
+                
+                teacher_schedule[day][slot_id] = teacher_id
+                class_schedule[day][slot_id] = class_id
+                sessions_created += 1
+                session_req["placed"] = True
+                placed = True
+                break
+    
+    # Update schedule
+    await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": {
+            "total_sessions": sessions_created,
+            "status": ScheduleStatusEnum.DRAFT.value,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    unplaced = sum(1 for s in sessions_to_place if not s["placed"])
+    
+    return {
+        "success": unplaced == 0,
+        "schedule_id": schedule_id,
+        "sessions_created": sessions_created,
+        "unplaced_sessions": unplaced,
+        "message": f"تم إنشاء {sessions_created} حصة",
+        "message_en": f"Created {sessions_created} sessions"
+    }
+
+# ============== SCHEDULE CONFLICTS CHECK ==============
+@api_router.get("/schedules/{schedule_id}/conflicts")
+async def check_schedule_conflicts(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """التحقق من تعارضات الجدول"""
+    conflicts = []
+    
+    sessions = await db.schedule_sessions.find({
+        "schedule_id": schedule_id,
+        "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+    }, {"_id": 0}).to_list(500)
+    
+    # Group by day and time slot
+    by_day_slot = {}
+    for session in sessions:
+        key = (session.get("day_of_week"), session.get("time_slot_id"))
+        if key not in by_day_slot:
+            by_day_slot[key] = []
+        by_day_slot[key].append(session)
+    
+    for (day, slot_id), slot_sessions in by_day_slot.items():
+        if len(slot_sessions) < 2:
+            continue
+        
+        assignment_ids = [s.get("assignment_id") for s in slot_sessions]
+        assignments = await db.teacher_assignments.find(
+            {"id": {"$in": assignment_ids}}, {"_id": 0}
+        ).to_list(100)
+        assignment_map = {a.get("id"): a for a in assignments}
+        
+        teachers_seen = {}
+        classes_seen = {}
+        
+        for session in slot_sessions:
+            assignment = assignment_map.get(session.get("assignment_id"), {})
+            teacher_id = assignment.get("teacher_id")
+            class_id = assignment.get("class_id")
+            
+            if teacher_id:
+                if teacher_id in teachers_seen:
+                    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "full_name": 1})
+                    conflicts.append({
+                        "type": "teacher_double_booking",
+                        "day": day,
+                        "time_slot_id": slot_id,
+                        "teacher_id": teacher_id,
+                        "teacher_name": teacher.get("full_name") if teacher else "Unknown",
+                        "message_ar": f"المعلم مجدول في أكثر من حصة",
+                        "severity": "error"
+                    })
+                teachers_seen[teacher_id] = session.get("id")
+            
+            if class_id:
+                if class_id in classes_seen:
+                    class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1})
+                    conflicts.append({
+                        "type": "class_double_booking",
+                        "day": day,
+                        "time_slot_id": slot_id,
+                        "class_id": class_id,
+                        "class_name": class_doc.get("name") if class_doc else "Unknown",
+                        "message_ar": f"الفصل مجدول في أكثر من حصة",
+                        "severity": "error"
+                    })
+                classes_seen[class_id] = session.get("id")
+    
+    return {
+        "schedule_id": schedule_id,
+        "total_conflicts": len(conflicts),
+        "conflicts": conflicts
+    }
+
+# ============== TEACHER RANK UPDATE ==============
+@api_router.put("/teachers/{teacher_id}/rank")
+async def update_teacher_rank(
+    teacher_id: str,
+    rank: TeacherRankEnum,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """تحديث رتبة المعلم"""
+    result = await db.teachers.update_one(
+        {"id": teacher_id},
+        {"$set": {"rank": rank.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    return {"message": "تم تحديث رتبة المعلم"}
+
+# ============== TEACHER WORKLOAD ==============
+@api_router.get("/teachers/{teacher_id}/workload")
+async def get_teacher_workload(
+    teacher_id: str,
+    schedule_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """الحصول على نصاب المعلم"""
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    
+    rank_str = teacher.get("rank", TeacherRankEnum.PRACTITIONER.value)
+    
+    # Workload limits by rank
+    workload_limits = {
+        TeacherRankEnum.EXPERT.value: {"min": 12, "max": 18, "daily_max": 4},
+        TeacherRankEnum.ADVANCED.value: {"min": 16, "max": 20, "daily_max": 5},
+        TeacherRankEnum.PRACTITIONER.value: {"min": 18, "max": 24, "daily_max": 6},
+        TeacherRankEnum.ASSISTANT.value: {"min": 20, "max": 26, "daily_max": 7},
+    }
+    
+    limits = workload_limits.get(rank_str, workload_limits[TeacherRankEnum.PRACTITIONER.value])
+    
+    # Get assignments
+    assignments = await db.teacher_assignments.find(
+        {"teacher_id": teacher_id, "is_active": True}, {"_id": 0}
+    ).to_list(50)
+    
+    total_weekly_sessions = sum(a.get("weekly_sessions", 0) for a in assignments)
+    
+    # Get actual sessions if schedule_id provided
+    actual_sessions = 0
+    sessions_by_day = {}
+    if schedule_id:
+        assignment_ids = [a.get("id") for a in assignments]
+        sessions = await db.schedule_sessions.find({
+            "schedule_id": schedule_id,
+            "assignment_id": {"$in": assignment_ids},
+            "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+        }, {"_id": 0}).to_list(200)
+        
+        actual_sessions = len(sessions)
+        for s in sessions:
+            day = s.get("day_of_week")
+            if day not in sessions_by_day:
+                sessions_by_day[day] = 0
+            sessions_by_day[day] += 1
+    
+    return {
+        "teacher_id": teacher_id,
+        "teacher_name": teacher.get("full_name"),
+        "rank": rank_str,
+        "weekly_hours_min": limits["min"],
+        "weekly_hours_max": limits["max"],
+        "daily_sessions_max": limits["daily_max"],
+        "total_assigned_sessions": total_weekly_sessions,
+        "actual_scheduled_sessions": actual_sessions,
+        "sessions_by_day": sessions_by_day,
+        "is_overloaded": total_weekly_sessions > limits["max"],
+        "is_underloaded": total_weekly_sessions < limits["min"],
+        "assignments_count": len(assignments)
+    }
+
+# ============== SEED TIME SLOTS ==============
+@api_router.post("/seed/time-slots/{school_id}")
+async def seed_time_slots(
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """إنشاء فترات زمنية افتراضية للمدرسة"""
+    # Check if slots already exist
+    existing = await db.time_slots.count_documents({"school_id": school_id})
+    if existing > 0:
+        return {"message": "الفترات الزمنية موجودة بالفعل", "count": existing}
+    
+    # Default time slots for Saudi schools
+    default_slots = [
+        {"name": "الحصة الأولى", "name_en": "Period 1", "start_time": "07:00", "end_time": "07:45", "slot_number": 1, "is_break": False},
+        {"name": "الحصة الثانية", "name_en": "Period 2", "start_time": "07:50", "end_time": "08:35", "slot_number": 2, "is_break": False},
+        {"name": "الحصة الثالثة", "name_en": "Period 3", "start_time": "08:40", "end_time": "09:25", "slot_number": 3, "is_break": False},
+        {"name": "الاستراحة", "name_en": "Break", "start_time": "09:25", "end_time": "09:45", "slot_number": 4, "is_break": True},
+        {"name": "الحصة الرابعة", "name_en": "Period 4", "start_time": "09:45", "end_time": "10:30", "slot_number": 5, "is_break": False},
+        {"name": "الحصة الخامسة", "name_en": "Period 5", "start_time": "10:35", "end_time": "11:20", "slot_number": 6, "is_break": False},
+        {"name": "الحصة السادسة", "name_en": "Period 6", "start_time": "11:25", "end_time": "12:10", "slot_number": 7, "is_break": False},
+        {"name": "الصلاة", "name_en": "Prayer", "start_time": "12:10", "end_time": "12:30", "slot_number": 8, "is_break": True},
+        {"name": "الحصة السابعة", "name_en": "Period 7", "start_time": "12:30", "end_time": "13:15", "slot_number": 9, "is_break": False},
+    ]
+    
+    created = 0
+    for slot in default_slots:
+        slot_id = str(uuid.uuid4())
+        slot_doc = {
+            "id": slot_id,
+            "school_id": school_id,
+            "duration_minutes": 45 if not slot["is_break"] else 20,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            **slot
+        }
+        await db.time_slots.insert_one(slot_doc)
+        created += 1
+    
+    return {"message": f"تم إنشاء {created} فترة زمنية", "count": created}
+
 # ============== LEGACY ROUTES ==============
 @api_router.get("/")
 async def root():
