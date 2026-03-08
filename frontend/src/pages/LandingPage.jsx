@@ -287,7 +287,7 @@ export const LandingPage = () => {
           </div>
           
           {/* LOGO - Bigger with Curved Corners */}
-          <div className="mb-8">
+          <div className="mb-4">
             <img 
               src={LOGO_WHITE} 
               alt="نَسَّق" 
@@ -296,17 +296,69 @@ export const LandingPage = () => {
             />
           </div>
           
+          {/* Platform Name Under Logo */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-cairo font-bold text-white mb-6" data-testid="platform-name">
+            {isRTL ? 'نَسَّق' : 'NASSAQ'}
+          </h1>
+          
           <p className="text-2xl md:text-3xl lg:text-4xl text-brand-turquoise font-cairo font-semibold mb-6">
             {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
           
           {/* Updated Description - Shorter */}
-          <p className="text-lg text-white/70 font-tajawal mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-white/70 font-tajawal mb-8 max-w-2xl mx-auto leading-relaxed">
             {isRTL 
               ? 'منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي'
               : 'A comprehensive school management platform with modern educational standards, powered by AI'
             }
           </p>
+          
+          {/* ========== TRACTION / PLATFORM IMPACT BLOCK ========== */}
+          <div className="mb-10" data-testid="traction-section">
+            <p className="text-white/80 font-tajawal text-base mb-6 max-w-xl mx-auto">
+              {isRTL 
+                ? 'تستخدم منصة نَسَّق اليوم وتدير آلاف العمليات التعليمية يوميًا.'
+                : 'NASSAQ platform is used today to manage thousands of educational operations daily.'
+              }
+            </p>
+            
+            {/* Traction Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-6">
+              {/* Schools */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-schools">
+                <Building2 className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+200</p>
+                <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'مدرسة' : 'Schools'}</p>
+              </div>
+              
+              {/* Students */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-students">
+                <GraduationCap className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+50,000</p>
+                <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'طالب' : 'Students'}</p>
+              </div>
+              
+              {/* Parents */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-parents">
+                <Users className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+100,000</p>
+                <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'ولي أمر' : 'Parents'}</p>
+              </div>
+              
+              {/* Teachers */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-teachers">
+                <UserCheck className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+3,000</p>
+                <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'معلم ومعلمة' : 'Teachers'}</p>
+              </div>
+            </div>
+            
+            {/* 24/7 Support Badge */}
+            <div className="inline-flex items-center gap-2 bg-brand-turquoise/20 border border-brand-turquoise/30 rounded-full px-4 py-2">
+              <Bell className="h-4 w-4 text-brand-turquoise animate-pulse" />
+              <span className="text-white font-tajawal text-sm">{isRTL ? 'دعم فني متواصل 24/7' : '24/7 Technical Support'}</span>
+            </div>
+          </div>
           
           <div className="flex items-center justify-center gap-4 mb-10">
             <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-12 h-12 rounded-full object-cover border-2 border-brand-turquoise shadow-lg" data-testid="hakim-avatar" />
