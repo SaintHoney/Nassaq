@@ -774,7 +774,7 @@ export const SchedulePage = () => {
             </div>
           )}
 
-          {/* Weekly Schedule Grid */}
+          {/* Weekly Schedule Grid with Drag & Drop */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-brand-turquoise" />
@@ -795,116 +795,128 @@ export const SchedulePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="card-nassaq overflow-hidden" data-testid="schedule-grid">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="p-3 text-start font-medium border-b border-e w-24">
-                          {isRTL ? 'الوقت' : 'Time'}
-                        </th>
-                        {DAYS.map(day => (
-                          <th key={day.key} className="p-3 text-center font-medium border-b min-w-[160px]">
-                            {isRTL ? day.ar : day.en}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {timeSlots.map((slot, slotIndex) => (
-                        <tr key={slot.id} className={slotIndex % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
-                          <td className="p-3 border-e border-b">
-                            <div className="text-xs font-medium text-muted-foreground">
-                              {formatTime(slot.start_time)}
-                            </div>
-                            <div className="text-xs text-muted-foreground/60">
-                              {formatTime(slot.end_time)}
-                            </div>
-                            <Badge variant="secondary" className="mt-1 text-xs">
-                              {isRTL ? slot.name : (slot.name_en || slot.name)}
-                            </Badge>
-                          </td>
-                          {DAYS.map(day => {
-                            const cellSessions = getSessionsForCell(day.key, slot.id);
-                            const cellConflicts = getCellConflicts(day.key, slot.id);
-                            const hasConflict = cellConflicts.length > 0;
-                            
-                            return (
-                              <td 
-                                key={`${day.key}-${slot.id}`} 
-                                className={`p-2 border-b min-h-[80px] align-top ${
-                                  hasConflict ? 'bg-red-50 dark:bg-red-900/10' : ''
-                                }`}
-                                data-testid={`cell-${day.key}-${slot.slot_number}`}
-                              >
-                                {cellSessions.length > 0 ? (
-                                  <div className="space-y-2">
-                                    {cellSessions.map(session => (
-                                      <TooltipProvider key={session.id}>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div
-                                              className={`p-2 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                                                hasConflict 
-                                                  ? 'border-red-400 dark:border-red-600 bg-red-100 dark:bg-red-900/30' 
-                                                  : subjectColorMap[session.subject_id] || SUBJECT_COLORS[0]
-                                              }`}
-                                              onClick={() => {
-                                                setSelectedSession(session);
-                                                setSessionDetailOpen(true);
-                                              }}
-                                              data-testid={`session-${session.id}`}
-                                            >
-                                              <div className="flex items-start justify-between">
-                                                <div className="min-w-0 flex-1">
-                                                  <p className="font-medium text-sm truncate">
-                                                    {session.subject_name}
-                                                  </p>
-                                                  <p className="text-xs opacity-75 truncate">
-                                                    {session.teacher_name}
-                                                  </p>
-                                                  <p className="text-xs opacity-60 truncate mt-1">
-                                                    {session.class_name}
-                                                  </p>
-                                                </div>
-                                                {hasConflict && (
-                                                  <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                                                )}
-                                              </div>
-                                            </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="top" className="max-w-xs">
-                                            <div className="space-y-1">
-                                              <p className="font-medium">{session.subject_name}</p>
-                                              <p className="text-xs">{isRTL ? 'المعلم:' : 'Teacher:'} {session.teacher_name}</p>
-                                              <p className="text-xs">{isRTL ? 'الفصل:' : 'Class:'} {session.class_name}</p>
-                                              {hasConflict && (
-                                                <p className="text-xs text-red-500 font-medium">
-                                                  {cellConflicts[0]?.message_ar || cellConflicts[0]?.message}
-                                                </p>
-                                              )}
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="h-16 flex items-center justify-center text-muted-foreground/30">
-                                    <span className="text-xs">—</span>
-                                  </div>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              {/* Drag & Drop Instructions Banner */}
+              <div className="mb-4 p-3 bg-brand-turquoise/10 rounded-xl border border-brand-turquoise/30">
+                <div className="flex items-center gap-2 text-sm text-brand-turquoise">
+                  <Move className="h-4 w-4" />
+                  <span className="font-medium">
+                    {isRTL ? 'يمكنك سحب وإفلات الحصص لتعديل الجدول' : 'Drag and drop sessions to modify the schedule'}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              {/* Moving Indicator */}
+              {movingSession && (
+                <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+                  <div className="bg-background rounded-xl p-6 shadow-xl flex items-center gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-turquoise" />
+                    <span className="font-medium">
+                      {isRTL ? 'جاري نقل الحصة...' : 'Moving session...'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <Card className="card-nassaq overflow-hidden" data-testid="schedule-grid">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="p-3 text-start font-medium border-b border-e w-24">
+                            {isRTL ? 'الوقت' : 'Time'}
+                          </th>
+                          {DAYS.map(day => (
+                            <th key={day.key} className="p-3 text-center font-medium border-b min-w-[160px]">
+                              {isRTL ? day.ar : day.en}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timeSlots.map((slot, slotIndex) => (
+                          <tr key={slot.id} className={slotIndex % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
+                            <td className="p-3 border-e border-b">
+                              <div className="text-xs font-medium text-muted-foreground">
+                                {formatTime(slot.start_time)}
+                              </div>
+                              <div className="text-xs text-muted-foreground/60">
+                                {formatTime(slot.end_time)}
+                              </div>
+                              <Badge variant="secondary" className="mt-1 text-xs">
+                                {isRTL ? slot.name : (slot.name_en || slot.name)}
+                              </Badge>
+                            </td>
+                            {DAYS.map(day => {
+                              const cellSessions = getSessionsForCell(day.key, slot.id);
+                              const cellConflicts = getCellConflicts(day.key, slot.id);
+                              const hasConflict = cellConflicts.length > 0;
+                              
+                              return (
+                                <DroppableCell
+                                  key={`${day.key}-${slot.id}`}
+                                  id={`${day.key}::${slot.id}`}
+                                  day={day}
+                                  slot={slot}
+                                  hasConflict={hasConflict}
+                                  isDragging={isDragging}
+                                >
+                                  {cellSessions.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {cellSessions.map(session => (
+                                        <DraggableSession
+                                          key={session.id}
+                                          session={session}
+                                          hasConflict={hasConflict}
+                                          cellConflicts={cellConflicts}
+                                          subjectColor={subjectColorMap[session.subject_id] || SUBJECT_COLORS[0]}
+                                          isRTL={isRTL}
+                                          onClick={() => {
+                                            setSelectedSession(session);
+                                            setSessionDetailOpen(true);
+                                          }}
+                                        />
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="h-16 flex items-center justify-center text-muted-foreground/30">
+                                      <span className="text-xs">{isDragging ? (isRTL ? 'أفلت هنا' : 'Drop here') : '—'}</span>
+                                    </div>
+                                  )}
+                                </DroppableCell>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Drag Overlay */}
+              <DragOverlay>
+                {activeSession && (
+                  <div className={`p-3 rounded-xl border-2 shadow-xl ${subjectColorMap[activeSession.subject_id] || SUBJECT_COLORS[0]} opacity-90`}>
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="h-4 w-4" />
+                      <div>
+                        <p className="font-medium text-sm">{activeSession.subject_name}</p>
+                        <p className="text-xs opacity-75">{activeSession.teacher_name}</p>
+                        <p className="text-xs opacity-60">{activeSession.class_name}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
           )}
 
           {/* Session Detail Dialog */}
