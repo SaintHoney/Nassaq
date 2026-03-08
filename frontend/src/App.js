@@ -10,6 +10,10 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { SchoolDashboard } from "./pages/SchoolDashboard";
+import { TeachersPage } from "./pages/TeachersPage";
+import { StudentsPage } from "./pages/StudentsPage";
+import { ClassesPage } from "./pages/ClassesPage";
+import { SubjectsPage } from "./pages/SubjectsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -131,6 +135,40 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
             <SchoolDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Management Routes */}
+      <Route
+        path="/admin/teachers"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <TeachersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/students"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <StudentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/classes"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <ClassesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/subjects"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <SubjectsPage />
           </ProtectedRoute>
         }
       />

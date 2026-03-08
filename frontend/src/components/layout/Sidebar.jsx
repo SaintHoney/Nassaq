@@ -53,22 +53,28 @@ export const Sidebar = ({ children }) => {
         roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
       },
       {
-        icon: GraduationCap,
-        label: isRTL ? 'الطلاب' : 'Students',
-        href: '/school/students',
-        roles: ['school_principal', 'school_sub_admin', 'teacher'],
-      },
-      {
         icon: UserCheck,
         label: isRTL ? 'المعلمون' : 'Teachers',
-        href: '/school/teachers',
-        roles: ['school_principal', 'school_sub_admin'],
+        href: '/admin/teachers',
+        roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: GraduationCap,
+        label: isRTL ? 'الطلاب' : 'Students',
+        href: '/admin/students',
+        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
       },
       {
         icon: BookOpen,
         label: isRTL ? 'الفصول' : 'Classes',
-        href: '/school/classes',
-        roles: ['school_principal', 'school_sub_admin', 'teacher'],
+        href: '/admin/classes',
+        roles: ['platform_admin', 'school_principal', 'school_sub_admin', 'teacher'],
+      },
+      {
+        icon: MessageSquare,
+        label: isRTL ? 'المواد الدراسية' : 'Subjects',
+        href: '/admin/subjects',
+        roles: ['platform_admin', 'school_principal', 'school_sub_admin'],
       },
       {
         icon: Calendar,
