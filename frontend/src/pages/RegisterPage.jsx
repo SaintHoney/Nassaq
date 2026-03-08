@@ -275,10 +275,10 @@ export const RegisterPage = () => {
           
           {/* Tagline */}
           <h2 className="font-cairo text-4xl font-bold text-white mb-4">
-            نَسَّق
+            {isRTL ? 'نَسَّق' : 'NASSAQ'}
           </h2>
           <p className="text-2xl text-brand-turquoise font-cairo font-semibold mb-8">
-            من البيانات إلى القرار
+            {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
           
           {/* Hakim Character */}
@@ -286,14 +286,17 @@ export const RegisterPage = () => {
             <div className="absolute inset-0 bg-brand-turquoise/30 rounded-full blur-3xl" />
             <img
               src={HAKIM_CHARACTER}
-              alt="حكيم - المساعد الذكي"
+              alt={isRTL ? 'حكيم - المساعد الذكي' : 'Hakim - AI Assistant'}
               className="relative z-10 w-full h-full object-contain animate-float"
               style={{ filter: 'drop-shadow(0 0 25px rgba(70, 193, 190, 0.4))' }}
             />
           </div>
           
           <p className="text-white/60 font-tajawal mt-6">
-            انضم إلى منصة نَسَّق وابدأ رحلة الإدارة الذكية
+            {isRTL 
+              ? 'انضم إلى منصة نَسَّق وابدأ رحلة الإدارة الذكية'
+              : 'Join NASSAQ platform and start your smart management journey'
+            }
           </p>
         </div>
       </div>
