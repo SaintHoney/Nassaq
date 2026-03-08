@@ -2417,6 +2417,319 @@ async def get_status_checks():
     return status_checks
 
 # Include the router in the main app
+# ============== SESSION MOVE API (Drag & Drop) ==============
+class MoveSessionRequest(BaseModel):
+    """طلب نقل حصة"""
+    new_day_of_week: str
+    new_time_slot_id: str
+
+class MoveSessionResponse(BaseModel):
+    """استجابة نقل حصة"""
+    success: bool
+    session_id: str
+    old_day: str
+    old_time_slot_id: str
+    new_day: str
+    new_time_slot_id: str
+    conflicts: List[dict] = []
+    status: str  # 'success', 'conflict_warning', 'hard_conflict'
+    message: str
+    message_en: str
+
+@api_router.put("/schedule-sessions/{session_id}/move", response_model=MoveSessionResponse)
+async def move_schedule_session(
+    session_id: str,
+    move_data: MoveSessionRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    """
+    نقل حصة من موقع إلى آخر (Drag & Drop)
+    
+    يتحقق من:
+    1. تعارض المعلم
+    2. تعارض الفصل
+    3. تعارض القاعة (إن وجدت)
+    
+    يُرجع:
+    - success: تم النقل بنجاح
+    - conflict_warning: تم النقل مع وجود تعارض يحتاج مراجعة
+    - hard_conflict: تم رفض النقل وإرجاع الحصة
+    """
+    # Get the session
+    session = await db.schedule_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    old_day = session.get("day_of_week")
+    old_time_slot_id = session.get("time_slot_id")
+    schedule_id = session.get("schedule_id")
+    assignment_id = session.get("assignment_id")
+    
+    # Get assignment details
+    assignment = await db.teacher_assignments.find_one({"id": assignment_id}, {"_id": 0})
+    if not assignment:
+        raise HTTPException(status_code=404, detail="الإسناد غير موجود")
+    
+    teacher_id = assignment.get("teacher_id")
+    class_id = assignment.get("class_id")
+    
+    # Validate the new time slot exists
+    new_slot = await db.time_slots.find_one({"id": move_data.new_time_slot_id}, {"_id": 0})
+    if not new_slot:
+        raise HTTPException(status_code=400, detail="الفترة الزمنية غير موجودة")
+    
+    # Check for conflicts at the new position
+    conflicts = []
+    is_hard_conflict = False
+    
+    # 1. Check teacher conflict
+    teacher_conflict = await db.schedule_sessions.find_one({
+        "schedule_id": schedule_id,
+        "day_of_week": move_data.new_day_of_week,
+        "time_slot_id": move_data.new_time_slot_id,
+        "id": {"$ne": session_id},
+        "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+    }, {"_id": 0})
+    
+    if teacher_conflict:
+        conflict_assignment = await db.teacher_assignments.find_one(
+            {"id": teacher_conflict.get("assignment_id")}, {"_id": 0}
+        )
+        if conflict_assignment:
+            conflict_teacher_id = conflict_assignment.get("teacher_id")
+            conflict_class_id = conflict_assignment.get("class_id")
+            
+            # Check if same teacher
+            if conflict_teacher_id == teacher_id:
+                teacher_doc = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+                teacher_name = teacher_doc.get("full_name", "المعلم") if teacher_doc else "المعلم"
+                conflicts.append({
+                    "type": "teacher_double_booking",
+                    "message": f"المعلم {teacher_name} لديه حصة أخرى في نفس الوقت",
+                    "message_en": f"Teacher {teacher_name} has another session at the same time",
+                    "severity": "hard",
+                    "conflicting_session_id": teacher_conflict.get("id")
+                })
+                is_hard_conflict = True
+            
+            # Check if same class
+            if conflict_class_id == class_id:
+                class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0})
+                class_name = class_doc.get("name", "الفصل") if class_doc else "الفصل"
+                conflicts.append({
+                    "type": "class_double_booking",
+                    "message": f"الفصل {class_name} لديه حصة أخرى في نفس الوقت",
+                    "message_en": f"Class {class_name} has another session at the same time",
+                    "severity": "hard",
+                    "conflicting_session_id": teacher_conflict.get("id")
+                })
+                is_hard_conflict = True
+    
+    # If hard conflict, reject the move
+    if is_hard_conflict:
+        return MoveSessionResponse(
+            success=False,
+            session_id=session_id,
+            old_day=old_day,
+            old_time_slot_id=old_time_slot_id,
+            new_day=move_data.new_day_of_week,
+            new_time_slot_id=move_data.new_time_slot_id,
+            conflicts=conflicts,
+            status="hard_conflict",
+            message="لا يمكن نقل الحصة بسبب تعارض. تم إرجاع الحصة إلى مكانها السابق.",
+            message_en="Cannot move session due to conflict. Session returned to original position."
+        )
+    
+    # Perform the move
+    await db.schedule_sessions.update_one(
+        {"id": session_id},
+        {"$set": {
+            "day_of_week": move_data.new_day_of_week,
+            "time_slot_id": move_data.new_time_slot_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Determine response status
+    if conflicts:
+        status = "conflict_warning"
+        message = "تم نقل الحصة مع وجود تحذيرات. يرجى مراجعة التعارضات."
+        message_en = "Session moved with warnings. Please review conflicts."
+    else:
+        status = "success"
+        message = "تم نقل الحصة بنجاح"
+        message_en = "Session moved successfully"
+    
+    return MoveSessionResponse(
+        success=True,
+        session_id=session_id,
+        old_day=old_day,
+        old_time_slot_id=old_time_slot_id,
+        new_day=move_data.new_day_of_week,
+        new_time_slot_id=move_data.new_time_slot_id,
+        conflicts=conflicts,
+        status=status,
+        message=message,
+        message_en=message_en
+    )
+
+
+# ============== SEED TEST ACCOUNTS ==============
+@api_router.post("/seed/test-accounts")
+async def seed_test_accounts():
+    """
+    إنشاء حسابات اختبار للنظام:
+    - مدير المدرسة: principal@nassaq.com / NassaqPrincipal2026
+    - معلم: teacher@nassaq.com / NassaqTeacher2026
+    """
+    results = {
+        "principal": None,
+        "teacher": None
+    }
+    
+    # Get or create a test school
+    test_school = await db.schools.find_one({"code": "TEST001"}, {"_id": 0})
+    if not test_school:
+        school_id = str(uuid.uuid4())
+        test_school = {
+            "id": school_id,
+            "name": "مدرسة نَسَّق التجريبية",
+            "name_en": "NASSAQ Test School",
+            "code": "TEST001",
+            "email": "school@nassaq.com",
+            "phone": "0500000000",
+            "address": "الرياض، المملكة العربية السعودية",
+            "city": "الرياض",
+            "region": "الرياض",
+            "country": "SA",
+            "logo_url": None,
+            "status": "active",
+            "student_capacity": 500,
+            "current_students": 0,
+            "current_teachers": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.schools.insert_one(test_school)
+    
+    school_id = test_school.get("id")
+    
+    # 1. Create Principal Account
+    existing_principal = await db.users.find_one({"email": "principal@nassaq.com"})
+    if existing_principal:
+        # Update password to ensure it's correct
+        await db.users.update_one(
+            {"email": "principal@nassaq.com"},
+            {"$set": {
+                "password_hash": hash_password("NassaqPrincipal2026"),
+                "is_active": True,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        results["principal"] = {"status": "updated", "email": "principal@nassaq.com"}
+    else:
+        principal_id = str(uuid.uuid4())
+        principal_doc = {
+            "id": principal_id,
+            "email": "principal@nassaq.com",
+            "password_hash": hash_password("NassaqPrincipal2026"),
+            "full_name": "مدير المدرسة",
+            "full_name_en": "School Principal",
+            "role": UserRole.SCHOOL_PRINCIPAL.value,
+            "tenant_id": school_id,
+            "phone": "0511111111",
+            "avatar_url": None,
+            "is_active": True,
+            "preferred_language": "ar",
+            "preferred_theme": "light",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(principal_doc)
+        results["principal"] = {"status": "created", "email": "principal@nassaq.com"}
+    
+    # 2. Create Teacher Account
+    existing_teacher = await db.users.find_one({"email": "teacher@nassaq.com"})
+    if existing_teacher:
+        # Update password to ensure it's correct
+        await db.users.update_one(
+            {"email": "teacher@nassaq.com"},
+            {"$set": {
+                "password_hash": hash_password("NassaqTeacher2026"),
+                "is_active": True,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        results["teacher"] = {"status": "updated", "email": "teacher@nassaq.com"}
+    else:
+        teacher_user_id = str(uuid.uuid4())
+        teacher_id = str(uuid.uuid4())
+        
+        # User account
+        teacher_user_doc = {
+            "id": teacher_user_id,
+            "email": "teacher@nassaq.com",
+            "password_hash": hash_password("NassaqTeacher2026"),
+            "full_name": "معلم تجريبي",
+            "full_name_en": "Test Teacher",
+            "role": UserRole.TEACHER.value,
+            "tenant_id": school_id,
+            "phone": "0522222222",
+            "avatar_url": None,
+            "is_active": True,
+            "preferred_language": "ar",
+            "preferred_theme": "light",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Teacher profile
+        teacher_profile_doc = {
+            "id": teacher_id,
+            "user_id": teacher_user_id,
+            "full_name": "معلم تجريبي",
+            "full_name_en": "Test Teacher",
+            "email": "teacher@nassaq.com",
+            "phone": "0522222222",
+            "school_id": school_id,
+            "specialization": "الرياضيات",
+            "years_of_experience": 5,
+            "qualification": "بكالوريوس",
+            "gender": "male",
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.users.insert_one(teacher_user_doc)
+        await db.teachers.insert_one(teacher_profile_doc)
+        
+        # Update school teacher count
+        await db.schools.update_one(
+            {"id": school_id},
+            {"$inc": {"current_teachers": 1}}
+        )
+        
+        results["teacher"] = {"status": "created", "email": "teacher@nassaq.com"}
+    
+    return {
+        "message": "تم إنشاء/تحديث حسابات الاختبار",
+        "accounts": {
+            "principal": {
+                "email": "principal@nassaq.com",
+                "password": "NassaqPrincipal2026",
+                "role": "School Principal"
+            },
+            "teacher": {
+                "email": "teacher@nassaq.com",
+                "password": "NassaqTeacher2026",
+                "role": "Teacher"
+            }
+        },
+        "results": results
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
