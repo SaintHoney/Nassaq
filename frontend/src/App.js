@@ -175,6 +175,32 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      
+      {/* Scheduling Routes */}
+      <Route
+        path="/admin/schedule"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <SchedulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/time-slots"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <TimeSlotsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/teacher-assignments"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin']}>
+            <TeacherAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
