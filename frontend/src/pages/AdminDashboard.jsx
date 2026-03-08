@@ -89,7 +89,7 @@ export const AdminDashboard = () => {
 
   const handleCreateSchool = async () => {
     try {
-      await api.post('/schools', newSchool);
+      const response = await api.post('/schools', newSchool);
       toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح' : 'School created successfully');
       setCreateDialogOpen(false);
       setNewSchool({
@@ -101,7 +101,11 @@ export const AdminDashboard = () => {
         city: '',
         student_capacity: 500,
       });
-      fetchData();
+      // Immediately update schools list with the new school
+      setSchools(prev => [...prev, response.data]);
+      // Also refresh stats
+      const statsRes = await api.get('/dashboard/stats');
+      setStats(statsRes.data);
     } catch (error) {
       toast.error(error.response?.data?.detail || (isRTL ? 'فشل إنشاء المدرسة' : 'Failed to create school'));
     }
