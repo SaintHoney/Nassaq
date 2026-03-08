@@ -14,6 +14,9 @@ import { TeachersPage } from "./pages/TeachersPage";
 import { StudentsPage } from "./pages/StudentsPage";
 import { ClassesPage } from "./pages/ClassesPage";
 import { SubjectsPage } from "./pages/SubjectsPage";
+import { SchedulePage } from "./pages/SchedulePage";
+import { TimeSlotsPage } from "./pages/TimeSlotsPage";
+import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
