@@ -326,6 +326,74 @@ export const LoginPage = () => {
                   </Link>
                 </p>
               </div>
+
+              {/* Test Accounts Section */}
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <p className="text-xs text-muted-foreground font-tajawal text-center mb-3">
+                  {isRTL ? '🔐 حسابات تجريبية للاختبار:' : '🔐 Test Accounts for Testing:'}
+                </p>
+                <div className="space-y-2">
+                  {/* Platform Admin */}
+                  <div 
+                    className="p-3 rounded-xl bg-brand-navy/5 border border-brand-navy/20 cursor-pointer hover:bg-brand-navy/10 transition-colors"
+                    onClick={() => {
+                      setEmail('info@nassaqapp.com');
+                      setPassword('NassaqAdmin2026!##$$HBJ');
+                    }}
+                    data-testid="test-admin-credentials"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-brand-navy dark:text-brand-gold">
+                          {isRTL ? 'مدير المنصة' : 'Platform Admin'}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">info@nassaqapp.com</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* School Principal */}
+                  <div 
+                    className="p-3 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
+                    onClick={() => {
+                      setEmail('principal@nassaq.com');
+                      setPassword('NassaqPrincipal2026');
+                    }}
+                    data-testid="test-principal-credentials"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-brand-turquoise">
+                          {isRTL ? 'مدير المدرسة' : 'School Principal'}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">principal@nassaq.com</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Teacher */}
+                  <div 
+                    className="p-3 rounded-xl bg-brand-purple/5 border border-brand-purple/20 cursor-pointer hover:bg-brand-purple/10 transition-colors"
+                    onClick={() => {
+                      setEmail('teacher@nassaq.com');
+                      setPassword('NassaqTeacher2026');
+                    }}
+                    data-testid="test-teacher-credentials"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-brand-purple">
+                          {isRTL ? 'معلم' : 'Teacher'}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">teacher@nassaq.com</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
