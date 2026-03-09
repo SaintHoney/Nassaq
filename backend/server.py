@@ -383,6 +383,18 @@ async def create_school(
     if existing:
         raise HTTPException(status_code=400, detail="رمز المدرسة مستخدم مسبقاً")
     
+    # Validate principal email uniqueness (except if teacher creating parent account)
+    if school_data.principal_email:
+        existing_email = await db.users.find_one({"email": school_data.principal_email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="البريد الإلكتروني مستخدم مسبقاً")
+    
+    # Validate principal phone uniqueness
+    if school_data.principal_phone:
+        existing_phone = await db.users.find_one({"phone": school_data.principal_phone})
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="رقم الهاتف مستخدم مسبقاً")
+    
     # Use principal_email as school email if not provided
     school_email = school_data.email or school_data.principal_email or f"school-{school_code.lower()}@nassaq.com"
     school_phone = school_data.phone or school_data.principal_phone
@@ -400,7 +412,7 @@ async def create_school(
         "region": school_data.region,
         "country": school_data.country or "SA",
         "logo_url": None,
-        "status": SchoolStatus.PENDING.value,
+        "status": SchoolStatus.ACTIVE.value,  # Set to active immediately
         "student_capacity": school_data.student_capacity,
         "current_students": 0,
         "current_teachers": 0,
@@ -413,10 +425,57 @@ async def create_school(
         "principal_email": school_data.principal_email,
         "principal_phone": school_data.principal_phone,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user.get("user_id")
     }
     
     await db.schools.insert_one(school_doc)
+    
+    # Create principal account if email provided
+    if school_data.principal_email and school_data.principal_name:
+        # Generate temporary password
+        import secrets
+        import string
+        chars = string.ascii_letters + string.digits + "@#$"
+        temp_password = ''.join(secrets.choice(chars) for _ in range(12))
+        
+        # Hash password
+        hashed_password = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        principal_id = str(uuid.uuid4())
+        principal_doc = {
+            "id": principal_id,
+            "email": school_data.principal_email,
+            "password": hashed_password,
+            "full_name": school_data.principal_name,
+            "full_name_en": None,
+            "role": UserRole.SCHOOL_PRINCIPAL.value,
+            "tenant_id": school_id,
+            "phone": school_data.principal_phone,
+            "avatar_url": None,
+            "is_active": True,
+            "must_change_password": True,  # Force password change on first login
+            "preferred_language": school_data.language or "ar",
+            "preferred_theme": "light",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(principal_doc)
+        
+        # Log in audit
+        await db.audit_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "action": "CREATE_SCHOOL_WITH_PRINCIPAL",
+            "entity_type": "school",
+            "entity_id": school_id,
+            "details": {
+                "school_code": school_code,
+                "school_name": school_data.name,
+                "principal_email": school_data.principal_email
+            },
+            "user_id": current_user.get("user_id"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
     
     return SchoolResponse(
         id=school_id,
@@ -430,7 +489,7 @@ async def create_school(
         region=school_data.region,
         country=school_data.country or "SA",
         logo_url=None,
-        status=SchoolStatus.PENDING,
+        status=SchoolStatus.ACTIVE,
         student_capacity=school_data.student_capacity,
         current_students=0,
         current_teachers=0,
