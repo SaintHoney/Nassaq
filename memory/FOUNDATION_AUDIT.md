@@ -204,28 +204,35 @@
 
 ## 4. الإجراءات المطلوبة (مرتبة حسب الأولوية)
 
-### Phase 2A: Identity & Tenant Foundation
-1. إنشاء Permission model
-2. إنشاء Scope model
-3. إنشاء User Relationship model
-4. بناء Tenant Isolation middleware
-5. تحسين RBAC
+### Phase 2A: Identity & Tenant Foundation ✅ COMPLETED
+1. ✅ إنشاء Permission model (في foundation.py)
+2. ✅ إنشاء Scope model (PermissionScope enum)
+3. ✅ إنشاء User Relationship model (UserRelationship)
+4. ⚠️ بناء Tenant Isolation middleware (جزئي)
+5. ✅ تحسين RBAC (إضافة الأدوار الجديدة)
 
-### Phase 2B: Academic Structure
-6. إنشاء Educational Stage model
-7. إنشاء Grade model
-8. إنشاء Physical Classroom model
-9. بناء Academic Hierarchy
+### Phase 2B: Behaviour Engine ✅ COMPLETED
+6. ✅ إنشاء Behaviour Types model
+7. ✅ إنشاء Behaviour Records model
+8. ✅ إنشاء Disciplinary Actions model
+9. ✅ APIs للتسجيل والمراجعة
+10. ✅ Auto-escalation logic
+11. ✅ Student behaviour profile
 
-### Phase 2C: Missing Engines
-10. بناء Behaviour Engine كامل
-11. تحسين Notification Engine
-12. بناء Reporting Engine
+### Phase 2C: Multi-Role Support ✅ COMPLETED
+12. ✅ Get user roles API
+13. ✅ Switch role API
+14. ✅ Add role to user API
+15. ✅ Audit logging for role changes
 
-### Phase 2D: Hardening
-13. إضافة Audit logging شامل
-14. Data validation
-15. Error handling
+### Phase 2D: Public APIs ✅ COMPLETED
+16. ✅ Public contact info API (no auth)
+
+### Phase 2E: Remaining Work
+17. ❌ Academic Structure Engine (stages, grades, sections)
+18. ❌ Tenant Isolation Middleware
+19. ❌ Reporting Engine
+20. ❌ AI Planning Engine
 
 ---
 
