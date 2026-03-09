@@ -117,13 +117,22 @@ class SchoolBase(BaseModel):
 class SchoolCreate(BaseModel):
     name: str
     name_en: Optional[str] = None
-    code: str
-    email: EmailStr
+    code: Optional[str] = None  # Auto-generated if not provided
+    email: Optional[EmailStr] = None  # Can use principal_email
     phone: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
     region: Optional[str] = None
+    country: str = "SA"
     student_capacity: int = 500
+    # New fields from wizard
+    language: Optional[str] = "ar"
+    calendar_system: Optional[str] = "hijri_gregorian"
+    school_type: Optional[str] = "public"  # public, private
+    stage: Optional[str] = "primary"  # nursery, kindergarten, primary, middle, high, etc.
+    principal_name: Optional[str] = None
+    principal_email: Optional[EmailStr] = None
+    principal_phone: Optional[str] = None
 
 class SchoolResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
