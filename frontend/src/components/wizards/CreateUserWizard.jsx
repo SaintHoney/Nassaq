@@ -27,7 +27,7 @@ import {
   CheckCircle2, XCircle, Plus, AlertTriangle, Sparkles,
   Building2, Users, BarChart3, Activity, FileText, Brain,
   GraduationCap, UserCheck, CalendarCheck, Bell, MessageSquare,
-  Link2, Archive, Server, Database, Key, School
+  Link2, Archive, Server, Database, Key, School, LayoutDashboard
 } from 'lucide-react';
 
 // =============================================================
