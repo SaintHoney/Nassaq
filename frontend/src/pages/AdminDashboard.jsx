@@ -430,18 +430,225 @@ export const AdminDashboard = () => {
                 <BarChart3 className="h-5 w-5 text-brand-turquoise" />
                 {isRTL ? 'المؤشرات العامة للمنصة' : 'Platform Analytics'}
               </h2>
-              <Button variant="ghost" size="sm" onClick={fetchStats}>
-                <RefreshCw className="h-4 w-4 me-2" />
-                {isRTL ? 'تحديث' : 'Refresh'}
-              </Button>
             </div>
+
+            {/* Global Filters Bar */}
+            <Card className="card-nassaq mb-4">
+              <CardContent className="p-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  {/* Scope Filter */}
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Select 
+                      value={filters.scope} 
+                      onValueChange={(v) => setFilters({ ...filters, scope: v })}
+                    >
+                      <SelectTrigger className="w-40 rounded-xl h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{isRTL ? 'كل المنصة' : 'All Platform'}</SelectItem>
+                        <SelectItem value="single">{isRTL ? 'مدرسة محددة' : 'Single School'}</SelectItem>
+                        <SelectItem value="multi">{isRTL ? 'مجموعة مدارس' : 'Multi-Select'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* School Selector (when scope is single) */}
+                  {filters.scope === 'single' && (
+                    <Select 
+                      value={filters.selectedSchool} 
+                      onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
+                    >
+                      <SelectTrigger className="w-48 rounded-xl h-9 text-sm">
+                        <SelectValue placeholder={isRTL ? 'اختر مدرسة' : 'Select school'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {schools.slice(0, 20).map((school) => (
+                          <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {/* City Filter */}
+                  <Select 
+                    value={filters.city} 
+                    onValueChange={(v) => setFilters({ ...filters, city: v })}
+                  >
+                    <SelectTrigger className="w-32 rounded-xl h-9 text-sm">
+                      <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                      {SAUDI_CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Divider */}
+                  <div className="h-8 w-px bg-border hidden md:block" />
+
+                  {/* Time Window */}
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Select 
+                      value={filters.timeWindow} 
+                      onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}
+                    >
+                      <SelectTrigger className="w-36 rounded-xl h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="live">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            {isRTL ? 'الآن (مباشر)' : 'Live'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                        <SelectItem value="week">{isRTL ? 'الأسبوع الحالي' : 'This Week'}</SelectItem>
+                        <SelectItem value="month">{isRTL ? 'الشهر الحالي' : 'This Month'}</SelectItem>
+                        <SelectItem value="custom">{isRTL ? 'نطاق مخصص' : 'Custom Range'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date Display */}
+                  <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg">
+                    <Calendar className="h-3 w-3" />
+                    <span className="font-medium">{getCurrentHijriDate().hijri}</span>
+                    <span className="opacity-60">({getCurrentHijriDate().gregorian})</span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-8 w-px bg-border hidden md:block" />
+
+                  {/* Tenant Status */}
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={filters.tenantStatus} 
+                      onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}
+                    >
+                      <SelectTrigger className="w-36 rounded-xl h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
+                        <SelectItem value="active">
+                          <span className="flex items-center gap-2">
+                            <Badge className="h-2 w-2 p-0 bg-green-500" />
+                            {isRTL ? 'نشطة' : 'Active'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="suspended">
+                          <span className="flex items-center gap-2">
+                            <Badge className="h-2 w-2 p-0 bg-red-500" />
+                            {isRTL ? 'موقوفة' : 'Suspended'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="setup">
+                          <span className="flex items-center gap-2">
+                            <Badge className="h-2 w-2 p-0 bg-yellow-500" />
+                            {isRTL ? 'قيد الإعداد' : 'Setup'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="expired">
+                          <span className="flex items-center gap-2">
+                            <Badge className="h-2 w-2 p-0 bg-gray-500" />
+                            {isRTL ? 'انتهى الاشتراك' : 'Expired'}
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Spacer */}
+                  <div className="flex-1" />
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {/* Refresh */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={fetchStats}
+                      className="rounded-xl h-9"
+                      disabled={loading}
+                    >
+                      <RefreshCw className={`h-4 w-4 me-1 ${loading ? 'animate-spin' : ''}`} />
+                      {isRTL ? 'تحديث' : 'Refresh'}
+                    </Button>
+
+                    {/* Export */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-xl h-9">
+                          <Download className="h-4 w-4 me-1" />
+                          {isRTL ? 'تصدير' : 'Export'}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleExport('PDF')}>
+                          <FileText className="h-4 w-4 me-2" />
+                          PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('Excel')}>
+                          <BarChart3 className="h-4 w-4 me-2" />
+                          Excel
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Display Settings */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowDisplaySettings(true)}
+                      className="rounded-xl h-9"
+                    >
+                      <SlidersHorizontal className="h-4 w-4 me-1" />
+                      {isRTL ? 'العرض' : 'Display'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Custom Date Range */}
+                {filters.timeWindow === 'custom' && (
+                  <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm">{isRTL ? 'من:' : 'From:'}</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.customDateFrom}
+                        onChange={(e) => setFilters({ ...filters, customDateFrom: e.target.value })}
+                        className="w-40 rounded-xl h-9"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm">{isRTL ? 'إلى:' : 'To:'}</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.customDateTo}
+                        onChange={(e) => setFilters({ ...filters, customDateTo: e.target.value })}
+                        className="w-40 rounded-xl h-9"
+                      />
+                    </div>
+                    <Button size="sm" className="rounded-xl h-9 bg-brand-turquoise">
+                      {isRTL ? 'تطبيق' : 'Apply'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             
             <div className={`grid gap-4 ${
               viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' :
               viewMode === 'expanded' ? 'grid-cols-1 md:grid-cols-2' :
               'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
             }`}>
-              {renderAnalyticsCard(
+              {visibleCards.schools && renderAnalyticsCard(
                 <Building2 className="h-6 w-6 text-brand-navy" />,
                 isRTL ? 'المدارس المسجلة' : 'Registered Schools',
                 stats?.total_schools,
