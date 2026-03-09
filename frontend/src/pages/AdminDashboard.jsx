@@ -955,14 +955,49 @@ export const AdminDashboard = () => {
           </div>
         </header>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
           
           {/* ============================================ */}
-          {/* 1. كارت الترحيب - Welcome Card (بنفس عرض الكروت) */}
+          {/* 1. كارت الترحيب - Welcome Card (متجاوب بالكامل) */}
           {/* ============================================ */}
           <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20" data-testid="welcome-card">
-            <CardContent className="py-5 px-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="py-4 px-4 lg:py-5 lg:px-6">
+              {/* Mobile Layout */}
+              <div className="lg:hidden">
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="h-12 w-12 border-2 border-brand-turquoise shadow-lg flex-shrink-0">
+                    <AvatarImage src={user?.avatar_url} alt={user?.full_name} />
+                    <AvatarFallback className="bg-gradient-to-br from-brand-navy to-brand-turquoise text-white text-lg font-bold">
+                      {user?.full_name?.charAt(0) || 'أ'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="font-cairo text-base font-bold text-brand-navy truncate" data-testid="user-display-mobile">
+                      {isRTL ? 'مرحباً أستاذ أحمد زلط' : 'Welcome, Ahmed Zalt'}
+                    </h1>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? 'مركز القيادة' : 'Command Center'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 text-center px-3 py-2 bg-brand-turquoise/10 rounded-xl border border-brand-turquoise/20">
+                    <p className="text-[10px] text-muted-foreground">{isRTL ? 'الفصل' : 'Semester'}</p>
+                    <p className="font-cairo font-bold text-brand-turquoise text-sm">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center gap-2 bg-muted/30 px-3 py-2 rounded-xl" data-testid="date-display-mobile">
+                    <Calendar className="h-4 w-4 text-brand-navy flex-shrink-0" />
+                    <div className="text-center">
+                      <p className="font-cairo text-xs font-bold text-brand-navy">
+                        {getCurrentHijriDate().hijri}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Desktop Layout */}
+              <div className="hidden lg:flex items-center justify-between">
                 {/* القسم الأيسر: الترحيب والعنوان مع صورة المستخدم */}
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-2 border-brand-turquoise shadow-lg">
