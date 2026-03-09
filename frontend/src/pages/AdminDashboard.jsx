@@ -329,6 +329,11 @@ export const AdminDashboard = () => {
     fetchStats();
   }, [fetchStats]);
 
+  // تحميل بيانات النشاط اليومي
+  useEffect(() => {
+    fetchActivityData();
+  }, [fetchActivityData]);
+
   // تصدير البيانات - Export Data (PDF حقيقي باستخدام jsPDF)
   const handleExportData = (format) => {
     const data = {
