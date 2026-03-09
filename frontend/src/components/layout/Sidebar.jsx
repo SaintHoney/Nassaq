@@ -71,12 +71,6 @@ export const Sidebar = ({ children }) => {
         roles: ['platform_admin'],
       },
       {
-        icon: FileText,
-        label: isRTL ? 'طلبات المعلمين' : 'Teacher Requests',
-        href: '/admin/teacher-requests',
-        roles: ['platform_admin'],
-      },
-      {
         icon: BookOpen,
         label: isRTL ? 'إدارة القواعد' : 'Rules Management',
         href: '/admin/rules',
