@@ -49,6 +49,28 @@ def create_audit_router(db, get_current_user, require_roles, UserRole):
     
     # ============== AUDIT LOGS ==============
     
+    def normalize_audit_log(log: dict) -> dict:
+        """Normalize audit log to handle legacy data format"""
+        # Handle legacy field names
+        if "action_by" in log and "performed_by" not in log:
+            log["performed_by"] = log.get("action_by") or log.get("actor_id", "unknown")
+        elif "actor_id" in log and "performed_by" not in log:
+            log["performed_by"] = log.get("actor_id", "unknown")
+        
+        # Ensure performed_by exists
+        if "performed_by" not in log:
+            log["performed_by"] = "unknown"
+        
+        # Add default severity if missing
+        if "severity" not in log:
+            log["severity"] = "low"
+        
+        # Ensure details is a dict
+        if "details" not in log or log["details"] is None:
+            log["details"] = {}
+        
+        return log
+    
     @router.get("/logs", response_model=List[AuditLogResponse])
     async def get_audit_logs(
         action: Optional[str] = None,
@@ -89,7 +111,10 @@ def create_audit_router(db, get_current_user, require_roles, UserRole):
             skip=skip
         )
         
-        return logs
+        # Normalize logs to handle legacy data format
+        normalized_logs = [normalize_audit_log(log) for log in logs]
+        
+        return normalized_logs
     
     @router.get("/entity/{entity_type}/{entity_id}")
     async def get_entity_history(
