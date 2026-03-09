@@ -323,61 +323,48 @@ export const AdminDashboard = () => {
     setCreatedSchool(null);
   };
 
-  // AI Operations
+  // AI Operations - Real API calls
   const runAiOperation = async (operation) => {
     setAiOperationsRunning(prev => ({ ...prev, [operation]: true }));
     
-    // Simulate AI operation
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
-    
-    const results = {
-      'diagnosis': {
-        success: true,
-        message: isRTL ? 'النظام يعمل بشكل طبيعي' : 'System running normally',
-        details: {
-          health_score: 98,
-          issues_found: 0,
-          recommendations: 2,
-        }
-      },
-      'data_quality': {
-        success: true,
-        message: isRTL ? 'جودة البيانات: 95.5%' : 'Data Quality: 95.5%',
-        details: {
-          score: 95.5,
-          missing_data: 12,
-          duplicates: 3,
-        }
-      },
-      'tenant_health': {
-        success: true,
-        message: isRTL ? 'تم فحص جميع المدارس' : 'All schools checked',
-        details: {
-          healthy: stats?.active_schools || 0,
-          warning: 5,
-          critical: 2,
-        }
-      },
-      'executive_summary': {
-        success: true,
-        message: isRTL ? 'تم إنشاء الملخص التنفيذي' : 'Executive summary generated',
+    try {
+      const apiEndpoints = {
+        'diagnosis': '/ai/diagnosis',
+        'data_quality': '/ai/data-quality',
+        'tenant_health': '/ai/tenant-health',
+        'executive_summary': '/ai/executive-summary',
+      };
+      
+      const endpoint = apiEndpoints[operation];
+      
+      if (endpoint) {
+        const response = await api.post(endpoint);
+        const result = response.data;
+        
+        setRecentAiOperations(prev => [{
+          id: Date.now(),
+          operation,
+          timestamp: new Date().toISOString(),
+          status: result.success ? 'success' : 'failed',
+          result,
+        }, ...prev.slice(0, 9)]);
+        
+        toast.success(isRTL ? result.message : result.message_en);
+        setAiOperationsRunning(prev => ({ ...prev, [operation]: false }));
+        return result;
+      } else {
+        // For operations without API yet, show coming soon
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        toast.info(isRTL ? 'هذه الميزة قيد التطوير' : 'This feature is under development');
+        setAiOperationsRunning(prev => ({ ...prev, [operation]: false }));
+        return { success: false, message: 'Under development' };
       }
-    };
-    
-    const result = results[operation] || { success: true, message: 'Done' };
-    
-    setRecentAiOperations(prev => [{
-      id: Date.now(),
-      operation,
-      timestamp: new Date().toISOString(),
-      status: result.success ? 'success' : 'failed',
-      result,
-    }, ...prev.slice(0, 9)]);
-    
-    setAiOperationsRunning(prev => ({ ...prev, [operation]: false }));
-    
-    toast.success(result.message);
-    return result;
+    } catch (error) {
+      console.error('AI Operation failed:', error);
+      toast.error(isRTL ? 'فشل تنفيذ العملية' : 'Operation failed');
+      setAiOperationsRunning(prev => ({ ...prev, [operation]: false }));
+      return { success: false, message: 'Error' };
+    }
   };
 
   // Health tag component
