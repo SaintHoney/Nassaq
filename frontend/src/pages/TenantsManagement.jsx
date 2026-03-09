@@ -471,9 +471,12 @@ export default function TenantsManagement() {
                 </p>
               </div>
             </div>
-            <Button className="bg-brand-navy hover:bg-brand-navy/90 rounded-xl" onClick={() => setShowCreateWizard(true)}>
-              <Plus className="h-4 w-4 me-2" />
-              {isRTL ? 'إضافة مدرسة' : 'Add School'}
+            <Button 
+              className="bg-brand-navy hover:bg-brand-navy/90 rounded-xl px-6 py-6 text-lg shadow-lg" 
+              onClick={() => setShowCreateWizard(true)}
+            >
+              <Plus className="h-6 w-6 me-2" />
+              {isRTL ? 'إضافة مدرسة جديدة' : 'Add New School'}
             </Button>
           </div>
           
