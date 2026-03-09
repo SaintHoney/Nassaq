@@ -11,7 +11,7 @@ import {
   GraduationCap, Clock, CheckCircle2, AlertCircle, ChevronLeft,
   BarChart3, FileText, Star, TrendingUp, CalendarDays, Menu
 } from 'lucide-react';
-import Sidebar from '../components/layout/Sidebar';
+import { Sidebar } from '../components/layout/Sidebar';
 
 // Helper functions
 const getCurrentHijriDate = () => {
