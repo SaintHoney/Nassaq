@@ -39,7 +39,7 @@ import ForcePasswordChange from "./pages/ForcePasswordChange";
 import UsersManagement from "./pages/UsersManagement";
 
 // Protected Route Component
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) => {
   const { user, loading, isAuthenticated } = useAuth();
 
   if (loading) {
@@ -52,6 +52,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check if user must change password (skip for password change page itself)
+  if (!skipPasswordCheck && user?.must_change_password) {
+    return <Navigate to="/change-password" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
