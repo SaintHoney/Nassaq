@@ -8,95 +8,27 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { Progress } from '../components/ui/progress';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import {
-  Building2,
-  Users,
-  GraduationCap,
-  UserCheck,
-  TrendingUp,
-  TrendingDown,
-  Plus,
-  Sun,
-  Moon,
-  Globe,
-  Activity,
-  BarChart3,
-  Brain,
-  FileText,
-  Zap,
-  Download,
-  Shield,
-  AlertTriangle,
-  Clock,
-  RefreshCw,
-  FileSearch,
-  Sparkles,
-  Calendar,
-  Settings,
-  UserPlus,
-  BookOpen,
-  ChevronRight,
-  Filter,
-  SlidersHorizontal,
-  Play,
-  AlertCircle,
-  MessageSquare,
-  Send,
-  Lightbulb,
-  Target,
-  Gauge,
-  Server,
-  Bot,
-  Wand2,
-  LayoutGrid,
-  LayoutList,
-  Maximize2,
-  GripVertical,
-  CheckCircle,
-  XCircle,
-  Phone,
-  Mail,
-  MapPin,
-  Eye,
-  Check,
+  Building2, Users, GraduationCap, UserCheck, Plus, Sun, Moon, Globe, Activity, BarChart3, Brain,
+  FileText, Zap, Download, Shield, Clock, RefreshCw, Sparkles, Calendar, Settings, UserPlus,
+  BookOpen, ChevronRight, Filter, SlidersHorizontal, Play, MessageSquare, Send, Gauge, Server,
+  MapPin, Eye, Check, GripVertical, CheckCircle, LayoutGrid, LayoutList, Maximize2, ChevronUp, ChevronDown
 } from 'lucide-react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../components/ui/select';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
 } from 'recharts';
 
 // Hakim Avatar
@@ -135,17 +67,17 @@ const sampleChartData = [
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, api } = useAuth();
+  const { api } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
   const chatContainerRef = useRef(null);
   
   // States
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddSchoolWizard, setShowAddSchoolWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
-  const [viewMode, setViewMode] = useState('grid'); // grid, compact, expanded
-  const [sectionsOrder, setSectionsOrder] = useState(['analytics', 'quickActions', 'activity', 'aiOps', 'hakim']);
+  const [viewMode, setViewMode] = useState('grid');
   
   // Wizard Data
   const [schoolData, setSchoolData] = useState({
@@ -160,16 +92,16 @@ export const AdminDashboard = () => {
 
   // Global Filters State
   const [filters, setFilters] = useState({
-    scope: 'all', // all, single, multi
+    scope: 'all',
     selectedSchool: '',
     selectedSchools: [],
     city: '',
     region: '',
     schoolType: '',
-    timeWindow: 'today', // live, today, week, month, custom
+    timeWindow: 'today',
     customDateFrom: '',
     customDateTo: '',
-    tenantStatus: 'all', // all, active, suspended, setup, expired
+    tenantStatus: 'all',
   });
   const [showDisplaySettings, setShowDisplaySettings] = useState(false);
   const [visibleCards, setVisibleCards] = useState({
@@ -177,6 +109,7 @@ export const AdminDashboard = () => {
   });
   const [cardsOrder, setCardsOrder] = useState(['schools', 'students', 'teachers', 'admins', 'activeUsers', 'apiCalls']);
   const [schools, setSchools] = useState([]);
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
 
   // Hakim Chat
   const [hakimMessages, setHakimMessages] = useState([
@@ -185,15 +118,44 @@ export const AdminDashboard = () => {
   const [hakimInput, setHakimInput] = useState('');
   const [hakimLoading, setHakimLoading] = useState(false);
 
-  // Fetch Stats
-  const fetchStats = useCallback(async () => {
+  // Get current Hijri date
+  const getCurrentHijriDate = useCallback(() => {
+    const today = new Date();
+    const hijriYear = 1447;
+    const hijriMonth = Math.floor(today.getMonth() + 1);
+    const hijriDay = today.getDate();
+    return {
+      hijri: `${hijriYear}/${String(hijriMonth).padStart(2, '0')}/${String(hijriDay).padStart(2, '0')} هـ`,
+      gregorian: today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    };
+  }, []);
+
+  // Fetch Stats - يجلب البيانات مع تطبيق الفلاتر
+  const fetchStats = useCallback(async (showToast = false) => {
     try {
-      setLoading(true);
-      const response = await api.get('/dashboard/stats');
-      // Merge API data with computed values
+      if (showToast) setRefreshing(true);
+      
+      // بناء query parameters من الفلاتر
+      const queryParams = new URLSearchParams();
+      if (filters.scope !== 'all') queryParams.append('scope', filters.scope);
+      if (filters.selectedSchool) queryParams.append('school_id', filters.selectedSchool);
+      if (filters.selectedSchools.length > 0) queryParams.append('school_ids', filters.selectedSchools.join(','));
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.region) queryParams.append('region', filters.region);
+      if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
+      if (filters.timeWindow) queryParams.append('time_window', filters.timeWindow);
+      if (filters.timeWindow === 'custom') {
+        if (filters.customDateFrom) queryParams.append('date_from', filters.customDateFrom);
+        if (filters.customDateTo) queryParams.append('date_to', filters.customDateTo);
+      }
+      if (filters.tenantStatus !== 'all') queryParams.append('status', filters.tenantStatus);
+
+      const queryString = queryParams.toString();
+      const url = `/dashboard/stats${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.get(url);
       setStats({
         ...response.data,
-        // Ensure these values exist
         active_students: response.data.active_students || Math.floor(response.data.total_students * 0.97),
         new_students_this_month: response.data.new_students_this_month || Math.floor(response.data.total_students * 0.024),
         active_teachers: response.data.active_teachers || response.data.total_teachers - (response.data.teachers_without_rank || 0),
@@ -202,6 +164,8 @@ export const AdminDashboard = () => {
         active_users_today: response.data.active_users_today || response.data.active_users || 12500,
         api_calls_today: response.data.api_calls_today || 45000,
       });
+      
+      if (showToast) toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
     } catch (error) {
       // Use mock data
       setStats({
@@ -212,8 +176,9 @@ export const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [api]);
+  }, [api, filters, isRTL]);
 
   // Fetch Schools for filter
   const fetchSchools = useCallback(async () => {
@@ -225,60 +190,29 @@ export const AdminDashboard = () => {
     }
   }, [api]);
 
+  // تحميل البيانات عند التحميل الأول
   useEffect(() => {
     fetchStats();
     fetchSchools();
-  }, [fetchStats, fetchSchools]);
+  }, []);
 
-  // Re-fetch when filters change
+  // *** تحديث البيانات عند تغيير أي فلتر - Dynamic Data Refresh ***
   useEffect(() => {
     if (!loading) {
       fetchStats();
     }
-  }, [filters.scope, filters.timeWindow, filters.tenantStatus]);
-
-  // Get current Hijri date
-  const getCurrentHijriDate = () => {
-    const today = new Date();
-    const gregorian = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    // Simple approximation for display (actual conversion needs library)
-    const hijriYear = 1447;
-    const hijriMonth = Math.floor(today.getMonth() + 1);
-    const hijriDay = today.getDate();
-    return {
-      hijri: `${hijriYear}/${String(hijriMonth).padStart(2, '0')}/${String(hijriDay).padStart(2, '0')} هـ`,
-      gregorian: today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
-    };
-  };
-
-  const handleExport = (format) => {
-    toast.success(isRTL ? `جاري تصدير البيانات بصيغة ${format}` : `Exporting data as ${format}`);
-  };
-
-  // Wizard handlers
-  const handleNextStep = () => {
-    if (wizardStep === 1 && (!schoolData.name || !schoolData.city)) {
-      toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
-      return;
-    }
-    if (wizardStep === 3 && (!schoolData.principal_name || !schoolData.principal_email)) {
-      toast.error(isRTL ? 'يرجى ملء بيانات مدير المدرسة' : 'Please fill principal information');
-      return;
-    }
-    setWizardStep(prev => prev + 1);
-  };
-
-  const handleCreateSchool = async () => {
-    try {
-      const response = await api.post('/schools', schoolData);
-      setCreatedSchool(response.data);
-      setWizardStep(5);
-      toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح!' : 'School created successfully!');
-      fetchStats();
-    } catch (error) {
-      toast.error(isRTL ? 'فشل إنشاء المدرسة' : 'Failed to create school');
-    }
-  };
+  }, [
+    filters.scope,
+    filters.selectedSchool,
+    filters.selectedSchools,
+    filters.city,
+    filters.region,
+    filters.schoolType,
+    filters.timeWindow,
+    filters.customDateFrom,
+    filters.customDateTo,
+    filters.tenantStatus
+  ]);
 
   // تصدير البيانات - Export Data (تنزيل ملف فعلي)
   const handleExportData = (format) => {
@@ -303,6 +237,7 @@ export const AdminDashboard = () => {
       const csvContent = [
         ['تقرير المؤشرات العامة للمنصة - NASSAQ Platform Report'],
         ['تاريخ التصدير', new Date().toLocaleDateString('ar-SA')],
+        ['التاريخ الهجري', getCurrentHijriDate().hijri],
         [''],
         ['المؤشر', 'القيمة'],
         ['إجمالي المدارس', data.stats.totalSchools],
@@ -314,6 +249,11 @@ export const AdminDashboard = () => {
         ['إجمالي المسؤولين', data.stats.totalAdmins],
         ['المستخدمين النشطين اليوم', data.stats.activeUsersToday],
         ['طلبات API اليوم', data.stats.apiCallsToday],
+        [''],
+        ['الفلاتر المطبقة'],
+        ['النطاق', filters.scope === 'all' ? 'كل المنصة' : filters.scope === 'single' ? 'مدرسة محددة' : 'مجموعة مدارس'],
+        ['الفترة الزمنية', filters.timeWindow],
+        ['حالة المدارس', filters.tenantStatus === 'all' ? 'كل الحالات' : filters.tenantStatus],
       ].map(row => row.join(',')).join('\n');
 
       const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -323,8 +263,9 @@ export const AdminDashboard = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
       toast.success(isRTL ? 'تم تنزيل ملف Excel بنجاح' : 'Excel file downloaded');
-    } else {
+    } else if (format === 'pdf') {
       // تصدير كملف HTML (يمكن طباعته كـ PDF)
       const htmlContent = `
         <!DOCTYPE html>
@@ -341,11 +282,21 @@ export const AdminDashboard = () => {
             th { background: #1e3a5f; color: white; }
             tr:nth-child(even) { background: #f9f9f9; }
             .footer { margin-top: 40px; color: #999; font-size: 12px; }
+            .filters { background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
           </style>
         </head>
         <body>
-          <h1>📊 تقرير المؤشرات العامة للمنصة</h1>
-          <p class="date">تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')} | ${getCurrentHijriDate().hijri}</p>
+          <h1>تقرير المؤشرات العامة للمنصة</h1>
+          <p class="date">
+            <strong>التاريخ الهجري:</strong> ${getCurrentHijriDate().hijri}<br/>
+            <strong>التاريخ الميلادي:</strong> ${getCurrentHijriDate().gregorian}
+          </p>
+          <div class="filters">
+            <strong>الفلاتر المطبقة:</strong>
+            النطاق: ${filters.scope === 'all' ? 'كل المنصة' : filters.scope} |
+            الفترة: ${filters.timeWindow} |
+            الحالة: ${filters.tenantStatus === 'all' ? 'الكل' : filters.tenantStatus}
+          </div>
           <table>
             <tr><th>المؤشر</th><th>القيمة</th></tr>
             <tr><td>إجمالي المدارس المسجلة</td><td>${data.stats.totalSchools}</td></tr>
@@ -359,7 +310,6 @@ export const AdminDashboard = () => {
             <tr><td>طلبات API اليوم</td><td>${data.stats.apiCallsToday.toLocaleString()}</td></tr>
           </table>
           <p class="footer">تم إنشاء هذا التقرير بواسطة نظام نَسَّق | NASSAQ School Management System</p>
-          <script>window.print();</script>
         </body>
         </html>
       `;
@@ -371,7 +321,34 @@ export const AdminDashboard = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success(isRTL ? 'تم تنزيل ملف PDF بنجاح (افتحه واطبعه كـ PDF)' : 'PDF file downloaded');
+      URL.revokeObjectURL(link.href);
+      toast.success(isRTL ? 'تم تنزيل الملف - افتحه واطبعه كـ PDF' : 'File downloaded - open and print as PDF');
+    }
+  };
+
+  // Wizard handlers
+  const handleNextStep = () => {
+    if (wizardStep === 1 && (!schoolData.name || !schoolData.city)) {
+      toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+      return;
+    }
+    if (wizardStep === 3 && (!schoolData.principal_name || !schoolData.principal_email)) {
+      toast.error(isRTL ? 'يرجى ملء بيانات مدير المدرسة' : 'Please fill principal information');
+      return;
+    }
+    setWizardStep(prev => prev + 1);
+  };
+
+  const handleCreateSchool = async () => {
+    try {
+      const response = await api.post('/schools', schoolData);
+      setCreatedSchool(response.data);
+      setWizardStep(5);
+      toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح!' : 'School created successfully!');
+      fetchStats();
+      fetchSchools();
+    } catch (error) {
+      toast.error(isRTL ? 'فشل إنشاء المدرسة' : 'Failed to create school');
     }
   };
 
@@ -379,7 +356,6 @@ export const AdminDashboard = () => {
   const handleAiOperation = async (operation) => {
     toast.success(isRTL ? `جاري تشغيل: ${operation}` : `Running: ${operation}`);
     setAiOperationsToday(prev => prev + 1);
-    // Simulate operation
     setTimeout(() => {
       toast.success(isRTL ? 'تم التشغيل بنجاح' : 'Operation completed');
     }, 2000);
@@ -394,7 +370,6 @@ export const AdminDashboard = () => {
     setHakimInput('');
     setHakimLoading(true);
 
-    // Simulate AI response
     setTimeout(() => {
       const responses = isRTL ? [
         'تم تحليل طلبك. يبدو أن لديك استفسار حول النظام.',
@@ -429,43 +404,147 @@ export const AdminDashboard = () => {
     { id: 'executive_summary', icon: FileText, title: isRTL ? 'ملخص تنفيذي' : 'Executive Summary', desc: isRTL ? 'تقرير شامل' : 'Comprehensive report' },
   ];
 
+  // Cards configuration for rendering
+  const cardsConfig = {
+    schools: {
+      icon: <Building2 className="h-6 w-6 text-brand-navy" />,
+      title: isRTL ? 'المدارس المسجلة' : 'Registered Schools',
+      mainValue: stats?.total_schools,
+      secondaryData: [
+        { label: isRTL ? 'نشطة' : 'Active', value: stats?.active_schools, dotColor: 'bg-green-500' },
+        { label: isRTL ? 'موقوفة' : 'Suspended', value: stats?.suspended_schools, dotColor: 'bg-red-500' },
+        { label: isRTL ? 'معلقة' : 'Pending', value: stats?.pending_schools, dotColor: 'bg-yellow-500' },
+      ],
+      actionLabel: isRTL ? 'إضافة' : 'Add',
+      actionFn: () => setShowAddSchoolWizard(true),
+    },
+    students: {
+      icon: <GraduationCap className="h-6 w-6 text-brand-turquoise" />,
+      title: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students',
+      mainValue: stats?.total_students,
+      secondaryData: [
+        { label: isRTL ? 'نشط' : 'Active', value: stats?.active_students?.toLocaleString(), dotColor: 'bg-green-500' },
+        { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_students_this_month}`, dotColor: 'bg-blue-500' },
+      ],
+      actionLabel: isRTL ? 'عرض' : 'View',
+      actionFn: () => navigate('/admin/reports'),
+    },
+    teachers: {
+      icon: <UserCheck className="h-6 w-6 text-brand-purple" />,
+      title: isRTL ? 'المعلمين' : 'Teachers',
+      mainValue: stats?.total_teachers,
+      secondaryData: [
+        { label: isRTL ? 'نشط' : 'Active', value: stats?.active_teachers?.toLocaleString(), dotColor: 'bg-green-500' },
+        { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_teachers_this_month}`, dotColor: 'bg-blue-500' },
+      ],
+      actionLabel: isRTL ? 'عرض' : 'View',
+      actionFn: () => navigate('/admin/users'),
+    },
+    admins: {
+      icon: <Users className="h-6 w-6 text-orange-500" />,
+      title: isRTL ? 'المسؤولين' : 'Administrators',
+      mainValue: stats?.total_admins,
+      secondaryData: [
+        { label: isRTL ? 'مدراء' : 'Principals', value: 200, dotColor: 'bg-purple-500' },
+        { label: isRTL ? 'منصة' : 'Platform', value: 45, dotColor: 'bg-blue-500' },
+      ],
+      actionLabel: isRTL ? 'إدارة' : 'Manage',
+      actionFn: () => navigate('/admin/users'),
+    },
+    activeUsers: {
+      icon: <Activity className="h-6 w-6 text-green-500" />,
+      title: isRTL ? 'المستخدمين النشطين' : 'Active Users Today',
+      mainValue: stats?.active_users_today,
+      secondaryData: [
+        { label: isRTL ? 'طلاب' : 'Students', value: '10.2K', dotColor: 'bg-green-500' },
+        { label: isRTL ? 'معلمين' : 'Teachers', value: '2.1K', dotColor: 'bg-blue-500' },
+      ],
+      actionLabel: isRTL ? 'تفاصيل' : 'Details',
+      actionFn: () => navigate('/admin/monitoring'),
+    },
+    apiCalls: {
+      icon: <Server className="h-6 w-6 text-teal-500" />,
+      title: isRTL ? 'طلبات API اليوم' : 'API Requests Today',
+      mainValue: stats?.api_calls_today,
+      secondaryData: [
+        { label: isRTL ? 'نجاح' : 'Success', value: '99.8%', dotColor: 'bg-green-500' },
+        { label: isRTL ? 'متوسط' : 'Avg', value: '45ms', dotColor: 'bg-blue-500' },
+      ],
+      actionLabel: isRTL ? 'مراقبة' : 'Monitor',
+      actionFn: () => navigate('/admin/monitoring'),
+    },
+  };
+
   // Render Analytics Card
-  const renderAnalyticsCard = (icon, title, mainValue, secondaryData, actionLabel, actionFn, color = 'brand-navy') => (
-    <Card className="card-nassaq hover:shadow-lg transition-all">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 rounded-xl bg-${color}/10 flex items-center justify-center`}>
-            {icon}
+  const renderAnalyticsCard = (cardKey) => {
+    const card = cardsConfig[cardKey];
+    if (!card || !visibleCards[cardKey]) return null;
+    
+    return (
+      <Card key={cardKey} className="card-nassaq hover:shadow-lg transition-all" data-testid={`card-${cardKey}`}>
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
+              {card.icon}
+            </div>
+            <Button 
+              size="sm" 
+              onClick={card.actionFn}
+              className="bg-brand-turquoise hover:bg-brand-turquoise/90 text-white rounded-lg text-xs px-3"
+            >
+              {card.actionLabel}
+            </Button>
           </div>
-          <Button 
-            size="sm" 
-            onClick={actionFn}
-            className="bg-brand-turquoise hover:bg-brand-turquoise/90 text-white rounded-lg text-xs px-3"
-          >
-            {actionLabel}
-          </Button>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <p className="text-3xl font-bold">{mainValue?.toLocaleString() || 0}</p>
-            <p className="text-sm text-muted-foreground">{title}</p>
+          <div className="space-y-3">
+            <div>
+              <p className="text-3xl font-bold">{card.mainValue?.toLocaleString() || 0}</p>
+              <p className="text-sm text-muted-foreground">{card.title}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {card.secondaryData?.map((item, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-xs bg-muted/50"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1.5`}></span>
+                  {item.label}: {item.value ?? 0}
+                </Badge>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {secondaryData?.map((item, idx) => (
-              <Badge 
-                key={idx} 
-                variant="outline" 
-                className={`text-xs ${item.color || 'bg-muted/50'}`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1.5`}></span>
-                {item.label}: {item.value ?? 0}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Filter schools based on search
+  const filteredSchools = schools.filter(school => 
+    school.name?.toLowerCase().includes(schoolSearchQuery.toLowerCase()) ||
+    school.city?.toLowerCase().includes(schoolSearchQuery.toLowerCase())
   );
+
+  // Handle card reorder
+  const moveCard = (index, direction) => {
+    const newOrder = [...cardsOrder];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex >= 0 && newIndex < cardsOrder.length) {
+      [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
+      setCardsOrder(newOrder);
+    }
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setFilters({
+      scope: 'all', selectedSchool: '', selectedSchools: [], city: '', region: '', schoolType: '',
+      timeWindow: 'today', customDateFrom: '', customDateTo: '', tenantStatus: 'all'
+    });
+  };
+
+  // Check if any filter is active
+  const hasActiveFilters = filters.city || filters.region || filters.schoolType || 
+    filters.tenantStatus !== 'all' || filters.scope !== 'all';
 
   if (loading) {
     return (
@@ -533,8 +612,11 @@ export const AdminDashboard = () => {
         </header>
 
         <div className="p-6 space-y-6">
-          {/* أول شيء في الصفحة: التاريخ الهجري والميلادي */}
-          <div className="flex justify-center">
+          
+          {/* ============================================ */}
+          {/* 1. التاريخ الهجري والميلادي - أول شيء في الصفحة */}
+          {/* ============================================ */}
+          <div className="flex justify-center" data-testid="date-display">
             <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20">
               <CardContent className="py-3 px-6">
                 <div className="flex items-center gap-4">
@@ -557,8 +639,10 @@ export const AdminDashboard = () => {
             </Card>
           </div>
 
-          {/* Section 1: Analytics Cards */}
-          <section>
+          {/* ============================================ */}
+          {/* 2. قسم المؤشرات العامة للمنصة */}
+          {/* ============================================ */}
+          <section data-testid="analytics-section">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-cairo text-lg font-bold flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-brand-turquoise" />
@@ -566,22 +650,24 @@ export const AdminDashboard = () => {
               </h2>
             </div>
 
-            {/* Global Filters Bar - شريط التحكم العلوي */}
-            <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20">
+            {/* ============================================ */}
+            {/* شريط التحكم العلوي - Global Filters Bar */}
+            {/* ============================================ */}
+            <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20" data-testid="global-filters-bar">
               <CardContent className="p-4">
-                {/* Row 1: نطاق البيانات والفلاتر الإضافية */}
+                
+                {/* الصف الأول: نطاق البيانات والفلاتر الإضافية */}
                 <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-border/50">
+                  
                   {/* A. نطاق البيانات - Scope */}
                   <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-2 rounded-xl border border-brand-navy/10">
                     <Filter className="h-4 w-4 text-brand-navy" />
                     <span className="text-xs font-bold text-brand-navy">{isRTL ? 'النطاق' : 'Scope'}</span>
                     <Select 
                       value={filters.scope} 
-                      onValueChange={(v) => {
-                        setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] });
-                      }}
+                      onValueChange={(v) => setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] })}
                     >
-                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-navy/20 bg-background">
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-navy/20 bg-background" data-testid="scope-select">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -592,38 +678,60 @@ export const AdminDashboard = () => {
                     </Select>
                   </div>
 
-                  {/* School Selector (when scope is single) */}
+                  {/* اختيار مدرسة واحدة - قابل للبحث */}
                   {filters.scope === 'single' && (
-                    <Select 
-                      value={filters.selectedSchool} 
-                      onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
-                    >
-                      <SelectTrigger className="w-56 rounded-xl h-8 text-sm border-brand-turquoise/30">
-                        <Building2 className="h-3 w-3 me-1" />
-                        <SelectValue placeholder={isRTL ? 'ابحث واختر مدرسة...' : 'Search school...'} />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-72">
-                        <div className="p-2 border-b">
-                          <Input placeholder={isRTL ? 'بحث...' : 'Search...'} className="h-8 text-sm" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[200px] justify-between border-brand-turquoise/30" data-testid="single-school-select">
+                          <span className="flex items-center gap-2">
+                            <Building2 className="h-3 w-3" />
+                            {filters.selectedSchool 
+                              ? schools.find(s => s.id === filters.selectedSchool)?.name || (isRTL ? 'اختر مدرسة' : 'Select school')
+                              : (isRTL ? 'ابحث واختر مدرسة...' : 'Search school...')}
+                          </span>
+                          <ChevronRight className="h-3 w-3 rotate-90" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-72 max-h-80">
+                        <div className="p-2 border-b sticky top-0 bg-background z-10">
+                          <Input 
+                            placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search schools...'} 
+                            className="h-8 text-sm rounded-lg"
+                            value={schoolSearchQuery}
+                            onChange={(e) => setSchoolSearchQuery(e.target.value)}
+                          />
                         </div>
-                        {schools.map((school) => (
-                          <SelectItem key={school.id} value={school.id}>
-                            <span className="flex items-center gap-2">
+                        <ScrollArea className="max-h-60">
+                          {filteredSchools.map((school) => (
+                            <DropdownMenuItem 
+                              key={school.id}
+                              className={`flex items-center gap-2 cursor-pointer ${filters.selectedSchool === school.id ? 'bg-brand-turquoise/10' : ''}`}
+                              onClick={() => {
+                                setFilters({ ...filters, selectedSchool: school.id });
+                                setSchoolSearchQuery('');
+                              }}
+                            >
                               <Building2 className="h-3 w-3" />
-                              {school.name}
-                              <Badge variant="outline" className="text-[10px] ms-auto">{school.city}</Badge>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                              <span className="text-sm flex-1">{school.name}</span>
+                              {school.city && <Badge variant="outline" className="text-[10px]">{school.city}</Badge>}
+                              {filters.selectedSchool === school.id && <Check className="h-3 w-3 text-brand-turquoise" />}
+                            </DropdownMenuItem>
+                          ))}
+                          {filteredSchools.length === 0 && (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              {isRTL ? 'لا توجد نتائج' : 'No results found'}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
 
-                  {/* Multi-Select Schools (when scope is multi) */}
+                  {/* اختيار مجموعة مدارس - Multi-Select مع بحث */}
                   {filters.scope === 'multi' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[220px] justify-between border-brand-turquoise/30">
+                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[220px] justify-between border-brand-turquoise/30" data-testid="multi-school-select">
                           <span className="flex items-center gap-2">
                             <Building2 className="h-3 w-3" />
                             {filters.selectedSchools.length > 0 
@@ -633,41 +741,56 @@ export const AdminDashboard = () => {
                           <ChevronRight className="h-3 w-3 rotate-90" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-72 max-h-80 overflow-y-auto">
+                      <DropdownMenuContent className="w-72 max-h-80">
                         <div className="p-2 border-b sticky top-0 bg-background z-10">
-                          <Input placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search...'} className="h-8 text-sm" />
+                          <Input 
+                            placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search schools...'} 
+                            className="h-8 text-sm rounded-lg"
+                            value={schoolSearchQuery}
+                            onChange={(e) => setSchoolSearchQuery(e.target.value)}
+                          />
                         </div>
-                        <div className="p-1">
-                          {schools.map((school) => (
-                            <div 
-                              key={school.id}
-                              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted/50 ${
-                                filters.selectedSchools.includes(school.id) ? 'bg-brand-turquoise/10' : ''
-                              }`}
-                              onClick={() => {
-                                const isSelected = filters.selectedSchools.includes(school.id);
-                                setFilters({
-                                  ...filters,
-                                  selectedSchools: isSelected 
-                                    ? filters.selectedSchools.filter(id => id !== school.id)
-                                    : [...filters.selectedSchools, school.id]
-                                });
-                              }}
+                        <ScrollArea className="max-h-60">
+                          <div className="p-1">
+                            {filteredSchools.map((school) => {
+                              const isSelected = filters.selectedSchools.includes(school.id);
+                              return (
+                                <div 
+                                  key={school.id}
+                                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted/50 ${isSelected ? 'bg-brand-turquoise/10' : ''}`}
+                                  onClick={() => {
+                                    setFilters({
+                                      ...filters,
+                                      selectedSchools: isSelected 
+                                        ? filters.selectedSchools.filter(id => id !== school.id)
+                                        : [...filters.selectedSchools, school.id]
+                                    });
+                                  }}
+                                >
+                                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-brand-turquoise border-brand-turquoise' : 'border-gray-300'}`}>
+                                    {isSelected && <Check className="h-3 w-3 text-white" />}
+                                  </div>
+                                  <span className="text-sm flex-1">{school.name}</span>
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {school.status === 'active' ? (isRTL ? 'نشط' : 'Active') : school.status}
+                                  </Badge>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </ScrollArea>
+                        {filters.selectedSchools.length > 0 && (
+                          <div className="p-2 border-t">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="w-full text-xs text-red-500"
+                              onClick={() => setFilters({ ...filters, selectedSchools: [] })}
                             >
-                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                                filters.selectedSchools.includes(school.id) 
-                                  ? 'bg-brand-turquoise border-brand-turquoise' 
-                                  : 'border-gray-300'
-                              }`}>
-                                {filters.selectedSchools.includes(school.id) && (
-                                  <Check className="h-3 w-3 text-white" />
-                                )}
-                              </div>
-                              <span className="text-sm flex-1">{school.name}</span>
-                              <Badge variant="outline" className="text-[10px]">{school.status === 'active' ? (isRTL ? 'نشط' : 'Active') : school.status}</Badge>
-                            </div>
-                          ))}
-                        </div>
+                              {isRTL ? 'مسح الاختيار' : 'Clear selection'}
+                            </Button>
+                          </div>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -675,12 +798,12 @@ export const AdminDashboard = () => {
                   {/* فاصل */}
                   <div className="h-6 w-px bg-border hidden lg:block" />
 
-                  {/* فلاتر إضافية: المدينة */}
+                  {/* فلتر المدينة */}
                   <Select 
                     value={filters.city || 'all_cities'} 
                     onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
                   >
-                    <SelectTrigger className="w-32 rounded-xl h-8 text-sm">
+                    <SelectTrigger className="w-32 rounded-xl h-8 text-sm" data-testid="city-filter">
                       <MapPin className="h-3 w-3 me-1 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
@@ -692,12 +815,12 @@ export const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
 
-                  {/* فلاتر إضافية: المنطقة */}
+                  {/* فلتر المنطقة */}
                   <Select 
                     value={filters.region || 'all_regions'} 
                     onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v })}
                   >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm" data-testid="region-filter">
                       <Globe className="h-3 w-3 me-1 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
@@ -711,12 +834,12 @@ export const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
 
-                  {/* فلاتر إضافية: نوع المدرسة */}
+                  {/* فلتر نوع المدرسة */}
                   <Select 
                     value={filters.schoolType || 'all_types'} 
                     onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
                   >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm" data-testid="type-filter">
                       <GraduationCap className="h-3 w-3 me-1 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
@@ -729,8 +852,9 @@ export const AdminDashboard = () => {
                   </Select>
                 </div>
 
-                {/* Row 2: الفترة الزمنية + حالة المدارس + الأزرار */}
+                {/* الصف الثاني: الفترة الزمنية + حالة المدارس + الأزرار */}
                 <div className="flex flex-wrap items-center gap-3 pt-3">
+                  
                   {/* B. الفترة الزمنية - Time Window */}
                   <div className="flex items-center gap-2 bg-brand-purple/5 px-3 py-2 rounded-xl border border-brand-purple/10">
                     <Clock className="h-4 w-4 text-brand-purple" />
@@ -739,7 +863,7 @@ export const AdminDashboard = () => {
                       value={filters.timeWindow} 
                       onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}
                     >
-                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-purple/20 bg-background">
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-purple/20 bg-background" data-testid="time-filter">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -768,7 +892,7 @@ export const AdminDashboard = () => {
                       value={filters.tenantStatus} 
                       onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}
                     >
-                      <SelectTrigger className="w-40 rounded-lg h-8 text-sm border-orange-500/20 bg-background">
+                      <SelectTrigger className="w-40 rounded-lg h-8 text-sm border-orange-500/20 bg-background" data-testid="status-filter">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -780,25 +904,25 @@ export const AdminDashboard = () => {
                         </SelectItem>
                         <SelectItem value="active">
                           <span className="flex items-center gap-2">
-                            <Badge className="w-3 h-3 p-0 bg-green-500 rounded-full" />
+                            <span className="w-3 h-3 rounded-full bg-green-500" />
                             <span className="text-green-700 font-medium">{isRTL ? 'نشطة' : 'Active'}</span>
                           </span>
                         </SelectItem>
                         <SelectItem value="suspended">
                           <span className="flex items-center gap-2">
-                            <Badge className="w-3 h-3 p-0 bg-red-500 rounded-full" />
+                            <span className="w-3 h-3 rounded-full bg-red-500" />
                             <span className="text-red-700 font-medium">{isRTL ? 'موقوفة' : 'Suspended'}</span>
                           </span>
                         </SelectItem>
                         <SelectItem value="setup">
                           <span className="flex items-center gap-2">
-                            <Badge className="w-3 h-3 p-0 bg-yellow-500 rounded-full" />
+                            <span className="w-3 h-3 rounded-full bg-yellow-500" />
                             <span className="text-yellow-700 font-medium">{isRTL ? 'قيد الإعداد' : 'Setup'}</span>
                           </span>
                         </SelectItem>
                         <SelectItem value="expired">
                           <span className="flex items-center gap-2">
-                            <Badge className="w-3 h-3 p-0 bg-gray-400 rounded-full" />
+                            <span className="w-3 h-3 rounded-full bg-gray-400" />
                             <span className="text-gray-600 font-medium">{isRTL ? 'انتهى الاشتراك' : 'Expired'}</span>
                           </span>
                         </SelectItem>
@@ -815,33 +939,29 @@ export const AdminDashboard = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => { 
-                        setLoading(true);
-                        fetchStats().then(() => {
-                          toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
-                        });
-                      }}
+                      onClick={() => fetchStats(true)}
                       className="rounded-xl h-9 px-4 border-green-500/30 hover:bg-green-500/10 hover:border-green-500"
-                      disabled={loading}
+                      disabled={refreshing}
+                      data-testid="refresh-btn"
                     >
-                      <RefreshCw className={`h-4 w-4 me-2 ${loading ? 'animate-spin' : ''} text-green-600`} />
+                      <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''} text-green-600`} />
                       <span className="font-medium">{isRTL ? 'تحديث الآن' : 'Refresh'}</span>
                     </Button>
 
                     {/* تصدير البيانات - Export (ينزل ملف فعلي) */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500">
+                        <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500" data-testid="export-btn">
                           <Download className="h-4 w-4 me-2 text-blue-600" />
                           <span className="font-medium">{isRTL ? 'تصدير' : 'Export'}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => handleExportData('pdf')} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => handleExportData('pdf')} className="cursor-pointer" data-testid="export-pdf">
                           <FileText className="h-4 w-4 me-2 text-red-500" />
                           <span>{isRTL ? 'تنزيل PDF' : 'Download PDF'}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportData('excel')} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => handleExportData('excel')} className="cursor-pointer" data-testid="export-excel">
                           <BarChart3 className="h-4 w-4 me-2 text-green-600" />
                           <span>{isRTL ? 'تنزيل Excel' : 'Download Excel'}</span>
                         </DropdownMenuItem>
@@ -854,6 +974,7 @@ export const AdminDashboard = () => {
                       size="sm" 
                       onClick={() => setShowDisplaySettings(true)}
                       className="rounded-xl h-9 px-4 bg-brand-navy hover:bg-brand-navy/90"
+                      data-testid="display-settings-btn"
                     >
                       <SlidersHorizontal className="h-4 w-4 me-2" />
                       <span className="font-medium">{isRTL ? 'إعدادات العرض' : 'Display'}</span>
@@ -872,6 +993,7 @@ export const AdminDashboard = () => {
                         value={filters.customDateFrom}
                         onChange={(e) => setFilters({ ...filters, customDateFrom: e.target.value })}
                         className="w-40 rounded-xl h-8 text-sm"
+                        data-testid="date-from"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -881,17 +1003,14 @@ export const AdminDashboard = () => {
                         value={filters.customDateTo}
                         onChange={(e) => setFilters({ ...filters, customDateTo: e.target.value })}
                         className="w-40 rounded-xl h-8 text-sm"
+                        data-testid="date-to"
                       />
                     </div>
-                    <Button size="sm" className="rounded-xl h-8 bg-brand-purple hover:bg-brand-purple/90">
-                      <Check className="h-3 w-3 me-1" />
-                      {isRTL ? 'تطبيق' : 'Apply'}
-                    </Button>
                   </div>
                 )}
 
                 {/* عرض الفلاتر النشطة */}
-                {(filters.city || filters.region || filters.schoolType || filters.tenantStatus !== 'all' || filters.scope !== 'all') && (
+                {hasActiveFilters && (
                   <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/50">
                     <span className="text-xs text-muted-foreground">{isRTL ? 'الفلاتر النشطة:' : 'Active filters:'}</span>
                     {filters.scope !== 'all' && (
@@ -908,13 +1027,17 @@ export const AdminDashboard = () => {
                     )}
                     {filters.region && (
                       <Badge variant="secondary" className="rounded-full text-xs">
-                        {filters.region === 'central' ? (isRTL ? 'الوسطى' : 'Central') : filters.region}
+                        {filters.region === 'central' ? (isRTL ? 'الوسطى' : 'Central') : 
+                         filters.region === 'western' ? (isRTL ? 'الغربية' : 'Western') :
+                         filters.region === 'eastern' ? (isRTL ? 'الشرقية' : 'Eastern') :
+                         filters.region === 'northern' ? (isRTL ? 'الشمالية' : 'Northern') : (isRTL ? 'الجنوبية' : 'Southern')}
                         <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, region: '' })}>×</button>
                       </Badge>
                     )}
                     {filters.schoolType && (
                       <Badge variant="secondary" className="rounded-full text-xs">
-                        {filters.schoolType === 'public' ? (isRTL ? 'حكومي' : 'Public') : filters.schoolType}
+                        {filters.schoolType === 'public' ? (isRTL ? 'حكومي' : 'Public') : 
+                         filters.schoolType === 'private' ? (isRTL ? 'خاص' : 'Private') : (isRTL ? 'عالمي' : 'International')}
                         <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, schoolType: '' })}>×</button>
                       </Badge>
                     )}
@@ -926,364 +1049,30 @@ export const AdminDashboard = () => {
                         <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, tenantStatus: 'all' })}>×</button>
                       </Badge>
                     )}
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-red-500 hover:text-red-700" onClick={() => setFilters({
-                      scope: 'all', selectedSchool: '', selectedSchools: [], city: '', region: '', schoolType: '',
-                      timeWindow: 'today', customDateFrom: '', customDateTo: '', tenantStatus: 'all'
-                    })}>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-red-500 hover:text-red-700" onClick={clearAllFilters}>
                       {isRTL ? 'مسح الكل' : 'Clear All'}
                     </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[200px] justify-between">
-                          <span className="flex items-center gap-2">
-                            <Building2 className="h-3 w-3" />
-                            {filters.selectedSchools.length > 0 
-                              ? `${filters.selectedSchools.length} ${isRTL ? 'مدرسة محددة' : 'selected'}`
-                              : (isRTL ? 'اختر المدارس' : 'Select Schools')}
-                          </span>
-                          <ChevronRight className="h-3 w-3 rotate-90" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-64 max-h-60 overflow-y-auto">
-                        <div className="p-2 border-b sticky top-0 bg-background">
-                          <Input 
-                            placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search schools...'}
-                            className="h-8 text-sm rounded-lg"
-                          />
-                        </div>
-                        {schools.slice(0, 15).map((school) => (
-                          <DropdownMenuItem 
-                            key={school.id}
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              const isSelected = filters.selectedSchools.includes(school.id);
-                              setFilters({
-                                ...filters,
-                                selectedSchools: isSelected 
-                                  ? filters.selectedSchools.filter(id => id !== school.id)
-                                  : [...filters.selectedSchools, school.id]
-                              });
-                            }}
-                          >
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${
-                              filters.selectedSchools.includes(school.id) ? 'bg-brand-turquoise border-brand-turquoise' : 'border-gray-300'
-                            }`}>
-                              {filters.selectedSchools.includes(school.id) && (
-                                <Check className="h-3 w-3 text-white" />
-                              )}
-                            </div>
-                            <span className="text-sm">{school.name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
 
-                  {/* Divider */}
-                  <div className="h-6 w-px bg-border hidden md:block" />
-
-                  {/* Additional Filters: City */}
-                  <Select 
-                    value={filters.city || 'all_cities'} 
-                    onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
-                      <MapPin className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All'}</SelectItem>
-                      {SAUDI_CITIES.map((city) => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* Additional Filters: Region */}
-                  <Select 
-                    value={filters.region || 'all_regions'} 
-                    onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
-                      <Globe className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue placeholder={isRTL ? 'المنطقة' : 'Region'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_regions">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                      <SelectItem value="central">{isRTL ? 'الوسطى' : 'Central'}</SelectItem>
-                      <SelectItem value="western">{isRTL ? 'الغربية' : 'Western'}</SelectItem>
-                      <SelectItem value="eastern">{isRTL ? 'الشرقية' : 'Eastern'}</SelectItem>
-                      <SelectItem value="northern">{isRTL ? 'الشمالية' : 'Northern'}</SelectItem>
-                      <SelectItem value="southern">{isRTL ? 'الجنوبية' : 'Southern'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* Additional Filters: School Type */}
-                  <Select 
-                    value={filters.schoolType || 'all_types'} 
-                    onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
-                      <GraduationCap className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue placeholder={isRTL ? 'النوع' : 'Type'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_types">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                      <SelectItem value="public">{isRTL ? 'حكومي' : 'Public'}</SelectItem>
-                      <SelectItem value="private">{isRTL ? 'خاص' : 'Private'}</SelectItem>
-                      <SelectItem value="international">{isRTL ? 'عالمي' : 'International'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Row 2: Time, Status & Actions */}
-                <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border/50">
-                  {/* B. الفترة الزمنية - Time Window */}
-                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
-                    <Clock className="h-4 w-4 text-brand-purple" />
-                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'الفترة:' : 'Time:'}</span>
-                    <Select 
-                      value={filters.timeWindow} 
-                      onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}
-                    >
-                      <SelectTrigger className="w-32 rounded-lg h-8 text-sm border-0 bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="live">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            {isRTL ? 'الآن (Live)' : 'Live'}
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
-                        <SelectItem value="week">{isRTL ? 'الأسبوع الحالي' : 'This Week'}</SelectItem>
-                        <SelectItem value="month">{isRTL ? 'الشهر الحالي' : 'This Month'}</SelectItem>
-                        <SelectItem value="custom">{isRTL ? 'نطاق مخصص' : 'Custom Range'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Date Display - Hijri & Gregorian */}
-                  <div className="flex flex-col items-start bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 px-3 py-1.5 rounded-xl border border-brand-navy/10">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3 text-brand-navy" />
-                      <span className="font-cairo font-bold text-sm text-brand-navy">{getCurrentHijriDate().hijri}</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">({getCurrentHijriDate().gregorian})</span>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-6 w-px bg-border hidden md:block" />
-
-                  {/* C. حالة المدارس - Tenant Status */}
-                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
-                    <Shield className="h-4 w-4 text-orange-500" />
-                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'الحالة:' : 'Status:'}</span>
-                    <Select 
-                      value={filters.tenantStatus} 
-                      onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}
-                    >
-                      <SelectTrigger className="w-32 rounded-lg h-8 text-sm border-0 bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
-                        <SelectItem value="active">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500" />
-                            {isRTL ? 'نشطة' : 'Active'}
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="suspended">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500" />
-                            {isRTL ? 'موقوفة' : 'Suspended'}
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="setup">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                            {isRTL ? 'قيد الإعداد' : 'Setup'}
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="expired">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-gray-400" />
-                            {isRTL ? 'انتهى الاشتراك' : 'Expired'}
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Spacer */}
-                  <div className="flex-1" />
-
-                  {/* D. أزرار الإجراءات - Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    {/* تحديث الآن - Refresh Now */}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => { fetchStats(); toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed'); }}
-                      className="rounded-xl h-8 px-3"
-                      disabled={loading}
-                    >
-                      <RefreshCw className={`h-4 w-4 me-1 ${loading ? 'animate-spin' : ''}`} />
-                      <span className="hidden sm:inline">{isRTL ? 'تحديث الآن' : 'Refresh'}</span>
-                    </Button>
-
-                    {/* تصدير البيانات - Export */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-8 px-3">
-                          <Download className="h-4 w-4 me-1" />
-                          <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleExport('PDF')}>
-                          <FileText className="h-4 w-4 me-2 text-red-500" />
-                          {isRTL ? 'تصدير PDF' : 'Export as PDF'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExport('Excel')}>
-                          <BarChart3 className="h-4 w-4 me-2 text-green-600" />
-                          {isRTL ? 'تصدير Excel' : 'Export as Excel'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* إعدادات العرض - Display Settings */}
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      onClick={() => setShowDisplaySettings(true)}
-                      className="rounded-xl h-8 px-3 bg-brand-navy hover:bg-brand-navy/90"
-                    >
-                      <SlidersHorizontal className="h-4 w-4 me-1" />
-                      <span className="hidden sm:inline">{isRTL ? 'إعدادات العرض' : 'Display'}</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Custom Date Range (when selected) */}
-                {filters.timeWindow === 'custom' && (
-                  <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-border/50 bg-muted/20 -mx-4 -mb-4 px-4 pb-4 rounded-b-xl">
-                    <span className="text-sm font-medium">{isRTL ? 'نطاق مخصص:' : 'Custom Range:'}</span>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</Label>
-                      <Input 
-                        type="date" 
-                        value={filters.customDateFrom}
-                        onChange={(e) => setFilters({ ...filters, customDateFrom: e.target.value })}
-                        className="w-36 rounded-xl h-8 text-sm"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</Label>
-                      <Input 
-                        type="date" 
-                        value={filters.customDateTo}
-                        onChange={(e) => setFilters({ ...filters, customDateTo: e.target.value })}
-                        className="w-36 rounded-xl h-8 text-sm"
-                      />
-                    </div>
-                    <Button size="sm" className="rounded-xl h-8 bg-brand-turquoise hover:bg-brand-turquoise/90">
-                      <Check className="h-3 w-3 me-1" />
-                      {isRTL ? 'تطبيق' : 'Apply'}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
+            {/* ============================================ */}
+            {/* كروت المؤشرات - يتم ترتيبها حسب cardsOrder */}
+            {/* ============================================ */}
             <div className={`grid gap-4 ${
               viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' :
               viewMode === 'expanded' ? 'grid-cols-1 md:grid-cols-2' :
               'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-            }`}>
-              {visibleCards.schools && renderAnalyticsCard(
-                <Building2 className="h-6 w-6 text-brand-navy" />,
-                isRTL ? 'المدارس المسجلة' : 'Registered Schools',
-                stats?.total_schools,
-                [
-                  { label: isRTL ? 'نشطة' : 'Active', value: stats?.active_schools, dotColor: 'bg-green-500' },
-                  { label: isRTL ? 'موقوفة' : 'Suspended', value: stats?.suspended_schools, dotColor: 'bg-red-500' },
-                  { label: isRTL ? 'معلقة' : 'Pending', value: stats?.pending_schools, dotColor: 'bg-yellow-500' },
-                ],
-                isRTL ? 'إضافة' : 'Add',
-                () => setShowAddSchoolWizard(true)
-              )}
-
-              {visibleCards.students && renderAnalyticsCard(
-                <GraduationCap className="h-6 w-6 text-brand-turquoise" />,
-                isRTL ? 'الطلاب المسجلين' : 'Enrolled Students',
-                stats?.total_students,
-                [
-                  { label: isRTL ? 'نشط' : 'Active', value: stats?.active_students?.toLocaleString(), dotColor: 'bg-green-500' },
-                  { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_students_this_month}`, dotColor: 'bg-blue-500' },
-                ],
-                isRTL ? 'عرض' : 'View',
-                () => navigate('/admin/reports')
-              )}
-
-              {visibleCards.teachers && renderAnalyticsCard(
-                <UserCheck className="h-6 w-6 text-brand-purple" />,
-                isRTL ? 'المعلمين' : 'Teachers',
-                stats?.total_teachers,
-                [
-                  { label: isRTL ? 'نشط' : 'Active', value: stats?.active_teachers?.toLocaleString(), dotColor: 'bg-green-500' },
-                  { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_teachers_this_month}`, dotColor: 'bg-blue-500' },
-                ],
-                isRTL ? 'عرض' : 'View',
-                () => navigate('/admin/users')
-              )}
-
-              {visibleCards.admins && renderAnalyticsCard(
-                <Users className="h-6 w-6 text-orange-500" />,
-                isRTL ? 'المسؤولين' : 'Administrators',
-                stats?.total_admins,
-                [
-                  { label: isRTL ? 'مدراء' : 'Principals', value: 200, dotColor: 'bg-purple-500' },
-                  { label: isRTL ? 'منصة' : 'Platform', value: 45, dotColor: 'bg-blue-500' },
-                ],
-                isRTL ? 'إدارة' : 'Manage',
-                () => navigate('/admin/users')
-              )}
-
-              {visibleCards.activeUsers && renderAnalyticsCard(
-                <Activity className="h-6 w-6 text-green-500" />,
-                isRTL ? 'المستخدمين النشطين' : 'Active Users Today',
-                stats?.active_users_today,
-                [
-                  { label: isRTL ? 'طلاب' : 'Students', value: '10.2K', dotColor: 'bg-green-500' },
-                  { label: isRTL ? 'معلمين' : 'Teachers', value: '2.1K', dotColor: 'bg-blue-500' },
-                ],
-                isRTL ? 'تفاصيل' : 'Details',
-                () => navigate('/admin/monitoring')
-              )}
-
-              {visibleCards.apiCalls && renderAnalyticsCard(
-                <Server className="h-6 w-6 text-teal-500" />,
-                isRTL ? 'طلبات API اليوم' : 'API Requests Today',
-                stats?.api_calls_today,
-                [
-                  { label: isRTL ? 'نجاح' : 'Success', value: '99.8%', dotColor: 'bg-green-500' },
-                  { label: isRTL ? 'متوسط' : 'Avg', value: '45ms', dotColor: 'bg-blue-500' },
-                ],
-                isRTL ? 'مراقبة' : 'Monitor',
-                () => navigate('/admin/monitoring')
-              )}
+            }`} data-testid="analytics-cards-grid">
+              {cardsOrder.map((cardKey) => renderAnalyticsCard(cardKey))}
             </div>
           </section>
 
-          {/* Section 2: Quick Actions (Swapped with Activity) */}
-          <section>
+          {/* ============================================ */}
+          {/* 3. الإجراءات السريعة - Quick Actions */}
+          {/* ============================================ */}
+          <section data-testid="quick-actions-section">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-cairo text-lg font-bold flex items-center gap-2">
                 <Zap className="h-5 w-5 text-yellow-500" />
@@ -1309,8 +1098,10 @@ export const AdminDashboard = () => {
             </div>
           </section>
 
-          {/* Section 3: Daily Platform Activity (Swapped with Quick Actions) */}
-          <section>
+          {/* ============================================ */}
+          {/* 4. نشاط المنصة اليومي - Daily Platform Activity */}
+          {/* ============================================ */}
+          <section data-testid="activity-section">
             <Card className="card-nassaq">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -1369,8 +1160,10 @@ export const AdminDashboard = () => {
             </Card>
           </section>
 
-          {/* Section 4: AI Operations Panel */}
-          <section>
+          {/* ============================================ */}
+          {/* 5. لوحة العمليات الذكية - AI Operations Panel */}
+          {/* ============================================ */}
+          <section data-testid="ai-ops-section">
             <Card className="card-nassaq">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -1414,8 +1207,10 @@ export const AdminDashboard = () => {
             </Card>
           </section>
 
-          {/* Section 5: Hakim Chat Interface */}
-          <section>
+          {/* ============================================ */}
+          {/* 6. مساعد حكيم الذكي - Hakim AI Assistant */}
+          {/* ============================================ */}
+          <section data-testid="hakim-section">
             <Card className="card-nassaq">
               <CardHeader className="pb-2">
                 <CardTitle className="font-cairo text-lg flex items-center gap-2">
@@ -1502,7 +1297,9 @@ export const AdminDashboard = () => {
           </section>
         </div>
 
-        {/* Add School Wizard Dialog */}
+        {/* ============================================ */}
+        {/* Dialog: إضافة مدرسة جديدة - Add School Wizard */}
+        {/* ============================================ */}
         <Dialog open={showAddSchoolWizard} onOpenChange={setShowAddSchoolWizard}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -1523,9 +1320,7 @@ export const AdminDashboard = () => {
               <div className="flex items-center gap-2 mb-6">
                 {[1, 2, 3, 4].map((step) => (
                   <div key={step} className="flex-1">
-                    <div className={`h-2 rounded-full ${
-                      step <= wizardStep ? 'bg-brand-turquoise' : 'bg-muted'
-                    }`} />
+                    <div className={`h-2 rounded-full ${step <= wizardStep ? 'bg-brand-turquoise' : 'bg-muted'}`} />
                   </div>
                 ))}
               </div>
@@ -1760,7 +1555,9 @@ export const AdminDashboard = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Display Settings Dialog */}
+        {/* ============================================ */}
+        {/* Dialog: إعدادات العرض - Display Settings */}
+        {/* ============================================ */}
         <Dialog open={showDisplaySettings} onOpenChange={setShowDisplaySettings}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -1795,6 +1592,7 @@ export const AdminDashboard = () => {
                         visibleCards[item.key] ? 'bg-brand-turquoise/5 border-brand-turquoise/30' : 'bg-muted/30 border-transparent'
                       }`}
                       onClick={() => setVisibleCards({ ...visibleCards, [item.key]: !visibleCards[item.key] })}
+                      data-testid={`toggle-card-${item.key}`}
                     >
                       <div className="flex items-center gap-2">
                         <item.icon className={`h-4 w-4 ${item.color}`} />
@@ -1814,7 +1612,7 @@ export const AdminDashboard = () => {
               <div>
                 <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
                   <GripVertical className="h-4 w-4" />
-                  {isRTL ? 'ترتيب الكروت (اسحب للترتيب)' : 'Card Order (drag to reorder)'}
+                  {isRTL ? 'ترتيب الكروت' : 'Card Order'}
                 </h4>
                 <div className="space-y-2">
                   {cardsOrder.map((cardKey, index) => {
@@ -1832,6 +1630,7 @@ export const AdminDashboard = () => {
                       <div 
                         key={cardKey}
                         className="flex items-center gap-3 p-2.5 bg-muted/30 rounded-xl"
+                        data-testid={`reorder-card-${cardKey}`}
                       >
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Button 
@@ -1839,30 +1638,20 @@ export const AdminDashboard = () => {
                             size="sm" 
                             className="h-6 w-6 p-0"
                             disabled={index === 0}
-                            onClick={() => {
-                              if (index > 0) {
-                                const newOrder = [...cardsOrder];
-                                [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
-                                setCardsOrder(newOrder);
-                              }
-                            }}
+                            onClick={() => moveCard(index, 'up')}
+                            data-testid={`move-up-${cardKey}`}
                           >
-                            <ChevronRight className="h-4 w-4 -rotate-90" />
+                            <ChevronUp className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             className="h-6 w-6 p-0"
                             disabled={index === cardsOrder.length - 1}
-                            onClick={() => {
-                              if (index < cardsOrder.length - 1) {
-                                const newOrder = [...cardsOrder];
-                                [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-                                setCardsOrder(newOrder);
-                              }
-                            }}
+                            onClick={() => moveCard(index, 'down')}
+                            data-testid={`move-down-${cardKey}`}
                           >
-                            <ChevronRight className="h-4 w-4 rotate-90" />
+                            <ChevronDown className="h-4 w-4" />
                           </Button>
                         </div>
                         <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
@@ -1886,10 +1675,11 @@ export const AdminDashboard = () => {
                   setCardsOrder(['schools', 'students', 'teachers', 'admins', 'activeUsers', 'apiCalls']);
                 }} 
                 className="rounded-xl"
+                data-testid="reset-display-settings"
               >
                 {isRTL ? 'إعادة تعيين' : 'Reset'}
               </Button>
-              <Button onClick={() => setShowDisplaySettings(false)} className="rounded-xl bg-brand-navy">
+              <Button onClick={() => setShowDisplaySettings(false)} className="rounded-xl bg-brand-navy" data-testid="save-display-settings">
                 {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
               </Button>
             </DialogFooter>
