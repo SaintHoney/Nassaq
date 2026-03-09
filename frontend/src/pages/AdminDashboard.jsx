@@ -45,7 +45,24 @@ const COUNTRIES = [
   { code: 'EG', name: 'مصر', name_en: 'Egypt' },
 ];
 
+// المناطق والمدن - Regions and Cities (Cascading Filters)
+const REGIONS = [
+  { value: 'central', label: 'المنطقة الوسطى', label_en: 'Central Region', cities: ['الرياض', 'القصيم', 'حائل'] },
+  { value: 'western', label: 'المنطقة الغربية', label_en: 'Western Region', cities: ['جدة', 'مكة المكرمة', 'المدينة المنورة', 'الطائف', 'ينبع'] },
+  { value: 'eastern', label: 'المنطقة الشرقية', label_en: 'Eastern Region', cities: ['الدمام', 'الخبر', 'الظهران', 'الأحساء', 'الجبيل'] },
+  { value: 'northern', label: 'المنطقة الشمالية', label_en: 'Northern Region', cities: ['تبوك', 'عرعر', 'سكاكا'] },
+  { value: 'southern', label: 'المنطقة الجنوبية', label_en: 'Southern Region', cities: ['أبها', 'جازان', 'نجران', 'خميس مشيط'] },
+];
+
 const SAUDI_CITIES = ['الرياض', 'جدة', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر', 'الطائف', 'تبوك'];
+
+// أنواع المدارس
+const SCHOOL_TYPES = [
+  { value: 'public', label: 'حكومية', label_en: 'Public' },
+  { value: 'private', label: 'أهلية', label_en: 'Private' },
+  { value: 'international', label: 'دولية', label_en: 'International' },
+  { value: 'model', label: 'نموذجية', label_en: 'Model' },
+];
 
 const SCHOOL_STAGES = [
   { value: 'kindergarten', label: 'رياض الأطفال', label_en: 'Kindergarten' },
