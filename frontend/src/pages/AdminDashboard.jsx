@@ -1742,51 +1742,9 @@ export const AdminDashboard = () => {
           </section>
 
           {/* ============================================ */}
-          {/* 5. لوحة العمليات الذكية - AI Operations Panel */}
+          {/* 5. لوحة العمليات الذكية السريعة - Quick AI Operations Panel */}
           {/* ============================================ */}
-          <section data-testid="ai-ops-section">
-            <Card className="card-nassaq">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-cairo text-lg flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-brand-purple" />
-                    {isRTL ? 'لوحة العمليات الذكية السريعة' : 'AI Quick Operations'}
-                  </CardTitle>
-                  <Badge variant="outline">
-                    {aiOperationsToday} {isRTL ? 'عملية اليوم' : 'ops today'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {aiOperations.map((op) => (
-                    <Card 
-                      key={op.id}
-                      className="bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer border-0"
-                    >
-                      <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-brand-purple/10 flex items-center justify-center">
-                          <op.icon className="h-6 w-6 text-brand-purple" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{op.title}</p>
-                          <p className="text-xs text-muted-foreground">{op.desc}</p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          className="w-full bg-brand-purple hover:bg-brand-purple/90 rounded-lg"
-                          onClick={() => handleAiOperation(op.title)}
-                        >
-                          <Play className="h-3 w-3 me-1" />
-                          {isRTL ? 'تشغيل' : 'Run'}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+          <QuickAIOperationsPanel api={api} isRTL={isRTL} />
 
           {/* ============================================ */}
           {/* 6. مساعد حكيم الذكي - Hakim AI Assistant */}
