@@ -28,7 +28,7 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - Landing page with Arabic content
 
 ### ✅ Phase 2: Platform Admin Dashboard (Completed - Dec 2025)
-- **mركز القيادة (Command Center)**:
+- **مركز القيادة (Command Center)**:
   - Global Filters Bar with region, city, school type filters
   - Enhanced Analytics Cards with sparklines and health indicators
   - Daily Platform Activity chart with real-time data
@@ -46,29 +46,53 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
   - Mobile-optimized sidebar with toggle
 
 ### ✅ Phase 4: Tenants Management Page (Completed - March 2026)
-- **صفحة إدارة المستأجرين**:
-  - Statistics cards (total, active, suspended, AI-enabled)
-  - Global search (name, code, phone, email)
-  - Advanced filters (status, city, type, stage, AI status)
-  - Grid view with premium school cards
-  - Responsive design (desktop and mobile)
+- **صفحة إدارة المدارس (Updated)**:
+  - **Combined Statistics Card**: All school statuses in one card (نشطة, إعداد, موقوفة, منتهية)
+  - **Total Students & Teachers Cards**: New stats cards
+  - **6-Column Grid Layout**: Premium card layout (xl:grid-cols-6)
+  - **Larger Add School Button**: px-6 py-6 text-lg shadow-lg styling
+  - Global search (name, code, phone, principal)
+  - Advanced filters (status, city, stage, type)
+  - Grid/Table view toggle
   - Bulk actions support
-  - Create School Wizard integration
 
-### ✅ Phase 5: User Creation Wizard with RBAC (Completed - March 2026)
-- **معالج إنشاء حساب مستخدم**:
-  - **Step 1 - Role Selection**: 7 roles available:
-    - مدير العمليات التشغيلية (Platform Operations Manager)
-    - مسؤول الإدارة التقنية (Platform Technical Administrator)
-    - مسؤول دعم المستخدمين (Platform Support Specialist)
-    - محلل بيانات المنصة (Platform Data Analyst)
-    - مسؤول أمن المنصة (Platform Security Officer)
-    - حساب اختبار (Testing Account)
-    - معلم (Teacher)
-  - **Step 2 - User Data**: Full name, email, phone, city, department, status, notes
-  - **Step 3 - Permissions**: 60+ permissions in 14 categories with visual cards
+### ✅ Phase 5: User Creation Wizard with RBAC (Updated - March 2026)
+- **معالج إنشاء حساب مستخدم (Connected to Real API)**:
+  - **Backend API**: `/api/users/create` endpoint working
+  - **Step 1 - Role Selection**: 7 roles available
+  - **Step 2 - User Data (Teacher)**: Updated fields:
+    - الاسم الكامل * (Full Name)
+    - البريد الإلكتروني * (Email)
+    - رقم الهاتف (Phone)
+    - **المنطقة *** (Region - 13 Saudi regions)
+    - **المدينة *** (City - dynamic based on region)
+    - **الإدارة التعليمية** (Educational Department)
+    - **اسم المدرسة (عربي)** (School Name Arabic)
+    - **اسم المدرسة (English)** (School Name English)
+  - **Removed Fields**: القسم, حالة الحساب, ملاحظات إدارية
+  - **Step 3 - Permissions**: 11 teacher permissions
   - **Step 4 - Password**: Auto-generated secure temporary password
-  - **Step 5 - Success**: Copy credentials and welcome message functionality
+  - **Step 5 - Success**: Copy credentials and welcome message
+  - **Fixed Button Visibility**: التالي/السابق buttons now fully visible
+
+---
+
+## API Endpoints
+
+### User Management (NEW)
+- `POST /api/users/create` - Create platform user (admin, teacher)
+- `GET /api/users/platform-users` - List platform users
+- `DELETE /api/users/{user_id}` - Soft delete user
+
+### Authentication
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Register
+- `GET /api/auth/me` - Get current user
+
+### Schools
+- `POST /api/schools/` - Create school with principal
+- `GET /api/schools/` - List schools
+- `GET /api/schools/{id}` - Get school details
 
 ---
 
@@ -87,25 +111,19 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - JWT authentication
 - Pydantic models
 
-### Database Schema
-- users, schools, students, teachers
-- classes, subjects, schedules
-- attendance, grades, notifications
-
 ---
 
 ## Prioritized Backlog
 
-### P0 - Critical
+### P0 - Critical (COMPLETED ✅)
 - [x] Mobile-First Responsive Design
-- [x] Tenants Management Page
+- [x] Tenants Management Page (Updated Layout)
 - [x] User Creation Wizard with RBAC
-- [ ] **Connect User Creation to Backend API**
-- [ ] **User Management Page (list, edit, delete users)**
+- [x] **Connect User Creation to Backend API**
 
 ### P1 - High Priority
-- [ ] Backend API for user CRUD operations
-- [ ] First-time login password change flow
+- [ ] **First-time login password change flow**
+- [ ] User Management Page (list, edit, delete users)
 - [ ] Teacher Dashboard enhancements
 - [ ] School Principal Dashboard
 
@@ -123,20 +141,9 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ---
 
-## Known Issues & Technical Debt
-
-### Issues to Fix
-- [ ] Recharts console warnings (width/height -1)
-
-### Refactoring Needed
-- [ ] Break down AdminDashboard.jsx (currently ~2300 lines)
-- [ ] Break down server.py into routes/models/services structure
-- [ ] Extract reusable components
-
-### Mocked Features
-- **User Creation Wizard**: Uses setTimeout simulation, needs backend API connection
-
----
+## Test Reports
+- `/app/test_reports/iteration_20.json` - Mobile design tests
+- `/app/test_reports/iteration_21.json` - User creation API tests (11/11 passed)
 
 ## Test Credentials
 - **Platform Admin**: info@nassaqapp.com / NassaqAdmin2026!##$$HBJ
@@ -145,7 +152,8 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ---
 
 ## Last Updated: March 9, 2026
-- Added Mobile-First Responsive Design for Admin Dashboard
-- Created Tenants Management page with full functionality
-- Implemented User Creation Wizard with 7 roles and 60+ permissions
-- All frontend tests passing (100% success rate)
+- Updated User Creation Wizard with new teacher fields (region, city, educational_department, school_name)
+- Connected User Creation to real Backend API (no more mock)
+- Updated TenantsManagement page layout (6-column grid, combined stats card)
+- Fixed button visibility in wizard (التالي/السابق)
+- All tests passing (100% success rate)
