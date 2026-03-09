@@ -127,9 +127,7 @@ export const SchoolDashboard = () => {
               <Button variant="ghost" size="icon" onClick={toggleTheme}>
                 {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationBell />
             </div>
           </div>
         </header>
