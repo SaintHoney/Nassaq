@@ -400,6 +400,7 @@ export default function TenantsManagement() {
   };
   
   return (
+    <Sidebar>
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Mobile Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b lg:hidden">
