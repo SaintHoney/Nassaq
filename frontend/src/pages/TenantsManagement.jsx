@@ -46,6 +46,7 @@ import {
   Menu, Bell, Home
 } from 'lucide-react';
 import CreateSchoolWizard from '../components/wizards/CreateSchoolWizard';
+import { Sidebar } from '../components/layout/Sidebar';
 
 // School status configuration
 const SCHOOL_STATUS = {
