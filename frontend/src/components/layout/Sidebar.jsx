@@ -49,31 +49,68 @@ export const Sidebar = ({ children }) => {
   };
 
   const getMenuItems = () => {
-    // Platform Admin Menu Items
+    // Platform Admin Menu Items - مدير المنصة
+    // Based on Platform Admin Role Documentation
     const platformAdminItems = [
       {
         icon: LayoutDashboard,
-        label: isRTL ? 'نظرة عامة' : 'Overview',
+        label: isRTL ? 'مركز القيادة' : 'Control Dashboard',
         href: '/admin',
         roles: ['platform_admin'],
       },
       {
         icon: Building2,
-        label: isRTL ? 'المدارس' : 'Schools',
+        label: isRTL ? 'إدارة المدارس' : 'Schools Management',
         href: '/admin/schools',
         roles: ['platform_admin'],
       },
       {
         icon: Users,
-        label: isRTL ? 'المستخدمين' : 'Users',
+        label: isRTL ? 'إدارة المستخدمين' : 'Users Management',
         href: '/admin/users',
         roles: ['platform_admin'],
       },
       {
+        icon: FileText,
+        label: isRTL ? 'طلبات المعلمين' : 'Teacher Requests',
+        href: '/admin/teacher-requests',
+        roles: ['platform_admin'],
+      },
+      {
+        icon: BookOpen,
+        label: isRTL ? 'إدارة القواعد' : 'Rules Management',
+        href: '/admin/rules',
+        roles: ['platform_admin'],
+      },
+      {
+        icon: Activity,
+        label: isRTL ? 'مراقبة النظام' : 'System Monitoring',
+        href: '/admin/monitoring',
+        roles: ['platform_admin'],
+      },
+      {
         icon: BarChart3,
-        label: isRTL ? 'التقارير' : 'Reports',
+        label: isRTL ? 'التحليلات' : 'Analytics',
         href: '/admin/reports',
         roles: ['platform_admin', 'ministry_rep'],
+      },
+      {
+        icon: Link2,
+        label: isRTL ? 'التكاملات' : 'Integrations',
+        href: '/admin/integrations',
+        roles: ['platform_admin'],
+      },
+      {
+        icon: Shield,
+        label: isRTL ? 'مركز الأمان' : 'Security Center',
+        href: '/admin/security',
+        roles: ['platform_admin'],
+      },
+      {
+        icon: MessageSquare,
+        label: isRTL ? 'مركز التواصل' : 'Communication',
+        href: '/admin/communication',
+        roles: ['platform_admin'],
       },
       {
         icon: Bell,
@@ -83,7 +120,7 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: Settings,
-        label: isRTL ? 'الإعدادات' : 'Settings',
+        label: isRTL ? 'إعدادات النظام' : 'System Settings',
         href: '/settings',
         roles: ['platform_admin'],
       },
