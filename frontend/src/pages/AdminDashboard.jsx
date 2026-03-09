@@ -1583,20 +1583,21 @@ export const AdminDashboard = () => {
           {/* ============================================ */}
           <section data-testid="activity-section">
             <Card className="card-nassaq">
-              <CardHeader className="pb-2">
-                <div className="flex flex-col gap-4">
+              <CardHeader className="pb-2 px-4 lg:px-6">
+                <div className="flex flex-col gap-3 lg:gap-4">
                   {/* العنوان وشريط التحكم */}
                   <div className="flex items-center justify-between">
-                    <CardTitle className="font-cairo text-lg flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-brand-turquoise" />
-                      {isRTL ? 'نشاط المنصة اليومي' : 'Daily Platform Activity'}
-                      <Badge className="bg-red-500 text-white text-xs animate-pulse">
+                    <CardTitle className="font-cairo text-base lg:text-lg flex items-center gap-2">
+                      <Activity className="h-4 w-4 lg:h-5 lg:w-5 text-brand-turquoise" />
+                      <span className="hidden sm:inline">{isRTL ? 'نشاط المنصة اليومي' : 'Daily Platform Activity'}</span>
+                      <span className="sm:hidden">{isRTL ? 'النشاط اليومي' : 'Daily Activity'}</span>
+                      <Badge className="bg-red-500 text-white text-[10px] lg:text-xs animate-pulse">
                         {isRTL ? 'مباشر' : 'LIVE'}
                       </Badge>
                     </CardTitle>
                     
-                    {/* أدوات التحكم */}
-                    <div className="flex items-center gap-3">
+                    {/* أدوات التحكم - Desktop */}
+                    <div className="hidden lg:flex items-center gap-3">
                       {/* الفترة الزمنية */}
                       <Select value={activityPeriod} onValueChange={setActivityPeriod}>
                         <SelectTrigger className="w-36 rounded-xl h-8 text-xs">
@@ -1624,10 +1625,24 @@ export const AdminDashboard = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    
+                    {/* Mobile Controls */}
+                    <div className="lg:hidden">
+                      <Select value={activityPeriod} onValueChange={setActivityPeriod}>
+                        <SelectTrigger className="w-24 rounded-xl h-7 text-[10px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                          <SelectItem value="24h">{isRTL ? '24 ساعة' : '24h'}</SelectItem>
+                          <SelectItem value="week">{isRTL ? 'الأسبوع' : 'Week'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
-                  {/* فلاتر النشاط - Activity Filters */}
-                  <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-xl">
+                  {/* فلاتر النشاط - Desktop Only */}
+                  <div className="hidden lg:flex items-center gap-4 bg-muted/30 p-3 rounded-xl">
                     <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'إظهار:' : 'Show:'}</span>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -1675,11 +1690,11 @@ export const AdminDashboard = () => {
                 </div>
               </CardHeader>
               
-              <CardContent>
+              <CardContent className="px-4 lg:px-6">
                 {/* الرسم البياني التفاعلي */}
-                <div className="h-72 mb-6">
+                <div className="h-48 lg:h-72 mb-4 lg:mb-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={activityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorLessons" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
@@ -1699,15 +1714,16 @@ export const AdminDashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
+                      <XAxis dataKey="hour" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: isDark ? '#1f2937' : '#fff',
                           border: 'none',
                           borderRadius: '12px',
                           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                          direction: isRTL ? 'rtl' : 'ltr'
+                          direction: isRTL ? 'rtl' : 'ltr',
+                          fontSize: '12px'
                         }}
                         labelStyle={{ fontWeight: 'bold', marginBottom: '8px' }}
                       />
