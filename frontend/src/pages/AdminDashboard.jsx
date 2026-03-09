@@ -386,14 +386,7 @@ export const AdminDashboard = () => {
               <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-xl">
                 {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-xl relative">
-                <Bell className="h-5 w-5" />
-                {registrationRequests.filter(r => r.status === 'pending').length > 0 && (
-                  <span className="absolute -top-1 -end-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {registrationRequests.filter(r => r.status === 'pending').length}
-                  </span>
-                )}
-              </Button>
+              <NotificationBell />
               <Button variant="ghost" size="icon" onClick={fetchData} className="rounded-xl">
                 <RefreshCw className="h-5 w-5" />
               </Button>
