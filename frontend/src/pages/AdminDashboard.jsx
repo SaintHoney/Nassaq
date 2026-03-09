@@ -698,8 +698,8 @@ export const AdminDashboard = () => {
             </div>
             
             {/* Sparkline Chart */}
-            <div className="w-24 h-12">
-              <MiniSparkline data={card.sparklineData} color={card.sparklineColor} height={48} />
+            <div className="w-28 h-10">
+              <MiniSparkline data={card.sparklineData} trend={card.delta.type} height={40} />
             </div>
           </div>
           
