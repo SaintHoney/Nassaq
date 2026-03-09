@@ -131,14 +131,29 @@ export default function UsersManagement() {
   // Rejection form
   const [rejectionReason, setRejectionReason] = useState('');
   
-  // API instance
-  const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  // API instance with interceptor
+  const api = useMemo(() => {
+    const instance = axios.create({
+      baseURL: API_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    // Add request interceptor to attach token dynamically
+    instance.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+    
+    return instance;
+  }, []);
   
   // Fetch users
   const fetchUsers = useCallback(async () => {
