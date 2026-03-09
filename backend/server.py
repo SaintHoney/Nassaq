@@ -468,6 +468,8 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_schools = await db.schools.count_documents({})
         active_schools = await db.schools.count_documents({"status": "active"})
         pending_schools = await db.schools.count_documents({"status": "pending"})
+        suspended_schools = await db.schools.count_documents({"status": "suspended"})
+        setup_schools = await db.schools.count_documents({"status": "setup"})
         total_users = await db.users.count_documents({})
         active_users = await db.users.count_documents({"is_active": True})
         total_students = await db.students.count_documents({})
@@ -475,11 +477,25 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_classes = await db.classes.count_documents({})
         total_subjects = await db.subjects.count_documents({})
         pending_requests = await db.registration_requests.count_documents({"status": "pending"})
+        
+        # Additional stats
+        teachers_without_classes = await db.teachers.count_documents({"assigned_classes": {"$size": 0}})
+        incomplete_schedules = await db.teachers.count_documents({"schedule_complete": False})
+        schools_without_principal = 0  # Would need principal check
+        students_missing_data = await db.students.count_documents({
+            "$or": [{"parent_phone": None}, {"parent_phone": ""}]
+        })
+        teachers_without_rank = await db.teachers.count_documents({
+            "$or": [{"rank": None}, {"rank": ""}]
+        })
+        total_operations = await db.events.count_documents({})
     else:
         tenant_id = current_user.get("tenant_id")
         total_schools = 1
         active_schools = 1
         pending_schools = 0
+        suspended_schools = 0
+        setup_schools = 0
         total_users = await db.users.count_documents({"tenant_id": tenant_id})
         active_users = await db.users.count_documents({"tenant_id": tenant_id, "is_active": True})
         total_students = await db.students.count_documents({"school_id": tenant_id})
@@ -487,6 +503,12 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_classes = await db.classes.count_documents({"school_id": tenant_id})
         total_subjects = await db.subjects.count_documents({"school_id": tenant_id})
         pending_requests = 0
+        teachers_without_classes = 0
+        incomplete_schedules = 0
+        schools_without_principal = 0
+        students_missing_data = 0
+        teachers_without_rank = 0
+        total_operations = await db.events.count_documents({"tenant_id": tenant_id})
     
     return DashboardStats(
         total_schools=total_schools,
@@ -494,12 +516,208 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_teachers=total_teachers,
         active_schools=active_schools,
         pending_schools=pending_schools,
+        suspended_schools=suspended_schools,
+        setup_schools=setup_schools,
         total_users=total_users,
         active_users=active_users,
         pending_requests=pending_requests,
         total_classes=total_classes,
-        total_subjects=total_subjects
+        total_subjects=total_subjects,
+        total_operations=total_operations,
+        teachers_without_classes=teachers_without_classes,
+        incomplete_schedules=incomplete_schedules,
+        schools_without_principal=schools_without_principal,
+        students_missing_data=students_missing_data,
+        teachers_without_rank=teachers_without_rank
     )
+
+# ============== AI OPERATIONS ==============
+@api_router.post("/ai/diagnosis")
+async def ai_system_diagnosis(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
+    """تشخيص النظام بالذكاء الاصطناعي"""
+    # Gather system metrics
+    total_schools = await db.schools.count_documents({})
+    active_schools = await db.schools.count_documents({"status": "active"})
+    total_users = await db.users.count_documents({})
+    active_users = await db.users.count_documents({"is_active": True})
+    
+    # Calculate health score
+    health_score = 100
+    issues = []
+    recommendations = []
+    
+    # Check for inactive schools
+    inactive_schools = total_schools - active_schools
+    if inactive_schools > 0:
+        health_score -= min(10, inactive_schools * 2)
+        issues.append(f"{inactive_schools} مدرسة غير نشطة")
+    
+    # Check for low active users ratio
+    if total_users > 0:
+        active_ratio = (active_users / total_users) * 100
+        if active_ratio < 70:
+            health_score -= 10
+            issues.append(f"نسبة المستخدمين النشطين منخفضة ({active_ratio:.1f}%)")
+            recommendations.append("مراجعة حسابات المستخدمين غير النشطين")
+    
+    # Check pending requests
+    pending = await db.registration_requests.count_documents({"status": "pending"})
+    if pending > 10:
+        health_score -= 5
+        issues.append(f"{pending} طلب تسجيل معلق")
+        recommendations.append("مراجعة طلبات التسجيل المعلقة")
+    
+    return {
+        "success": True,
+        "message": "تم تشخيص النظام بنجاح" if health_score >= 80 else "يحتاج النظام إلى متابعة",
+        "message_en": "System diagnosis completed",
+        "health_score": max(0, health_score),
+        "issues_found": len(issues),
+        "recommendations": len(recommendations),
+        "details": {
+            "issues": issues,
+            "recommendations": recommendations,
+            "metrics": {
+                "total_schools": total_schools,
+                "active_schools": active_schools,
+                "total_users": total_users,
+                "active_users": active_users,
+                "pending_requests": pending
+            }
+        }
+    }
+
+@api_router.post("/ai/data-quality")
+async def ai_data_quality_scan(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
+    """فحص جودة البيانات"""
+    issues = []
+    
+    # Check students with missing data
+    students_missing_phone = await db.students.count_documents({
+        "$or": [{"parent_phone": None}, {"parent_phone": ""}]
+    })
+    if students_missing_phone > 0:
+        issues.append({"type": "missing_data", "entity": "students", "count": students_missing_phone, "field": "parent_phone"})
+    
+    # Check teachers without rank
+    teachers_no_rank = await db.teachers.count_documents({
+        "$or": [{"rank": None}, {"rank": ""}]
+    })
+    if teachers_no_rank > 0:
+        issues.append({"type": "missing_data", "entity": "teachers", "count": teachers_no_rank, "field": "rank"})
+    
+    # Check classes without teachers
+    classes_no_teacher = await db.classes.count_documents({
+        "$or": [{"teacher_id": None}, {"teacher_id": ""}]
+    })
+    if classes_no_teacher > 0:
+        issues.append({"type": "incomplete", "entity": "classes", "count": classes_no_teacher, "issue": "no_teacher"})
+    
+    # Calculate quality score
+    total_records = await db.students.count_documents({}) + await db.teachers.count_documents({}) + await db.classes.count_documents({})
+    total_issues = sum(i.get("count", 0) for i in issues)
+    quality_score = max(0, 100 - (total_issues / max(1, total_records) * 100))
+    
+    return {
+        "success": True,
+        "message": f"جودة البيانات: {quality_score:.1f}%",
+        "message_en": f"Data Quality: {quality_score:.1f}%",
+        "health_score": int(quality_score),
+        "issues_found": len(issues),
+        "recommendations": len(issues),
+        "details": {
+            "quality_score": quality_score,
+            "issues": issues,
+            "total_records": total_records,
+            "records_with_issues": total_issues
+        }
+    }
+
+@api_router.post("/ai/tenant-health")
+async def ai_tenant_health_check(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
+    """فحص صحة المدارس"""
+    schools = await db.schools.find({}, {"_id": 0}).to_list(1000)
+    
+    healthy = []
+    warning = []
+    critical = []
+    
+    for school in schools:
+        school_id = school.get("id")
+        student_count = await db.students.count_documents({"school_id": school_id})
+        teacher_count = await db.teachers.count_documents({"school_id": school_id})
+        class_count = await db.classes.count_documents({"school_id": school_id})
+        
+        # Determine health
+        if school.get("status") == "suspended":
+            critical.append({"id": school_id, "name": school.get("name"), "reason": "موقوفة"})
+        elif student_count == 0 or teacher_count == 0:
+            warning.append({"id": school_id, "name": school.get("name"), "reason": "بيانات ناقصة"})
+        elif class_count == 0:
+            warning.append({"id": school_id, "name": school.get("name"), "reason": "لا توجد فصول"})
+        else:
+            healthy.append({"id": school_id, "name": school.get("name")})
+    
+    return {
+        "success": True,
+        "message": f"تم فحص {len(schools)} مدرسة",
+        "message_en": f"Checked {len(schools)} schools",
+        "health_score": int(len(healthy) / max(1, len(schools)) * 100),
+        "issues_found": len(warning) + len(critical),
+        "recommendations": len(warning) + len(critical),
+        "details": {
+            "healthy": len(healthy),
+            "warning": len(warning),
+            "critical": len(critical),
+            "schools_healthy": healthy[:5],
+            "schools_warning": warning,
+            "schools_critical": critical
+        }
+    }
+
+@api_router.post("/ai/executive-summary")
+async def ai_executive_summary(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
+    """الملخص التنفيذي الذكي"""
+    # Gather all stats
+    total_schools = await db.schools.count_documents({})
+    active_schools = await db.schools.count_documents({"status": "active"})
+    total_students = await db.students.count_documents({})
+    total_teachers = await db.teachers.count_documents({})
+    total_classes = await db.classes.count_documents({})
+    pending_requests = await db.registration_requests.count_documents({"status": "pending"})
+    
+    # Today's activity
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_events = await db.events.count_documents({"created_at": {"$gte": today_start.isoformat()}})
+    
+    summary_ar = f"""ملخص تنفيذي لمنصة نَسَّق
+
+📊 إحصائيات عامة:
+• إجمالي المدارس: {total_schools} ({active_schools} نشطة)
+• إجمالي الطلاب: {total_students:,}
+• إجمالي المعلمين: {total_teachers:,}
+• إجمالي الفصول: {total_classes:,}
+
+📈 نشاط اليوم:
+• عدد العمليات: {today_events:,}
+
+⚠️ يتطلب اهتمام:
+• طلبات تسجيل معلقة: {pending_requests}
+
+التوصيات:
+{"• مراجعة طلبات التسجيل المعلقة" if pending_requests > 0 else "• لا توجد إجراءات مطلوبة حالياً"}
+"""
+    
+    return {
+        "success": True,
+        "message": "تم إنشاء الملخص التنفيذي",
+        "message_en": "Executive summary generated",
+        "details": {
+            "summary_ar": summary_ar,
+            "summary_en": f"Platform Summary: {total_schools} schools, {total_students:,} students, {total_teachers:,} teachers",
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
 
 # ============== AI ASSISTANT (HAKIM) ==============
 @api_router.post("/hakim/chat", response_model=HakimResponse)
