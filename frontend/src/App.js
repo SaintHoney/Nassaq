@@ -289,6 +289,36 @@ function AppRoutes() {
         }
       />
       
+      {/* Student Dashboard Route */}
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Parent Dashboard Route */}
+      <Route
+        path="/parent"
+        element={
+          <ProtectedRoute allowedRoles={['parent']}>
+            <ParentDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Principal Dashboard Route */}
+      <Route
+        path="/principal"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal']}>
+            <PrincipalDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
       {/* Attendance Route */}
       <Route
         path="/admin/attendance"
