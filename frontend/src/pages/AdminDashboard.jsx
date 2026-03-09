@@ -1045,16 +1045,36 @@ export const AdminDashboard = () => {
           {/* ============================================ */}
           <section data-testid="analytics-section">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-cairo text-lg font-bold flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-brand-turquoise" />
-                {isRTL ? 'المؤشرات العامة للمنصة' : 'Platform Analytics'}
+              <h2 className="font-cairo text-base lg:text-lg font-bold flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 text-brand-turquoise" />
+                {isRTL ? 'المؤشرات العامة' : 'Platform Analytics'}
               </h2>
+              {/* Mobile Quick Actions */}
+              <div className="lg:hidden flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => fetchStats(true)}
+                  className="rounded-xl h-8 px-3"
+                  disabled={refreshing}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => setShowDisplaySettings(true)}
+                  className="rounded-xl h-8 px-3 bg-brand-navy"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
 
             {/* ============================================ */}
-            {/* شريط التحكم العلوي - Global Filters Bar (متسلسل) */}
+            {/* شريط التحكم العلوي - Desktop Only */}
             {/* ============================================ */}
-            <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20" data-testid="global-filters-bar">
+            <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20 hidden lg:block" data-testid="global-filters-bar">
               <CardContent className="p-4">
                 
                 {/* الصف الأول: الفلاتر المتسلسلة (المنطقة -> المدينة -> النوع -> المدرسة) */}
