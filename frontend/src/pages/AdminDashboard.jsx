@@ -162,6 +162,7 @@ export const AdminDashboard = () => {
     selectedSchool: '',
     selectedSchools: [],
     city: '',
+    region: '',
     schoolType: '',
     timeWindow: 'today', // live, today, week, month, custom
     customDateFrom: '',
@@ -172,6 +173,7 @@ export const AdminDashboard = () => {
   const [visibleCards, setVisibleCards] = useState({
     schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true
   });
+  const [cardsOrder, setCardsOrder] = useState(['schools', 'students', 'teachers', 'admins', 'activeUsers', 'apiCalls']);
   const [schools, setSchools] = useState([]);
 
   // Hakim Chat
