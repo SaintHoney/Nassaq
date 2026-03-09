@@ -473,14 +473,14 @@ export const AdminDashboard = () => {
 
                   {/* City Filter */}
                   <Select 
-                    value={filters.city} 
-                    onValueChange={(v) => setFilters({ ...filters, city: v })}
+                    value={filters.city || 'all_cities'} 
+                    onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
                   >
                     <SelectTrigger className="w-32 rounded-xl h-9 text-sm">
                       <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
                       {SAUDI_CITIES.map((city) => (
                         <SelectItem key={city} value={city}>{city}</SelectItem>
                       ))}
