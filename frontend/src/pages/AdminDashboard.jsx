@@ -149,6 +149,7 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddSchoolWizard, setShowAddSchoolWizard] = useState(false);
+  const [showCreateUserWizard, setShowCreateUserWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [viewMode, setViewMode] = useState('grid');
   
