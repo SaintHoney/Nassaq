@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
 import { toast } from 'sonner';
 import { Progress } from '../ui/progress';
 import {
@@ -14,10 +14,9 @@ import {
   DialogFooter,
 } from '../ui/dialog';
 import {
-  Brain, Activity, Shield, Database, Building2, FileText, Settings, AlertTriangle,
-  Play, RefreshCw, Eye, Download, CheckCircle2, XCircle, Clock, Zap, Upload,
-  BarChart3, Users, School, Sparkles, Copy, ChevronRight, History, Bot,
-  Gauge, Search, Filter, ListChecks, FileCheck, Wrench, Bell, Check, X
+  Brain, Activity, Database, Upload, Bell, Play, RefreshCw, Eye,
+  CheckCircle2, XCircle, Clock, Zap, Sparkles, ChevronRight, History,
+  Gauge, Check, X, ExternalLink, FileCheck, AlertTriangle
 } from 'lucide-react';
 
 // AI Status States
@@ -25,10 +24,9 @@ const AI_STATUS = {
   ACTIVE: { label: 'نشط', label_en: 'Active', color: 'bg-green-500', textColor: 'text-green-500' },
   PARTIAL: { label: 'نشط جزئياً', label_en: 'Partially Active', color: 'bg-yellow-500', textColor: 'text-yellow-500' },
   STOPPED: { label: 'متوقف', label_en: 'Stopped', color: 'bg-red-500', textColor: 'text-red-500' },
-  MAINTENANCE: { label: 'تحت الصيانة', label_en: 'Maintenance', color: 'bg-gray-500', textColor: 'text-gray-500' },
 };
 
-// AI Operations Configuration
+// AI Operations Configuration - Only 4 operations as requested
 const AI_OPERATIONS = [
   {
     id: 'system_diagnosis',
@@ -54,70 +52,59 @@ const AI_OPERATIONS = [
     id: 'import_analyzer',
     title: 'تحليل ملفات الاستيراد',
     title_en: 'Import Analyzer',
-    desc: 'تحليل الملفات قبل الإدخال',
-    desc_en: 'Analyze files before import',
+    desc: 'نتائج الملفات المستوردة',
+    desc_en: 'Import files results',
     icon: Upload,
     color: 'bg-purple-500',
     type: 'analysis',
   },
   {
-    id: 'tenant_health',
-    title: 'صحة المدارس',
-    title_en: 'Tenant Health',
-    desc: 'تحليل أداء المدارس',
-    desc_en: 'Schools performance',
-    icon: Building2,
-    color: 'bg-orange-500',
-    type: 'analysis',
-  },
-  {
-    id: 'config_suggestion',
-    title: 'اقتراح الإعدادات',
-    title_en: 'Config Suggestion',
-    desc: 'اقتراحات إعدادات ذكية',
-    desc_en: 'Smart config suggestions',
-    icon: Settings,
-    color: 'bg-cyan-500',
-    type: 'suggestion',
-  },
-  {
-    id: 'executive_summary',
-    title: 'الملخص التنفيذي',
-    title_en: 'Executive Summary',
-    desc: 'تقرير ذكي شامل',
-    desc_en: 'Comprehensive AI report',
-    icon: FileText,
-    color: 'bg-indigo-500',
-    type: 'report',
-  },
-  {
-    id: 'report_builder',
-    title: 'منشئ التقارير',
-    title_en: 'Report Builder',
-    desc: 'إنشاء تقارير مخصصة',
-    desc_en: 'Build custom reports',
-    icon: BarChart3,
-    color: 'bg-pink-500',
-    type: 'report',
-  },
-  {
     id: 'alerts_review',
     title: 'مراجعة التنبيهات',
     title_en: 'Alerts Review',
-    desc: 'التنبيهات الذكية',
-    desc_en: 'AI-generated alerts',
+    desc: 'التنبيهات غير المقروءة',
+    desc_en: 'Unread alerts',
     icon: Bell,
     color: 'bg-red-500',
     type: 'alert',
+    badge: 7, // Unread count
   },
 ];
 
-// Sample suggested actions
+// Sample suggested actions with navigation links
 const SUGGESTED_ACTIONS = [
-  { id: 1, title: 'توجد 3 مدارس لم يتم استكمال بيانات مديرها', priority: 'high', type: 'data' },
-  { id: 2, title: '12 معلماً بدون رتبة محددة', priority: 'medium', type: 'data' },
-  { id: 3, title: '4 ملفات استيراد تحتاج مراجعة', priority: 'high', type: 'import' },
-  { id: 4, title: 'يُفضل تفعيل AI Scheduling لمدرستين', priority: 'low', type: 'suggestion' },
+  { 
+    id: 1, 
+    title: 'توجد 3 مدارس لم يتم استكمال بيانات مديرها', 
+    priority: 'high', 
+    type: 'data',
+    link: '/admin/schools',
+    linkText: 'إدارة المدارس'
+  },
+  { 
+    id: 2, 
+    title: '12 معلماً بدون رتبة محددة', 
+    priority: 'medium', 
+    type: 'data',
+    link: '/teachers',
+    linkText: 'إدارة المعلمين'
+  },
+  { 
+    id: 3, 
+    title: '4 ملفات استيراد تحتاج مراجعة', 
+    priority: 'high', 
+    type: 'import',
+    link: '/admin/imports',
+    linkText: 'ملفات الاستيراد'
+  },
+  { 
+    id: 4, 
+    title: 'يُفضل تفعيل AI Scheduling لمدرستين', 
+    priority: 'low', 
+    type: 'suggestion',
+    link: '/admin/schools',
+    linkText: 'إدارة المدارس'
+  },
 ];
 
 // Sample recent operations
@@ -128,14 +115,16 @@ const RECENT_OPERATIONS = [
 ];
 
 export default function QuickAIOperationsPanel({ api, isRTL = true }) {
+  const navigate = useNavigate();
+  
   // States
-  const [aiStatus, setAiStatus] = useState(AI_STATUS.ACTIVE);
+  const [aiStatus] = useState(AI_STATUS.ACTIVE);
   const [operationsToday, setOperationsToday] = useState(47);
-  const [openAlerts, setOpenAlerts] = useState(5);
-  const [pendingRecommendations, setPendingRecommendations] = useState(8);
+  const [openAlerts] = useState(7);
+  const [pendingRecommendations] = useState(8);
   const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString('ar-SA'));
-  const [aiEnabledSchools, setAiEnabledSchools] = useState(184);
-  const [totalSchools, setTotalSchools] = useState(200);
+  const [aiEnabledSchools] = useState(184);
+  const [totalSchools] = useState(200);
   
   // Dialog states
   const [activeDialog, setActiveDialog] = useState(null);
@@ -151,14 +140,14 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
     // Simulate AI operation
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Generate mock results based on operation type
+    // Generate results based on operation type
     const results = generateOperationResults(operationId);
     setOperationResult(results);
     setIsProcessing(false);
     setOperationsToday(prev => prev + 1);
   };
   
-  // Generate mock operation results
+  // Generate operation results
   const generateOperationResults = (operationId) => {
     switch (operationId) {
       case 'system_diagnosis':
@@ -188,39 +177,37 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
             { label: isRTL ? 'فصول بدون معلم' : 'Classes without teacher', value: 6, type: 'critical' },
             { label: isRTL ? 'أولياء أمور غير مرتبطين' : 'Unlinked parents', value: 11, type: 'info' },
           ],
-          autoFixAvailable: true,
         };
-      case 'tenant_health':
+      case 'import_analyzer':
         return {
-          title: isRTL ? 'نتائج فحص صحة المدارس' : 'Tenant Health Results',
-          summary: isRTL ? 'تم فحص 200 مدرسة' : 'Checked 200 schools',
+          title: isRTL ? 'نتائج ملفات الاستيراد اليوم' : 'Today\'s Import Files Results',
+          summary: isRTL ? 'تم استيراد 8 ملفات اليوم' : '8 files imported today',
+          importStats: {
+            total: 8,
+            success: 5,
+            failed: 2,
+            pending: 1
+          },
           items: [
-            { label: isRTL ? 'مدارس مستقرة' : 'Stable schools', value: 148, type: 'success' },
-            { label: isRTL ? 'مدارس تحتاج متابعة' : 'Need follow-up', value: 34, type: 'warning' },
-            { label: isRTL ? 'مدارس حرجة' : 'Critical schools', value: 18, type: 'critical' },
+            { label: isRTL ? 'طلاب_مدرسة_النور.xlsx' : 'students_alnoor.xlsx', value: 'ناجح', type: 'success', records: 245 },
+            { label: isRTL ? 'معلمين_المنطقة_الشرقية.xlsx' : 'teachers_eastern.xlsx', value: 'ناجح', type: 'success', records: 87 },
+            { label: isRTL ? 'جداول_الابتدائية.xlsx' : 'primary_schedules.xlsx', value: 'فشل', type: 'critical', error: 'تنسيق غير صحيح' },
+            { label: isRTL ? 'اولياء_امور.xlsx' : 'parents.xlsx', value: 'ناجح', type: 'success', records: 312 },
+            { label: isRTL ? 'فصول_الثانوية.xlsx' : 'secondary_classes.xlsx', value: 'فشل', type: 'critical', error: 'بيانات مكررة' },
+            { label: isRTL ? 'طلاب_جدد.xlsx' : 'new_students.xlsx', value: 'معلق', type: 'warning', records: 56 },
           ],
         };
-      case 'executive_summary':
+      case 'alerts_review':
         return {
-          title: isRTL ? 'الملخص التنفيذي اليومي' : 'Daily Executive Summary',
-          content: isRTL 
-            ? `حالة المنصة: مستقرة ✓
-
-النشاط اليوم:
-• 184 مدرسة نشطة من أصل 200
-• 3,847 مستخدم نشط
-• 12,456 عملية منفذة
-
-التنبيهات:
-• 3 مدارس تحتاج متابعة عاجلة
-• 5 ملفات استيراد معلقة
-
-التوصيات:
-• تفعيل الإشعارات للمدارس المتأخرة
-• مراجعة ملفات الاستيراد المعلقة`
-            : 'Platform Status: Stable ✓\n\nActivity Today:\n• 184/200 active schools\n• 3,847 active users\n• 12,456 operations\n\nAlerts:\n• 3 schools need urgent follow-up\n• 5 pending imports',
-          canCopy: true,
-          canExport: true,
+          title: isRTL ? 'التنبيهات غير المقروءة' : 'Unread Alerts',
+          summary: isRTL ? `لديك ${openAlerts} تنبيهات غير مقروءة` : `You have ${openAlerts} unread alerts`,
+          unreadCount: openAlerts,
+          alertsLink: '/admin/alerts',
+          items: [
+            { label: isRTL ? 'مدرسة الأمل - نشاط منخفض' : 'Al-Amal School - Low activity', type: 'warning', time: '10:30' },
+            { label: isRTL ? 'فشل استيراد ملف الطلاب' : 'Student import failed', type: 'critical', time: '09:45' },
+            { label: isRTL ? 'معلم جديد بدون تعيين فصل' : 'New teacher without class', type: 'info', time: '09:15' },
+          ],
         };
       default:
         return {
@@ -237,15 +224,10 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
     toast.success(isRTL ? 'تم تحديث حالة الذكاء الاصطناعي' : 'AI status updated');
   };
   
-  // Copy text to clipboard
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success(isRTL ? 'تم النسخ' : 'Copied');
-  };
-  
-  // Execute suggested action
-  const executeAction = (action) => {
-    toast.success(isRTL ? `تم تنفيذ: ${action.title}` : `Executed: ${action.title}`);
+  // Navigate to action link
+  const handleActionClick = (action) => {
+    toast.info(isRTL ? `جاري الانتقال إلى ${action.linkText}...` : `Navigating to ${action.linkText}...`);
+    navigate(action.link);
   };
   
   // Get operation by ID
@@ -291,7 +273,7 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
               <div className="flex items-center gap-1 text-sm">
                 <Bell className="h-4 w-4 text-orange-500" />
                 <span>{openAlerts}</span>
-                <span className="text-muted-foreground">{isRTL ? 'تنبيه مفتوح' : 'open alerts'}</span>
+                <span className="text-muted-foreground">{isRTL ? 'تنبيه غير مقروء' : 'unread alerts'}</span>
               </div>
               <div className="h-6 w-px bg-border" />
               <div className="flex items-center gap-1 text-sm">
@@ -311,14 +293,6 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                 <Gauge className="h-4 w-4 me-1" />
                 {isRTL ? 'تشخيص' : 'Diagnose'}
               </Button>
-              <Button variant="outline" size="sm" className="rounded-lg">
-                <History className="h-4 w-4 me-1" />
-                {isRTL ? 'السجل' : 'Log'}
-              </Button>
-              <Button variant="outline" size="sm" className="rounded-lg">
-                <Settings className="h-4 w-4 me-1" />
-                {isRTL ? 'إعدادات' : 'Settings'}
-              </Button>
             </div>
           </div>
           
@@ -336,7 +310,7 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
         </CardContent>
       </Card>
       
-      {/* بطاقات العمليات الذكية - AI Action Cards */}
+      {/* بطاقات العمليات الذكية - 4 عمليات فقط */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {AI_OPERATIONS.map((op) => (
           <Card 
@@ -346,19 +320,21 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
             data-testid={`ai-op-${op.id}`}
           >
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-              <div className={`w-14 h-14 rounded-2xl ${op.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                <op.icon className="h-7 w-7 text-white" />
+              <div className="relative">
+                <div className={`w-14 h-14 rounded-2xl ${op.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                  <op.icon className="h-7 w-7 text-white" />
+                </div>
+                {/* Badge for unread alerts */}
+                {op.badge && (
+                  <Badge className="absolute -top-2 -end-2 bg-red-500 text-white text-xs px-2 animate-pulse">
+                    {op.badge}
+                  </Badge>
+                )}
               </div>
               <div>
                 <p className="font-cairo font-bold text-sm">{isRTL ? op.title : op.title_en}</p>
                 <p className="text-xs text-muted-foreground">{isRTL ? op.desc : op.desc_en}</p>
               </div>
-              <Badge variant="outline" className="text-[10px]">
-                {op.type === 'analysis' && (isRTL ? 'تحليل' : 'Analysis')}
-                {op.type === 'suggestion' && (isRTL ? 'اقتراح' : 'Suggestion')}
-                {op.type === 'report' && (isRTL ? 'تقرير' : 'Report')}
-                {op.type === 'alert' && (isRTL ? 'تنبيه' : 'Alert')}
-              </Badge>
               <Button 
                 size="sm" 
                 className={`w-full ${op.color} hover:opacity-90 rounded-lg text-white`}
@@ -393,21 +369,21 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                     'border-blue-200 bg-blue-50/50'
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full ${
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                     action.priority === 'high' ? 'bg-red-500' :
                     action.priority === 'medium' ? 'bg-yellow-500' :
                     'bg-blue-500'
                   }`} />
                   <span className="flex-1 text-sm">{action.title}</span>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => executeAction(action)}>
-                      <Check className="h-3 w-3 me-1" />
-                      {isRTL ? 'تنفيذ' : 'Execute'}
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground">
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 px-3 text-xs gap-1"
+                    onClick={() => handleActionClick(action)}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {action.linkText}
+                  </Button>
                 </div>
               ))}
             </div>
@@ -508,8 +484,55 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                 </div>
               )}
               
+              {/* إحصائيات الاستيراد (إن وجدت) */}
+              {operationResult.importStats && (
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <p className="text-2xl font-bold">{operationResult.importStats.total}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'إجمالي الملفات' : 'Total Files'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-50 text-center border border-green-200">
+                    <p className="text-2xl font-bold text-green-600">{operationResult.importStats.success}</p>
+                    <p className="text-xs text-green-600">{isRTL ? 'ناجح' : 'Success'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-red-50 text-center border border-red-200">
+                    <p className="text-2xl font-bold text-red-600">{operationResult.importStats.failed}</p>
+                    <p className="text-xs text-red-600">{isRTL ? 'فشل' : 'Failed'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-yellow-50 text-center border border-yellow-200">
+                    <p className="text-2xl font-bold text-yellow-600">{operationResult.importStats.pending}</p>
+                    <p className="text-xs text-yellow-600">{isRTL ? 'معلق' : 'Pending'}</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* رابط التنبيهات (إن وجد) */}
+              {operationResult.alertsLink && (
+                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="h-6 w-6 text-red-500" />
+                      <div>
+                        <p className="font-bold text-red-700">{operationResult.unreadCount} {isRTL ? 'تنبيهات غير مقروءة' : 'Unread Alerts'}</p>
+                        <p className="text-sm text-red-600">{isRTL ? 'اضغط للانتقال لصفحة التنبيهات' : 'Click to view alerts page'}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="bg-red-500 hover:bg-red-600"
+                      onClick={() => {
+                        setActiveDialog(null);
+                        navigate(operationResult.alertsLink);
+                      }}
+                    >
+                      <ExternalLink className="h-4 w-4 me-1" />
+                      {isRTL ? 'عرض التنبيهات' : 'View Alerts'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               {/* النتائج */}
-              {operationResult.items && operationResult.items.length > 0 && (
+              {operationResult.items && operationResult.items.length > 0 && !operationResult.importStats && !operationResult.alertsLink && (
                 <div className="space-y-2">
                   {operationResult.items.map((item, index) => (
                     <div 
@@ -535,6 +558,69 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                 </div>
               )}
               
+              {/* ملفات الاستيراد */}
+              {operationResult.importStats && operationResult.items && (
+                <div className="space-y-2">
+                  {operationResult.items.map((item, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        item.type === 'critical' ? 'bg-red-50 border border-red-200' :
+                        item.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
+                        'bg-green-50 border border-green-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileCheck className={`h-4 w-4 ${
+                          item.type === 'critical' ? 'text-red-500' :
+                          item.type === 'warning' ? 'text-yellow-500' :
+                          'text-green-500'
+                        }`} />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {item.records && <span className="text-xs text-muted-foreground">{item.records} {isRTL ? 'سجل' : 'records'}</span>}
+                        {item.error && <span className="text-xs text-red-500">{item.error}</span>}
+                        <Badge className={
+                          item.type === 'critical' ? 'bg-red-500' :
+                          item.type === 'warning' ? 'bg-yellow-500' :
+                          'bg-green-500'
+                        }>
+                          {item.value}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* عرض بعض التنبيهات */}
+              {operationResult.alertsLink && operationResult.items && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">{isRTL ? 'آخر التنبيهات:' : 'Recent alerts:'}</p>
+                  {operationResult.items.map((item, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        item.type === 'critical' ? 'bg-red-50 border border-red-200' :
+                        item.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
+                        'bg-blue-50 border border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bell className={`h-4 w-4 ${
+                          item.type === 'critical' ? 'text-red-500' :
+                          item.type === 'warning' ? 'text-yellow-500' :
+                          'text-blue-500'
+                        }`} />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {/* التوصيات */}
               {operationResult.recommendations && (
                 <div className="p-4 rounded-lg border border-brand-purple/20 bg-brand-purple/5">
@@ -552,44 +638,13 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                   </ul>
                 </div>
               )}
-              
-              {/* محتوى نصي (للملخص التنفيذي) */}
-              {operationResult.content && (
-                <div className="p-4 rounded-lg bg-muted/50 font-mono text-sm whitespace-pre-wrap">
-                  {operationResult.content}
-                </div>
-              )}
             </div>
           )}
           
           <DialogFooter className="gap-2">
-            {operationResult?.autoFixAvailable && (
-              <Button className="bg-green-600 hover:bg-green-700">
-                <Wrench className="h-4 w-4 me-1" />
-                {isRTL ? 'تصحيح تلقائي' : 'Auto Fix'}
-              </Button>
-            )}
-            {operationResult?.canCopy && (
-              <Button variant="outline" onClick={() => copyToClipboard(operationResult.content)}>
-                <Copy className="h-4 w-4 me-1" />
-                {isRTL ? 'نسخ' : 'Copy'}
-              </Button>
-            )}
-            {operationResult?.canExport && (
-              <Button variant="outline">
-                <Download className="h-4 w-4 me-1" />
-                {isRTL ? 'تصدير PDF' : 'Export PDF'}
-              </Button>
-            )}
             <Button variant="outline" onClick={() => { setActiveDialog(null); setOperationResult(null); }}>
               {isRTL ? 'إغلاق' : 'Close'}
             </Button>
-            {operationResult && (
-              <Button className="bg-brand-purple hover:bg-brand-purple/90">
-                <ListChecks className="h-4 w-4 me-1" />
-                {isRTL ? 'تحويل لمهام' : 'Create Tasks'}
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
