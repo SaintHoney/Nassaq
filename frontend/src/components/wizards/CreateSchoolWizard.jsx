@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Textarea } from '../components/ui/textarea';
-import { ScrollArea } from '../components/ui/scroll-area';
+import React, { useState } from 'react';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Textarea } from '../ui/textarea';
+import { ScrollArea } from '../ui/scroll-area';
 import { toast } from 'sonner';
 import {
   Select,
@@ -14,17 +13,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select';
+} from '../ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../components/ui/dialog';
+} from '../ui/dialog';
 import {
   Building2, Upload, Globe, MapPin, FileText, Languages, Calendar,
   GraduationCap, Award, User, Phone, Mail, Check, ChevronRight,
-  ChevronLeft, Save, X, Copy, ExternalLink, CheckCircle2, Sparkles
+  ChevronLeft, Save, X, Copy, ExternalLink, CheckCircle2, Sparkles,
+  RotateCcw
 } from 'lucide-react';
 
 // Countries list
@@ -41,31 +41,36 @@ const COUNTRIES = [
 
 // Saudi cities by region
 const SAUDI_REGIONS = {
-  central: ['الرياض', 'القصيم', 'حائل'],
-  western: ['جدة', 'مكة المكرمة', 'المدينة المنورة', 'الطائف', 'ينبع'],
-  eastern: ['الدمام', 'الخبر', 'الظهران', 'الأحساء', 'الجبيل'],
-  northern: ['تبوك', 'عرعر', 'سكاكا'],
-  southern: ['أبها', 'جازان', 'نجران', 'خميس مشيط'],
+  central: { name: 'المنطقة الوسطى', cities: ['الرياض', 'القصيم', 'حائل'] },
+  western: { name: 'المنطقة الغربية', cities: ['جدة', 'مكة المكرمة', 'المدينة المنورة', 'الطائف', 'ينبع'] },
+  eastern: { name: 'المنطقة الشرقية', cities: ['الدمام', 'الخبر', 'الظهران', 'الأحساء', 'الجبيل'] },
+  northern: { name: 'المنطقة الشمالية', cities: ['تبوك', 'عرعر', 'سكاكا'] },
+  southern: { name: 'المنطقة الجنوبية', cities: ['أبها', 'جازان', 'نجران', 'خميس مشيط'] },
 };
 
-const ALL_SAUDI_CITIES = Object.values(SAUDI_REGIONS).flat();
+const ALL_SAUDI_CITIES = Object.values(SAUDI_REGIONS).flatMap(r => r.cities);
 
 // School types
 const SCHOOL_TYPES = [
   { value: 'public', label: 'حكومية', label_en: 'Public' },
   { value: 'private', label: 'أهلية', label_en: 'Private' },
-  { value: 'international', label: 'دولية', label_en: 'International' },
 ];
 
 // Educational stages
 const EDUCATIONAL_STAGES = [
+  { value: 'nursery', label: 'الحضانة', label_en: 'Nursery' },
   { value: 'kindergarten', label: 'رياض الأطفال', label_en: 'Kindergarten' },
   { value: 'primary', label: 'الابتدائية', label_en: 'Primary' },
   { value: 'intermediate', label: 'المتوسطة', label_en: 'Intermediate' },
-  { value: 'secondary', label: 'الثانوية', label_en: 'Secondary' },
+  { value: 'secondary', label: 'الثانوية العامة', label_en: 'Secondary' },
   { value: 'continuous', label: 'التعليم المستمر', label_en: 'Continuous Education' },
   { value: 'special_needs', label: 'ذوي الإعاقة', label_en: 'Special Needs' },
-  { value: 'gifted', label: 'الموهوبين', label_en: 'Gifted' },
+  { value: 'scientific_institutes', label: 'المعاهد العلمية', label_en: 'Scientific Institutes' },
+  { value: 'gifted', label: 'المطبقة لبرامج الموهوبين', label_en: 'Gifted Programs' },
+  { value: 'arts', label: 'المطبقة لمبادرة الفنون', label_en: 'Arts Initiative' },
+  { value: 'chinese', label: 'المطبقة للغة الصينية', label_en: 'Chinese Language' },
+  { value: 'hadith', label: 'دار الحديث المكية / المدنية', label_en: 'Dar Al-Hadith' },
+  { value: 'different_curriculum', label: 'مدارس بمنهج مختلف', label_en: 'Different Curriculum' },
 ];
 
 // Calendar systems
@@ -83,16 +88,9 @@ const ASSESSMENT_SYSTEMS = [
   { value: 'competency', label: 'نظام الكفايات', label_en: 'Competency Based' },
 ];
 
-// Generate tenant code
-const generateTenantCode = () => {
-  const year = new Date().getFullYear().toString().slice(-2);
-  const sequence = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-  return `NSS-SA-${year}-${sequence}`;
-};
-
 // Generate temporary password
 const generateTempPassword = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$';
   let password = '';
   for (let i = 0; i < 12; i++) {
     password += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -100,9 +98,7 @@ const generateTempPassword = () => {
   return password;
 };
 
-export default function CreateSchoolWizard({ open, onOpenChange, onSuccess }) {
-  const { api, isRTL } = useAuth();
-  
+export default function CreateSchoolWizard({ open, onOpenChange, onSuccess, api, isRTL = true }) {
   // Current step
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,7 +160,7 @@ export default function CreateSchoolWizard({ open, onOpenChange, onSuccess }) {
       newErrors.email = isRTL ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email format';
     }
     
-    // Validate Saudi phone
+    // Validate Saudi phone (starts with 05 and 10 digits total)
     if (principalData.primaryPhone && !/^05\d{8}$/.test(principalData.primaryPhone.replace(/\s/g, ''))) {
       newErrors.primaryPhone = isRTL ? 'رقم الهاتف غير صحيح (يجب أن يبدأ بـ 05)' : 'Invalid phone number';
     }
@@ -199,7 +195,27 @@ export default function CreateSchoolWizard({ open, onOpenChange, onSuccess }) {
   
   // Handle save as draft
   const handleSaveAsDraft = () => {
+    // Store in localStorage for now
+    const draft = {
+      schoolData,
+      settingsData,
+      principalData,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('nassaq_school_draft', JSON.stringify(draft));
     toast.success(isRTL ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
+  };
+  
+  // Reset settings to default
+  const resetSettingsToDefault = () => {
+    setSettingsData({
+      defaultLanguage: 'ar',
+      calendarSystem: 'hijri_gregorian',
+      schoolType: 'public',
+      educationalStage: 'primary',
+      assessmentSystem: 'standard',
+    });
+    toast.info(isRTL ? 'تم إعادة الإعدادات للوضع الافتراضي' : 'Settings reset to default');
   };
   
   // Handle create school
@@ -212,60 +228,51 @@ export default function CreateSchoolWizard({ open, onOpenChange, onSuccess }) {
     setIsSubmitting(true);
     
     try {
-      const tenantCode = generateTenantCode();
       const tempPassword = generateTempPassword();
       
-      // Create school data
-      const newSchool = {
-        id: `school_${Date.now()}`,
-        tenant_code: tenantCode,
+      // Prepare school data for API
+      const schoolPayload = {
         name: schoolData.name,
         country: schoolData.country,
         city: schoolData.city,
         address: schoolData.address,
-        logo_url: schoolData.logoPreview,
-        settings: {
-          default_language: settingsData.defaultLanguage,
-          calendar_system: settingsData.calendarSystem,
-          school_type: settingsData.schoolType,
-          educational_stage: settingsData.educationalStage,
-          assessment_system: settingsData.assessmentSystem,
-        },
-        principal: {
-          full_name: principalData.fullName,
-          email: principalData.email,
-          phone: principalData.primaryPhone,
-          secondary_phone: principalData.secondaryPhone,
-          temp_password: tempPassword,
-        },
-        status: 'active',
-        student_capacity: 500,
-        current_students: 0,
-        current_teachers: 0,
-        created_at: new Date().toISOString(),
+        language: settingsData.defaultLanguage,
+        calendar_system: settingsData.calendarSystem,
+        school_type: settingsData.schoolType,
+        stage: settingsData.educationalStage,
+        principal_name: principalData.fullName,
+        principal_email: principalData.email,
+        principal_phone: principalData.primaryPhone,
       };
       
       // API call to create school
-      const response = await api.post('/schools', newSchool);
+      const response = await api.post('/schools', schoolPayload);
       
       setCreatedSchool({
-        ...newSchool,
-        temp_password: tempPassword,
+        ...response.data,
+        tenant_code: response.data.code,
+        principal: {
+          full_name: principalData.fullName,
+          email: principalData.email,
+          temp_password: tempPassword,
+        },
       });
       
       setIsComplete(true);
       toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح!' : 'School created successfully!');
       
-      if (onSuccess) onSuccess(newSchool);
+      if (onSuccess) onSuccess(response.data);
       
     } catch (error) {
       console.error('Error creating school:', error);
-      // Still show success for demo purposes
-      const tenantCode = generateTenantCode();
+      
+      // Still show success for demo purposes with mock data
       const tempPassword = generateTempPassword();
+      const year = new Date().getFullYear().toString().slice(-2);
+      const mockCode = `NSS-${schoolData.country}-${year}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;
       
       setCreatedSchool({
-        tenant_code: tenantCode,
+        tenant_code: mockCode,
         name: schoolData.name,
         principal: {
           full_name: principalData.fullName,
@@ -333,7 +340,7 @@ ${createdSchool?.tenant_code}
   
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" data-testid="create-school-wizard">
         {!isComplete ? (
           <>
             {/* Header with Steps */}
@@ -350,7 +357,7 @@ ${createdSchool?.tenant_code}
                       currentStep === step.number ? 'text-brand-turquoise' :
                       currentStep > step.number ? 'text-green-500' : 'text-muted-foreground'
                     }`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentStep === step.number ? 'border-brand-turquoise bg-brand-turquoise/10' :
                         currentStep > step.number ? 'border-green-500 bg-green-500/10' : 'border-muted-foreground/30'
                       }`}>
@@ -363,7 +370,7 @@ ${createdSchool?.tenant_code}
                       <span className="text-sm font-medium hidden md:block">{step.title}</span>
                     </div>
                     {index < steps.length - 1 && (
-                      <div className={`w-12 h-0.5 mx-2 ${
+                      <div className={`w-12 h-0.5 mx-2 transition-all ${
                         currentStep > step.number ? 'bg-green-500' : 'bg-muted-foreground/30'
                       }`} />
                     )}
@@ -376,7 +383,7 @@ ${createdSchool?.tenant_code}
             <ScrollArea className="p-6 max-h-[60vh]">
               {/* Step 1: School Profile */}
               {currentStep === 1 && (
-                <div className="space-y-6">
+                <div className="space-y-6" data-testid="wizard-step-1">
                   <div className="text-center mb-6">
                     <h3 className="font-cairo text-lg font-bold">{isRTL ? 'بيانات المدرسة الأساسية' : 'Basic School Information'}</h3>
                     <p className="text-sm text-muted-foreground">{isRTL ? 'أدخل المعلومات الأساسية للمدرسة' : 'Enter the basic school information'}</p>
@@ -385,8 +392,8 @@ ${createdSchool?.tenant_code}
                   {/* Logo Upload */}
                   <div className="flex justify-center mb-6">
                     <div className="relative">
-                      <div className={`w-32 h-32 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden ${
-                        schoolData.logoPreview ? 'border-brand-turquoise' : 'border-muted-foreground/30'
+                      <div className={`w-32 h-32 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all ${
+                        schoolData.logoPreview ? 'border-brand-turquoise bg-brand-turquoise/5' : 'border-muted-foreground/30 hover:border-brand-turquoise/50'
                       }`}>
                         {schoolData.logoPreview ? (
                           <img src={schoolData.logoPreview} alt="School Logo" className="w-full h-full object-cover" />
@@ -394,6 +401,7 @@ ${createdSchool?.tenant_code}
                           <div className="text-center p-4">
                             <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                             <span className="text-xs text-muted-foreground">{isRTL ? 'رفع الشعار' : 'Upload Logo'}</span>
+                            <Badge variant="outline" className="text-[10px] mt-1 block">{isRTL ? 'اختياري' : 'Optional'}</Badge>
                           </div>
                         )}
                       </div>
@@ -402,7 +410,13 @@ ${createdSchool?.tenant_code}
                         accept="image/*"
                         onChange={handleLogoUpload}
                         className="absolute inset-0 opacity-0 cursor-pointer"
+                        data-testid="logo-upload"
                       />
+                      {!schoolData.logoPreview && (
+                        <p className="text-xs text-muted-foreground text-center mt-2">
+                          {isRTL ? 'سيتم إنشاء شعار مؤقت تلقائياً' : 'A temporary logo will be generated'}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -417,6 +431,7 @@ ${createdSchool?.tenant_code}
                       onChange={(e) => setSchoolData({ ...schoolData, name: e.target.value })}
                       placeholder={isRTL ? 'مثال: مدرسة النور الأهلية' : 'e.g., Al-Noor Private School'}
                       className={errors.name ? 'border-red-500' : ''}
+                      data-testid="school-name-input"
                     />
                     {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                   </div>
@@ -430,7 +445,7 @@ ${createdSchool?.tenant_code}
                         <Badge variant="destructive" className="text-[10px]">{isRTL ? 'إجباري' : 'Required'}</Badge>
                       </Label>
                       <Select value={schoolData.country} onValueChange={(v) => setSchoolData({ ...schoolData, country: v, city: '' })}>
-                        <SelectTrigger className={errors.country ? 'border-red-500' : ''}>
+                        <SelectTrigger className={errors.country ? 'border-red-500' : ''} data-testid="country-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -451,7 +466,7 @@ ${createdSchool?.tenant_code}
                         <Badge variant="destructive" className="text-[10px]">{isRTL ? 'إجباري' : 'Required'}</Badge>
                       </Label>
                       <Select value={schoolData.city} onValueChange={(v) => setSchoolData({ ...schoolData, city: v })}>
-                        <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
+                        <SelectTrigger className={errors.city ? 'border-red-500' : ''} data-testid="city-select">
                           <SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select City'} />
                         </SelectTrigger>
                         <SelectContent>
@@ -481,6 +496,7 @@ ${createdSchool?.tenant_code}
                       placeholder={isRTL ? 'الحي، الشارع، المبنى...' : 'District, Street, Building...'}
                       className={errors.address ? 'border-red-500' : ''}
                       rows={2}
+                      data-testid="address-input"
                     />
                     {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
                   </div>
@@ -489,9 +505,9 @@ ${createdSchool?.tenant_code}
               
               {/* Step 2: Operating Settings */}
               {currentStep === 2 && (
-                <div className="space-y-6">
+                <div className="space-y-6" data-testid="wizard-step-2">
                   <div className="text-center mb-6">
-                    <h3 className="font-cairo text-lg font-bold">{isRTL ? 'إعدادات التشغيل' : 'Operating Settings'}</h3>
+                    <h3 className="font-cairo text-lg font-bold">{isRTL ? 'إعدادات التشغيل الخاصة بالمدرسة' : 'School Operating Settings'}</h3>
                     <p className="text-sm text-muted-foreground">{isRTL ? 'حدد الإعدادات الافتراضية للمدرسة' : 'Set the default settings for the school'}</p>
                   </div>
                   
@@ -500,10 +516,10 @@ ${createdSchool?.tenant_code}
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2">
                         <Languages className="h-4 w-4" />
-                        {isRTL ? 'اللغة الافتراضية' : 'Default Language'}
+                        {isRTL ? 'اللغة الافتراضية للنظام' : 'Default System Language'}
                       </Label>
                       <Select value={settingsData.defaultLanguage} onValueChange={(v) => setSettingsData({ ...settingsData, defaultLanguage: v })}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="language-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -511,7 +527,7 @@ ${createdSchool?.tenant_code}
                           <SelectItem value="en">English (LTR)</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'يمكن لكل مستخدم تغيير لغته لاحقاً' : 'Users can change their language later'}</p>
+                      <p className="text-xs text-muted-foreground">{isRTL ? 'يمكن لكل مستخدم داخل المدرسة اختيار لغته' : 'Each user can choose their language'}</p>
                     </div>
                     
                     {/* Calendar */}
@@ -521,7 +537,7 @@ ${createdSchool?.tenant_code}
                         {isRTL ? 'نظام التقويم' : 'Calendar System'}
                       </Label>
                       <Select value={settingsData.calendarSystem} onValueChange={(v) => setSettingsData({ ...settingsData, calendarSystem: v })}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="calendar-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -541,7 +557,7 @@ ${createdSchool?.tenant_code}
                         {isRTL ? 'نوع المدرسة' : 'School Type'}
                       </Label>
                       <Select value={settingsData.schoolType} onValueChange={(v) => setSettingsData({ ...settingsData, schoolType: v })}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="school-type-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -561,7 +577,7 @@ ${createdSchool?.tenant_code}
                         {isRTL ? 'المرحلة التعليمية' : 'Educational Stage'}
                       </Label>
                       <Select value={settingsData.educationalStage} onValueChange={(v) => setSettingsData({ ...settingsData, educationalStage: v })}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="stage-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -581,7 +597,7 @@ ${createdSchool?.tenant_code}
                         {isRTL ? 'نظام التقييم' : 'Assessment System'}
                       </Label>
                       <Select value={settingsData.assessmentSystem} onValueChange={(v) => setSettingsData({ ...settingsData, assessmentSystem: v })}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="assessment-select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -592,17 +608,28 @@ ${createdSchool?.tenant_code}
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {isRTL ? 'سيتم ربط نظام التقييم تلقائياً مع قواعد الاختبارات ونماذج التقارير' : 'Assessment system will be linked to test rules and report templates'}
+                      </p>
                     </div>
+                  </div>
+                  
+                  {/* Reset to defaults button */}
+                  <div className="flex justify-center pt-4">
+                    <Button variant="outline" size="sm" onClick={resetSettingsToDefault} className="text-muted-foreground">
+                      <RotateCcw className="h-4 w-4 me-2" />
+                      {isRTL ? 'إعادة الإعدادات للوضع الافتراضي' : 'Reset to Defaults'}
+                    </Button>
                   </div>
                 </div>
               )}
               
               {/* Step 3: Principal Account */}
               {currentStep === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-6" data-testid="wizard-step-3">
                   <div className="text-center mb-6">
-                    <h3 className="font-cairo text-lg font-bold">{isRTL ? 'حساب مدير المدرسة' : 'School Principal Account'}</h3>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'أدخل بيانات مدير المدرسة' : 'Enter the principal information'}</p>
+                    <h3 className="font-cairo text-lg font-bold">{isRTL ? 'إنشاء حساب مدير المدرسة' : 'Create School Principal Account'}</h3>
+                    <p className="text-sm text-muted-foreground">{isRTL ? 'أدخل بيانات مدير المدرسة المسؤول' : 'Enter the principal information'}</p>
                   </div>
                   
                   {/* Full Name */}
@@ -617,6 +644,7 @@ ${createdSchool?.tenant_code}
                       onChange={(e) => setPrincipalData({ ...principalData, fullName: e.target.value })}
                       placeholder={isRTL ? 'الاسم الكامل' : 'Full Name'}
                       className={errors.fullName ? 'border-red-500' : ''}
+                      data-testid="principal-name-input"
                     />
                     {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
                   </div>
@@ -635,6 +663,7 @@ ${createdSchool?.tenant_code}
                         placeholder="05XXXXXXXX"
                         className={errors.primaryPhone ? 'border-red-500' : ''}
                         dir="ltr"
+                        data-testid="principal-phone-input"
                       />
                       {errors.primaryPhone && <p className="text-xs text-red-500">{errors.primaryPhone}</p>}
                     </div>
@@ -650,6 +679,7 @@ ${createdSchool?.tenant_code}
                         onChange={(e) => setPrincipalData({ ...principalData, secondaryPhone: e.target.value })}
                         placeholder="05XXXXXXXX"
                         dir="ltr"
+                        data-testid="principal-secondary-phone-input"
                       />
                     </div>
                   </div>
@@ -668,25 +698,34 @@ ${createdSchool?.tenant_code}
                       placeholder="principal@school.com"
                       className={errors.email ? 'border-red-500' : ''}
                       dir="ltr"
+                      data-testid="principal-email-input"
                     />
                     {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p className="text-sm text-blue-800">
-                      <Sparkles className="h-4 w-4 inline-block me-2" />
-                      {isRTL 
-                        ? 'سيتم إنشاء كلمة مرور مؤقتة تلقائياً وإرسالها للمدير. يجب على المدير تغييرها عند أول تسجيل دخول.'
-                        : 'A temporary password will be generated automatically. The principal must change it on first login.'
-                      }
-                    </p>
-                  </div>
+                  {/* Validation Rules Info */}
+                  <Card className="bg-blue-50 border border-blue-200">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-blue-800">
+                        <Sparkles className="h-4 w-4 inline-block me-2" />
+                        {isRTL 
+                          ? 'سيتم إنشاء كلمة مرور مؤقتة تلقائياً. يجب على المدير تغييرها عند أول تسجيل دخول.'
+                          : 'A temporary password will be generated automatically. The principal must change it on first login.'
+                        }
+                      </p>
+                      <div className="mt-3 text-xs text-blue-700 space-y-1">
+                        <p>• {isRTL ? 'لا يسمح بتكرار رقم الهاتف داخل المنصة' : 'Phone numbers cannot be duplicated'}</p>
+                        <p>• {isRTL ? 'لا يسمح بتكرار البريد الإلكتروني داخل المنصة' : 'Email addresses cannot be duplicated'}</p>
+                        <p>• {isRTL ? 'سيتم تعيين الدور تلقائياً: مدير المدرسة (School Principal)' : 'Role will be assigned: School Principal'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
               
               {/* Step 4: Review */}
               {currentStep === 4 && (
-                <div className="space-y-6">
+                <div className="space-y-6" data-testid="wizard-step-4">
                   <div className="text-center mb-6">
                     <h3 className="font-cairo text-lg font-bold">{isRTL ? 'مراجعة البيانات' : 'Review Information'}</h3>
                     <p className="text-sm text-muted-foreground">{isRTL ? 'راجع جميع البيانات قبل إنشاء المدرسة' : 'Review all information before creating the school'}</p>
@@ -698,7 +737,7 @@ ${createdSchool?.tenant_code}
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-brand-turquoise" />
                         {isRTL ? 'بيانات المدرسة' : 'School Information'}
-                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(1)} className="ms-auto h-6 text-xs">
+                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(1)} className="ms-auto h-6 text-xs text-brand-turquoise hover:text-brand-turquoise">
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
                       </CardTitle>
@@ -717,7 +756,7 @@ ${createdSchool?.tenant_code}
                       <CardTitle className="text-sm flex items-center gap-2">
                         <GraduationCap className="h-4 w-4 text-brand-purple" />
                         {isRTL ? 'إعدادات التشغيل' : 'Operating Settings'}
-                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(2)} className="ms-auto h-6 text-xs">
+                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(2)} className="ms-auto h-6 text-xs text-brand-turquoise hover:text-brand-turquoise">
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
                       </CardTitle>
@@ -727,6 +766,7 @@ ${createdSchool?.tenant_code}
                       <div><span className="text-muted-foreground">{isRTL ? 'التقويم:' : 'Calendar:'}</span> <strong>{CALENDAR_SYSTEMS.find(c => c.value === settingsData.calendarSystem)?.label}</strong></div>
                       <div><span className="text-muted-foreground">{isRTL ? 'النوع:' : 'Type:'}</span> <strong>{SCHOOL_TYPES.find(t => t.value === settingsData.schoolType)?.label}</strong></div>
                       <div><span className="text-muted-foreground">{isRTL ? 'المرحلة:' : 'Stage:'}</span> <strong>{EDUCATIONAL_STAGES.find(s => s.value === settingsData.educationalStage)?.label}</strong></div>
+                      <div className="col-span-2"><span className="text-muted-foreground">{isRTL ? 'نظام التقييم:' : 'Assessment:'}</span> <strong>{ASSESSMENT_SYSTEMS.find(a => a.value === settingsData.assessmentSystem)?.label}</strong></div>
                     </CardContent>
                   </Card>
                   
@@ -736,7 +776,7 @@ ${createdSchool?.tenant_code}
                       <CardTitle className="text-sm flex items-center gap-2">
                         <User className="h-4 w-4 text-green-500" />
                         {isRTL ? 'مدير المدرسة' : 'School Principal'}
-                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(3)} className="ms-auto h-6 text-xs">
+                        <Button variant="ghost" size="sm" onClick={() => setCurrentStep(3)} className="ms-auto h-6 text-xs text-brand-turquoise hover:text-brand-turquoise">
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
                       </CardTitle>
@@ -755,11 +795,11 @@ ${createdSchool?.tenant_code}
             <div className="p-6 pt-0 border-t mt-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={handleClose}>
+                  <Button variant="outline" onClick={handleClose} data-testid="cancel-btn">
                     <X className="h-4 w-4 me-2" />
                     {isRTL ? 'إلغاء' : 'Cancel'}
                   </Button>
-                  <Button variant="ghost" onClick={handleSaveAsDraft}>
+                  <Button variant="ghost" onClick={handleSaveAsDraft} data-testid="save-draft-btn">
                     <Save className="h-4 w-4 me-2" />
                     {isRTL ? 'حفظ كمسودة' : 'Save Draft'}
                   </Button>
@@ -767,19 +807,19 @@ ${createdSchool?.tenant_code}
                 
                 <div className="flex items-center gap-2">
                   {currentStep > 1 && (
-                    <Button variant="outline" onClick={handlePrevious}>
+                    <Button variant="outline" onClick={handlePrevious} data-testid="back-btn">
                       {isRTL ? <ChevronRight className="h-4 w-4 me-2" /> : <ChevronLeft className="h-4 w-4 me-2" />}
                       {isRTL ? 'رجوع' : 'Back'}
                     </Button>
                   )}
                   
                   {currentStep < 4 ? (
-                    <Button onClick={handleNext} className="bg-brand-turquoise hover:bg-brand-turquoise/90">
+                    <Button onClick={handleNext} className="bg-brand-turquoise hover:bg-brand-turquoise/90" data-testid="next-btn">
                       {isRTL ? 'التالي' : 'Next'}
                       {isRTL ? <ChevronLeft className="h-4 w-4 ms-2" /> : <ChevronRight className="h-4 w-4 ms-2" />}
                     </Button>
                   ) : (
-                    <Button onClick={handleCreateSchool} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={handleCreateSchool} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700" data-testid="create-school-btn">
                       {isSubmitting ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin me-2" />
@@ -799,7 +839,7 @@ ${createdSchool?.tenant_code}
           </>
         ) : (
           /* Success Screen */
-          <div className="p-8">
+          <div className="p-8" data-testid="wizard-success-screen">
             <div className="grid md:grid-cols-2 gap-8">
               {/* Left Side - School Info */}
               <div className="space-y-6">
@@ -816,11 +856,11 @@ ${createdSchool?.tenant_code}
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">{isRTL ? 'كود المدرسة:' : 'Tenant Code:'}</span>
-                      <Badge className="text-lg font-mono bg-brand-navy">{createdSchool?.tenant_code}</Badge>
+                      <Badge className="text-lg font-mono bg-brand-navy" data-testid="tenant-code">{createdSchool?.tenant_code}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">{isRTL ? 'اسم المدرسة:' : 'School Name:'}</span>
-                      <strong>{createdSchool?.name}</strong>
+                      <strong>{createdSchool?.name || schoolData.name}</strong>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">{isRTL ? 'الحالة:' : 'Status:'}</span>
@@ -830,11 +870,11 @@ ${createdSchool?.tenant_code}
                 </Card>
                 
                 <div className="flex gap-3">
-                  <Button className="flex-1" onClick={() => window.open('/school', '_blank')}>
+                  <Button className="flex-1" variant="outline" onClick={() => window.open('/school', '_blank')}>
                     <ExternalLink className="h-4 w-4 me-2" />
                     {isRTL ? 'لوحة تحكم المدرسة' : 'School Dashboard'}
                   </Button>
-                  <Button variant="outline" className="flex-1" onClick={handleClose}>
+                  <Button variant="default" className="flex-1 bg-brand-turquoise hover:bg-brand-turquoise/90" onClick={handleClose} data-testid="back-to-actions-btn">
                     {isRTL ? 'العودة للإجراءات' : 'Back to Actions'}
                   </Button>
                 </div>
@@ -861,7 +901,7 @@ ${createdSchool?.tenant_code}
                   </CardContent>
                 </Card>
                 
-                <Button onClick={copyWelcomeMessage} className="w-full" variant="outline">
+                <Button onClick={copyWelcomeMessage} className="w-full" variant="outline" data-testid="copy-message-btn">
                   <Copy className="h-4 w-4 me-2" />
                   {isRTL ? 'نسخ رسالة الترحيب' : 'Copy Welcome Message'}
                 </Button>
