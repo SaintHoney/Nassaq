@@ -1322,52 +1322,135 @@ export const AdminDashboard = () => {
 
         {/* Display Settings Dialog */}
         <Dialog open={showDisplaySettings} onOpenChange={setShowDisplaySettings}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-cairo flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5" />
+                <SlidersHorizontal className="h-5 w-5 text-brand-turquoise" />
                 {isRTL ? 'إعدادات العرض' : 'Display Settings'}
               </DialogTitle>
               <DialogDescription>
-                {isRTL ? 'تخصيص الكروت المعروضة في لوحة التحكم' : 'Customize the cards displayed in the dashboard'}
+                {isRTL ? 'تخصيص الكروت المعروضة وترتيبها في لوحة التحكم' : 'Customize and reorder the cards displayed in the dashboard'}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <h4 className="font-medium text-sm">{isRTL ? 'المؤشرات المعروضة' : 'Visible Cards'}</h4>
-              <div className="space-y-3">
-                {[
-                  { key: 'schools', label: isRTL ? 'المدارس المسجلة' : 'Registered Schools', icon: Building2 },
-                  { key: 'students', label: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students', icon: GraduationCap },
-                  { key: 'teachers', label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck },
-                  { key: 'admins', label: isRTL ? 'المسؤولين' : 'Administrators', icon: Users },
-                  { key: 'activeUsers', label: isRTL ? 'المستخدمين النشطين' : 'Active Users', icon: Activity },
-                  { key: 'apiCalls', label: isRTL ? 'طلبات API' : 'API Requests', icon: Server },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <item.icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{item.label}</span>
-                    </div>
-                    <Button
-                      variant={visibleCards[item.key] ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-16 rounded-lg"
+            <div className="space-y-6 py-4">
+              {/* Visible Cards Section */}
+              <div>
+                <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  {isRTL ? 'إظهار / إخفاء المؤشرات' : 'Show / Hide Cards'}
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: 'schools', label: isRTL ? 'المدارس' : 'Schools', icon: Building2, color: 'text-brand-navy' },
+                    { key: 'students', label: isRTL ? 'الطلاب' : 'Students', icon: GraduationCap, color: 'text-brand-turquoise' },
+                    { key: 'teachers', label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck, color: 'text-brand-purple' },
+                    { key: 'admins', label: isRTL ? 'المسؤولين' : 'Admins', icon: Users, color: 'text-orange-500' },
+                    { key: 'activeUsers', label: isRTL ? 'النشطين' : 'Active', icon: Activity, color: 'text-green-500' },
+                    { key: 'apiCalls', label: isRTL ? 'API' : 'API', icon: Server, color: 'text-teal-500' },
+                  ].map((item) => (
+                    <div 
+                      key={item.key} 
+                      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                        visibleCards[item.key] ? 'bg-brand-turquoise/5 border-brand-turquoise/30' : 'bg-muted/30 border-transparent'
+                      }`}
                       onClick={() => setVisibleCards({ ...visibleCards, [item.key]: !visibleCards[item.key] })}
                     >
-                      {visibleCards[item.key] ? (isRTL ? 'ظاهر' : 'Show') : (isRTL ? 'مخفي' : 'Hide')}
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2">
+                        <item.icon className={`h-4 w-4 ${item.color}`} />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                        visibleCards[item.key] ? 'bg-brand-turquoise' : 'bg-muted'
+                      }`}>
+                        {visibleCards[item.key] && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reorder Cards Section */}
+              <div>
+                <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                  <GripVertical className="h-4 w-4" />
+                  {isRTL ? 'ترتيب الكروت (اسحب للترتيب)' : 'Card Order (drag to reorder)'}
+                </h4>
+                <div className="space-y-2">
+                  {cardsOrder.map((cardKey, index) => {
+                    const cardInfo = {
+                      schools: { label: isRTL ? 'المدارس المسجلة' : 'Registered Schools', icon: Building2 },
+                      students: { label: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students', icon: GraduationCap },
+                      teachers: { label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck },
+                      admins: { label: isRTL ? 'المسؤولين' : 'Administrators', icon: Users },
+                      activeUsers: { label: isRTL ? 'المستخدمين النشطين' : 'Active Users', icon: Activity },
+                      apiCalls: { label: isRTL ? 'طلبات API' : 'API Requests', icon: Server },
+                    }[cardKey];
+                    const IconComp = cardInfo.icon;
+                    
+                    return (
+                      <div 
+                        key={cardKey}
+                        className="flex items-center gap-3 p-2.5 bg-muted/30 rounded-xl"
+                      >
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0"
+                            disabled={index === 0}
+                            onClick={() => {
+                              if (index > 0) {
+                                const newOrder = [...cardsOrder];
+                                [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+                                setCardsOrder(newOrder);
+                              }
+                            }}
+                          >
+                            <ChevronRight className="h-4 w-4 -rotate-90" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0"
+                            disabled={index === cardsOrder.length - 1}
+                            onClick={() => {
+                              if (index < cardsOrder.length - 1) {
+                                const newOrder = [...cardsOrder];
+                                [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+                                setCardsOrder(newOrder);
+                              }
+                            }}
+                          >
+                            <ChevronRight className="h-4 w-4 rotate-90" />
+                          </Button>
+                        </div>
+                        <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
+                        <IconComp className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm flex-1">{cardInfo.label}</span>
+                        {!visibleCards[cardKey] && (
+                          <Badge variant="secondary" className="text-xs">{isRTL ? 'مخفي' : 'Hidden'}</Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setVisibleCards({ schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true })} className="rounded-xl">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setVisibleCards({ schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true });
+                  setCardsOrder(['schools', 'students', 'teachers', 'admins', 'activeUsers', 'apiCalls']);
+                }} 
+                className="rounded-xl"
+              >
                 {isRTL ? 'إعادة تعيين' : 'Reset'}
               </Button>
               <Button onClick={() => setShowDisplaySettings(false)} className="rounded-xl bg-brand-navy">
-                {isRTL ? 'حفظ' : 'Save'}
+                {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </DialogContent>
