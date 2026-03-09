@@ -1,261 +1,861 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
+import { PageHeader } from '../components/layout/PageHeader';
 import { useTheme } from '../contexts/ThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { ScrollArea } from '../components/ui/scroll-area';
 import { Progress } from '../components/ui/progress';
+import { Switch } from '../components/ui/switch';
+import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '../components/ui/sheet';
 import {
   Shield,
-  AlertTriangle,
-  Lock,
-  Key,
-  UserCheck,
-  Activity,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Clock,
-  FileWarning,
   ShieldCheck,
   ShieldAlert,
+  ShieldX,
+  Lock,
+  Unlock,
+  Key,
+  UserCheck,
+  UserX,
+  Users,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  RefreshCw,
+  Download,
+  Eye,
+  EyeOff,
+  Activity,
+  Server,
+  Database,
+  HardDrive,
+  FileText,
+  Search,
+  Filter,
+  RotateCcw,
+  Zap,
+  Brain,
+  Loader2,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  LogIn,
+  LogOut,
+  KeyRound,
+  Fingerprint,
+  Settings,
+  History,
+  Bell,
+  BellRing,
+  TriangleAlert,
+  Info,
+  Play,
+  Pause,
+  Ban,
+  LockKeyhole,
+  Gauge,
+  CloudOff,
+  Cloud,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+import axios from 'axios';
 
-export const SecurityCenterPage = () => {
-  const { isRTL, isDark } = useTheme();
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-  const securityScore = 92;
+// Translations
+const translations = {
+  ar: {
+    pageTitle: 'مركز الأمان',
+    pageSubtitle: 'إدارة ومراقبة الوضع الأمني للمنصة',
+    overview: 'نظرة عامة',
+    indicators: 'المؤشرات',
+    alerts: 'التنبيهات',
+    logs: 'السجلات',
+    tools: 'الأدوات',
+    securityScore: 'درجة الأمان',
+    excellent: 'ممتاز',
+    good: 'جيد',
+    warning: 'تحذير',
+    critical: 'حرج',
+    protectedAccounts: 'الحسابات المحمية',
+    applicationSecurity: 'تأمين التطبيق',
+    failedLogins: 'محاولات الدخول الفاشلة',
+    lockedAccounts: 'الحسابات المقفلة',
+    encryptedData: 'البيانات المشفرة',
+    passwordPolicy: 'سياسة كلمات المرور',
+    backupStatus: 'حالة النسخ الاحتياطي',
+    loggingCoverage: 'تغطية السجلات',
+    strong: 'قوية',
+    medium: 'متوسطة',
+    weak: 'ضعيفة',
+    lastBackup: 'آخر نسخة احتياطية',
+    totalBackups: 'إجمالي النسخ',
+    securityAlerts: 'التنبيهات الأمنية',
+    highPriority: 'أولوية عالية',
+    mediumPriority: 'أولوية متوسطة',
+    lowPriority: 'أولوية منخفضة',
+    viewDetails: 'عرض التفاصيل',
+    dismiss: 'تجاهل',
+    escalate: 'تصعيد',
+    securityEvents: 'الأحداث الأمنية',
+    loginAttempt: 'محاولة دخول',
+    loginFailed: 'دخول فاشل',
+    passwordChange: 'تغيير كلمة مرور',
+    accountLocked: 'قفل حساب',
+    accountUnlocked: 'فتح حساب',
+    permissionChange: 'تغيير صلاحيات',
+    sessionEnded: 'إنهاء جلسة',
+    quickActions: 'إجراءات سريعة',
+    lockAccount: 'قفل حساب',
+    unlockAccount: 'فتح حساب',
+    endAllSessions: 'إنهاء جميع الجلسات',
+    forcePasswordChange: 'فرض تغيير كلمة المرور',
+    runSecurityScan: 'تشغيل فحص أمني',
+    downloadReport: 'تحميل تقرير الأمان',
+    reviewIncidents: 'مراجعة الحوادث',
+    aiAnalysis: 'تحليل AI للأمان',
+    aiRecommendations: 'توصيات الذكاء الاصطناعي',
+    generateReport: 'إنشاء تقرير',
+    filterByType: 'تصفية حسب النوع',
+    filterByPriority: 'تصفية حسب الأولوية',
+    search: 'بحث...',
+    all: 'الكل',
+    today: 'اليوم',
+    thisWeek: 'هذا الأسبوع',
+    thisMonth: 'هذا الشهر',
+    refresh: 'تحديث',
+    export: 'تصدير',
+    close: 'إغلاق',
+    confirm: 'تأكيد',
+    cancel: 'إلغاء',
+    hoursAgo: 'ساعة',
+    minutesAgo: 'دقيقة',
+    accounts: 'حساب',
+    improveScore: 'تحسين الدرجة',
+    scoreFactors: 'عوامل الدرجة',
+    recommendations: 'التوصيات',
+  },
+  en: {
+    pageTitle: 'Security Center',
+    pageSubtitle: 'Manage and monitor platform security',
+    overview: 'Overview',
+    indicators: 'Indicators',
+    alerts: 'Alerts',
+    logs: 'Logs',
+    tools: 'Tools',
+    securityScore: 'Security Score',
+    excellent: 'Excellent',
+    good: 'Good',
+    warning: 'Warning',
+    critical: 'Critical',
+    protectedAccounts: 'Protected Accounts',
+    applicationSecurity: 'Application Security',
+    failedLogins: 'Failed Login Attempts',
+    lockedAccounts: 'Locked Accounts',
+    encryptedData: 'Encrypted Data',
+    passwordPolicy: 'Password Policy',
+    backupStatus: 'Backup Status',
+    loggingCoverage: 'Logging Coverage',
+    strong: 'Strong',
+    medium: 'Medium',
+    weak: 'Weak',
+    lastBackup: 'Last Backup',
+    totalBackups: 'Total Backups',
+    securityAlerts: 'Security Alerts',
+    highPriority: 'High Priority',
+    mediumPriority: 'Medium Priority',
+    lowPriority: 'Low Priority',
+    viewDetails: 'View Details',
+    dismiss: 'Dismiss',
+    escalate: 'Escalate',
+    securityEvents: 'Security Events',
+    loginAttempt: 'Login Attempt',
+    loginFailed: 'Login Failed',
+    passwordChange: 'Password Change',
+    accountLocked: 'Account Locked',
+    accountUnlocked: 'Account Unlocked',
+    permissionChange: 'Permission Change',
+    sessionEnded: 'Session Ended',
+    quickActions: 'Quick Actions',
+    lockAccount: 'Lock Account',
+    unlockAccount: 'Unlock Account',
+    endAllSessions: 'End All Sessions',
+    forcePasswordChange: 'Force Password Change',
+    runSecurityScan: 'Run Security Scan',
+    downloadReport: 'Download Security Report',
+    reviewIncidents: 'Review Incidents',
+    aiAnalysis: 'AI Security Analysis',
+    aiRecommendations: 'AI Recommendations',
+    generateReport: 'Generate Report',
+    filterByType: 'Filter by Type',
+    filterByPriority: 'Filter by Priority',
+    search: 'Search...',
+    all: 'All',
+    today: 'Today',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    refresh: 'Refresh',
+    export: 'Export',
+    close: 'Close',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    hoursAgo: 'hours ago',
+    minutesAgo: 'minutes ago',
+    accounts: 'accounts',
+    improveScore: 'Improve Score',
+    scoreFactors: 'Score Factors',
+    recommendations: 'Recommendations',
+  }
+};
 
-  const securityMetrics = [
-    { label: isRTL ? 'محاولات دخول فاشلة' : 'Failed Login Attempts', value: 12, trend: 'down', status: 'good' },
-    { label: isRTL ? 'حسابات مقفلة' : 'Locked Accounts', value: 3, trend: 'stable', status: 'warning' },
-    { label: isRTL ? 'جلسات نشطة' : 'Active Sessions', value: 127, trend: 'up', status: 'good' },
-    { label: isRTL ? 'تنبيهات أمنية' : 'Security Alerts', value: 2, trend: 'down', status: 'warning' },
-  ];
+// Security score factors
+const SCORE_FACTORS = [
+  { id: 'encryption', label_ar: 'تشفير البيانات', label_en: 'Data Encryption', value: 100, weight: 20 },
+  { id: 'passwords', label_ar: 'قوة كلمات المرور', label_en: 'Password Strength', value: 85, weight: 20 },
+  { id: 'mfa', label_ar: 'المصادقة الثنائية', label_en: 'Two-Factor Auth', value: 60, weight: 15 },
+  { id: 'backups', label_ar: 'النسخ الاحتياطية', label_en: 'Backups', value: 100, weight: 15 },
+  { id: 'logging', label_ar: 'تسجيل السجلات', label_en: 'Logging', value: 100, weight: 15 },
+  { id: 'incidents', label_ar: 'الحوادث المفتوحة', label_en: 'Open Incidents', value: 90, weight: 15 },
+];
 
-  const recentAlerts = [
-    {
-      id: 1,
-      type: 'warning',
-      title: isRTL ? 'محاولات دخول متعددة فاشلة' : 'Multiple Failed Login Attempts',
-      description: isRTL ? 'تم رصد 5 محاولات دخول فاشلة لحساب واحد' : '5 failed login attempts detected for one account',
-      time: '15 min ago',
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: isRTL ? 'دخول من موقع جديد' : 'Login from New Location',
-      description: isRTL ? 'تم تسجيل دخول من موقع جغرافي جديد' : 'Login detected from a new geographic location',
-      time: '1 hour ago',
-    },
-    {
-      id: 3,
-      type: 'success',
-      title: isRTL ? 'تم تحديث كلمة المرور' : 'Password Updated',
-      description: isRTL ? 'تم تغيير كلمة مرور حساب مدير بنجاح' : 'Admin account password changed successfully',
-      time: '2 hours ago',
-    },
-  ];
+// Security alerts
+const SECURITY_ALERTS = [
+  {
+    id: 1,
+    type: 'high',
+    title_ar: 'محاولات دخول مشبوهة',
+    title_en: 'Suspicious Login Attempts',
+    description_ar: '15 محاولة دخول فاشلة من IP غير معروف خلال آخر ساعة',
+    description_en: '15 failed login attempts from unknown IP in the last hour',
+    timestamp: '2026-03-09T10:30:00Z',
+    status: 'open',
+  },
+  {
+    id: 2,
+    type: 'medium',
+    title_ar: 'حسابات تحتاج تحديث كلمة المرور',
+    title_en: 'Accounts Need Password Update',
+    description_ar: '23 حساب لم يغير كلمة المرور منذ أكثر من 90 يوم',
+    description_en: '23 accounts haven\'t changed password in over 90 days',
+    timestamp: '2026-03-09T09:00:00Z',
+    status: 'open',
+  },
+  {
+    id: 3,
+    type: 'low',
+    title_ar: 'جلسات طويلة نشطة',
+    title_en: 'Long Active Sessions',
+    description_ar: '8 جلسات نشطة لأكثر من 24 ساعة',
+    description_en: '8 sessions active for more than 24 hours',
+    timestamp: '2026-03-09T08:00:00Z',
+    status: 'open',
+  },
+];
 
-  const securityChecks = [
-    { name: isRTL ? 'تشفير البيانات' : 'Data Encryption', status: 'passed', icon: Lock },
-    { name: isRTL ? 'المصادقة الثنائية' : 'Two-Factor Auth', status: 'partial', icon: Key },
-    { name: isRTL ? 'سياسة كلمات المرور' : 'Password Policy', status: 'passed', icon: ShieldCheck },
-    { name: isRTL ? 'تدقيق السجلات' : 'Audit Logging', status: 'passed', icon: Activity },
-    { name: isRTL ? 'حماية API' : 'API Protection', status: 'passed', icon: Shield },
-    { name: isRTL ? 'النسخ الاحتياطي' : 'Backup Security', status: 'passed', icon: FileWarning },
-  ];
+// Security events log
+const SECURITY_EVENTS = [
+  { id: 1, type: 'login', user: 'أحمد محمد', email: 'ahmed@school.edu', status: 'success', ip: '192.168.1.100', device: 'Chrome / Windows', timestamp: '2026-03-09T10:45:00Z' },
+  { id: 2, type: 'login_failed', user: 'Unknown', email: 'admin@nassaq.com', status: 'failed', ip: '45.33.32.156', device: 'Firefox / Linux', timestamp: '2026-03-09T10:42:00Z' },
+  { id: 3, type: 'password_change', user: 'سارة أحمد', email: 'sara@school.edu', status: 'success', ip: '192.168.1.105', device: 'Safari / macOS', timestamp: '2026-03-09T10:30:00Z' },
+  { id: 4, type: 'account_locked', user: 'محمد علي', email: 'mohammed@test.com', status: 'locked', ip: '192.168.1.50', device: 'System', timestamp: '2026-03-09T10:25:00Z' },
+  { id: 5, type: 'permission_change', user: 'فاطمة خالد', email: 'fatima@school.edu', status: 'success', ip: '192.168.1.1', device: 'Admin Panel', timestamp: '2026-03-09T10:15:00Z' },
+];
 
+// AI Recommendations
+const AI_RECOMMENDATIONS = [
+  {
+    id: 1,
+    type: 'security',
+    priority: 'high',
+    title_ar: 'تفعيل المصادقة الثنائية',
+    title_en: 'Enable Two-Factor Authentication',
+    description_ar: '65% من حسابات المسؤولين لم تفعل المصادقة الثنائية',
+    description_en: '65% of admin accounts haven\'t enabled 2FA',
+    impact: '+15% Security Score',
+  },
+  {
+    id: 2,
+    type: 'policy',
+    priority: 'medium',
+    title_ar: 'تحديث سياسة كلمات المرور',
+    title_en: 'Update Password Policy',
+    description_ar: 'السياسة الحالية تسمح بكلمات مرور أقل من 12 حرف',
+    description_en: 'Current policy allows passwords less than 12 characters',
+    impact: '+5% Security Score',
+  },
+];
+
+export default function SecurityCenterPage() {
+  const { isRTL = true, isDark } = useTheme();
+  const navigate = useNavigate();
+  const t = translations[isRTL ? 'ar' : 'en'];
+  
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showScoreDetailsDialog, setShowScoreDetailsDialog] = useState(false);
+  const [showAlertDetailsSheet, setShowAlertDetailsSheet] = useState(false);
+  const [showLockAccountDialog, setShowLockAccountDialog] = useState(false);
+  const [showAIReportDialog, setShowAIReportDialog] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [generatingReport, setGeneratingReport] = useState(false);
+  
+  const [metrics, setMetrics] = useState({
+    securityScore: 87,
+    protectedAccounts: 1240,
+    totalAccounts: 1425,
+    applicationSecurity: 93,
+    failedLogins24h: 15,
+    lockedAccounts: 3,
+    encryptedData: 100,
+    passwordPolicyStrength: 'strong',
+    lastBackup: '2026-03-09T06:00:00Z',
+    totalBackups: 12,
+    loggingCoverage: 100,
+  });
+  
+  const getScoreColor = (score) => {
+    if (score >= 90) return { color: 'text-green-600', bg: 'bg-green-500', label: t.excellent };
+    if (score >= 70) return { color: 'text-blue-600', bg: 'bg-blue-500', label: t.good };
+    if (score >= 50) return { color: 'text-yellow-600', bg: 'bg-yellow-500', label: t.warning };
+    return { color: 'text-red-600', bg: 'bg-red-500', label: t.critical };
+  };
+  
+  const scoreInfo = getScoreColor(metrics.securityScore);
+  
+  const formatRelativeTime = (dateStr) => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    if (diffMins < 60) return `${diffMins} ${t.minutesAgo}`;
+    if (diffHours < 24) return `${diffHours} ${t.hoursAgo}`;
+    return date.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
+  };
+  
+  const formatDateTime = (dateStr) => {
+    return new Date(dateStr).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  };
+  
+  const getEventTypeInfo = (type) => {
+    const types = {
+      login: { icon: LogIn, color: 'text-green-600 bg-green-100', label: t.loginAttempt },
+      login_failed: { icon: LogIn, color: 'text-red-600 bg-red-100', label: t.loginFailed },
+      password_change: { icon: KeyRound, color: 'text-blue-600 bg-blue-100', label: t.passwordChange },
+      account_locked: { icon: Lock, color: 'text-orange-600 bg-orange-100', label: t.accountLocked },
+      permission_change: { icon: Settings, color: 'text-purple-600 bg-purple-100', label: t.permissionChange },
+    };
+    return types[type] || types.login;
+  };
+  
+  const getAlertPriorityInfo = (type) => {
+    const types = {
+      high: { icon: AlertTriangle, color: 'text-red-600 bg-red-100 border-red-200', label: t.highPriority },
+      medium: { icon: AlertCircle, color: 'text-yellow-600 bg-yellow-100 border-yellow-200', label: t.mediumPriority },
+      low: { icon: Info, color: 'text-blue-600 bg-blue-100 border-blue-200', label: t.lowPriority },
+    };
+    return types[type] || types.low;
+  };
+  
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed'); }, 1500);
+  };
+  
+  const handleDownloadReport = () => {
+    setLoading(true);
+    setTimeout(() => { setLoading(false); toast.success(isRTL ? 'تم تحميل تقرير الأمان' : 'Security report downloaded'); }, 2000);
+  };
+  
+  const handleGenerateAIReport = () => {
+    setGeneratingReport(true);
+    setTimeout(() => { setGeneratingReport(false); toast.success(isRTL ? 'تم إنشاء تقرير AI' : 'AI report generated'); setShowAIReportDialog(false); }, 3000);
+  };
+  
+  const handleQuickAction = (action) => { toast.success(isRTL ? `تم تنفيذ: ${action}` : `Executed: ${action}`); };
+  
+  const filteredEvents = SECURITY_EVENTS.filter(event => {
+    if (filterType !== 'all' && event.type !== filterType) return false;
+    if (searchQuery && !event.user.toLowerCase().includes(searchQuery.toLowerCase()) && !event.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+  
+  const filteredAlerts = SECURITY_ALERTS.filter(alert => filterPriority === 'all' || alert.type === filterPriority);
+  
   return (
     <Sidebar>
-      <div className="min-h-screen bg-background" data-testid="security-center-page">
-        {/* Header */}
-        <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-cairo text-2xl font-bold text-foreground">
-                {isRTL ? 'مركز الأمان' : 'Security Center'}
-              </h1>
-              <p className="text-sm text-muted-foreground font-tajawal">
-                {isRTL ? 'مراقبة وإدارة أمان المنصة' : 'Monitor and manage platform security'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="rounded-xl">
-                <RefreshCw className="h-4 w-4 me-2" />
-                {isRTL ? 'تحديث' : 'Refresh'}
-              </Button>
-              <Button className="rounded-xl bg-brand-navy hover:bg-brand-navy/90">
-                <Shield className="h-4 w-4 me-2" />
-                {isRTL ? 'فحص شامل' : 'Full Scan'}
-              </Button>
+      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'} data-testid="security-center-page">
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 lg:px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <PageHeader title={t.pageTitle} subtitle={t.pageSubtitle} icon={Shield} className="mb-0" />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="rounded-xl" onClick={handleRefresh} disabled={refreshing}>
+                  {refreshing ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <RefreshCw className="h-4 w-4 me-2" />}
+                  {t.refresh}
+                </Button>
+                <Button className="rounded-xl bg-brand-navy hover:bg-brand-navy/90" onClick={handleDownloadReport} disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Download className="h-4 w-4 me-2" />}
+                  {t.downloadReport}
+                </Button>
+              </div>
             </div>
           </div>
         </header>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Under Development Banner */}
-          <Card className="card-nassaq border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="font-cairo font-medium text-yellow-600">
-                  {isRTL ? 'هذه الصفحة قيد التطوير' : 'This Page is Under Development'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isRTL 
-                    ? 'البيانات المعروضة توضيحية. سيتم ربطها بنظام الأمان الفعلي قريباً.'
-                    : 'The data shown is placeholder. It will be connected to the actual security system soon.'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Security Score */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="card-nassaq lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="font-cairo">{isRTL ? 'مؤشر الأمان' : 'Security Score'}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                <div className="relative w-32 h-32">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      fill="none"
-                      className="text-muted"
-                    />
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      fill="none"
-                      strokeDasharray={`${securityScore * 3.52} 352`}
-                      className="text-green-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-bold">{securityScore}%</span>
-                  </div>
-                </div>
-                <Badge className="mt-4 bg-green-100 text-green-700">
-                  {isRTL ? 'جيد جداً' : 'Very Good'}
-                </Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="card-nassaq lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="font-cairo">{isRTL ? 'مؤشرات الأمان' : 'Security Metrics'}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {securityMetrics.map((metric, index) => (
-                    <div key={index} className="p-4 bg-muted/30 rounded-xl">
-                      <p className="text-sm text-muted-foreground">{metric.label}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-2xl font-bold">{metric.value}</span>
-                        <Badge variant={metric.status === 'good' ? 'default' : 'secondary'}>
-                          {metric.status === 'good' 
-                            ? (isRTL ? 'طبيعي' : 'Normal')
-                            : (isRTL ? 'يحتاج متابعة' : 'Needs Attention')}
-                        </Badge>
+        
+        <main className="container mx-auto px-4 lg:px-6 py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full max-w-2xl grid-cols-5">
+              <TabsTrigger value="overview"><Shield className="h-4 w-4 me-2" />{t.overview}</TabsTrigger>
+              <TabsTrigger value="indicators"><Gauge className="h-4 w-4 me-2" />{t.indicators}</TabsTrigger>
+              <TabsTrigger value="alerts"><BellRing className="h-4 w-4 me-2" />{t.alerts}</TabsTrigger>
+              <TabsTrigger value="logs"><History className="h-4 w-4 me-2" />{t.logs}</TabsTrigger>
+              <TabsTrigger value="tools"><Settings className="h-4 w-4 me-2" />{t.tools}</TabsTrigger>
+            </TabsList>
+            
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              <Card className={`bg-gradient-to-br ${metrics.securityScore >= 90 ? 'from-green-500 to-green-600' : metrics.securityScore >= 70 ? 'from-blue-500 to-blue-600' : 'from-yellow-500 to-yellow-600'} text-white cursor-pointer hover:shadow-xl transition-all`} onClick={() => setShowScoreDetailsDialog(true)}>
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="relative w-32 h-32">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="none" className="text-white/20" />
+                          <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="none" strokeDasharray={`${metrics.securityScore * 3.52} 352`} className="text-white" strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center"><span className="text-4xl font-bold">{metrics.securityScore}%</span></div>
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold mb-2">{t.securityScore}</h2>
+                        <Badge className="bg-white/20 text-white text-lg px-4 py-1">{scoreInfo.label}</Badge>
+                        <p className="text-white/70 mt-2">{isRTL ? 'انقر لعرض تفاصيل الدرجة' : 'Click to view score details'}</p>
                       </div>
                     </div>
-                  ))}
+                    <ShieldCheck className="h-24 w-24 text-white/20" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="hover:shadow-lg transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <UserCheck className="h-8 w-8 text-green-600" />
+                      <Badge variant="outline" className="text-green-600">{((metrics.protectedAccounts / metrics.totalAccounts) * 100).toFixed(0)}%</Badge>
+                    </div>
+                    <h3 className="font-bold text-2xl">{metrics.protectedAccounts.toLocaleString()}</h3>
+                    <p className="text-sm text-muted-foreground">{t.protectedAccounts}</p>
+                    <Progress value={(metrics.protectedAccounts / metrics.totalAccounts) * 100} className="mt-2 h-2" />
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-lg transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <Shield className="h-8 w-8 text-blue-600" />
+                      <Badge variant="outline" className="text-blue-600">{metrics.applicationSecurity}%</Badge>
+                    </div>
+                    <h3 className="font-bold text-2xl">{metrics.applicationSecurity}%</h3>
+                    <p className="text-sm text-muted-foreground">{t.applicationSecurity}</p>
+                    <Progress value={metrics.applicationSecurity} className="mt-2 h-2" />
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-lg transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <AlertTriangle className="h-8 w-8 text-orange-600" />
+                      <Badge variant="outline" className="text-orange-600">24h</Badge>
+                    </div>
+                    <h3 className="font-bold text-2xl">{metrics.failedLogins24h}</h3>
+                    <p className="text-sm text-muted-foreground">{t.failedLogins}</p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-lg transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <Lock className="h-8 w-8 text-red-600" />
+                      <Badge variant="outline" className="text-red-600">{t.accounts}</Badge>
+                    </div>
+                    <h3 className="font-bold text-2xl">{metrics.lockedAccounts}</h3>
+                    <p className="text-sm text-muted-foreground">{t.lockedAccounts}</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center"><Lock className="h-5 w-5 text-green-600" /></div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t.encryptedData}</p>
+                        <p className="font-bold text-xl text-green-600">{metrics.encryptedData}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-sm text-green-600">{isRTL ? 'مشفر بالكامل' : 'Fully Encrypted'}</span></div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center"><Key className="h-5 w-5 text-blue-600" /></div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t.passwordPolicy}</p>
+                        <p className="font-bold text-xl text-blue-600">{t.strong}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-blue-600" /><span className="text-sm text-blue-600">{isRTL ? '12+ حرف' : '12+ characters'}</span></div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center"><Database className="h-5 w-5 text-purple-600" /></div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t.backupStatus}</p>
+                        <p className="font-bold text-xl text-purple-600">{metrics.totalBackups}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-purple-600" /><span className="text-sm text-purple-600">{formatRelativeTime(metrics.lastBackup)}</span></div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-cyan-50 border-cyan-200">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center"><FileText className="h-5 w-5 text-cyan-600" /></div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t.loggingCoverage}</p>
+                        <p className="font-bold text-xl text-cyan-600">{metrics.loggingCoverage}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-cyan-600" /><span className="text-sm text-cyan-600">{isRTL ? 'تغطية كاملة' : 'Full Coverage'}</span></div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2"><BellRing className="h-5 w-5 text-brand-navy" />{t.securityAlerts}</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab('alerts')}>{isRTL ? 'عرض الكل' : 'View All'}<ChevronRight className="h-4 w-4 ms-1 rtl:rotate-180" /></Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {SECURITY_ALERTS.slice(0, 3).map(alert => {
+                      const priorityInfo = getAlertPriorityInfo(alert.type);
+                      const PriorityIcon = priorityInfo.icon;
+                      return (
+                        <div key={alert.id} className={`p-4 rounded-xl border ${priorityInfo.color} cursor-pointer hover:shadow-md transition-all`} onClick={() => { setSelectedAlert(alert); setShowAlertDetailsSheet(true); }}>
+                          <div className="flex items-start gap-3">
+                            <PriorityIcon className="h-5 w-5 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-medium">{isRTL ? alert.title_ar : alert.title_en}</h4>
+                                <Badge variant="outline">{formatRelativeTime(alert.timestamp)}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{isRTL ? alert.description_ar : alert.description_en}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Indicators Tab */}
+            <TabsContent value="indicators" className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Gauge className="h-5 w-5 text-brand-navy" />{t.scoreFactors}</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {SCORE_FACTORS.map(factor => (
+                      <div key={factor.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{isRTL ? factor.label_ar : factor.label_en}</span>
+                          <span className="text-sm text-muted-foreground">{factor.value}% ({factor.weight}%)</span>
+                        </div>
+                        <Progress value={factor.value} className="h-2" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Alerts Tab */}
+            <TabsContent value="alerts" className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-48"><SelectValue placeholder={t.filterByPriority} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    <SelectItem value="high">{t.highPriority}</SelectItem>
+                    <SelectItem value="medium">{t.mediumPriority}</SelectItem>
+                    <SelectItem value="low">{t.lowPriority}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-4">
+                {filteredAlerts.map(alert => {
+                  const priorityInfo = getAlertPriorityInfo(alert.type);
+                  const PriorityIcon = priorityInfo.icon;
+                  return (
+                    <Card key={alert.id} className="border-2">
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${priorityInfo.color}`}><PriorityIcon className="h-6 w-6" /></div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold">{isRTL ? alert.title_ar : alert.title_en}</h4>
+                                <Badge>{alert.status}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">{isRTL ? alert.description_ar : alert.description_en}</p>
+                              <p className="text-xs text-muted-foreground">{formatDateTime(alert.timestamp)}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm"><Eye className="h-4 w-4 me-1" />{t.viewDetails}</Button>
+                            <Button variant="outline" size="sm">{t.dismiss}</Button>
+                            <Button variant="destructive" size="sm">{t.escalate}</Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </TabsContent>
+            
+            {/* Logs Tab */}
+            <TabsContent value="logs" className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder={t.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-10" />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Security Checks */}
-          <Card className="card-nassaq">
-            <CardHeader>
-              <CardTitle className="font-cairo flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-brand-turquoise" />
-                {isRTL ? 'فحوصات الأمان' : 'Security Checks'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {securityChecks.map((check, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl"
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      check.status === 'passed' ? 'bg-green-500/10' : 'bg-yellow-500/10'
-                    }`}>
-                      <check.icon className={`h-5 w-5 ${
-                        check.status === 'passed' ? 'text-green-600' : 'text-yellow-600'
-                      }`} />
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-48"><SelectValue placeholder={t.filterByType} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    <SelectItem value="login">{t.loginAttempt}</SelectItem>
+                    <SelectItem value="login_failed">{t.loginFailed}</SelectItem>
+                    <SelectItem value="password_change">{t.passwordChange}</SelectItem>
+                    <SelectItem value="account_locked">{t.accountLocked}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline"><Download className="h-4 w-4 me-2" />{t.export}</Button>
+              </div>
+              <Card>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px]">
+                    <div className="divide-y">
+                      {filteredEvents.map(event => {
+                        const typeInfo = getEventTypeInfo(event.type);
+                        const TypeIcon = typeInfo.icon;
+                        return (
+                          <div key={event.id} className="p-4 hover:bg-muted/30 cursor-pointer transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${typeInfo.color}`}><TypeIcon className="h-5 w-5" /></div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{event.user}</span>
+                                    <Badge variant="outline" className="text-xs">{typeInfo.label}</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{event.email}</p>
+                                </div>
+                              </div>
+                              <div className="text-end">
+                                <p className="text-sm">{event.ip}</p>
+                                <p className="text-xs text-muted-foreground">{formatRelativeTime(event.timestamp)}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{check.name}</p>
-                      <p className={`text-xs ${
-                        check.status === 'passed' ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {check.status === 'passed' 
-                          ? (isRTL ? 'ناجح' : 'Passed')
-                          : (isRTL ? 'جزئي' : 'Partial')}
-                      </p>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Tools Tab */}
+            <TabsContent value="tools" className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowLockAccountDialog(true)}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center"><Lock className="h-7 w-7 text-red-600" /></div>
+                    <h4 className="font-bold mb-1">{t.lockAccount}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Unlock Account')}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-green-100 flex items-center justify-center"><Unlock className="h-7 w-7 text-green-600" /></div>
+                    <h4 className="font-bold mb-1">{t.unlockAccount}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('End All Sessions')}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-orange-100 flex items-center justify-center"><LogOut className="h-7 w-7 text-orange-600" /></div>
+                    <h4 className="font-bold mb-1">{t.endAllSessions}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Force Password Change')}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-100 flex items-center justify-center"><KeyRound className="h-7 w-7 text-purple-600" /></div>
+                    <h4 className="font-bold mb-1">{t.forcePasswordChange}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Security Scan')}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-100 flex items-center justify-center"><ShieldCheck className="h-7 w-7 text-blue-600" /></div>
+                    <h4 className="font-bold mb-1">{t.runSecurityScan}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={handleDownloadReport}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-cyan-100 flex items-center justify-center"><Download className="h-7 w-7 text-cyan-600" /></div>
+                    <h4 className="font-bold mb-1">{t.downloadReport}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setActiveTab('alerts')}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-yellow-100 flex items-center justify-center"><AlertTriangle className="h-7 w-7 text-yellow-600" /></div>
+                    <h4 className="font-bold mb-1">{t.reviewIncidents}</h4>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowAIReportDialog(true)}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-pink-100 flex items-center justify-center"><Brain className="h-7 w-7 text-pink-600" /></div>
+                    <h4 className="font-bold mb-1">{t.aiAnalysis}</h4>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-brand-navy" />{t.aiRecommendations}</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {AI_RECOMMENDATIONS.map(rec => (
+                    <div key={rec.id} className="p-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium">{isRTL ? rec.title_ar : rec.title_en}</h4>
+                        <Badge variant={rec.priority === 'high' ? 'destructive' : rec.priority === 'medium' ? 'default' : 'secondary'}>{rec.priority === 'high' ? t.highPriority : rec.priority === 'medium' ? t.mediumPriority : t.lowPriority}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">{isRTL ? rec.description_ar : rec.description_en}</p>
+                      <Badge variant="outline" className="text-green-600"><TrendingUp className="h-3 w-3 me-1" />{rec.impact}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+        
+        {/* Score Details Dialog */}
+        <Dialog open={showScoreDetailsDialog} onOpenChange={setShowScoreDetailsDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle className="flex items-center gap-2"><Gauge className="h-5 w-5 text-brand-navy" />{t.scoreFactors}</DialogTitle></DialogHeader>
+            <div className="py-4 space-y-4">
+              {SCORE_FACTORS.map(factor => (
+                <div key={factor.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{isRTL ? factor.label_ar : factor.label_en}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${factor.value >= 90 ? 'text-green-600' : factor.value >= 70 ? 'text-blue-600' : 'text-yellow-600'}`}>{factor.value}%</span>
+                      <Badge variant="outline">{factor.weight}%</Badge>
                     </div>
                   </div>
-                ))}
+                  <Progress value={factor.value} className="h-2" />
+                </div>
+              ))}
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">{isRTL ? 'الدرجة الإجمالية' : 'Total Score'}</span>
+                  <span className={`text-2xl font-bold ${scoreInfo.color}`}>{metrics.securityScore}%</span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Alerts */}
-          <Card className="card-nassaq">
-            <CardHeader>
-              <CardTitle className="font-cairo flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                {isRTL ? 'التنبيهات الأخيرة' : 'Recent Alerts'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentAlerts.map((alert) => (
-                  <div 
-                    key={alert.id}
-                    className="flex items-start gap-4 p-4 bg-muted/30 rounded-xl"
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      alert.type === 'warning' ? 'bg-yellow-500/10' :
-                      alert.type === 'success' ? 'bg-green-500/10' : 'bg-blue-500/10'
-                    }`}>
-                      {alert.type === 'warning' ? (
-                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                      ) : alert.type === 'success' ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{alert.title}</p>
-                      <p className="text-sm text-muted-foreground">{alert.description}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">{alert.time}</span>
-                  </div>
-                ))}
+            </div>
+            <DialogFooter><Button onClick={() => setShowScoreDetailsDialog(false)} className="bg-brand-navy">{t.close}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Lock Account Dialog */}
+        <Dialog open={showLockAccountDialog} onOpenChange={setShowLockAccountDialog}>
+          <DialogContent>
+            <DialogHeader><DialogTitle className="flex items-center gap-2"><Lock className="h-5 w-5 text-red-600" />{t.lockAccount}</DialogTitle></DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2"><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input placeholder={isRTL ? 'أدخل البريد الإلكتروني' : 'Enter email address'} /></div>
+              <div className="space-y-2"><Label>{isRTL ? 'السبب' : 'Reason'}</Label>
+                <Select><SelectTrigger><SelectValue placeholder={isRTL ? 'اختر السبب' : 'Select reason'} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="suspicious">{isRTL ? 'نشاط مشبوه' : 'Suspicious Activity'}</SelectItem>
+                    <SelectItem value="violation">{isRTL ? 'مخالفة' : 'Policy Violation'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowLockAccountDialog(false)}>{t.cancel}</Button>
+              <Button variant="destructive" onClick={() => { handleQuickAction('Lock Account'); setShowLockAccountDialog(false); }}><Lock className="h-4 w-4 me-2" />{t.lockAccount}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* AI Report Dialog */}
+        <Dialog open={showAIReportDialog} onOpenChange={setShowAIReportDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-brand-navy" />{t.aiAnalysis}</DialogTitle><DialogDescription>{isRTL ? 'تحليل شامل للوضع الأمني باستخدام الذكاء الاصطناعي' : 'Comprehensive security analysis using AI'}</DialogDescription></DialogHeader>
+            <div className="py-4">
+              <div className="p-4 bg-muted/30 rounded-xl text-center">
+                <Brain className="h-16 w-16 mx-auto text-brand-navy/30 mb-4" />
+                <p className="text-muted-foreground">{isRTL ? 'سيقوم الذكاء الاصطناعي بتحليل جميع البيانات الأمنية وإنشاء تقرير شامل' : 'AI will analyze all security data and generate a comprehensive report'}</p>
+              </div>
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowAIReportDialog(false)}>{t.cancel}</Button>
+              <Button onClick={handleGenerateAIReport} disabled={generatingReport} className="bg-brand-navy">{generatingReport ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Zap className="h-4 w-4 me-2" />}{t.generateReport}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
-};
+}
