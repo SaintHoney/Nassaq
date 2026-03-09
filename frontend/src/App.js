@@ -231,6 +231,16 @@ function AppRoutes() {
         }
       />
       
+      {/* Teacher Dashboard Route */}
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
       {/* Attendance Route */}
       <Route
         path="/admin/attendance"
