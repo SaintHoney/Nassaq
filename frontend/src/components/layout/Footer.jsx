@@ -1,16 +1,63 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Mail, Phone, MapPin, Twitter, Linkedin } from 'lucide-react';
+import { Mail, Phone, MapPin, Twitter, Linkedin, Facebook, Instagram, Youtube, Globe } from 'lucide-react';
+import axios from 'axios';
 
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const Footer = () => {
   const { isRTL } = useTheme();
+  const [contactInfo, setContactInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const socialLinks = [
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  ];
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/public/contact-info`);
+        setContactInfo(response.data);
+      } catch (error) {
+        console.error('Failed to fetch contact info:', error);
+        // Use defaults on error
+        setContactInfo({
+          primary_email: 'info@nassaqapp.com',
+          support_email: 'support@nassaqapp.com',
+          primary_phone: '+966 11 234 5678',
+          address: 'الرياض، المملكة العربية السعودية',
+          social_media: {}
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
+
+  // Build social links from contact info
+  const buildSocialLinks = () => {
+    if (!contactInfo?.social_media) return [];
+    
+    const social = contactInfo.social_media;
+    const links = [];
+    
+    if (social.twitter) links.push({ icon: Twitter, href: social.twitter.startsWith('http') ? social.twitter : `https://twitter.com/${social.twitter.replace('@', '')}`, label: 'Twitter' });
+    if (social.linkedin) links.push({ icon: Linkedin, href: social.linkedin.startsWith('http') ? social.linkedin : `https://linkedin.com/company/${social.linkedin}`, label: 'LinkedIn' });
+    if (social.facebook) links.push({ icon: Facebook, href: social.facebook.startsWith('http') ? social.facebook : `https://facebook.com/${social.facebook}`, label: 'Facebook' });
+    if (social.instagram) links.push({ icon: Instagram, href: social.instagram.startsWith('http') ? social.instagram : `https://instagram.com/${social.instagram.replace('@', '')}`, label: 'Instagram' });
+    if (social.youtube) links.push({ icon: Youtube, href: social.youtube.startsWith('http') ? social.youtube : `https://youtube.com/${social.youtube}`, label: 'YouTube' });
+    
+    // Fallback if no social links configured
+    if (links.length === 0) {
+      links.push({ icon: Twitter, href: '#', label: 'Twitter' });
+      links.push({ icon: Linkedin, href: '#', label: 'LinkedIn' });
+    }
+    
+    return links;
+  };
+
+  const socialLinks = buildSocialLinks();
 
   return (
     <footer data-testid="footer" className="bg-brand-navy text-white">
