@@ -153,7 +153,7 @@ function AppRoutes() {
         path="/notifications"
         element={
           <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher']}>
-            <PlatformNotificationsPage />
+            <NotificationsPage />
           </ProtectedRoute>
         }
       />
