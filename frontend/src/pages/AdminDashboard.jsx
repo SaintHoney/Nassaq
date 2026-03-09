@@ -828,14 +828,17 @@ export const AdminDashboard = () => {
           <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20" data-testid="welcome-card">
             <CardContent className="py-5 px-6">
               <div className="flex items-center justify-between">
-                {/* القسم الأيسر: الترحيب والعنوان */}
+                {/* القسم الأيسر: الترحيب والعنوان مع صورة المستخدم */}
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-navy to-brand-turquoise flex items-center justify-center shadow-lg">
-                    <User className="h-7 w-7 text-white" />
-                  </div>
+                  <Avatar className="h-16 w-16 border-2 border-brand-turquoise shadow-lg">
+                    <AvatarImage src={user?.avatar_url} alt={user?.full_name} />
+                    <AvatarFallback className="bg-gradient-to-br from-brand-navy to-brand-turquoise text-white text-xl font-bold">
+                      {user?.full_name?.charAt(0) || 'أ'}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h1 className="font-cairo text-xl font-bold text-brand-navy" data-testid="user-display">
-                      {isRTL ? `مرحباً ${user?.full_name || 'أستاذ أحمد'}` : `Welcome ${user?.full_name || 'Admin'}`}
+                      {isRTL ? `مرحباً أستاذ ${user?.full_name || 'أحمد زلط'}` : `Welcome, ${user?.full_name || 'Ahmed'}`}
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">
                       {isRTL ? 'مركز القيادة' : 'Command Center'}
