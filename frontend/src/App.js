@@ -105,6 +105,7 @@ const PublicRoute = ({ children }) => {
       case 'platform_admin':
         return <Navigate to="/admin" replace />;
       case 'school_principal':
+        return <Navigate to="/principal" replace />;
       case 'school_sub_admin':
         return <Navigate to="/school" replace />;
       case 'teacher':
