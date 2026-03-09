@@ -361,7 +361,15 @@ Test Schedule ID: 4e1a3a8d-dcb5-4c09-8265-aed49e54e9be
 
 ## 📅 سجل التحديثات (Changelog)
 
-### 2026-03-09 (Session 3)
+### 2026-03-09 (Session 3 - Part 2)
+- ✅ بناء محرك التقييمات الكامل (Assessment Engine)
+- ✅ صفحة التقييمات والدرجات `/admin/assessments`
+- ✅ 9 أنواع تقييم (Quiz, Assignment, Exam, Participation, Project, Midterm, Final, Oral, Practical)
+- ✅ إدخال الدرجات بشكل جماعي
+- ✅ تقارير الفصل وسجل درجات الطالب
+- ✅ اختبار شامل Backend + Frontend (100%)
+
+### 2026-03-09 (Session 3 - Part 1)
 - ✅ إصلاح مشكلة الشاشة البيضاء (SelectItem value="" error)
 - ✅ بناء محرك الحضور الكامل (Attendance Engine)
 - ✅ صفحة تسجيل الحضور التفاعلية
