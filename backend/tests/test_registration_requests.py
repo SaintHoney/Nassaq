@@ -154,8 +154,9 @@ class TestUserCreation:
     
     def test_create_user_invalid_role(self, auth_headers):
         """Test creating user with invalid role fails"""
+        unique_id = str(uuid.uuid4())[:8]
         user_data = {
-            "email": f"TEST_invalid_{uuid.uuid4()[:8]}@nassaq.com",
+            "email": f"TEST_invalid_{unique_id}@nassaq.com",
             "password": "TestPass123!@#",
             "full_name": "TEST مستخدم غير صالح",
             "role": "invalid_role_xyz",
