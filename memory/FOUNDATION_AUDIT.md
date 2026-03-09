@@ -228,11 +228,19 @@
 ### Phase 2D: Public APIs ✅ COMPLETED
 16. ✅ Public contact info API (no auth)
 
-### Phase 2E: Remaining Work
-17. ❌ Academic Structure Engine (stages, grades, sections)
-18. ❌ Tenant Isolation Middleware
-19. ❌ Reporting Engine
-20. ❌ AI Planning Engine
+### Phase 2E: New Engines (COMPLETED ✅)
+17. ✅ Scheduling Engine - إدارة الجداول والحصص
+18. ✅ Attendance Engine - الحضور والغياب
+19. ✅ Assessment Engine - التقييم والاختبارات
+20. ✅ Notification Engine - الإشعارات
+21. ✅ Audit Engine - سجل التدقيق
+
+### Phase 2F: Remaining Work
+22. ❌ Connect new engines to API routes in server.py
+23. ❌ Tenant Isolation Middleware
+24. ❌ RBAC Middleware with permission granularity
+25. ❌ Reporting Engine
+26. ❌ AI Planning Engine
 
 ---
 
