@@ -1200,6 +1200,59 @@ export const AdminDashboard = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Display Settings Dialog */}
+        <Dialog open={showDisplaySettings} onOpenChange={setShowDisplaySettings}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <SlidersHorizontal className="h-5 w-5" />
+                {isRTL ? 'إعدادات العرض' : 'Display Settings'}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL ? 'تخصيص الكروت المعروضة في لوحة التحكم' : 'Customize the cards displayed in the dashboard'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <h4 className="font-medium text-sm">{isRTL ? 'المؤشرات المعروضة' : 'Visible Cards'}</h4>
+              <div className="space-y-3">
+                {[
+                  { key: 'schools', label: isRTL ? 'المدارس المسجلة' : 'Registered Schools', icon: Building2 },
+                  { key: 'students', label: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students', icon: GraduationCap },
+                  { key: 'teachers', label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck },
+                  { key: 'admins', label: isRTL ? 'المسؤولين' : 'Administrators', icon: Users },
+                  { key: 'activeUsers', label: isRTL ? 'المستخدمين النشطين' : 'Active Users', icon: Activity },
+                  { key: 'apiCalls', label: isRTL ? 'طلبات API' : 'API Requests', icon: Server },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <item.icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Button
+                      variant={visibleCards[item.key] ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 w-16 rounded-lg"
+                      onClick={() => setVisibleCards({ ...visibleCards, [item.key]: !visibleCards[item.key] })}
+                    >
+                      {visibleCards[item.key] ? (isRTL ? 'ظاهر' : 'Show') : (isRTL ? 'مخفي' : 'Hide')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setVisibleCards({ schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true })} className="rounded-xl">
+                {isRTL ? 'إعادة تعيين' : 'Reset'}
+              </Button>
+              <Button onClick={() => setShowDisplaySettings(false)} className="rounded-xl bg-brand-navy">
+                {isRTL ? 'حفظ' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
