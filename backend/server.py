@@ -3275,6 +3275,712 @@ async def get_students_for_attendance(
     }
 
 
+# ============== ASSESSMENT ENGINE ==============
+# Data Models
+
+class AssessmentType(str, Enum):
+    QUIZ = "quiz"
+    ASSIGNMENT = "assignment"
+    EXAM = "exam"
+    PARTICIPATION = "participation"
+    PROJECT = "project"
+    MIDTERM = "midterm"
+    FINAL = "final"
+    ORAL = "oral"
+    PRACTICAL = "practical"
+
+class AssessmentCreate(BaseModel):
+    class_id: str
+    subject_id: str
+    title: str
+    title_en: Optional[str] = None
+    assessment_type: AssessmentType
+    max_score: float = 100.0
+    weight: float = 1.0  # Weight for GPA calculation (0.0 - 1.0)
+    date: str  # YYYY-MM-DD
+    description: Optional[str] = None
+    is_published: bool = False
+
+class AssessmentUpdate(BaseModel):
+    title: Optional[str] = None
+    title_en: Optional[str] = None
+    max_score: Optional[float] = None
+    weight: Optional[float] = None
+    date: Optional[str] = None
+    description: Optional[str] = None
+    is_published: Optional[bool] = None
+
+class AssessmentResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    class_id: str
+    class_name: Optional[str] = None
+    subject_id: str
+    subject_name: Optional[str] = None
+    teacher_id: str
+    teacher_name: Optional[str] = None
+    title: str
+    title_en: Optional[str] = None
+    assessment_type: str
+    max_score: float
+    weight: float
+    date: str
+    description: Optional[str] = None
+    is_published: bool
+    created_at: str
+    grades_count: Optional[int] = 0
+
+class GradeCreate(BaseModel):
+    student_id: str
+    score: float
+    notes: Optional[str] = None
+
+class GradeUpdate(BaseModel):
+    score: Optional[float] = None
+    notes: Optional[str] = None
+
+class GradeResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    assessment_id: str
+    student_id: str
+    student_name: Optional[str] = None
+    student_code: Optional[str] = None
+    score: float
+    max_score: float
+    percentage: float
+    notes: Optional[str] = None
+    recorded_by: str
+    recorded_at: str
+
+class BulkGradeEntry(BaseModel):
+    assessment_id: str
+    grades: List[GradeCreate]
+
+class StudentGradeHistoryResponse(BaseModel):
+    student_id: str
+    student_name: str
+    class_id: str
+    class_name: str
+    total_assessments: int
+    average_percentage: float
+    grades_by_subject: dict
+    grades_by_type: dict
+    recent_grades: List[dict]
+
+class ClassGradeOverviewResponse(BaseModel):
+    class_id: str
+    class_name: str
+    subject_id: Optional[str]
+    subject_name: Optional[str]
+    total_students: int
+    total_assessments: int
+    class_average: float
+    highest_score: float
+    lowest_score: float
+    grade_distribution: dict
+    recent_assessments: List[dict]
+
+# Assessment APIs
+
+@api_router.post("/assessments", response_model=AssessmentResponse)
+async def create_assessment(
+    assessment: AssessmentCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new assessment"""
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized to create assessments")
+    
+    # Verify class exists
+    class_info = await db.classes.find_one({"id": assessment.class_id}, {"_id": 0})
+    if not class_info:
+        raise HTTPException(status_code=404, detail="Class not found")
+    
+    # Verify subject exists
+    subject = await db.subjects.find_one({"id": assessment.subject_id}, {"_id": 0})
+    if not subject:
+        raise HTTPException(status_code=404, detail="Subject not found")
+    
+    assessment_id = str(uuid.uuid4())
+    assessment_doc = {
+        "id": assessment_id,
+        "class_id": assessment.class_id,
+        "subject_id": assessment.subject_id,
+        "teacher_id": current_user['id'],
+        "title": assessment.title,
+        "title_en": assessment.title_en,
+        "assessment_type": assessment.assessment_type.value,
+        "max_score": assessment.max_score,
+        "weight": assessment.weight,
+        "date": assessment.date,
+        "description": assessment.description,
+        "is_published": assessment.is_published,
+        "school_id": current_user.get('tenant_id') or class_info.get('school_id'),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.assessments.insert_one(assessment_doc)
+    
+    # Get teacher name
+    teacher = await db.users.find_one({"id": current_user['id']}, {"_id": 0, "full_name": 1})
+    
+    return AssessmentResponse(
+        id=assessment_id,
+        class_id=assessment.class_id,
+        class_name=class_info.get('name'),
+        subject_id=assessment.subject_id,
+        subject_name=subject.get('name'),
+        teacher_id=current_user['id'],
+        teacher_name=teacher.get('full_name') if teacher else None,
+        title=assessment.title,
+        title_en=assessment.title_en,
+        assessment_type=assessment.assessment_type.value,
+        max_score=assessment.max_score,
+        weight=assessment.weight,
+        date=assessment.date,
+        description=assessment.description,
+        is_published=assessment.is_published,
+        created_at=assessment_doc['created_at'],
+        grades_count=0
+    )
+
+@api_router.get("/assessments", response_model=List[AssessmentResponse])
+async def get_assessments(
+    class_id: Optional[str] = None,
+    subject_id: Optional[str] = None,
+    assessment_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all assessments with optional filters"""
+    query = {}
+    
+    # Filter by school for school-level users
+    if current_user['role'] in ['school_principal', 'school_sub_admin', 'teacher']:
+        if current_user.get('tenant_id'):
+            query['school_id'] = current_user['tenant_id']
+    
+    if class_id:
+        query['class_id'] = class_id
+    if subject_id:
+        query['subject_id'] = subject_id
+    if assessment_type:
+        query['assessment_type'] = assessment_type
+    
+    assessments = await db.assessments.find(query, {"_id": 0}).sort("date", -1).to_list(500)
+    
+    # Enrich with related data
+    result = []
+    for a in assessments:
+        # Get class info
+        class_info = await db.classes.find_one({"id": a['class_id']}, {"_id": 0, "name": 1})
+        # Get subject info
+        subject = await db.subjects.find_one({"id": a['subject_id']}, {"_id": 0, "name": 1})
+        # Get teacher info
+        teacher = await db.users.find_one({"id": a['teacher_id']}, {"_id": 0, "full_name": 1})
+        # Count grades
+        grades_count = await db.grades.count_documents({"assessment_id": a['id']})
+        
+        result.append(AssessmentResponse(
+            id=a['id'],
+            class_id=a['class_id'],
+            class_name=class_info.get('name') if class_info else None,
+            subject_id=a['subject_id'],
+            subject_name=subject.get('name') if subject else None,
+            teacher_id=a['teacher_id'],
+            teacher_name=teacher.get('full_name') if teacher else None,
+            title=a['title'],
+            title_en=a.get('title_en'),
+            assessment_type=a['assessment_type'],
+            max_score=a['max_score'],
+            weight=a.get('weight', 1.0),
+            date=a['date'],
+            description=a.get('description'),
+            is_published=a.get('is_published', False),
+            created_at=a['created_at'],
+            grades_count=grades_count
+        ))
+    
+    return result
+
+@api_router.get("/assessments/{assessment_id}", response_model=AssessmentResponse)
+async def get_assessment(
+    assessment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a single assessment by ID"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Get related data
+    class_info = await db.classes.find_one({"id": assessment['class_id']}, {"_id": 0, "name": 1})
+    subject = await db.subjects.find_one({"id": assessment['subject_id']}, {"_id": 0, "name": 1})
+    teacher = await db.users.find_one({"id": assessment['teacher_id']}, {"_id": 0, "full_name": 1})
+    grades_count = await db.grades.count_documents({"assessment_id": assessment_id})
+    
+    return AssessmentResponse(
+        id=assessment['id'],
+        class_id=assessment['class_id'],
+        class_name=class_info.get('name') if class_info else None,
+        subject_id=assessment['subject_id'],
+        subject_name=subject.get('name') if subject else None,
+        teacher_id=assessment['teacher_id'],
+        teacher_name=teacher.get('full_name') if teacher else None,
+        title=assessment['title'],
+        title_en=assessment.get('title_en'),
+        assessment_type=assessment['assessment_type'],
+        max_score=assessment['max_score'],
+        weight=assessment.get('weight', 1.0),
+        date=assessment['date'],
+        description=assessment.get('description'),
+        is_published=assessment.get('is_published', False),
+        created_at=assessment['created_at'],
+        grades_count=grades_count
+    )
+
+@api_router.put("/assessments/{assessment_id}", response_model=AssessmentResponse)
+async def update_assessment(
+    assessment_id: str,
+    update: AssessmentUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update an assessment"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Only owner or admin can update
+    if current_user['role'] not in ['school_principal', 'school_sub_admin'] and assessment['teacher_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Not authorized to update this assessment")
+    
+    update_data = {k: v for k, v in update.model_dump().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.assessments.update_one({"id": assessment_id}, {"$set": update_data})
+    
+    return await get_assessment(assessment_id, current_user)
+
+@api_router.delete("/assessments/{assessment_id}")
+async def delete_assessment(
+    assessment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete an assessment and its grades"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Only owner or admin can delete
+    if current_user['role'] not in ['school_principal', 'school_sub_admin'] and assessment['teacher_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this assessment")
+    
+    # Delete all grades for this assessment
+    await db.grades.delete_many({"assessment_id": assessment_id})
+    # Delete the assessment
+    await db.assessments.delete_one({"id": assessment_id})
+    
+    return {"message": "Assessment deleted successfully"}
+
+# Grade APIs
+
+@api_router.post("/grades/bulk")
+async def create_bulk_grades(
+    data: BulkGradeEntry,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create or update multiple grades at once for an assessment"""
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized to enter grades")
+    
+    assessment = await db.assessments.find_one({"id": data.assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    created = 0
+    updated = 0
+    errors = []
+    
+    for grade in data.grades:
+        try:
+            # Check if student exists
+            student = await db.students.find_one({"id": grade.student_id}, {"_id": 0})
+            if not student:
+                errors.append(f"Student {grade.student_id} not found")
+                continue
+            
+            # Validate score
+            if grade.score < 0 or grade.score > assessment['max_score']:
+                errors.append(f"Invalid score {grade.score} for student {grade.student_id}")
+                continue
+            
+            # Check if grade already exists
+            existing = await db.grades.find_one({
+                "assessment_id": data.assessment_id,
+                "student_id": grade.student_id
+            })
+            
+            if existing:
+                # Update existing grade
+                await db.grades.update_one(
+                    {"id": existing['id']},
+                    {"$set": {
+                        "score": grade.score,
+                        "notes": grade.notes,
+                        "recorded_by": current_user['id'],
+                        "recorded_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                updated += 1
+            else:
+                # Create new grade
+                grade_id = str(uuid.uuid4())
+                grade_doc = {
+                    "id": grade_id,
+                    "assessment_id": data.assessment_id,
+                    "student_id": grade.student_id,
+                    "class_id": assessment['class_id'],
+                    "subject_id": assessment['subject_id'],
+                    "score": grade.score,
+                    "max_score": assessment['max_score'],
+                    "percentage": round((grade.score / assessment['max_score']) * 100, 2),
+                    "notes": grade.notes,
+                    "recorded_by": current_user['id'],
+                    "recorded_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.grades.insert_one(grade_doc)
+                created += 1
+                
+                # Create assessment event for notifications/analytics
+                await db.events.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "type": "grade_recorded",
+                    "student_id": grade.student_id,
+                    "assessment_id": data.assessment_id,
+                    "score": grade.score,
+                    "max_score": assessment['max_score'],
+                    "recorded_by": current_user['id'],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+        except Exception as e:
+            errors.append(f"Error processing grade for student {grade.student_id}: {str(e)}")
+    
+    return {
+        "success": True,
+        "created": created,
+        "updated": updated,
+        "errors": errors,
+        "total_processed": created + updated
+    }
+
+@api_router.get("/grades/assessment/{assessment_id}", response_model=List[GradeResponse])
+async def get_grades_for_assessment(
+    assessment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all grades for a specific assessment"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    grades = await db.grades.find({"assessment_id": assessment_id}, {"_id": 0}).to_list(500)
+    
+    result = []
+    for g in grades:
+        student = await db.students.find_one({"id": g['student_id']}, {"_id": 0, "full_name": 1, "student_code": 1})
+        result.append(GradeResponse(
+            id=g['id'],
+            assessment_id=g['assessment_id'],
+            student_id=g['student_id'],
+            student_name=student.get('full_name') if student else None,
+            student_code=student.get('student_code') if student else None,
+            score=g['score'],
+            max_score=g['max_score'],
+            percentage=g.get('percentage', round((g['score'] / g['max_score']) * 100, 2)),
+            notes=g.get('notes'),
+            recorded_by=g['recorded_by'],
+            recorded_at=g['recorded_at']
+        ))
+    
+    return result
+
+@api_router.get("/grades/student/{student_id}")
+async def get_student_grade_history(
+    student_id: str,
+    subject_id: Optional[str] = None,
+    assessment_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get complete grade history for a student"""
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Get class info
+    class_info = await db.classes.find_one({"id": student.get('class_id')}, {"_id": 0, "name": 1})
+    
+    query = {"student_id": student_id}
+    if subject_id:
+        query['subject_id'] = subject_id
+    
+    grades = await db.grades.find(query, {"_id": 0}).sort("recorded_at", -1).to_list(500)
+    
+    # Calculate statistics
+    grades_by_subject = {}
+    grades_by_type = {}
+    total_percentage = 0
+    
+    for g in grades:
+        # Get assessment details
+        assessment = await db.assessments.find_one({"id": g['assessment_id']}, {"_id": 0})
+        if not assessment:
+            continue
+        
+        if assessment_type and assessment['assessment_type'] != assessment_type:
+            continue
+        
+        # Get subject name
+        subject = await db.subjects.find_one({"id": g['subject_id']}, {"_id": 0, "name": 1})
+        subject_name = subject.get('name') if subject else "Unknown"
+        
+        # Aggregate by subject
+        if subject_name not in grades_by_subject:
+            grades_by_subject[subject_name] = {
+                "subject_id": g['subject_id'],
+                "grades": [],
+                "average": 0
+            }
+        grades_by_subject[subject_name]['grades'].append({
+            "assessment_id": g['assessment_id'],
+            "title": assessment['title'],
+            "type": assessment['assessment_type'],
+            "score": g['score'],
+            "max_score": g['max_score'],
+            "percentage": g.get('percentage', 0),
+            "date": assessment['date']
+        })
+        
+        # Aggregate by type
+        assessment_type_key = assessment['assessment_type']
+        if assessment_type_key not in grades_by_type:
+            grades_by_type[assessment_type_key] = {
+                "count": 0,
+                "total_percentage": 0,
+                "average": 0
+            }
+        grades_by_type[assessment_type_key]['count'] += 1
+        grades_by_type[assessment_type_key]['total_percentage'] += g.get('percentage', 0)
+        
+        total_percentage += g.get('percentage', 0)
+    
+    # Calculate averages
+    for subj in grades_by_subject.values():
+        if subj['grades']:
+            subj['average'] = round(sum(g['percentage'] for g in subj['grades']) / len(subj['grades']), 2)
+    
+    for type_data in grades_by_type.values():
+        if type_data['count'] > 0:
+            type_data['average'] = round(type_data['total_percentage'] / type_data['count'], 2)
+    
+    average_percentage = round(total_percentage / len(grades), 2) if grades else 0
+    
+    # Get recent grades (last 10)
+    recent_grades = []
+    for g in grades[:10]:
+        assessment = await db.assessments.find_one({"id": g['assessment_id']}, {"_id": 0})
+        subject = await db.subjects.find_one({"id": g['subject_id']}, {"_id": 0, "name": 1})
+        if assessment:
+            recent_grades.append({
+                "assessment_id": g['assessment_id'],
+                "title": assessment['title'],
+                "type": assessment['assessment_type'],
+                "subject_name": subject.get('name') if subject else None,
+                "score": g['score'],
+                "max_score": g['max_score'],
+                "percentage": g.get('percentage', 0),
+                "date": assessment['date'],
+                "recorded_at": g['recorded_at']
+            })
+    
+    return {
+        "student_id": student_id,
+        "student_name": student.get('full_name'),
+        "class_id": student.get('class_id'),
+        "class_name": class_info.get('name') if class_info else None,
+        "total_assessments": len(grades),
+        "average_percentage": average_percentage,
+        "grades_by_subject": grades_by_subject,
+        "grades_by_type": grades_by_type,
+        "recent_grades": recent_grades
+    }
+
+@api_router.get("/grades/class/{class_id}/overview")
+async def get_class_grade_overview(
+    class_id: str,
+    subject_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get grade overview for a class"""
+    class_info = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    if not class_info:
+        raise HTTPException(status_code=404, detail="Class not found")
+    
+    # Get all students in class
+    students = await db.students.find({"class_id": class_id}, {"_id": 0, "id": 1}).to_list(100)
+    student_ids = [s['id'] for s in students]
+    
+    # Get grades query
+    query = {"student_id": {"$in": student_ids}}
+    if subject_id:
+        query['subject_id'] = subject_id
+    
+    grades = await db.grades.find(query, {"_id": 0}).to_list(1000)
+    
+    # Get subject info
+    subject_name = None
+    if subject_id:
+        subject = await db.subjects.find_one({"id": subject_id}, {"_id": 0, "name": 1})
+        subject_name = subject.get('name') if subject else None
+    
+    # Calculate statistics
+    if not grades:
+        return {
+            "class_id": class_id,
+            "class_name": class_info.get('name'),
+            "subject_id": subject_id,
+            "subject_name": subject_name,
+            "total_students": len(students),
+            "total_assessments": 0,
+            "class_average": 0,
+            "highest_score": 0,
+            "lowest_score": 0,
+            "grade_distribution": {},
+            "recent_assessments": []
+        }
+    
+    percentages = [g.get('percentage', 0) for g in grades]
+    class_average = round(sum(percentages) / len(percentages), 2)
+    highest_score = max(percentages)
+    lowest_score = min(percentages)
+    
+    # Grade distribution
+    grade_distribution = {
+        "excellent": len([p for p in percentages if p >= 90]),  # A
+        "very_good": len([p for p in percentages if 80 <= p < 90]),  # B
+        "good": len([p for p in percentages if 70 <= p < 80]),  # C
+        "pass": len([p for p in percentages if 60 <= p < 70]),  # D
+        "fail": len([p for p in percentages if p < 60])  # F
+    }
+    
+    # Get unique assessments count
+    assessment_ids = list(set(g['assessment_id'] for g in grades))
+    
+    # Get recent assessments
+    recent_assessments = []
+    assessments_query = {"class_id": class_id}
+    if subject_id:
+        assessments_query['subject_id'] = subject_id
+    
+    recent_assessment_docs = await db.assessments.find(
+        assessments_query, 
+        {"_id": 0}
+    ).sort("date", -1).limit(5).to_list(5)
+    
+    for a in recent_assessment_docs:
+        # Get grades for this assessment
+        assessment_grades = [g for g in grades if g['assessment_id'] == a['id']]
+        assessment_percentages = [g.get('percentage', 0) for g in assessment_grades]
+        
+        recent_assessments.append({
+            "id": a['id'],
+            "title": a['title'],
+            "type": a['assessment_type'],
+            "date": a['date'],
+            "max_score": a['max_score'],
+            "students_graded": len(assessment_grades),
+            "average": round(sum(assessment_percentages) / len(assessment_percentages), 2) if assessment_percentages else 0
+        })
+    
+    return {
+        "class_id": class_id,
+        "class_name": class_info.get('name'),
+        "subject_id": subject_id,
+        "subject_name": subject_name,
+        "total_students": len(students),
+        "total_assessments": len(assessment_ids),
+        "class_average": class_average,
+        "highest_score": highest_score,
+        "lowest_score": lowest_score,
+        "grade_distribution": grade_distribution,
+        "recent_assessments": recent_assessments
+    }
+
+@api_router.get("/assessments/students-for-grading/{assessment_id}")
+async def get_students_for_grading(
+    assessment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get students with their grades for a specific assessment"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Get class info
+    class_info = await db.classes.find_one({"id": assessment['class_id']}, {"_id": 0})
+    
+    # Get subject info
+    subject = await db.subjects.find_one({"id": assessment['subject_id']}, {"_id": 0, "name": 1})
+    
+    # Get all students in this class
+    students = await db.students.find({"class_id": assessment['class_id']}, {"_id": 0}).to_list(100)
+    
+    # Get existing grades for this assessment
+    existing_grades = await db.grades.find(
+        {"assessment_id": assessment_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Create a map of student_id -> grade
+    grades_map = {g['student_id']: g for g in existing_grades}
+    
+    # Build result with grade data
+    result = []
+    for student in students:
+        student_id = student['id']
+        grade_record = grades_map.get(student_id)
+        
+        result.append({
+            "id": student_id,
+            "student_code": student.get('student_code'),
+            "full_name": student.get('full_name'),
+            "full_name_en": student.get('full_name_en'),
+            "avatar_url": student.get('avatar_url'),
+            "gender": student.get('gender'),
+            "score": grade_record.get('score') if grade_record else None,
+            "notes": grade_record.get('notes') if grade_record else None,
+            "grade_id": grade_record.get('id') if grade_record else None,
+            "percentage": grade_record.get('percentage') if grade_record else None
+        })
+    
+    graded_count = len([s for s in result if s['score'] is not None])
+    
+    return {
+        "assessment_id": assessment_id,
+        "assessment_title": assessment['title'],
+        "assessment_type": assessment['assessment_type'],
+        "max_score": assessment['max_score'],
+        "date": assessment['date'],
+        "class_id": assessment['class_id'],
+        "class_name": class_info.get('name') if class_info else None,
+        "subject_id": assessment['subject_id'],
+        "subject_name": subject.get('name') if subject else None,
+        "total_students": len(students),
+        "graded_count": graded_count,
+        "students": result
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
