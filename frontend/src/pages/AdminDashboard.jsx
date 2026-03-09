@@ -156,6 +156,24 @@ export const AdminDashboard = () => {
   // AI Operations
   const [aiOperationsToday, setAiOperationsToday] = useState(0);
 
+  // Global Filters State
+  const [filters, setFilters] = useState({
+    scope: 'all', // all, single, multi
+    selectedSchool: '',
+    selectedSchools: [],
+    city: '',
+    schoolType: '',
+    timeWindow: 'today', // live, today, week, month, custom
+    customDateFrom: '',
+    customDateTo: '',
+    tenantStatus: 'all', // all, active, suspended, setup, expired
+  });
+  const [showDisplaySettings, setShowDisplaySettings] = useState(false);
+  const [visibleCards, setVisibleCards] = useState({
+    schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true
+  });
+  const [schools, setSchools] = useState([]);
+
   // Hakim Chat
   const [hakimMessages, setHakimMessages] = useState([
     { id: 1, role: 'assistant', content: isRTL ? 'مرحباً! أنا حكيم، مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟' : 'Hello! I am Hakim, your AI assistant. How can I help you today?' }
