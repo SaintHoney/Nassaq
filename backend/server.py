@@ -1297,12 +1297,17 @@ class RegistrationRequestStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+    MORE_INFO_REQUESTED = "more_info_requested"
+    PENDING_REVIEW = "pending_review"
 
 class RegistrationRequest(BaseModel):
     full_name: str
     phone: str
     account_type: str  # 'school' or 'teacher'
     status: RegistrationRequestStatus = RegistrationRequestStatus.PENDING
+    # Common fields
+    email: Optional[str] = None
+    national_id: Optional[str] = None
     # School fields
     school_name: Optional[str] = None
     school_email: Optional[str] = None
@@ -1311,9 +1316,12 @@ class RegistrationRequest(BaseModel):
     school_address: Optional[str] = None
     student_capacity: Optional[str] = None
     # Teacher fields
-    email: Optional[str] = None
     school_code: Optional[str] = None
     specialization: Optional[str] = None
+    subject: Optional[str] = None
+    educational_level: Optional[str] = None
+    school_mentioned: Optional[str] = None
+    country: Optional[str] = "السعودية"
     years_of_experience: Optional[str] = None
 
 class RegistrationRequestResponse(BaseModel):
@@ -1321,9 +1329,38 @@ class RegistrationRequestResponse(BaseModel):
     id: str
     full_name: str
     phone: str
+    email: Optional[str] = None
+    national_id: Optional[str] = None
     account_type: str
     status: str
+    subject: Optional[str] = None
+    educational_level: Optional[str] = None
+    school_mentioned: Optional[str] = None
+    country: Optional[str] = None
     created_at: str
+    rejection_reason: Optional[str] = None
+    additional_info_request: Optional[str] = None
+    approved_by: Optional[str] = None
+    approved_at: Optional[str] = None
+    rejected_by: Optional[str] = None
+    rejected_at: Optional[str] = None
+
+class ApproveRequestData(BaseModel):
+    send_notification: bool = True
+
+class RejectRequestData(BaseModel):
+    reason: str
+
+class RequestMoreInfoData(BaseModel):
+    message: str
+
+class TeacherApprovalResult(BaseModel):
+    user_id: str
+    teacher_id: str
+    email: str
+    temporary_password: str
+    qr_code: str
+    message_template: str
 
 # ============== REGISTRATION REQUESTS ROUTES ==============
 @api_router.post("/registration-requests", response_model=RegistrationRequestResponse)
