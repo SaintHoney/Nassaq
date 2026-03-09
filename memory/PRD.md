@@ -505,6 +505,97 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - ✅ Footer: Dynamic contact info from API
 - ✅ New Engines: All created and importable (not connected to routes yet)
 
+### Test Results (iteration_31.json):
+- ✅ Backend: 100% (18/18 tests passed)
+- ✅ All 4 new routers connected: Scheduling, Attendance, Assessment, Audit
+- ✅ Audit APIs fully functional for platform_admin
+- ✅ Tenant-scoped APIs return proper 400 error for users without tenant_id
+- ✅ RBAC middleware created and ready
+- ✅ Tenant Isolation middleware created and ready
+
+---
+
+## 📋 Architecture Changes (March 9, 2026 - Phase 14)
+
+### New API Routes Connected:
+```
+/api/scheduling/
+  ├── POST /time-slots/seed-defaults
+  ├── GET /time-slots
+  ├── POST /time-slots
+  ├── POST /schedules
+  ├── GET /schedules
+  ├── GET /schedules/{id}
+  ├── PUT /schedules/{id}/publish
+  ├── DELETE /schedules/{id}
+  ├── POST /sessions
+  ├── GET /sessions
+  ├── PUT /sessions/{id}/move
+  ├── DELETE /sessions/{id}
+  ├── GET /schedules/{id}/conflicts
+  ├── GET /schedules/{id}/stats
+  ├── GET /teacher/{id}/weekly
+  ├── GET /section/{id}/weekly
+  └── POST /teacher-assignments
+
+/api/attendance/
+  ├── POST /record
+  ├── POST /bulk
+  ├── POST /mark-all-present
+  ├── GET /student/{id}
+  ├── GET /section/{id}
+  ├── GET /reports/daily
+  ├── GET /summary/student/{id}
+  ├── GET /summary/section/{id}
+  ├── GET /overview
+  ├── POST /excuses
+  ├── POST /excuses/{id}/approve
+  ├── GET /excuses/student/{id}
+  ├── GET /alerts/low-attendance
+  └── GET /alerts/consecutive-absences
+
+/api/assessments/
+  ├── POST /
+  ├── GET /
+  ├── GET /{id}
+  ├── PUT /{id}
+  ├── POST /{id}/publish
+  ├── DELETE /{id}
+  ├── POST /{id}/grades
+  ├── POST /{id}/grades/bulk
+  ├── GET /{id}/grades
+  ├── GET /student/{id}/grades
+  ├── POST /grade-weights
+  ├── GET /grade-weights/{subject_id}
+  ├── GET /student/{id}/average/{subject_id}
+  ├── GET /{id}/statistics
+  ├── POST /report-cards/generate
+  └── GET /report-cards/student/{id}
+
+/api/audit/
+  ├── GET /logs
+  ├── GET /entity/{type}/{id}
+  ├── GET /user/{id}/activity
+  ├── GET /critical-events
+  ├── GET /stats
+  ├── GET /login-analytics
+  ├── POST /export-report
+  └── POST /cleanup
+```
+
+### New Middleware Created:
+```
+/app/backend/middleware/
+├── __init__.py
+├── rbac.py          # Role-Based Access Control
+└── tenant_isolation.py  # Tenant Data Isolation
+```
+
+### Permission System (RBAC):
+- 50+ granular permissions defined
+- Role-to-permission mapping for all user roles
+- Decorators: @require_permission, @require_any_permission, @require_tenant_access
+
 ---
 
 ## 📋 Audit Report Location
