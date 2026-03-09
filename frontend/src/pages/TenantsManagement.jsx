@@ -5,6 +5,8 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 import { ScrollArea } from '../components/ui/scroll-area';
 import {
@@ -23,18 +25,10 @@ import {
   DialogFooter,
 } from '../components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '../components/ui/sheet';
 import {
   Building2, Search, Filter, Plus, LayoutGrid, List, MoreVertical,
@@ -47,6 +41,152 @@ import {
 } from 'lucide-react';
 import CreateSchoolWizard from '../components/wizards/CreateSchoolWizard';
 import { Sidebar } from '../components/layout/Sidebar';
+
+// Translations
+const translations = {
+  ar: {
+    pageTitle: 'إدارة المدارس',
+    pageSubtitle: 'إدارة جميع المدارس والمؤسسات التعليمية',
+    addSchool: 'إضافة مدرسة جديدة',
+    totalSchools: 'إجمالي المدارس',
+    totalTeachers: 'إجمالي المعلمين',
+    totalStudents: 'إجمالي الطلاب',
+    activeSchools: 'نشطة',
+    suspendedSchools: 'موقوفة',
+    setupSchools: 'قيد الإعداد',
+    expiredSchools: 'منتهية',
+    viewingActiveSchools: 'عرض المدارس النشطة',
+    viewingSuspendedSchools: 'عرض المدارس الموقوفة',
+    viewingSetupSchools: 'عرض المدارس قيد الإعداد',
+    viewingExpiredSchools: 'عرض المدارس المنتهية',
+    viewingAllSchools: 'عرض جميع المدارس',
+    searchPlaceholder: 'بحث بالاسم، الكود، الهاتف، البريد...',
+    allStatus: 'جميع الحالات',
+    active: 'نشطة',
+    suspended: 'موقوفة',
+    setup: 'قيد الإعداد',
+    expired: 'منتهية',
+    status: 'الحالة',
+    allCities: 'جميع المدن',
+    city: 'المدينة',
+    aiStatus: 'حالة AI',
+    all: 'الكل',
+    enabled: 'مفعّل',
+    disabled: 'غير مفعّل',
+    reset: 'إعادة ضبط',
+    filters: 'الفلاتر',
+    schoolType: 'نوع المدرسة',
+    public: 'حكومية',
+    private: 'أهلية',
+    stage: 'المرحلة',
+    allStages: 'جميع المراحل',
+    kindergarten: 'رياض الأطفال',
+    primary: 'ابتدائي',
+    intermediate: 'متوسط',
+    secondary: 'ثانوي',
+    apply: 'تطبيق',
+    noResults: 'لا توجد نتائج',
+    tryChangingFilters: 'جرب تغيير معايير البحث أو الفلاتر',
+    resetFilters: 'إعادة ضبط الفلاتر',
+    openDashboard: 'فتح لوحة التحكم',
+    editData: 'تعديل البيانات',
+    users: 'المستخدمون',
+    reports: 'التقارير',
+    enableAI: 'تفعيل AI',
+    disableAI: 'إيقاف AI',
+    suspend: 'تعليق',
+    activate: 'تفعيل',
+    resendWelcome: 'إعادة إرسال الترحيب',
+    delete: 'حذف',
+    students: 'طالب',
+    teachers: 'معلم',
+    health: 'الصحة',
+    lastActivity: 'آخر نشاط:',
+    school: 'مدرسة',
+    total: 'إجمالي',
+    schoolsSelected: 'مدرسة محددة',
+    export: 'تصدير',
+    createdSuccessfully: 'تم إنشاء المدرسة بنجاح!',
+    suspendSchool: 'تعليق المدرسة',
+    suspendConfirm: 'هل أنت متأكد من تعليق هذه المدرسة؟ سيتم تعطيل جميع الحسابات المرتبطة بها.',
+    activateConfirm: 'هل أنت متأكد من إعادة تفعيل هذه المدرسة؟',
+    aiEnabled: 'الذكاء الاصطناعي',
+    aiEnabledDesc: 'تفعيل ميزات AI لجميع مستخدمي المدرسة',
+    cancel: 'إلغاء',
+    confirm: 'تأكيد',
+  },
+  en: {
+    pageTitle: 'Tenants Management',
+    pageSubtitle: 'Manage all schools and educational institutions',
+    addSchool: 'Add New School',
+    totalSchools: 'Total Schools',
+    totalTeachers: 'Total Teachers',
+    totalStudents: 'Total Students',
+    activeSchools: 'Active',
+    suspendedSchools: 'Suspended',
+    setupSchools: 'Setup',
+    expiredSchools: 'Expired',
+    viewingActiveSchools: 'Viewing Active Schools',
+    viewingSuspendedSchools: 'Viewing Suspended Schools',
+    viewingSetupSchools: 'Viewing Schools in Setup',
+    viewingExpiredSchools: 'Viewing Expired Schools',
+    viewingAllSchools: 'Viewing All Schools',
+    searchPlaceholder: 'Search by name, code, phone, email...',
+    allStatus: 'All Status',
+    active: 'Active',
+    suspended: 'Suspended',
+    setup: 'Setup',
+    expired: 'Expired',
+    status: 'Status',
+    allCities: 'All Cities',
+    city: 'City',
+    aiStatus: 'AI Status',
+    all: 'All',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    reset: 'Reset',
+    filters: 'Filters',
+    schoolType: 'School Type',
+    public: 'Public',
+    private: 'Private',
+    stage: 'Stage',
+    allStages: 'All Stages',
+    kindergarten: 'Kindergarten',
+    primary: 'Primary',
+    intermediate: 'Intermediate',
+    secondary: 'Secondary',
+    apply: 'Apply',
+    noResults: 'No results found',
+    tryChangingFilters: 'Try changing search criteria or filters',
+    resetFilters: 'Reset Filters',
+    openDashboard: 'Open Dashboard',
+    editData: 'Edit Data',
+    users: 'Users',
+    reports: 'Reports',
+    enableAI: 'Enable AI',
+    disableAI: 'Disable AI',
+    suspend: 'Suspend',
+    activate: 'Activate',
+    resendWelcome: 'Resend Welcome',
+    delete: 'Delete',
+    students: 'Students',
+    teachers: 'Teachers',
+    health: 'Health',
+    lastActivity: 'Last:',
+    school: 'school',
+    total: 'total',
+    schoolsSelected: 'schools selected',
+    export: 'Export',
+    createdSuccessfully: 'School created successfully!',
+    suspendSchool: 'Suspend School',
+    suspendConfirm: 'Are you sure you want to suspend this school? All associated accounts will be disabled.',
+    activateConfirm: 'Are you sure you want to reactivate this school?',
+    aiEnabled: 'Artificial Intelligence',
+    aiEnabledDesc: 'Enable AI features for all school users',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+  }
+};
 
 // School status configuration
 const SCHOOL_STATUS = {
@@ -219,20 +359,22 @@ const SAMPLE_SCHOOLS = [
 ];
 
 export default function TenantsManagement() {
-  const { api, isRTL } = useAuth();
+  const { api, isRTL: contextIsRTL } = useAuth();
   const navigate = useNavigate();
+  const isRTL = contextIsRTL !== false; // Default to RTL
+  const t = translations[isRTL ? 'ar' : 'en'];
   
   // States
   const [schools, setSchools] = useState(SAMPLE_SCHOOLS);
   const [filteredSchools, setFilteredSchools] = useState(SAMPLE_SCHOOLS);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
+  const [viewMode, setViewMode] = useState('grid');
   const [selectedSchools, setSelectedSchools] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
-  const [selectedSchool, setSelectedSchool] = useState(null);
-  const [showSchoolActions, setShowSchoolActions] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeStatusFilter, setActiveStatusFilter] = useState(null);
+  const [showSuspendDialog, setShowSuspendDialog] = useState(null);
+  const [showAIDialog, setShowAIDialog] = useState(null);
   
   // Filters state
   const [filters, setFilters] = useState({
@@ -250,12 +392,20 @@ export default function TenantsManagement() {
     active: schools.filter(s => s.status === 'active').length,
     suspended: schools.filter(s => s.status === 'suspended').length,
     setup: schools.filter(s => s.status === 'setup').length,
+    expired: schools.filter(s => s.status === 'expired').length,
     aiEnabled: schools.filter(s => s.ai_enabled).length,
+    totalStudents: schools.reduce((sum, s) => sum + s.students_count, 0),
+    totalTeachers: schools.reduce((sum, s) => sum + s.teachers_count, 0),
   };
   
   // Filter and search schools
   useEffect(() => {
     let result = [...schools];
+    
+    // Apply active status filter from stats card click
+    if (activeStatusFilter) {
+      result = result.filter(s => s.status === activeStatusFilter);
+    }
     
     // Search
     if (searchQuery) {
@@ -271,8 +421,8 @@ export default function TenantsManagement() {
       );
     }
     
-    // Apply filters
-    if (filters.status !== 'all') {
+    // Apply filters (only if no status filter from card click)
+    if (!activeStatusFilter && filters.status !== 'all') {
       result = result.filter(s => s.status === filters.status);
     }
     if (filters.city !== 'all') {
@@ -289,7 +439,7 @@ export default function TenantsManagement() {
     }
     
     setFilteredSchools(result);
-  }, [searchQuery, filters, schools]);
+  }, [searchQuery, filters, schools, activeStatusFilter]);
   
   // Get unique cities
   const cities = [...new Set(schools.map(s => s.city))];
@@ -305,6 +455,28 @@ export default function TenantsManagement() {
       subscriptionStatus: 'all',
     });
     setSearchQuery('');
+    setActiveStatusFilter(null);
+  };
+  
+  // Handle status filter from stats card
+  const handleStatusFilter = (status) => {
+    if (activeStatusFilter === status) {
+      setActiveStatusFilter(null);
+    } else {
+      setActiveStatusFilter(status);
+    }
+  };
+  
+  // Get current filter label
+  const getCurrentFilterLabel = () => {
+    if (!activeStatusFilter) return t.viewingAllSchools;
+    switch (activeStatusFilter) {
+      case 'active': return t.viewingActiveSchools;
+      case 'suspended': return t.viewingSuspendedSchools;
+      case 'setup': return t.viewingSetupSchools;
+      case 'expired': return t.viewingExpiredSchools;
+      default: return t.viewingAllSchools;
+    }
   };
   
   // Toggle school selection
@@ -314,15 +486,6 @@ export default function TenantsManagement() {
         ? prev.filter(id => id !== schoolId)
         : [...prev, schoolId]
     );
-  };
-  
-  // Select all schools
-  const selectAllSchools = () => {
-    if (selectedSchools.length === filteredSchools.length) {
-      setSelectedSchools([]);
-    } else {
-      setSelectedSchools(filteredSchools.map(s => s.id));
-    }
   };
   
   // School actions
@@ -335,16 +498,13 @@ export default function TenantsManagement() {
         toast.info(isRTL ? 'جاري فتح صفحة التعديل...' : 'Opening edit page...');
         break;
       case 'suspend':
-        toast.warning(isRTL ? `تم تعليق ${school.name}` : `${school.name} suspended`);
+        setShowSuspendDialog(school);
         break;
       case 'activate':
-        toast.success(isRTL ? `تم تفعيل ${school.name}` : `${school.name} activated`);
+        handleToggleSuspend(school, false);
         break;
       case 'toggleAI':
-        toast.info(isRTL 
-          ? `تم ${school.ai_enabled ? 'إيقاف' : 'تفعيل'} الذكاء الاصطناعي`
-          : `AI ${school.ai_enabled ? 'disabled' : 'enabled'}`
-        );
+        setShowAIDialog(school);
         break;
       case 'users':
         navigate(`/admin/schools/${school.id}/users`);
@@ -361,7 +521,30 @@ export default function TenantsManagement() {
       default:
         break;
     }
-    setShowSchoolActions(null);
+  };
+  
+  // Handle suspend toggle
+  const handleToggleSuspend = (school, suspend = true) => {
+    setSchools(prev => prev.map(s => 
+      s.id === school.id ? { ...s, status: suspend ? 'suspended' : 'active' } : s
+    ));
+    toast.success(suspend 
+      ? (isRTL ? `تم تعليق ${school.name}` : `${school.name} suspended`)
+      : (isRTL ? `تم تفعيل ${school.name}` : `${school.name} activated`)
+    );
+    setShowSuspendDialog(null);
+  };
+  
+  // Handle AI toggle
+  const handleToggleAI = (school, enable) => {
+    setSchools(prev => prev.map(s => 
+      s.id === school.id ? { ...s, ai_enabled: enable } : s
+    ));
+    toast.success(enable 
+      ? (isRTL ? `تم تفعيل AI لـ ${school.name}` : `AI enabled for ${school.name}`)
+      : (isRTL ? `تم إيقاف AI لـ ${school.name}` : `AI disabled for ${school.name}`)
+    );
+    setShowAIDialog(null);
   };
   
   // Bulk actions
@@ -401,17 +584,20 @@ export default function TenantsManagement() {
   
   return (
     <Sidebar>
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'} data-testid="tenants-management">
       {/* Mobile Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b lg:hidden">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
             </Button>
             <div>
-              <h1 className="font-cairo text-lg font-bold">{isRTL ? 'إدارة المدارس' : 'Schools'}</h1>
-              <p className="text-xs text-muted-foreground">{filteredSchools.length} {isRTL ? 'مدرسة' : 'schools'}</p>
+              <h1 className="font-cairo text-lg font-bold flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-brand-navy" />
+                {t.pageTitle}
+              </h1>
+              <p className="text-xs text-muted-foreground">{filteredSchools.length} {t.school}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -434,7 +620,7 @@ export default function TenantsManagement() {
           <div className="relative">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={isRTL ? 'بحث بالاسم، الكود، الهاتف...' : 'Search by name, code, phone...'}
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ps-10 rounded-xl"
@@ -463,16 +649,16 @@ export default function TenantsManagement() {
               data-testid="add-school-btn"
             >
               <Plus className="h-6 w-6 me-2" />
-              {isRTL ? 'إضافة مدرسة جديدة' : 'Add New School'}
+              {t.addSchool}
             </Button>
             <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <h1 className={`font-cairo text-2xl font-bold flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <Building2 className="h-7 w-7 text-brand-navy" />
-                  {isRTL ? 'إدارة المدارس' : 'Tenants Management'}
+                  {t.pageTitle}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL ? 'إدارة جميع المدارس والمؤسسات التعليمية' : 'Manage all schools and educational institutions'}
+                  {t.pageSubtitle}
                 </p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
@@ -481,82 +667,128 @@ export default function TenantsManagement() {
             </div>
           </div>
           
-          {/* Stats Cards - Desktop - RTL Aligned */}
+          {/* Stats Cards - Desktop - 2 columns for school info, then total schools card */}
           <div className={`grid grid-cols-4 gap-4 mb-4 ${isRTL ? 'direction-rtl' : ''}`}>
             {/* إجمالي المعلمين */}
             <Card className="border-teal-200 bg-teal-50">
               <CardContent className="p-4">
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <p className="text-teal-600 text-sm">{isRTL ? 'إجمالي المعلمين' : 'Total Teachers'}</p>
-                    <p className="text-3xl font-bold text-teal-700">{stats.totalTeachers || 98}</p>
+                    <p className="text-teal-600 text-sm">{t.totalTeachers}</p>
+                    <p className="text-3xl font-bold text-teal-700">{stats.totalTeachers}</p>
                   </div>
                   <GraduationCap className="h-10 w-10 text-teal-200" />
                 </div>
               </CardContent>
             </Card>
+            
             {/* إجمالي الطلاب */}
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-4">
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <p className="text-blue-600 text-sm">{isRTL ? 'إجمالي الطلاب' : 'Total Students'}</p>
-                    <p className="text-3xl font-bold text-blue-700">{stats.totalStudents || 1250}</p>
+                    <p className="text-blue-600 text-sm">{t.totalStudents}</p>
+                    <p className="text-3xl font-bold text-blue-700">{stats.totalStudents}</p>
                   </div>
                   <Users className="h-10 w-10 text-blue-200" />
                 </div>
               </CardContent>
             </Card>
-            {/* كارت إجمالي المدارس مع جميع الحالات */}
+            
+            {/* كارت إجمالي المدارس مع الحالات التفاعلية */}
             <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white col-span-2">
               <CardContent className="p-4">
                 <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <p className="text-white/70 text-sm">{isRTL ? 'إجمالي المدارس' : 'Total Schools'}</p>
+                    <p className="text-white/70 text-sm">{t.totalSchools}</p>
                     <p className="text-4xl font-bold">{stats.total}</p>
                   </div>
                   <Building2 className="h-12 w-12 text-white/30" />
                 </div>
+                
+                {/* Interactive status sections */}
                 <div className={`grid grid-cols-4 gap-2 pt-3 border-t border-white/20 ${isRTL ? 'direction-rtl' : ''}`}>
-                  <div className="text-center">
+                  {/* Expired */}
+                  <button 
+                    onClick={() => handleStatusFilter('expired')}
+                    className={`text-center p-2 rounded-lg transition-all cursor-pointer hover:bg-white/10 ${activeStatusFilter === 'expired' ? 'bg-white/20 ring-2 ring-white/50' : ''}`}
+                    data-testid="filter-expired"
+                  >
                     <div className="flex items-center justify-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                      <span className="text-xl font-bold">{stats.expired || 0}</span>
+                      <span className="text-xl font-bold">{stats.expired}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'منتهية' : 'Expired'}</p>
-                  </div>
-                  <div className="text-center">
+                    <p className="text-[10px] text-white/70">{t.expiredSchools}</p>
+                  </button>
+                  
+                  {/* Suspended */}
+                  <button 
+                    onClick={() => handleStatusFilter('suspended')}
+                    className={`text-center p-2 rounded-lg transition-all cursor-pointer hover:bg-white/10 ${activeStatusFilter === 'suspended' ? 'bg-white/20 ring-2 ring-white/50' : ''}`}
+                    data-testid="filter-suspended"
+                  >
                     <div className="flex items-center justify-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-red-400"></span>
                       <span className="text-xl font-bold">{stats.suspended}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'موقوفة' : 'Suspended'}</p>
-                  </div>
-                  <div className="text-center">
+                    <p className="text-[10px] text-white/70">{t.suspendedSchools}</p>
+                  </button>
+                  
+                  {/* Setup */}
+                  <button 
+                    onClick={() => handleStatusFilter('setup')}
+                    className={`text-center p-2 rounded-lg transition-all cursor-pointer hover:bg-white/10 ${activeStatusFilter === 'setup' ? 'bg-white/20 ring-2 ring-white/50' : ''}`}
+                    data-testid="filter-setup"
+                  >
                     <div className="flex items-center justify-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
                       <span className="text-xl font-bold">{stats.setup}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'إعداد' : 'Setup'}</p>
-                  </div>
-                  <div className="text-center">
+                    <p className="text-[10px] text-white/70">{t.setupSchools}</p>
+                  </button>
+                  
+                  {/* Active */}
+                  <button 
+                    onClick={() => handleStatusFilter('active')}
+                    className={`text-center p-2 rounded-lg transition-all cursor-pointer hover:bg-white/10 ${activeStatusFilter === 'active' ? 'bg-white/20 ring-2 ring-white/50' : ''}`}
+                    data-testid="filter-active"
+                  >
                     <div className="flex items-center justify-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-green-400"></span>
                       <span className="text-xl font-bold">{stats.active}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'نشطة' : 'Active'}</p>
-                  </div>
+                    <p className="text-[10px] text-white/70">{t.activeSchools}</p>
+                  </button>
                 </div>
               </CardContent>
             </Card>
           </div>
+          
+          {/* Active Filter Indicator */}
+          {activeStatusFilter && (
+            <div className="mb-4 p-3 bg-brand-purple/10 border border-brand-purple/30 rounded-xl flex items-center justify-between">
+              <span className="text-sm font-medium text-brand-purple flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                {getCurrentFilterLabel()}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setActiveStatusFilter(null)}
+                className="text-brand-purple hover:bg-brand-purple/20"
+              >
+                <X className="h-4 w-4 me-1" />
+                {isRTL ? 'إلغاء الفلتر' : 'Clear filter'}
+              </Button>
+            </div>
+          )}
           
           {/* Search and Filters - Desktop */}
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={isRTL ? 'بحث بالاسم، الكود، الهاتف، البريد...' : 'Search by name, code, phone, email...'}
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ps-10 rounded-xl"
@@ -564,24 +796,25 @@ export default function TenantsManagement() {
             </div>
             
             {/* Quick Filters */}
-            <Select value={filters.status} onValueChange={(v) => setFilters({ ...filters, status: v })}>
+            <Select value={filters.status} onValueChange={(v) => { setFilters({ ...filters, status: v }); setActiveStatusFilter(null); }}>
               <SelectTrigger className="w-36 rounded-xl">
-                <SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} />
+                <SelectValue placeholder={t.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</SelectItem>
-                <SelectItem value="active">{isRTL ? 'نشطة' : 'Active'}</SelectItem>
-                <SelectItem value="suspended">{isRTL ? 'موقوفة' : 'Suspended'}</SelectItem>
-                <SelectItem value="setup">{isRTL ? 'قيد الإعداد' : 'Setup'}</SelectItem>
+                <SelectItem value="all">{t.allStatus}</SelectItem>
+                <SelectItem value="active">{t.active}</SelectItem>
+                <SelectItem value="suspended">{t.suspended}</SelectItem>
+                <SelectItem value="setup">{t.setup}</SelectItem>
+                <SelectItem value="expired">{t.expired}</SelectItem>
               </SelectContent>
             </Select>
             
             <Select value={filters.city} onValueChange={(v) => setFilters({ ...filters, city: v })}>
               <SelectTrigger className="w-36 rounded-xl">
-                <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
+                <SelectValue placeholder={t.city} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? 'جميع المدن' : 'All Cities'}</SelectItem>
+                <SelectItem value="all">{t.allCities}</SelectItem>
                 {cities.map(city => (
                   <SelectItem key={city} value={city}>{city}</SelectItem>
                 ))}
@@ -590,18 +823,18 @@ export default function TenantsManagement() {
             
             <Select value={filters.aiStatus} onValueChange={(v) => setFilters({ ...filters, aiStatus: v })}>
               <SelectTrigger className="w-36 rounded-xl">
-                <SelectValue placeholder={isRTL ? 'حالة AI' : 'AI Status'} />
+                <SelectValue placeholder={t.aiStatus} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                <SelectItem value="enabled">{isRTL ? 'مفعّل' : 'Enabled'}</SelectItem>
-                <SelectItem value="disabled">{isRTL ? 'غير مفعّل' : 'Disabled'}</SelectItem>
+                <SelectItem value="all">{t.all}</SelectItem>
+                <SelectItem value="enabled">{t.enabled}</SelectItem>
+                <SelectItem value="disabled">{t.disabled}</SelectItem>
               </SelectContent>
             </Select>
             
             <Button variant="outline" onClick={resetFilters} className="rounded-xl">
               <RefreshCw className="h-4 w-4 me-2" />
-              {isRTL ? 'إعادة ضبط' : 'Reset'}
+              {t.reset}
             </Button>
             
             <div className="flex items-center border rounded-xl overflow-hidden">
@@ -629,26 +862,38 @@ export default function TenantsManagement() {
       {/* Mobile Stats */}
       <div className="lg:hidden px-4 py-3 overflow-x-auto">
         <div className="flex gap-3 min-w-max">
-          <div className="flex items-center gap-2 px-3 py-2 bg-brand-navy/10 rounded-xl">
-            <Building2 className="h-4 w-4 text-brand-navy" />
+          <button 
+            onClick={() => handleStatusFilter(null)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${!activeStatusFilter ? 'bg-brand-navy text-white' : 'bg-brand-navy/10'}`}
+          >
+            <Building2 className="h-4 w-4" />
             <span className="text-sm font-medium">{stats.total}</span>
-            <span className="text-xs text-muted-foreground">{isRTL ? 'مدرسة' : 'total'}</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-xl">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-medium text-green-700">{stats.active}</span>
-            <span className="text-xs text-green-600">{isRTL ? 'نشطة' : 'active'}</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-red-50 rounded-xl">
-            <XCircle className="h-4 w-4 text-red-500" />
-            <span className="text-sm font-medium text-red-700">{stats.suspended}</span>
-            <span className="text-xs text-red-600">{isRTL ? 'موقوفة' : 'suspended'}</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-xl">
-            <Brain className="h-4 w-4 text-purple-500" />
-            <span className="text-sm font-medium text-purple-700">{stats.aiEnabled}</span>
-            <span className="text-xs text-purple-600">AI</span>
-          </div>
+            <span className="text-xs">{t.total}</span>
+          </button>
+          <button 
+            onClick={() => handleStatusFilter('active')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${activeStatusFilter === 'active' ? 'bg-green-500 text-white' : 'bg-green-50'}`}
+          >
+            <CheckCircle2 className={`h-4 w-4 ${activeStatusFilter === 'active' ? 'text-white' : 'text-green-500'}`} />
+            <span className={`text-sm font-medium ${activeStatusFilter === 'active' ? 'text-white' : 'text-green-700'}`}>{stats.active}</span>
+            <span className={`text-xs ${activeStatusFilter === 'active' ? 'text-white/80' : 'text-green-600'}`}>{t.active}</span>
+          </button>
+          <button 
+            onClick={() => handleStatusFilter('suspended')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${activeStatusFilter === 'suspended' ? 'bg-red-500 text-white' : 'bg-red-50'}`}
+          >
+            <XCircle className={`h-4 w-4 ${activeStatusFilter === 'suspended' ? 'text-white' : 'text-red-500'}`} />
+            <span className={`text-sm font-medium ${activeStatusFilter === 'suspended' ? 'text-white' : 'text-red-700'}`}>{stats.suspended}</span>
+            <span className={`text-xs ${activeStatusFilter === 'suspended' ? 'text-white/80' : 'text-red-600'}`}>{t.suspended}</span>
+          </button>
+          <button 
+            onClick={() => handleStatusFilter('setup')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${activeStatusFilter === 'setup' ? 'bg-yellow-500 text-white' : 'bg-yellow-50'}`}
+          >
+            <Clock className={`h-4 w-4 ${activeStatusFilter === 'setup' ? 'text-white' : 'text-yellow-500'}`} />
+            <span className={`text-sm font-medium ${activeStatusFilter === 'setup' ? 'text-white' : 'text-yellow-700'}`}>{stats.setup}</span>
+            <span className={`text-xs ${activeStatusFilter === 'setup' ? 'text-white/80' : 'text-yellow-600'}`}>{t.setup}</span>
+          </button>
         </div>
       </div>
       
@@ -656,16 +901,16 @@ export default function TenantsManagement() {
       {selectedSchools.length > 0 && (
         <div className="sticky top-[120px] lg:top-[200px] z-40 bg-brand-purple text-white px-4 py-3 flex items-center justify-between">
           <span className="text-sm">
-            {selectedSchools.length} {isRTL ? 'مدرسة محددة' : 'schools selected'}
+            {selectedSchools.length} {t.schoolsSelected}
           </span>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="secondary" onClick={() => handleBulkAction('enableAI')}>
               <Brain className="h-4 w-4 me-1" />
-              {isRTL ? 'تفعيل AI' : 'Enable AI'}
+              {t.enableAI}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => handleBulkAction('export')}>
               <Download className="h-4 w-4 me-1" />
-              {isRTL ? 'تصدير' : 'Export'}
+              {t.export}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedSchools([])}>
               <X className="h-4 w-4" />
@@ -674,36 +919,36 @@ export default function TenantsManagement() {
         </div>
       )}
       
-      {/* Schools Grid */}
+      {/* Schools Grid - 2 columns on desktop */}
       <main className="container mx-auto px-4 lg:px-6 py-4 lg:py-6">
         {filteredSchools.length === 0 ? (
           <Card className="p-12 text-center">
             <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
-            <h3 className="font-bold text-lg mb-2">{isRTL ? 'لا توجد نتائج' : 'No results found'}</h3>
+            <h3 className="font-bold text-lg mb-2">{t.noResults}</h3>
             <p className="text-muted-foreground mb-4">
-              {isRTL ? 'جرب تغيير معايير البحث أو الفلاتر' : 'Try changing search criteria or filters'}
+              {t.tryChangingFilters}
             </p>
             <Button onClick={resetFilters}>
               <RefreshCw className="h-4 w-4 me-2" />
-              {isRTL ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+              {t.resetFilters}
             </Button>
           </Card>
         ) : (
-          <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6' : 'grid-cols-1'}`}>
+          <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {filteredSchools.map((school) => (
               <Card 
                 key={school.id}
-                className={`card-nassaq hover:shadow-lg transition-all cursor-pointer ${
+                className={`card-nassaq hover:shadow-lg transition-all cursor-pointer h-[280px] ${
                   selectedSchools.includes(school.id) ? 'ring-2 ring-brand-purple' : ''
                 }`}
                 data-testid={`school-card-${school.id}`}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-4 h-full flex flex-col">
                   {/* Card Header */}
-                  <div className="flex items-start gap-3 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
                     {/* Logo/Avatar */}
                     <div 
-                      className={`w-14 h-14 lg:w-16 lg:h-16 rounded-xl ${getLogoColor(school.id)} flex items-center justify-center flex-shrink-0 cursor-pointer`}
+                      className={`w-14 h-14 rounded-xl ${getLogoColor(school.id)} flex items-center justify-center flex-shrink-0 cursor-pointer relative`}
                       onClick={() => toggleSchoolSelection(school.id)}
                     >
                       {school.logo_url ? (
@@ -720,65 +965,10 @@ export default function TenantsManagement() {
                     
                     {/* School Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="font-cairo font-bold text-base lg:text-lg truncate">{school.name}</h3>
-                          <p className="text-xs text-muted-foreground font-mono">{school.code}</p>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-48">
-                            <DropdownMenuItem onClick={() => handleSchoolAction('view', school)}>
-                              <Eye className="h-4 w-4 me-2" />
-                              {isRTL ? 'فتح لوحة التحكم' : 'Open Dashboard'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSchoolAction('edit', school)}>
-                              <Edit className="h-4 w-4 me-2" />
-                              {isRTL ? 'تعديل البيانات' : 'Edit Data'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSchoolAction('users', school)}>
-                              <Users className="h-4 w-4 me-2" />
-                              {isRTL ? 'المستخدمون' : 'Users'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSchoolAction('reports', school)}>
-                              <BarChart3 className="h-4 w-4 me-2" />
-                              {isRTL ? 'التقارير' : 'Reports'}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleSchoolAction('toggleAI', school)}>
-                              <Brain className="h-4 w-4 me-2" />
-                              {school.ai_enabled 
-                                ? (isRTL ? 'إيقاف AI' : 'Disable AI')
-                                : (isRTL ? 'تفعيل AI' : 'Enable AI')
-                              }
-                            </DropdownMenuItem>
-                            {school.status === 'active' ? (
-                              <DropdownMenuItem onClick={() => handleSchoolAction('suspend', school)} className="text-red-600">
-                                <Pause className="h-4 w-4 me-2" />
-                                {isRTL ? 'تعليق' : 'Suspend'}
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem onClick={() => handleSchoolAction('activate', school)} className="text-green-600">
-                                <Play className="h-4 w-4 me-2" />
-                                {isRTL ? 'تفعيل' : 'Activate'}
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleSchoolAction('resendWelcome', school)}>
-                              <Mail className="h-4 w-4 me-2" />
-                              {isRTL ? 'إعادة إرسال الترحيب' : 'Resend Welcome'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSchoolAction('delete', school)} className="text-red-600">
-                              <Trash2 className="h-4 w-4 me-2" />
-                              {isRTL ? 'حذف' : 'Delete'}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <h3 className="font-cairo font-bold text-base truncate" title={school.name}>
+                        {school.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{school.code}</p>
                       
                       {/* Badges */}
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -787,9 +977,6 @@ export default function TenantsManagement() {
                         </Badge>
                         <Badge variant="outline" className="text-[10px]">
                           {isRTL ? SCHOOL_TYPES[school.type]?.label : SCHOOL_TYPES[school.type]?.label_en}
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px]">
-                          {isRTL ? EDUCATIONAL_STAGES[school.stage]?.label : EDUCATIONAL_STAGES[school.stage]?.label_en}
                         </Badge>
                         {school.ai_enabled && (
                           <Badge className="bg-purple-500 text-white text-[10px]">
@@ -802,23 +989,23 @@ export default function TenantsManagement() {
                   </div>
                   
                   {/* Stats Row */}
-                  <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-muted/30 rounded-xl">
+                  <div className="grid grid-cols-3 gap-2 mb-3 p-2 bg-muted/30 rounded-xl">
                     <div className="text-center">
                       <p className="text-lg font-bold text-brand-navy">{school.students_count}</p>
-                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'طالب' : 'Students'}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.students}</p>
                     </div>
                     <div className="text-center border-x border-border">
                       <p className="text-lg font-bold text-brand-turquoise">{school.teachers_count}</p>
-                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'معلم' : 'Teachers'}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.teachers}</p>
                     </div>
                     <div className="text-center">
                       <p className={`text-lg font-bold ${getHealthColor(school.health_score)}`}>{school.health_score}%</p>
-                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'الصحة' : 'Health'}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.health}</p>
                     </div>
                   </div>
                   
                   {/* Details */}
-                  <div className="space-y-2 text-sm mb-4">
+                  <div className="space-y-1 text-sm mb-3 flex-1">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{school.city}</span>
@@ -827,20 +1014,49 @@ export default function TenantsManagement() {
                       <Users className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{school.principal_name}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Activity className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-xs">{isRTL ? 'آخر نشاط:' : 'Last:'} {school.last_activity}</span>
-                    </div>
                   </div>
                   
-                  {/* Action Button */}
-                  <Button 
-                    className="w-full bg-brand-navy hover:bg-brand-navy/90 rounded-xl"
-                    onClick={() => handleSchoolAction('view', school)}
-                  >
-                    <Eye className="h-4 w-4 me-2" />
-                    {isRTL ? 'فتح لوحة التحكم' : 'Open Dashboard'}
-                  </Button>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 mt-auto">
+                    <Button 
+                      className="flex-1 bg-brand-navy hover:bg-brand-navy/90 rounded-xl"
+                      onClick={() => handleSchoolAction('view', school)}
+                      data-testid={`open-dashboard-${school.id}`}
+                    >
+                      <Eye className="h-4 w-4 me-2" />
+                      {t.openDashboard}
+                    </Button>
+                    
+                    {/* Suspend Toggle */}
+                    <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 rounded-xl">
+                      <Switch
+                        checked={school.status !== 'suspended'}
+                        onCheckedChange={(checked) => {
+                          if (!checked) {
+                            setShowSuspendDialog(school);
+                          } else {
+                            handleToggleSuspend(school, false);
+                          }
+                        }}
+                        className="data-[state=checked]:bg-green-500"
+                        data-testid={`suspend-toggle-${school.id}`}
+                      />
+                      <span className="text-[10px] text-muted-foreground">{t.suspend}</span>
+                    </div>
+                    
+                    {/* AI Toggle */}
+                    <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 rounded-xl">
+                      <Switch
+                        checked={school.ai_enabled}
+                        onCheckedChange={(checked) => {
+                          handleToggleAI(school, checked);
+                        }}
+                        className="data-[state=checked]:bg-purple-500"
+                        data-testid={`ai-toggle-${school.id}`}
+                      />
+                      <span className="text-[10px] text-muted-foreground">AI</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -852,34 +1068,35 @@ export default function TenantsManagement() {
       <Sheet open={showFilters} onOpenChange={setShowFilters}>
         <SheetContent side={isRTL ? 'right' : 'left'} className="w-[85vw] sm:w-[400px]">
           <SheetHeader>
-            <SheetTitle className="font-cairo">{isRTL ? 'الفلاتر' : 'Filters'}</SheetTitle>
+            <SheetTitle className="font-cairo">{t.filters}</SheetTitle>
           </SheetHeader>
           <div className="space-y-6 mt-6">
             {/* Status Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{isRTL ? 'الحالة' : 'Status'}</label>
-              <Select value={filters.status} onValueChange={(v) => setFilters({ ...filters, status: v })}>
+              <label className="text-sm font-medium">{t.status}</label>
+              <Select value={filters.status} onValueChange={(v) => { setFilters({ ...filters, status: v }); setActiveStatusFilter(null); }}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</SelectItem>
-                  <SelectItem value="active">{isRTL ? 'نشطة' : 'Active'}</SelectItem>
-                  <SelectItem value="suspended">{isRTL ? 'موقوفة' : 'Suspended'}</SelectItem>
-                  <SelectItem value="setup">{isRTL ? 'قيد الإعداد' : 'Setup'}</SelectItem>
+                  <SelectItem value="all">{t.allStatus}</SelectItem>
+                  <SelectItem value="active">{t.active}</SelectItem>
+                  <SelectItem value="suspended">{t.suspended}</SelectItem>
+                  <SelectItem value="setup">{t.setup}</SelectItem>
+                  <SelectItem value="expired">{t.expired}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {/* City Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{isRTL ? 'المدينة' : 'City'}</label>
+              <label className="text-sm font-medium">{t.city}</label>
               <Select value={filters.city} onValueChange={(v) => setFilters({ ...filters, city: v })}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع المدن' : 'All Cities'}</SelectItem>
+                  <SelectItem value="all">{t.allCities}</SelectItem>
                   {cities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -889,28 +1106,28 @@ export default function TenantsManagement() {
             
             {/* Type Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{isRTL ? 'نوع المدرسة' : 'School Type'}</label>
+              <label className="text-sm font-medium">{t.schoolType}</label>
               <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                  <SelectItem value="public">{isRTL ? 'حكومية' : 'Public'}</SelectItem>
-                  <SelectItem value="private">{isRTL ? 'أهلية' : 'Private'}</SelectItem>
+                  <SelectItem value="all">{t.all}</SelectItem>
+                  <SelectItem value="public">{t.public}</SelectItem>
+                  <SelectItem value="private">{t.private}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {/* Stage Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{isRTL ? 'المرحلة' : 'Stage'}</label>
+              <label className="text-sm font-medium">{t.stage}</label>
               <Select value={filters.stage} onValueChange={(v) => setFilters({ ...filters, stage: v })}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع المراحل' : 'All Stages'}</SelectItem>
+                  <SelectItem value="all">{t.allStages}</SelectItem>
                   {Object.entries(EDUCATIONAL_STAGES).map(([key, value]) => (
                     <SelectItem key={key} value={key}>{isRTL ? value.label : value.label_en}</SelectItem>
                   ))}
@@ -920,15 +1137,15 @@ export default function TenantsManagement() {
             
             {/* AI Status Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{isRTL ? 'حالة الذكاء الاصطناعي' : 'AI Status'}</label>
+              <label className="text-sm font-medium">{t.aiStatus}</label>
               <Select value={filters.aiStatus} onValueChange={(v) => setFilters({ ...filters, aiStatus: v })}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                  <SelectItem value="enabled">{isRTL ? 'مفعّل' : 'Enabled'}</SelectItem>
-                  <SelectItem value="disabled">{isRTL ? 'غير مفعّل' : 'Disabled'}</SelectItem>
+                  <SelectItem value="all">{t.all}</SelectItem>
+                  <SelectItem value="enabled">{t.enabled}</SelectItem>
+                  <SelectItem value="disabled">{t.disabled}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -936,23 +1153,49 @@ export default function TenantsManagement() {
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button variant="outline" onClick={resetFilters} className="flex-1 rounded-xl">
-                {isRTL ? 'إعادة ضبط' : 'Reset'}
+                {t.reset}
               </Button>
               <Button onClick={() => setShowFilters(false)} className="flex-1 bg-brand-navy rounded-xl">
-                {isRTL ? 'تطبيق' : 'Apply'}
+                {t.apply}
               </Button>
             </div>
           </div>
         </SheetContent>
       </Sheet>
       
+      {/* Suspend Confirmation Dialog */}
+      <Dialog open={!!showSuspendDialog} onOpenChange={() => setShowSuspendDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-yellow-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t.suspendSchool}
+            </DialogTitle>
+            <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+              {t.suspendConfirm}
+              <br />
+              <strong>{showSuspendDialog?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row-reverse gap-2">
+            <Button variant="outline" onClick={() => setShowSuspendDialog(null)}>{t.cancel}</Button>
+            <Button 
+              variant="destructive"
+              onClick={() => handleToggleSuspend(showSuspendDialog, true)}
+            >
+              <Pause className="h-4 w-4 me-2" />
+              {t.suspend}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* Create School Wizard */}
       <CreateSchoolWizard
         open={showCreateWizard}
         onOpenChange={setShowCreateWizard}
         onSuccess={(newSchool) => {
-          toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح!' : 'School created successfully!');
-          // Refresh schools list
+          toast.success(t.createdSuccessfully);
         }}
         api={api}
         isRTL={isRTL}
