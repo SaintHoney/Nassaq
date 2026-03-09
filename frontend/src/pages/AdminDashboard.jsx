@@ -42,6 +42,7 @@ import {
   UserPlus,
   FolderPlus,
   ClipboardList,
+  BookOpen,
 } from 'lucide-react';
 import {
   DropdownMenu,
