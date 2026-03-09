@@ -7,6 +7,7 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - **Platform Admin (مدير المنصة)**: Full system control, manages all schools and users
 - **School Principal (مدير المدرسة)**: Manages their school's operations
 - **Teacher (معلم)**: Manages classes, students, attendance, grades
+- **Independent Teacher (معلم مستقل)**: Uses platform tools without school affiliation
 - **Student (طالب)**: Views grades, assignments, schedule
 - **Parent (ولي الأمر)**: Monitors child's progress
 
@@ -45,54 +46,83 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
   - Simplified activity chart for mobile
   - Mobile-optimized sidebar with toggle
 
-### ✅ Phase 4: Tenants Management Page (Completed - March 2026)
-- **صفحة إدارة المدارس (Updated)**:
+### ✅ Phase 4: Tenants Management Page (Completed & Fixed - March 2026)
+- **صفحة إدارة المدارس (Updated with RTL Fix)**:
+  - **RTL Layout Fixed**: Add School button on RIGHT side
   - **Combined Statistics Card**: All school statuses in one card (نشطة, إعداد, موقوفة, منتهية)
-  - **Total Students & Teachers Cards**: New stats cards
-  - **6-Column Grid Layout**: Premium card layout (xl:grid-cols-6)
+  - **Stats Cards Reordered**: Teachers → Students → Schools (RTL order)
+  - **6-Column Grid Layout**: Premium card layout (2xl:grid-cols-6)
   - **Larger Add School Button**: px-6 py-6 text-lg shadow-lg styling
   - Global search (name, code, phone, principal)
   - Advanced filters (status, city, stage, type)
   - Grid/Table view toggle
   - Bulk actions support
 
-### ✅ Phase 5: User Creation Wizard with RBAC (Updated - March 2026)
+### ✅ Phase 5: User Creation Wizard with RBAC (Completed - March 2026)
 - **معالج إنشاء حساب مستخدم (Connected to Real API)**:
   - **Backend API**: `/api/users/create` endpoint working
   - **Step 1 - Role Selection**: 7 roles available
-  - **Step 2 - User Data (Teacher)**: Updated fields:
-    - الاسم الكامل * (Full Name)
-    - البريد الإلكتروني * (Email)
-    - رقم الهاتف (Phone)
-    - **المنطقة *** (Region - 13 Saudi regions)
-    - **المدينة *** (City - dynamic based on region)
-    - **الإدارة التعليمية** (Educational Department)
-    - **اسم المدرسة (عربي)** (School Name Arabic)
-    - **اسم المدرسة (English)** (School Name English)
-  - **Removed Fields**: القسم, حالة الحساب, ملاحظات إدارية
+  - **Step 2 - User Data (Teacher)**: Region, City, Educational Department, School Names
   - **Step 3 - Permissions**: 11 teacher permissions
   - **Step 4 - Password**: Auto-generated secure temporary password
   - **Step 5 - Success**: Copy credentials and welcome message
-  - **Fixed Button Visibility**: التالي/السابق buttons now fully visible
+
+### ✅ Phase 6: Users Management Page (Completed - March 2026)
+- **صفحة إدارة المستخدمين الشاملة (NEW)**:
+  - **6 Statistics Cards**:
+    - إجمالي المستخدمين (Total Users)
+    - إجمالي المدارس (Total Schools)
+    - معلمين داخل المدارس (Teachers in Schools)
+    - معلمين مستقلين (Independent Teachers)
+    - حسابات المنصة (Platform Accounts)
+    - طلبات معلقة (Pending Requests)
+  - **User Cards with Visible Action Buttons**:
+    - عرض (View) - Opens user details dialog
+    - تعليق (Suspend) - Toggles account status
+    - تعديل (Edit) - Opens edit form
+    - حذف (Delete) - Soft delete (archive)
+    - إشعار (Notify) - Send notification
+  - **Integrated Teacher Requests Tab**:
+    - Shows pending teacher account requests
+    - Request details: name, ID, phone, email, subject, education level, school
+    - Actions: موافقة (Approve), رفض (Reject), طلب معلومات (Request Info)
+    - Approval creates Teacher ID, QR Code, and temp credentials
+  - **Advanced Filters**: Account type, role, status, AI status
+  - **Search**: Name, email, phone, school
+  - **RTL Layout**: Full Arabic support
+
+### ✅ Phase 7: Force Password Change Flow (Completed - March 2026)
+- **تغيير كلمة المرور الإجباري**:
+  - Backend endpoint: `/api/auth/change-password`
+  - `must_change_password` flag in user model
+  - Password validation rules (8+ chars, uppercase, lowercase, number, special)
+  - Redirect to password change page on first login
 
 ---
 
 ## API Endpoints
 
-### User Management (NEW)
+### User Management
 - `POST /api/users/create` - Create platform user (admin, teacher)
-- `GET /api/users/platform-users` - List platform users
+- `GET /api/users/platform-users` - List platform users with filters
 - `DELETE /api/users/{user_id}` - Soft delete user
+- `PATCH /api/users/{user_id}/status` - Update user status
 
 ### Authentication
 - `POST /api/auth/login` - Login
 - `POST /api/auth/register` - Register
 - `GET /api/auth/me` - Get current user
+- `POST /api/auth/change-password` - Change password
 
 ### Schools
 - `POST /api/schools/` - Create school with principal
 - `GET /api/schools/` - List schools
 - `GET /api/schools/{id}` - Get school details
+
+### Registration Requests
+- `POST /api/registration-requests` - Create registration request
+- `GET /api/registration-requests` - List requests (admin)
+- `PUT /api/registration-requests/{id}/status` - Update request status
 
 ---
 
@@ -117,13 +147,14 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ### P0 - Critical (COMPLETED ✅)
 - [x] Mobile-First Responsive Design
-- [x] Tenants Management Page (Updated Layout)
+- [x] Tenants Management Page (RTL Fixed)
 - [x] User Creation Wizard with RBAC
-- [x] **Connect User Creation to Backend API**
+- [x] Connect User Creation to Backend API
+- [x] **Users Management Page (Complete)**
+- [x] **Teacher Requests Integration**
 
 ### P1 - High Priority
-- [ ] **First-time login password change flow**
-- [ ] User Management Page (list, edit, delete users)
+- [x] First-time login password change flow
 - [ ] Teacher Dashboard enhancements
 - [ ] School Principal Dashboard
 
@@ -142,8 +173,8 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ---
 
 ## Test Reports
-- `/app/test_reports/iteration_20.json` - Mobile design tests
-- `/app/test_reports/iteration_21.json` - User creation API tests (11/11 passed)
+- `/app/test_reports/iteration_21.json` - User creation API tests
+- `/app/test_reports/iteration_22.json` - Users Management & RTL tests (14/14 passed)
 
 ## Test Credentials
 - **Platform Admin**: info@nassaqapp.com / NassaqAdmin2026!##$$HBJ
@@ -152,8 +183,18 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ---
 
 ## Last Updated: March 9, 2026
-- Updated User Creation Wizard with new teacher fields (region, city, educational_department, school_name)
-- Connected User Creation to real Backend API (no more mock)
-- Updated TenantsManagement page layout (6-column grid, combined stats card)
-- Fixed button visibility in wizard (التالي/السابق)
-- All tests passing (100% success rate)
+
+### Latest Changes:
+1. **Fixed RTL Layout on TenantsManagement**:
+   - Add School button now on RIGHT side (correct for RTL)
+   - Stats cards reordered: Teachers → Students → Schools
+   - Combined stats card with RTL-ordered statuses
+
+2. **Built Comprehensive UsersManagement Page**:
+   - 6 statistics cards showing all user metrics
+   - User cards with 5 visible action buttons
+   - Integrated Teacher Requests tab
+   - Advanced filtering and search
+   - Full RTL Arabic layout
+
+3. **All Tests Passing (100% success rate)**
