@@ -108,14 +108,8 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: MessageSquare,
-        label: isRTL ? 'مركز التواصل' : 'Communication',
+        label: isRTL ? 'التواصل والإشعارات' : 'Communication & Notifications',
         href: '/admin/communication',
-        roles: ['platform_admin'],
-      },
-      {
-        icon: Bell,
-        label: isRTL ? 'الإشعارات' : 'Notifications',
-        href: '/notifications',
         roles: ['platform_admin'],
       },
       {
