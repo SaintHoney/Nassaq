@@ -822,47 +822,49 @@ export const AdminDashboard = () => {
         <div className="p-6 space-y-6">
           
           {/* ============================================ */}
-          {/* 1. التاريخ واسم المستخدم - أول شيء في الصفحة */}
+          {/* 1. كارت الترحيب - Welcome Card (بنفس عرض الكروت) */}
           {/* ============================================ */}
-          <div className="flex justify-center" data-testid="date-display">
-            <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20">
-              <CardContent className="py-3 px-6">
-                <div className="flex items-center gap-6">
-                  {/* اسم المستخدم */}
-                  <div className="flex items-center gap-3 pe-6 border-e border-border" data-testid="user-display">
-                    <div className="w-10 h-10 rounded-full bg-brand-navy flex items-center justify-center">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'مرحباً' : 'Welcome'}</p>
-                      <p className="font-bold text-brand-navy">{user?.full_name || (isRTL ? 'مدير المنصة' : 'Platform Admin')}</p>
-                    </div>
+          <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20" data-testid="welcome-card">
+            <CardContent className="py-5 px-6">
+              <div className="flex items-center justify-between">
+                {/* القسم الأيسر: الترحيب والعنوان */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-navy to-brand-turquoise flex items-center justify-center shadow-lg">
+                    <User className="h-7 w-7 text-white" />
                   </div>
-                  
-                  {/* التاريخ الهجري/الميلادي */}
-                  <div className="flex items-center gap-4">
-                    <Calendar className="h-6 w-6 text-brand-navy" />
-                    <div className="text-center">
-                      <p className="font-cairo text-2xl font-bold text-brand-navy">
-                        {getCurrentHijriDate().hijri}
-                      </p>
-                      <p className="text-sm text-muted-foreground font-mono">
-                        ({getCurrentHijriDate().gregorian})
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="h-10 w-px bg-border" />
-                  
-                  {/* الفصل الدراسي */}
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground">{isRTL ? 'الفصل الدراسي' : 'Semester'}</p>
-                    <p className="font-bold text-brand-turquoise">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
+                  <div>
+                    <h1 className="font-cairo text-xl font-bold text-brand-navy" data-testid="user-display">
+                      {isRTL ? `مرحباً ${user?.full_name || 'أستاذ أحمد'}` : `Welcome ${user?.full_name || 'Admin'}`}
+                    </h1>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {isRTL ? 'مركز القيادة' : 'Command Center'}
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                
+                {/* القسم الأوسط: الفصل الدراسي */}
+                <div className="flex items-center gap-6">
+                  <div className="text-center px-6 py-2 bg-brand-turquoise/10 rounded-xl border border-brand-turquoise/20">
+                    <p className="text-xs text-muted-foreground font-medium">{isRTL ? 'الفصل الدراسي' : 'Semester'}</p>
+                    <p className="font-cairo font-bold text-brand-turquoise text-lg">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
+                  </div>
+                </div>
+                
+                {/* القسم الأيمن: التاريخ */}
+                <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl" data-testid="date-display">
+                  <Calendar className="h-5 w-5 text-brand-navy" />
+                  <div className="text-end">
+                    <p className="font-cairo text-lg font-bold text-brand-navy">
+                      {getCurrentHijriDate().hijri}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {getCurrentHijriDate().gregorian}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* ============================================ */}
           {/* 2. قسم المؤشرات العامة للمنصة */}
@@ -876,28 +878,118 @@ export const AdminDashboard = () => {
             </div>
 
             {/* ============================================ */}
-            {/* شريط التحكم العلوي - Global Filters Bar */}
+            {/* شريط التحكم العلوي - Global Filters Bar (متسلسل) */}
             {/* ============================================ */}
             <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20" data-testid="global-filters-bar">
               <CardContent className="p-4">
                 
-                {/* الصف الأول: نطاق البيانات والفلاتر الإضافية */}
+                {/* الصف الأول: الفلاتر المتسلسلة (المنطقة -> المدينة -> النوع -> المدرسة) */}
                 <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-border/50">
                   
-                  {/* A. نطاق البيانات - Scope */}
+                  {/* 1. المنطقة - Region (أولاً) */}
                   <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-2 rounded-xl border border-brand-navy/10">
-                    <Filter className="h-4 w-4 text-brand-navy" />
-                    <span className="text-xs font-bold text-brand-navy">{isRTL ? 'النطاق' : 'Scope'}</span>
+                    <MapPin className="h-4 w-4 text-brand-navy" />
+                    <span className="text-xs font-bold text-brand-navy">{isRTL ? 'المنطقة' : 'Region'}</span>
+                    <Select 
+                      value={filters.region || 'all_regions'} 
+                      onValueChange={(v) => setFilters({ 
+                        ...filters, 
+                        region: v === 'all_regions' ? '' : v,
+                        city: '', // إعادة تعيين المدينة عند تغيير المنطقة
+                        selectedSchool: '',
+                        selectedSchools: []
+                      })}
+                    >
+                      <SelectTrigger className="w-40 rounded-lg h-8 text-sm border-brand-navy/20 bg-background" data-testid="region-filter">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_regions">{isRTL ? 'كل المناطق' : 'All Regions'}</SelectItem>
+                        {REGIONS.map((region) => (
+                          <SelectItem key={region.value} value={region.value}>
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-brand-turquoise" />
+                              {isRTL ? region.label : region.label_en}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 2. المدينة - City (تعتمد على المنطقة) */}
+                  <div className="flex items-center gap-2 bg-brand-turquoise/5 px-3 py-2 rounded-xl border border-brand-turquoise/10">
+                    <Building2 className="h-4 w-4 text-brand-turquoise" />
+                    <span className="text-xs font-bold text-brand-turquoise">{isRTL ? 'المدينة' : 'City'}</span>
+                    <Select 
+                      value={filters.city || 'all_cities'} 
+                      onValueChange={(v) => setFilters({ 
+                        ...filters, 
+                        city: v === 'all_cities' ? '' : v,
+                        selectedSchool: '',
+                        selectedSchools: []
+                      })}
+                    >
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-turquoise/20 bg-background" data-testid="city-filter">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
+                        {(filters.region 
+                          ? REGIONS.find(r => r.value === filters.region)?.cities || SAUDI_CITIES
+                          : SAUDI_CITIES
+                        ).map((city) => (
+                          <SelectItem key={city} value={city}>{city}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 3. نوع المدرسة - School Type */}
+                  <div className="flex items-center gap-2 bg-brand-purple/5 px-3 py-2 rounded-xl border border-brand-purple/10">
+                    <GraduationCap className="h-4 w-4 text-brand-purple" />
+                    <span className="text-xs font-bold text-brand-purple">{isRTL ? 'النوع' : 'Type'}</span>
+                    <Select 
+                      value={filters.schoolType || 'all_types'} 
+                      onValueChange={(v) => setFilters({ 
+                        ...filters, 
+                        schoolType: v === 'all_types' ? '' : v,
+                        selectedSchool: '',
+                        selectedSchools: []
+                      })}
+                    >
+                      <SelectTrigger className="w-32 rounded-lg h-8 text-sm border-brand-purple/20 bg-background" data-testid="type-filter">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_types">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
+                        {SCHOOL_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {isRTL ? type.label : type.label_en}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 4. اختيار مدرسة محددة (اختياري) */}
+                  <div className="flex items-center gap-2 bg-orange-500/5 px-3 py-2 rounded-xl border border-orange-500/10">
+                    <Filter className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs font-bold text-orange-600">{isRTL ? 'المدرسة' : 'School'}</span>
                     <Select 
                       value={filters.scope} 
                       onValueChange={(v) => setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] })}
                     >
-                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-navy/20 bg-background" data-testid="scope-select">
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-orange-500/20 bg-background" data-testid="scope-select">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">{isRTL ? 'كل المنصة' : 'All Tenants'}</SelectItem>
+                        <SelectItem value="all">{isRTL ? 'كل المدارس' : 'All Schools'}</SelectItem>
                         <SelectItem value="single">{isRTL ? 'مدرسة محددة' : 'Single School'}</SelectItem>
+                        <SelectItem value="multi">{isRTL ? 'مجموعة مدارس' : 'Multi-Select'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                         <SelectItem value="multi">{isRTL ? 'مجموعة مدارس' : 'Multi-Select'}</SelectItem>
                       </SelectContent>
                     </Select>
