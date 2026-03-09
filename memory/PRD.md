@@ -272,6 +272,9 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - [x] System Monitoring Dashboard - Real-time metrics, charts, jobs, integrations, AI status
 
 ### P2 - Medium Priority (NEXT)
+- [ ] Connect PlatformAnalyticsPage to real database data
+- [ ] Connect SystemMonitoringPage to real system metrics
+- [ ] Connect RulesManagementPage to backend
 - [ ] Teacher Dashboard enhancements
 - [ ] School Principal Dashboard
 - [ ] Parent Dashboard
@@ -283,7 +286,7 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - [ ] PDF Reports generation
 - [ ] Data import/export
 - [ ] Audit logs UI
-- [ ] System monitoring dashboard
+- [ ] Force Password Change backend logic
 
 ---
 
