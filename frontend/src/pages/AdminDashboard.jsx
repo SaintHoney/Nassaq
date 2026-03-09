@@ -31,6 +31,7 @@ import {
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line,
 } from 'recharts';
+import { jsPDF } from 'jspdf';
 
 // Hakim Avatar
 const HAKIM_AVATAR = 'https://customer-assets.emergentagent.com/job_nassaq-school/artifacts/mtvfci3y_HAKIM%201.png';
