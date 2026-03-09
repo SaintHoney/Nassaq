@@ -682,7 +682,7 @@ export const PlatformAnalyticsPage = () => {
                               <span className="text-sm font-medium">{item.name}</span>
                               <span className="text-sm font-bold">{item.value}%</span>
                             </div>
-                            <Progress value={item.value} className="h-3" style={{ '--progress-color': item.color } as any} />
+                            <Progress value={item.value} className="h-3" />
                           </div>
                         ))}
                       </div>
