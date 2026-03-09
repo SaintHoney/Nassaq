@@ -117,6 +117,8 @@ export default function UsersManagement() {
   const [showSendNotification, setShowSendNotification] = useState(null);
   const [showApproveRequest, setShowApproveRequest] = useState(null);
   const [showRejectRequest, setShowRejectRequest] = useState(null);
+  const [showMoreInfoRequest, setShowMoreInfoRequest] = useState(null);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(null);
   
   // Selection
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -130,6 +132,9 @@ export default function UsersManagement() {
   
   // Rejection form
   const [rejectionReason, setRejectionReason] = useState('');
+  
+  // More info request form
+  const [moreInfoMessage, setMoreInfoMessage] = useState('');
   
   // API instance with interceptor
   const api = useMemo(() => {
