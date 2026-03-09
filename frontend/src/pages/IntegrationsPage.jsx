@@ -38,6 +38,14 @@ import {
   SheetDescription,
 } from '../components/ui/sheet';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
   Link2,
   Plus,
   Settings,
@@ -52,8 +60,6 @@ import {
   Power,
   PowerOff,
   FileText,
-  Upload,
-  Download,
   Key,
   Globe,
   Server,
@@ -66,7 +72,6 @@ import {
   Shield,
   Building2,
   Webhook,
-  FileJson,
   Activity,
   Search,
   Filter,
@@ -76,21 +81,16 @@ import {
   Check,
   Zap,
   PlugZap,
-  Unplug,
-  ArrowUpDown,
   History,
-  Play,
-  Pause,
-  RotateCcw,
   Loader2,
   Smartphone,
   Share2,
   Lock,
-  Unlock,
-  FileCode,
   Terminal,
   Hash,
-  LinkIcon,
+  LayoutGrid,
+  List,
+  X,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -126,26 +126,14 @@ const translations = {
     enable: 'تفعيل',
     disable: 'تعطيل',
     viewLogs: 'عرض السجلات',
-    setupIntegration: 'إعداد التكامل',
-    viewDetails: 'عرض التفاصيل',
-    integrationName: 'اسم التكامل',
-    integrationType: 'نوع التكامل',
-    description: 'الوصف',
-    apiUrl: 'رابط API',
-    apiKey: 'مفتاح API',
-    secretKey: 'المفتاح السري',
-    webhookUrl: 'رابط Webhook',
-    save: 'حفظ',
-    cancel: 'إلغاء',
-    noIntegrations: 'لا توجد تكاملات',
-    connectionSuccess: 'تم الاتصال بنجاح',
-    connectionFailed: 'فشل الاتصال',
-    syncSuccess: 'تمت المزامنة بنجاح',
+    setupIntegration: 'إعداد',
+    viewDetails: 'التفاصيل',
     totalIntegrations: 'إجمالي التكاملات',
     activeIntegrations: 'تكاملات نشطة',
     pendingIntegrations: 'قيد الإعداد',
     errorIntegrations: 'بها أخطاء',
-    search: 'بحث...',
+    search: 'بحث عن تكامل...',
+    searchPlaceholder: 'ابحث بالاسم، النوع، أو الحالة...',
     logs: 'السجلات',
     settings: 'الإعدادات',
     endpoints: 'نقاط الاتصال',
@@ -166,6 +154,17 @@ const translations = {
     readOnly: 'قراءة فقط',
     readWrite: 'قراءة وكتابة',
     fullAccess: 'وصول كامل',
+    cardView: 'عرض الكروت',
+    tableView: 'عرض الجدول',
+    filterByCategory: 'تصفية حسب الفئة',
+    filterByStatus: 'تصفية حسب الحالة',
+    clearFilters: 'مسح الفلاتر',
+    noResults: 'لا توجد نتائج',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    apiKey: 'مفتاح API',
+    secretKey: 'المفتاح السري',
+    webhookUrl: 'رابط Webhook',
   },
   en: {
     pageTitle: 'Integrations',
@@ -188,33 +187,21 @@ const translations = {
     error: 'Error',
     notConfigured: 'Not Configured',
     lastSync: 'Last Sync',
-    testConnection: 'Test Connection',
+    testConnection: 'Test',
     sync: 'Sync',
     edit: 'Edit',
     delete: 'Delete',
     enable: 'Enable',
     disable: 'Disable',
-    viewLogs: 'View Logs',
+    viewLogs: 'Logs',
     setupIntegration: 'Setup',
-    viewDetails: 'View Details',
-    integrationName: 'Integration Name',
-    integrationType: 'Integration Type',
-    description: 'Description',
-    apiUrl: 'API URL',
-    apiKey: 'API Key',
-    secretKey: 'Secret Key',
-    webhookUrl: 'Webhook URL',
-    save: 'Save',
-    cancel: 'Cancel',
-    noIntegrations: 'No integrations',
-    connectionSuccess: 'Connection successful',
-    connectionFailed: 'Connection failed',
-    syncSuccess: 'Sync completed',
+    viewDetails: 'Details',
     totalIntegrations: 'Total Integrations',
     activeIntegrations: 'Active',
     pendingIntegrations: 'Pending',
     errorIntegrations: 'With Errors',
-    search: 'Search...',
+    search: 'Search integration...',
+    searchPlaceholder: 'Search by name, type, or status...',
     logs: 'Logs',
     settings: 'Settings',
     endpoints: 'Endpoints',
@@ -235,11 +222,23 @@ const translations = {
     readOnly: 'Read Only',
     readWrite: 'Read/Write',
     fullAccess: 'Full Access',
+    cardView: 'Card View',
+    tableView: 'Table View',
+    filterByCategory: 'Filter by Category',
+    filterByStatus: 'Filter by Status',
+    clearFilters: 'Clear Filters',
+    noResults: 'No results',
+    save: 'Save',
+    cancel: 'Cancel',
+    apiKey: 'API Key',
+    secretKey: 'Secret Key',
+    webhookUrl: 'Webhook URL',
   }
 };
 
-// Integration types with icons and colors
-const INTEGRATION_TYPES = [
+// Integration categories
+const INTEGRATION_CATEGORIES = [
+  { id: 'all', icon: Link2, color: 'from-gray-500 to-gray-600', label_ar: 'الكل', label_en: 'All' },
   { id: 'government', icon: Building2, color: 'from-blue-500 to-blue-600', label_ar: 'حكومية', label_en: 'Government' },
   { id: 'payment', icon: CreditCard, color: 'from-green-500 to-green-600', label_ar: 'مدفوعات', label_en: 'Payment' },
   { id: 'messaging', icon: Smartphone, color: 'from-emerald-500 to-emerald-600', label_ar: 'المراسلة', label_en: 'Messaging' },
@@ -247,7 +246,7 @@ const INTEGRATION_TYPES = [
   { id: 'email', icon: Mail, color: 'from-orange-500 to-orange-600', label_ar: 'بريد إلكتروني', label_en: 'Email' },
   { id: 'storage', icon: Cloud, color: 'from-cyan-500 to-cyan-600', label_ar: 'تخزين', label_en: 'Storage' },
   { id: 'ai', icon: Brain, color: 'from-pink-500 to-pink-600', label_ar: 'ذكاء اصطناعي', label_en: 'AI' },
-  { id: 'other', icon: PlugZap, color: 'from-gray-500 to-gray-600', label_ar: 'أخرى', label_en: 'Other' },
+  { id: 'other', icon: PlugZap, color: 'from-slate-500 to-slate-600', label_ar: 'أخرى', label_en: 'Other' },
 ];
 
 // Premium Integration Cards Data
@@ -257,14 +256,15 @@ const PREMIUM_INTEGRATIONS = [
     name: 'نظام نور',
     name_en: 'Noor System',
     type: 'government',
-    description: 'الربط مع نظام نور التعليمي لمزامنة بيانات الطلاب والمعلمين',
-    description_en: 'Integration with Noor educational system for student and teacher data sync',
+    description: 'الربط مع نظام نور التعليمي لمزامنة بيانات الطلاب والمعلمين والدرجات',
+    description_en: 'Integration with Noor educational system for student, teacher and grades sync',
     logo: '🏛️',
     status: 'active',
     is_active: true,
     last_sync: '2026-03-09T10:30:00Z',
     api_base_url: 'https://noor.moe.gov.sa/api',
     features: ['مزامنة الطلاب', 'مزامنة المعلمين', 'الدرجات', 'الحضور'],
+    features_en: ['Students Sync', 'Teachers Sync', 'Grades', 'Attendance'],
   },
   {
     id: 'whatsapp',
@@ -279,20 +279,22 @@ const PREMIUM_INTEGRATIONS = [
     last_sync: null,
     api_base_url: 'https://api.whatsapp.com/v1',
     features: ['إشعارات', 'تقارير', 'تذكيرات', 'دعم'],
+    features_en: ['Notifications', 'Reports', 'Reminders', 'Support'],
   },
   {
     id: 'stripe',
     name: 'بوابة الدفع',
     name_en: 'Payment Gateway',
     type: 'payment',
-    description: 'معالجة المدفوعات والرسوم الدراسية إلكترونياً',
-    description_en: 'Process payments and tuition fees electronically',
+    description: 'معالجة المدفوعات والرسوم الدراسية إلكترونياً بأمان',
+    description_en: 'Process payments and tuition fees electronically and securely',
     logo: '💳',
     status: 'active',
     is_active: true,
     last_sync: '2026-03-09T08:00:00Z',
     api_base_url: 'https://api.stripe.com/v1',
     features: ['الرسوم', 'الفواتير', 'الاشتراكات', 'التقارير المالية'],
+    features_en: ['Fees', 'Invoices', 'Subscriptions', 'Financial Reports'],
   },
   {
     id: 'sms',
@@ -307,6 +309,7 @@ const PREMIUM_INTEGRATIONS = [
     last_sync: '2026-03-09T09:15:00Z',
     api_base_url: 'https://api.unifonic.com/rest',
     features: ['إشعارات', 'تذكيرات', 'OTP', 'حملات'],
+    features_en: ['Notifications', 'Reminders', 'OTP', 'Campaigns'],
   },
   {
     id: 'openai',
@@ -314,27 +317,29 @@ const PREMIUM_INTEGRATIONS = [
     name_en: 'AI Integration',
     type: 'ai',
     description: 'تكامل مع OpenAI و Google AI لتحليل البيانات والمساعد الذكي',
-    description_en: 'Integration with OpenAI and Google AI for data analysis',
+    description_en: 'Integration with OpenAI and Google AI for data analysis and smart assistant',
     logo: '🤖',
     status: 'active',
     is_active: true,
     last_sync: '2026-03-09T10:00:00Z',
     api_base_url: 'https://api.openai.com/v1',
     features: ['تحليل البيانات', 'التقارير الذكية', 'المساعد الافتراضي', 'التوصيات'],
+    features_en: ['Data Analysis', 'Smart Reports', 'Virtual Assistant', 'Recommendations'],
   },
   {
     id: 'sendgrid',
     name: 'SendGrid',
     name_en: 'SendGrid',
     type: 'email',
-    description: 'إرسال البريد الإلكتروني للإشعارات والتقارير',
-    description_en: 'Send email notifications and reports',
+    description: 'إرسال البريد الإلكتروني للإشعارات والتقارير والنشرات',
+    description_en: 'Send email notifications, reports and newsletters',
     logo: '📧',
     status: 'error',
     is_active: false,
     last_sync: '2026-03-08T22:00:00Z',
     api_base_url: 'https://api.sendgrid.com/v3',
     features: ['إشعارات', 'تقارير', 'نشرات', 'قوالب'],
+    features_en: ['Notifications', 'Reports', 'Newsletters', 'Templates'],
   },
   {
     id: 's3',
@@ -349,6 +354,7 @@ const PREMIUM_INTEGRATIONS = [
     last_sync: '2026-03-09T07:30:00Z',
     api_base_url: 'https://s3.amazonaws.com',
     features: ['الملفات', 'الصور', 'المستندات', 'النسخ الاحتياطي'],
+    features_en: ['Files', 'Images', 'Documents', 'Backup'],
   },
 ];
 
@@ -374,28 +380,26 @@ const NASSAQ_API_KEYS = [
     last_used: '2026-03-08T14:00:00Z',
     is_active: true,
   },
-  {
-    id: '3',
-    name: 'Read Only Key',
-    key: 'nsk_ro_xxxxxxxxxxxxxxxxxxxxxxxxx',
-    secret: 'nss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    permissions: 'read_only',
-    created_at: '2026-03-01T12:00:00Z',
-    last_used: null,
-    is_active: false,
-  },
 ];
 
 // NASSAQ API Endpoints
 const NASSAQ_ENDPOINTS = [
-  { path: '/api/students', method: 'GET', description: 'قائمة الطلاب' },
-  { path: '/api/students/{id}', method: 'GET', description: 'تفاصيل طالب' },
-  { path: '/api/teachers', method: 'GET', description: 'قائمة المعلمين' },
-  { path: '/api/schools', method: 'GET', description: 'قائمة المدارس' },
-  { path: '/api/attendance', method: 'POST', description: 'تسجيل الحضور' },
-  { path: '/api/grades', method: 'POST', description: 'إدخال الدرجات' },
-  { path: '/api/reports', method: 'GET', description: 'التقارير' },
-  { path: '/api/webhooks', method: 'POST', description: 'Webhooks' },
+  { path: '/api/students', method: 'GET', description_ar: 'قائمة الطلاب', description_en: 'List Students' },
+  { path: '/api/students/{id}', method: 'GET', description_ar: 'تفاصيل طالب', description_en: 'Student Details' },
+  { path: '/api/teachers', method: 'GET', description_ar: 'قائمة المعلمين', description_en: 'List Teachers' },
+  { path: '/api/schools', method: 'GET', description_ar: 'قائمة المدارس', description_en: 'List Schools' },
+  { path: '/api/attendance', method: 'POST', description_ar: 'تسجيل الحضور', description_en: 'Record Attendance' },
+  { path: '/api/grades', method: 'POST', description_ar: 'إدخال الدرجات', description_en: 'Submit Grades' },
+  { path: '/api/reports', method: 'GET', description_ar: 'التقارير', description_en: 'Reports' },
+  { path: '/api/webhooks', method: 'POST', description_ar: 'Webhooks', description_en: 'Webhooks' },
+];
+
+// Sample logs
+const SAMPLE_LOGS = [
+  { id: 1, action: 'sync', status: 'success', timestamp: '2026-03-09T10:30:00Z', details_ar: 'تمت مزامنة 150 سجل', details_en: '150 records synced' },
+  { id: 2, action: 'test', status: 'success', timestamp: '2026-03-09T10:00:00Z', details_ar: 'اتصال ناجح', details_en: 'Connection successful' },
+  { id: 3, action: 'sync', status: 'failed', timestamp: '2026-03-08T22:00:00Z', details_ar: 'خطأ في المصادقة', details_en: 'Authentication error' },
+  { id: 4, action: 'webhook', status: 'success', timestamp: '2026-03-08T18:30:00Z', details_ar: 'تم استلام حدث', details_en: 'Event received' },
 ];
 
 export default function IntegrationsPage() {
@@ -406,34 +410,20 @@ export default function IntegrationsPage() {
   // States
   const [integrations, setIntegrations] = useState(PREMIUM_INTEGRATIONS);
   const [apiKeys, setApiKeys] = useState(NASSAQ_API_KEYS);
-  const [loading, setLoading] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('integrations');
-  const [activeTypeTab, setActiveTypeTab] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('card'); // card or table
   const [selectedIntegration, setSelectedIntegration] = useState(null);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditSheet, setShowEditSheet] = useState(false);
-  const [showLogsSheet, setShowLogsSheet] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsSheet, setShowDetailsSheet] = useState(false);
+  const [showLogsSheet, setShowLogsSheet] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showNewKeyDialog, setShowNewKeyDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [testingConnection, setTestingConnection] = useState(null);
   const [syncing, setSyncing] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    name_en: '',
-    type: 'other',
-    description: '',
-    description_en: '',
-    api_base_url: '',
-    api_key: '',
-    secret_key: '',
-    webhook_url: '',
-  });
   
   // New key form
   const [newKeyForm, setNewKeyForm] = useState({
@@ -441,21 +431,15 @@ export default function IntegrationsPage() {
     permissions: 'read_only',
   });
   
-  // Sample logs
-  const [logs, setLogs] = useState([
-    { id: 1, action: 'sync', status: 'success', timestamp: '2026-03-09T10:30:00Z', details: 'تمت مزامنة 150 سجل' },
-    { id: 2, action: 'test', status: 'success', timestamp: '2026-03-09T10:00:00Z', details: 'اتصال ناجح' },
-    { id: 3, action: 'sync', status: 'failed', timestamp: '2026-03-08T22:00:00Z', details: 'خطأ في المصادقة' },
-    { id: 4, action: 'webhook', status: 'success', timestamp: '2026-03-08T18:30:00Z', details: 'تم استلام حدث' },
-  ]);
-  
-  // API instance
-  const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json',
-    },
+  // Add integration form
+  const [formData, setFormData] = useState({
+    name: '',
+    name_en: '',
+    type: 'other',
+    description: '',
+    api_base_url: '',
+    api_key: '',
+    secret_key: '',
   });
   
   // Format date
@@ -474,32 +458,32 @@ export default function IntegrationsPage() {
   const getStatusInfo = (status) => {
     switch (status) {
       case 'active':
-        return { label: isRTL ? 'نشط' : 'Active', color: 'bg-green-500', icon: CheckCircle2 };
+        return { label: t.active, color: 'bg-green-500', textColor: 'text-green-600', bgLight: 'bg-green-100', icon: CheckCircle2 };
       case 'inactive':
-        return { label: isRTL ? 'غير نشط' : 'Inactive', color: 'bg-gray-500', icon: PowerOff };
+        return { label: t.inactive, color: 'bg-gray-500', textColor: 'text-gray-600', bgLight: 'bg-gray-100', icon: PowerOff };
       case 'pending':
-        return { label: isRTL ? 'قيد الإعداد' : 'Pending', color: 'bg-yellow-500', icon: Clock };
+        return { label: t.pending, color: 'bg-yellow-500', textColor: 'text-yellow-600', bgLight: 'bg-yellow-100', icon: Clock };
       case 'error':
-        return { label: isRTL ? 'خطأ' : 'Error', color: 'bg-red-500', icon: XCircle };
-      case 'not_configured':
-        return { label: isRTL ? 'غير مهيأ' : 'Not Configured', color: 'bg-slate-500', icon: Settings };
+        return { label: t.error, color: 'bg-red-500', textColor: 'text-red-600', bgLight: 'bg-red-100', icon: XCircle };
       default:
-        return { label: status, color: 'bg-gray-500', icon: AlertTriangle };
+        return { label: status, color: 'bg-gray-500', textColor: 'text-gray-600', bgLight: 'bg-gray-100', icon: AlertTriangle };
     }
   };
   
-  // Get type info
-  const getTypeInfo = (type) => {
-    return INTEGRATION_TYPES.find(t => t.id === type) || INTEGRATION_TYPES[INTEGRATION_TYPES.length - 1];
+  // Get category info
+  const getCategoryInfo = (type) => {
+    return INTEGRATION_CATEGORIES.find(c => c.id === type) || INTEGRATION_CATEGORIES[INTEGRATION_CATEGORIES.length - 1];
   };
   
   // Filter integrations
   const filteredIntegrations = integrations.filter(integration => {
-    const matchesTab = activeTypeTab === 'all' || integration.type === activeTypeTab;
+    const matchesCategory = selectedCategory === 'all' || integration.type === selectedCategory;
+    const matchesStatus = selectedStatus === 'all' || integration.status === selectedStatus;
     const matchesSearch = !searchQuery || 
       integration.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (integration.name_en && integration.name_en.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesTab && matchesSearch;
+      integration.name_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      integration.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesStatus && matchesSearch;
   });
   
   // Stats
@@ -509,6 +493,9 @@ export default function IntegrationsPage() {
     pending: integrations.filter(i => i.status === 'pending').length,
     error: integrations.filter(i => i.status === 'error').length,
   };
+  
+  // Active filters count
+  const activeFiltersCount = (selectedCategory !== 'all' ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0);
   
   // Copy to clipboard
   const copyToClipboard = async (text, field) => {
@@ -552,9 +539,9 @@ ${baseUrl}/webhooks
     setTestingConnection(integration.id);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success(t.connectionSuccess);
+      toast.success(isRTL ? 'تم الاتصال بنجاح' : 'Connection successful');
     } catch (error) {
-      toast.error(t.connectionFailed);
+      toast.error(isRTL ? 'فشل الاتصال' : 'Connection failed');
     } finally {
       setTestingConnection(null);
     }
@@ -565,7 +552,7 @@ ${baseUrl}/webhooks
     setSyncing(integration.id);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(t.syncSuccess);
+      toast.success(isRTL ? 'تمت المزامنة بنجاح' : 'Sync completed');
       setIntegrations(prev => prev.map(i => 
         i.id === integration.id 
           ? { ...i, last_sync: new Date().toISOString() }
@@ -629,6 +616,13 @@ ${baseUrl}/webhooks
     setShowLogsSheet(true);
   };
   
+  // Clear filters
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setSelectedStatus('all');
+    setSearchQuery('');
+  };
+  
   return (
     <Sidebar>
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'} data-testid="integrations-page">
@@ -653,7 +647,7 @@ ${baseUrl}/webhooks
             </div>
             
             {/* Main Tabs */}
-            <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="mb-4">
+            <Tabs value={activeMainTab} onValueChange={setActiveMainTab}>
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="integrations" className="flex items-center gap-2">
                   <PlugZap className="h-4 w-4" />
@@ -672,243 +666,422 @@ ${baseUrl}/webhooks
         <main className="container mx-auto px-4 lg:px-6 py-6">
           {activeMainTab === 'integrations' ? (
             <>
-              {/* Stats Cards */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">{t.totalIntegrations}</p>
-                        <p className="text-3xl font-bold">{stats.total}</p>
+              {/* Category Filter Tabs - Moved to top */}
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  {INTEGRATION_CATEGORIES.map(category => {
+                    const CategoryIcon = category.icon;
+                    const count = category.id === 'all' 
+                      ? integrations.length 
+                      : integrations.filter(i => i.type === category.id).length;
+                    const isSelected = selectedCategory === category.id;
+                    
+                    return (
+                      <Button
+                        key={category.id}
+                        variant={isSelected ? 'default' : 'outline'}
+                        size="sm"
+                        className={`rounded-xl ${isSelected ? 'bg-brand-navy' : ''}`}
+                        onClick={() => setSelectedCategory(category.id)}
+                      >
+                        <CategoryIcon className="h-4 w-4 me-2" />
+                        {isRTL ? category.label_ar : category.label_en}
+                        <Badge variant="secondary" className="ms-2 bg-white/20">
+                          {count}
+                        </Badge>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Stats Cards - Below filters */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-lg ${selectedStatus === 'all' ? 'ring-2 ring-brand-navy' : ''}`}
+                  onClick={() => setSelectedStatus(selectedStatus === 'all' ? 'all' : 'all')}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <Link2 className="h-6 w-6 text-white" />
                       </div>
-                      <Link2 className="h-10 w-10 text-white/30" />
+                      <span className="text-3xl font-bold">{stats.total}</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">{t.totalIntegrations}</p>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">{t.activeIntegrations}</p>
-                        <p className="text-3xl font-bold">{stats.active}</p>
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-lg ${selectedStatus === 'active' ? 'ring-2 ring-green-500' : ''}`}
+                  onClick={() => setSelectedStatus(selectedStatus === 'active' ? 'all' : 'active')}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                        <CheckCircle2 className="h-6 w-6 text-white" />
                       </div>
-                      <CheckCircle2 className="h-10 w-10 text-white/30" />
+                      <span className="text-3xl font-bold text-green-600">{stats.active}</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">{t.activeIntegrations}</p>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">{t.pendingIntegrations}</p>
-                        <p className="text-3xl font-bold">{stats.pending}</p>
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-lg ${selectedStatus === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+                  onClick={() => setSelectedStatus(selectedStatus === 'pending' ? 'all' : 'pending')}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-white" />
                       </div>
-                      <Clock className="h-10 w-10 text-white/30" />
+                      <span className="text-3xl font-bold text-yellow-600">{stats.pending}</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">{t.pendingIntegrations}</p>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">{t.errorIntegrations}</p>
-                        <p className="text-3xl font-bold">{stats.error}</p>
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-lg ${selectedStatus === 'error' ? 'ring-2 ring-red-500' : ''}`}
+                  onClick={() => setSelectedStatus(selectedStatus === 'error' ? 'all' : 'error')}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                        <XCircle className="h-6 w-6 text-white" />
                       </div>
-                      <XCircle className="h-10 w-10 text-white/30" />
+                      <span className="text-3xl font-bold text-red-600">{stats.error}</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">{t.errorIntegrations}</p>
                   </CardContent>
                 </Card>
               </div>
               
-              {/* Type Filter Tabs */}
-              <Tabs value={activeTypeTab} onValueChange={setActiveTypeTab} className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <TabsList className="flex-wrap h-auto p-1">
-                    <TabsTrigger value="all" className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4" />
-                      {t.all} ({integrations.length})
-                    </TabsTrigger>
-                    {INTEGRATION_TYPES.map(type => {
-                      const count = integrations.filter(i => i.type === type.id).length;
-                      const TypeIcon = type.icon;
-                      return (
-                        <TabsTrigger key={type.id} value={type.id} className="flex items-center gap-2">
-                          <TypeIcon className="h-4 w-4" />
-                          {isRTL ? type.label_ar : type.label_en} ({count})
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                  
-                  <div className="relative w-64">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder={t.search}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="ps-10 rounded-xl"
-                      data-testid="search-input"
-                    />
-                  </div>
+              {/* Search and View Toggle - Separate line */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder={t.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="ps-12 h-12 rounded-xl text-base"
+                    data-testid="search-input"
+                  />
+                  {searchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute end-2 top-1/2 -translate-y-1/2"
+                      onClick={() => setSearchQuery('')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 
-                <TabsContent value={activeTypeTab} className="mt-0">
-                  {/* Premium Integration Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredIntegrations.map(integration => {
-                      const typeInfo = getTypeInfo(integration.type);
-                      const statusInfo = getStatusInfo(integration.status);
-                      const TypeIcon = typeInfo.icon;
-                      const StatusIcon = statusInfo.icon;
-                      
-                      return (
-                        <Card 
-                          key={integration.id} 
-                          className="group relative overflow-hidden border-2 hover:border-brand-navy/30 transition-all hover:shadow-xl"
-                          data-testid={`integration-card-${integration.id}`}
-                        >
-                          {/* Gradient Background */}
-                          <div className={`absolute inset-0 bg-gradient-to-br ${typeInfo.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                {/* Active Filters Display */}
+                {activeFiltersCount > 0 && (
+                  <div className="flex items-center gap-2">
+                    {selectedCategory !== 'all' && (
+                      <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1">
+                        {isRTL 
+                          ? INTEGRATION_CATEGORIES.find(c => c.id === selectedCategory)?.label_ar 
+                          : INTEGRATION_CATEGORIES.find(c => c.id === selectedCategory)?.label_en}
+                        <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCategory('all')} />
+                      </Badge>
+                    )}
+                    {selectedStatus !== 'all' && (
+                      <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1">
+                        {getStatusInfo(selectedStatus).label}
+                        <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedStatus('all')} />
+                      </Badge>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={clearFilters}>
+                      {t.clearFilters}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* View Toggle */}
+                <div className="flex items-center border rounded-xl p-1">
+                  <Button
+                    variant={viewMode === 'card' ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`rounded-lg ${viewMode === 'card' ? 'bg-brand-navy' : ''}`}
+                    onClick={() => setViewMode('card')}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`rounded-lg ${viewMode === 'table' ? 'bg-brand-navy' : ''}`}
+                    onClick={() => setViewMode('table')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Integrations Display */}
+              {filteredIntegrations.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">{t.noResults}</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {isRTL ? 'جرب تغيير معايير البحث أو الفلاتر' : 'Try changing search criteria or filters'}
+                  </p>
+                  <Button variant="outline" onClick={clearFilters}>
+                    {t.clearFilters}
+                  </Button>
+                </Card>
+              ) : viewMode === 'card' ? (
+                /* Card View */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredIntegrations.map(integration => {
+                    const categoryInfo = getCategoryInfo(integration.type);
+                    const statusInfo = getStatusInfo(integration.status);
+                    const CategoryIcon = categoryInfo.icon;
+                    const StatusIcon = statusInfo.icon;
+                    
+                    return (
+                      <Card 
+                        key={integration.id} 
+                        className="group relative overflow-hidden border-2 hover:border-brand-navy/30 transition-all hover:shadow-xl"
+                        data-testid={`integration-card-${integration.id}`}
+                      >
+                        {/* Gradient Background */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${categoryInfo.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                        
+                        <CardContent className="p-6 relative">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${categoryInfo.color} flex items-center justify-center text-2xl shadow-lg`}>
+                                {integration.logo}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-lg">
+                                  {isRTL ? integration.name : integration.name_en}
+                                </h3>
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  {isRTL ? categoryInfo.label_ar : categoryInfo.label_en}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
                           
-                          <CardContent className="p-6 relative">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-4">
+                          {/* Status Badge */}
+                          <Badge className={`${statusInfo.color} text-white mb-3`}>
+                            <StatusIcon className="h-3 w-3 me-1" />
+                            {statusInfo.label}
+                          </Badge>
+                          
+                          {/* Description */}
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-[40px]">
+                            {isRTL ? integration.description : integration.description_en}
+                          </p>
+                          
+                          {/* Features Tags */}
+                          {integration.features && (
+                            <div className="flex flex-wrap gap-1 mb-4">
+                              {(isRTL ? integration.features : integration.features_en).slice(0, 3).map((feature, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {feature}
+                                </Badge>
+                              ))}
+                              {integration.features.length > 3 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{integration.features.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Last Sync */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                            <Clock className="h-3 w-3" />
+                            <span>{t.lastSync}: {formatDateTime(integration.last_sync)}</span>
+                          </div>
+                          
+                          {/* Toggle */}
+                          <div className="flex items-center justify-between pb-4 border-b mb-4">
+                            <span className="text-sm font-medium">
+                              {integration.is_active ? t.active : t.inactive}
+                            </span>
+                            <Switch
+                              checked={integration.is_active}
+                              onCheckedChange={() => handleToggle(integration)}
+                              data-testid={`toggle-${integration.id}`}
+                            />
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-lg"
+                              onClick={() => openDetails(integration)}
+                            >
+                              <Settings className="h-4 w-4 me-1" />
+                              {t.setupIntegration}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-lg"
+                              onClick={() => handleTestConnection(integration)}
+                              disabled={testingConnection === integration.id}
+                            >
+                              {testingConnection === integration.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Zap className="h-4 w-4 me-1" />
+                                  {t.testConnection}
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-lg"
+                              onClick={() => openLogs(integration)}
+                            >
+                              <History className="h-4 w-4 me-1" />
+                              {t.viewLogs}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-lg"
+                              onClick={() => handleSync(integration)}
+                              disabled={syncing === integration.id || !integration.is_active}
+                            >
+                              {syncing === integration.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <RefreshCw className="h-4 w-4 me-1" />
+                                  {t.sync}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {/* View Details */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-2 rounded-lg group-hover:bg-brand-navy/5"
+                            onClick={() => openDetails(integration)}
+                          >
+                            <Eye className="h-4 w-4 me-2" />
+                            {t.viewDetails}
+                            <ChevronRight className="h-4 w-4 ms-auto rtl:rotate-180" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Table View */
+                <Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{isRTL ? 'التكامل' : 'Integration'}</TableHead>
+                        <TableHead>{isRTL ? 'النوع' : 'Type'}</TableHead>
+                        <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                        <TableHead>{t.lastSync}</TableHead>
+                        <TableHead>{isRTL ? 'الإجراءات' : 'Actions'}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredIntegrations.map(integration => {
+                        const categoryInfo = getCategoryInfo(integration.type);
+                        const statusInfo = getStatusInfo(integration.status);
+                        const StatusIcon = statusInfo.icon;
+                        
+                        return (
+                          <TableRow key={integration.id}>
+                            <TableCell>
                               <div className="flex items-center gap-3">
-                                {/* Logo */}
-                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${typeInfo.color} flex items-center justify-center text-2xl shadow-lg`}>
-                                  {integration.logo}
-                                </div>
+                                <span className="text-2xl">{integration.logo}</span>
                                 <div>
-                                  <h3 className="font-bold text-lg">
-                                    {isRTL ? integration.name : integration.name_en}
-                                  </h3>
-                                  <Badge variant="outline" className="text-xs mt-1">
-                                    {isRTL ? typeInfo.label_ar : typeInfo.label_en}
-                                  </Badge>
+                                  <p className="font-medium">{isRTL ? integration.name : integration.name_en}</p>
+                                  <p className="text-xs text-muted-foreground line-clamp-1">
+                                    {isRTL ? integration.description : integration.description_en}
+                                  </p>
                                 </div>
                               </div>
-                              
-                              {/* Status Badge */}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {isRTL ? categoryInfo.label_ar : categoryInfo.label_en}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
                               <Badge className={`${statusInfo.color} text-white`}>
                                 <StatusIcon className="h-3 w-3 me-1" />
                                 {statusInfo.label}
                               </Badge>
-                            </div>
-                            
-                            {/* Description */}
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-[40px]">
-                              {isRTL ? integration.description : integration.description_en}
-                            </p>
-                            
-                            {/* Features Tags */}
-                            {integration.features && (
-                              <div className="flex flex-wrap gap-1 mb-4">
-                                {integration.features.slice(0, 3).map((feature, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
-                                    {feature}
-                                  </Badge>
-                                ))}
-                                {integration.features.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    +{integration.features.length - 3}
-                                  </Badge>
-                                )}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDateTime(integration.last_sync)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={integration.is_active}
+                                  onCheckedChange={() => handleToggle(integration)}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openDetails(integration)}
+                                >
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTestConnection(integration)}
+                                  disabled={testingConnection === integration.id}
+                                >
+                                  {testingConnection === integration.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Zap className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSync(integration)}
+                                  disabled={syncing === integration.id}
+                                >
+                                  {syncing === integration.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="h-4 w-4" />
+                                  )}
+                                </Button>
                               </div>
-                            )}
-                            
-                            {/* Last Sync */}
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                              <Clock className="h-3 w-3" />
-                              <span>{t.lastSync}: {formatDateTime(integration.last_sync)}</span>
-                            </div>
-                            
-                            {/* Toggle */}
-                            <div className="flex items-center justify-between pb-4 border-b mb-4">
-                              <span className="text-sm font-medium">
-                                {integration.is_active ? t.active : t.inactive}
-                              </span>
-                              <Switch
-                                checked={integration.is_active}
-                                onCheckedChange={() => handleToggle(integration)}
-                                data-testid={`toggle-${integration.id}`}
-                              />
-                            </div>
-                            
-                            {/* Action Buttons */}
-                            <div className="grid grid-cols-2 gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-lg"
-                                onClick={() => openDetails(integration)}
-                              >
-                                <Settings className="h-4 w-4 me-1" />
-                                {t.setupIntegration}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-lg"
-                                onClick={() => handleTestConnection(integration)}
-                                disabled={testingConnection === integration.id}
-                              >
-                                {testingConnection === integration.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Zap className="h-4 w-4 me-1" />
-                                    {t.testConnection}
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-lg"
-                                onClick={() => openLogs(integration)}
-                              >
-                                <History className="h-4 w-4 me-1" />
-                                {t.viewLogs}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-lg"
-                                onClick={() => handleSync(integration)}
-                                disabled={syncing === integration.id || !integration.is_active}
-                              >
-                                {syncing === integration.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <RefreshCw className="h-4 w-4 me-1" />
-                                    {t.sync}
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                            
-                            {/* View Details */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full mt-2 rounded-lg group-hover:bg-brand-navy/5"
-                              onClick={() => openDetails(integration)}
-                            >
-                              <Eye className="h-4 w-4 me-2" />
-                              {t.viewDetails}
-                              <ChevronRight className="h-4 w-4 ms-auto rtl:rotate-180" />
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </Card>
+              )}
             </>
           ) : (
             /* API Management Tab */
@@ -1078,7 +1251,9 @@ ${baseUrl}/webhooks
                               {endpoint.method}
                             </Badge>
                             <code className="flex-1 text-sm font-mono" dir="ltr">{endpoint.path}</code>
-                            <span className="text-xs text-muted-foreground">{endpoint.description}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {isRTL ? endpoint.description_ar : endpoint.description_en}
+                            </span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1150,7 +1325,7 @@ ${baseUrl}/webhooks
                   
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <Label>{t.apiUrl}</Label>
+                      <Label>{isRTL ? 'رابط API' : 'API URL'}</Label>
                       <div className="flex gap-2">
                         <Input value={selectedIntegration.api_base_url} readOnly dir="ltr" />
                         <Button
@@ -1194,7 +1369,7 @@ ${baseUrl}/webhooks
                   <div className="space-y-3">
                     <h4 className="font-medium">{isRTL ? 'الميزات المتاحة' : 'Available Features'}</h4>
                     <div className="flex flex-wrap gap-2">
-                      {selectedIntegration.features.map((feature, idx) => (
+                      {(isRTL ? selectedIntegration.features : selectedIntegration.features_en).map((feature, idx) => (
                         <Badge key={idx} variant="secondary">{feature}</Badge>
                       ))}
                     </div>
@@ -1247,7 +1422,7 @@ ${baseUrl}/webhooks
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-4 py-6">
-              {logs.map(log => (
+              {SAMPLE_LOGS.map(log => (
                 <div 
                   key={log.id}
                   className={`p-4 rounded-xl border ${
@@ -1275,7 +1450,9 @@ ${baseUrl}/webhooks
                       {formatDateTime(log.timestamp)}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{log.details}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isRTL ? log.details_ar : log.details_en}
+                  </p>
                 </div>
               ))}
             </div>
@@ -1398,13 +1575,13 @@ ${baseUrl}/webhooks
               </div>
               
               <div className="space-y-2">
-                <Label>{t.integrationType}</Label>
+                <Label>{isRTL ? 'نوع التكامل' : 'Integration Type'}</Label>
                 <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {INTEGRATION_TYPES.map(type => (
+                    {INTEGRATION_CATEGORIES.filter(c => c.id !== 'all').map(type => (
                       <SelectItem key={type.id} value={type.id}>
                         {isRTL ? type.label_ar : type.label_en}
                       </SelectItem>
@@ -1414,7 +1591,7 @@ ${baseUrl}/webhooks
               </div>
               
               <div className="space-y-2">
-                <Label>{t.description}</Label>
+                <Label>{isRTL ? 'الوصف' : 'Description'}</Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1423,7 +1600,7 @@ ${baseUrl}/webhooks
               </div>
               
               <div className="space-y-2">
-                <Label>{t.apiUrl}</Label>
+                <Label>{isRTL ? 'رابط API' : 'API URL'}</Label>
                 <Input
                   value={formData.api_base_url}
                   onChange={(e) => setFormData({ ...formData, api_base_url: e.target.value })}
