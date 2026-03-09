@@ -990,10 +990,6 @@ export const AdminDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                        <SelectItem value="multi">{isRTL ? 'مجموعة مدارس' : 'Multi-Select'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   {/* اختيار مدرسة واحدة - قابل للبحث */}
                   {filters.scope === 'single' && (
