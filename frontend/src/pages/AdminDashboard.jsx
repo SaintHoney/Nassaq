@@ -446,19 +446,21 @@ export const AdminDashboard = () => {
             {/* Global Filters Bar */}
             <Card className="card-nassaq mb-4">
               <CardContent className="p-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  {/* Scope Filter */}
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
+                {/* Row 1: Main Filters */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* A. نطاق البيانات - Scope */}
+                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
+                    <Filter className="h-4 w-4 text-brand-turquoise" />
+                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'النطاق:' : 'Scope:'}</span>
                     <Select 
                       value={filters.scope} 
-                      onValueChange={(v) => setFilters({ ...filters, scope: v })}
+                      onValueChange={(v) => setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] })}
                     >
-                      <SelectTrigger className="w-40 rounded-xl h-9 text-sm">
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-0 bg-background">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">{isRTL ? 'كل المنصة' : 'All Platform'}</SelectItem>
+                        <SelectItem value="all">{isRTL ? 'كل المنصة' : 'All Tenants'}</SelectItem>
                         <SelectItem value="single">{isRTL ? 'مدرسة محددة' : 'Single School'}</SelectItem>
                         <SelectItem value="multi">{isRTL ? 'مجموعة مدارس' : 'Multi-Select'}</SelectItem>
                       </SelectContent>
@@ -467,55 +469,153 @@ export const AdminDashboard = () => {
 
                   {/* School Selector (when scope is single) */}
                   {filters.scope === 'single' && (
-                    <Select 
-                      value={filters.selectedSchool} 
-                      onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
-                    >
-                      <SelectTrigger className="w-48 rounded-xl h-9 text-sm">
-                        <SelectValue placeholder={isRTL ? 'اختر مدرسة' : 'Select school'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {schools.slice(0, 20).map((school) => (
-                          <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="relative">
+                      <Select 
+                        value={filters.selectedSchool} 
+                        onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
+                      >
+                        <SelectTrigger className="w-52 rounded-xl h-8 text-sm">
+                          <SelectValue placeholder={isRTL ? '🔍 ابحث واختر مدرسة' : '🔍 Search & select'} />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {schools.map((school) => (
+                            <SelectItem key={school.id} value={school.id}>
+                              <span className="flex items-center gap-2">
+                                <Building2 className="h-3 w-3" />
+                                {school.name}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
 
-                  {/* City Filter */}
+                  {/* Multi-Select Schools (when scope is multi) */}
+                  {filters.scope === 'multi' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[200px] justify-between">
+                          <span className="flex items-center gap-2">
+                            <Building2 className="h-3 w-3" />
+                            {filters.selectedSchools.length > 0 
+                              ? `${filters.selectedSchools.length} ${isRTL ? 'مدرسة محددة' : 'selected'}`
+                              : (isRTL ? 'اختر المدارس' : 'Select Schools')}
+                          </span>
+                          <ChevronRight className="h-3 w-3 rotate-90" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-64 max-h-60 overflow-y-auto">
+                        <div className="p-2 border-b sticky top-0 bg-background">
+                          <Input 
+                            placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search schools...'}
+                            className="h-8 text-sm rounded-lg"
+                          />
+                        </div>
+                        {schools.slice(0, 15).map((school) => (
+                          <DropdownMenuItem 
+                            key={school.id}
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const isSelected = filters.selectedSchools.includes(school.id);
+                              setFilters({
+                                ...filters,
+                                selectedSchools: isSelected 
+                                  ? filters.selectedSchools.filter(id => id !== school.id)
+                                  : [...filters.selectedSchools, school.id]
+                              });
+                            }}
+                          >
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                              filters.selectedSchools.includes(school.id) ? 'bg-brand-turquoise border-brand-turquoise' : 'border-gray-300'
+                            }`}>
+                              {filters.selectedSchools.includes(school.id) && (
+                                <Check className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                            <span className="text-sm">{school.name}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
+                  {/* Divider */}
+                  <div className="h-6 w-px bg-border hidden md:block" />
+
+                  {/* Additional Filters: City */}
                   <Select 
                     value={filters.city || 'all_cities'} 
                     onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
                   >
-                    <SelectTrigger className="w-32 rounded-xl h-9 text-sm">
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                      <MapPin className="h-3 w-3 me-1 text-muted-foreground" />
                       <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
+                    <SelectContent className="max-h-60">
+                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All'}</SelectItem>
                       {SAUDI_CITIES.map((city) => (
                         <SelectItem key={city} value={city}>{city}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
 
-                  {/* Divider */}
-                  <div className="h-8 w-px bg-border hidden md:block" />
+                  {/* Additional Filters: Region */}
+                  <Select 
+                    value={filters.region || 'all_regions'} 
+                    onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v })}
+                  >
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                      <Globe className="h-3 w-3 me-1 text-muted-foreground" />
+                      <SelectValue placeholder={isRTL ? 'المنطقة' : 'Region'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_regions">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                      <SelectItem value="central">{isRTL ? 'الوسطى' : 'Central'}</SelectItem>
+                      <SelectItem value="western">{isRTL ? 'الغربية' : 'Western'}</SelectItem>
+                      <SelectItem value="eastern">{isRTL ? 'الشرقية' : 'Eastern'}</SelectItem>
+                      <SelectItem value="northern">{isRTL ? 'الشمالية' : 'Northern'}</SelectItem>
+                      <SelectItem value="southern">{isRTL ? 'الجنوبية' : 'Southern'}</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                  {/* Time Window */}
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  {/* Additional Filters: School Type */}
+                  <Select 
+                    value={filters.schoolType || 'all_types'} 
+                    onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
+                  >
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                      <GraduationCap className="h-3 w-3 me-1 text-muted-foreground" />
+                      <SelectValue placeholder={isRTL ? 'النوع' : 'Type'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_types">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                      <SelectItem value="public">{isRTL ? 'حكومي' : 'Public'}</SelectItem>
+                      <SelectItem value="private">{isRTL ? 'خاص' : 'Private'}</SelectItem>
+                      <SelectItem value="international">{isRTL ? 'عالمي' : 'International'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Row 2: Time, Status & Actions */}
+                <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border/50">
+                  {/* B. الفترة الزمنية - Time Window */}
+                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
+                    <Clock className="h-4 w-4 text-brand-purple" />
+                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'الفترة:' : 'Time:'}</span>
                     <Select 
                       value={filters.timeWindow} 
                       onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}
                     >
-                      <SelectTrigger className="w-36 rounded-xl h-9 text-sm">
+                      <SelectTrigger className="w-32 rounded-lg h-8 text-sm border-0 bg-background">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="live">
                           <span className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            {isRTL ? 'الآن (مباشر)' : 'Live'}
+                            {isRTL ? 'الآن (Live)' : 'Live'}
                           </span>
                         </SelectItem>
                         <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
@@ -526,48 +626,52 @@ export const AdminDashboard = () => {
                     </Select>
                   </div>
 
-                  {/* Date Display */}
-                  <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg">
-                    <Calendar className="h-3 w-3" />
-                    <span className="font-medium">{getCurrentHijriDate().hijri}</span>
-                    <span className="opacity-60">({getCurrentHijriDate().gregorian})</span>
+                  {/* Date Display - Hijri & Gregorian */}
+                  <div className="flex flex-col items-start bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 px-3 py-1.5 rounded-xl border border-brand-navy/10">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-brand-navy" />
+                      <span className="font-cairo font-bold text-sm text-brand-navy">{getCurrentHijriDate().hijri}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">({getCurrentHijriDate().gregorian})</span>
                   </div>
 
                   {/* Divider */}
-                  <div className="h-8 w-px bg-border hidden md:block" />
+                  <div className="h-6 w-px bg-border hidden md:block" />
 
-                  {/* Tenant Status */}
-                  <div className="flex items-center gap-2">
+                  {/* C. حالة المدارس - Tenant Status */}
+                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
+                    <Shield className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'الحالة:' : 'Status:'}</span>
                     <Select 
                       value={filters.tenantStatus} 
                       onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}
                     >
-                      <SelectTrigger className="w-36 rounded-xl h-9 text-sm">
+                      <SelectTrigger className="w-32 rounded-lg h-8 text-sm border-0 bg-background">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
                         <SelectItem value="active">
                           <span className="flex items-center gap-2">
-                            <Badge className="h-2 w-2 p-0 bg-green-500" />
+                            <span className="w-2 h-2 rounded-full bg-green-500" />
                             {isRTL ? 'نشطة' : 'Active'}
                           </span>
                         </SelectItem>
                         <SelectItem value="suspended">
                           <span className="flex items-center gap-2">
-                            <Badge className="h-2 w-2 p-0 bg-red-500" />
+                            <span className="w-2 h-2 rounded-full bg-red-500" />
                             {isRTL ? 'موقوفة' : 'Suspended'}
                           </span>
                         </SelectItem>
                         <SelectItem value="setup">
                           <span className="flex items-center gap-2">
-                            <Badge className="h-2 w-2 p-0 bg-yellow-500" />
+                            <span className="w-2 h-2 rounded-full bg-yellow-500" />
                             {isRTL ? 'قيد الإعداد' : 'Setup'}
                           </span>
                         </SelectItem>
                         <SelectItem value="expired">
                           <span className="flex items-center gap-2">
-                            <Badge className="h-2 w-2 p-0 bg-gray-500" />
+                            <span className="w-2 h-2 rounded-full bg-gray-400" />
                             {isRTL ? 'انتهى الاشتراك' : 'Expired'}
                           </span>
                         </SelectItem>
@@ -578,75 +682,77 @@ export const AdminDashboard = () => {
                   {/* Spacer */}
                   <div className="flex-1" />
 
-                  {/* Action Buttons */}
+                  {/* D. أزرار الإجراءات - Action Buttons */}
                   <div className="flex items-center gap-2">
-                    {/* Refresh */}
+                    {/* تحديث الآن - Refresh Now */}
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={fetchStats}
-                      className="rounded-xl h-9"
+                      onClick={() => { fetchStats(); toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed'); }}
+                      className="rounded-xl h-8 px-3"
                       disabled={loading}
                     >
                       <RefreshCw className={`h-4 w-4 me-1 ${loading ? 'animate-spin' : ''}`} />
-                      {isRTL ? 'تحديث' : 'Refresh'}
+                      <span className="hidden sm:inline">{isRTL ? 'تحديث الآن' : 'Refresh'}</span>
                     </Button>
 
-                    {/* Export */}
+                    {/* تصدير البيانات - Export */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-9">
+                        <Button variant="outline" size="sm" className="rounded-xl h-8 px-3">
                           <Download className="h-4 w-4 me-1" />
-                          {isRTL ? 'تصدير' : 'Export'}
+                          <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleExport('PDF')}>
-                          <FileText className="h-4 w-4 me-2" />
-                          PDF
+                          <FileText className="h-4 w-4 me-2 text-red-500" />
+                          {isRTL ? 'تصدير PDF' : 'Export as PDF'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExport('Excel')}>
-                          <BarChart3 className="h-4 w-4 me-2" />
-                          Excel
+                          <BarChart3 className="h-4 w-4 me-2 text-green-600" />
+                          {isRTL ? 'تصدير Excel' : 'Export as Excel'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Display Settings */}
+                    {/* إعدادات العرض - Display Settings */}
                     <Button 
-                      variant="outline" 
+                      variant="default" 
                       size="sm" 
                       onClick={() => setShowDisplaySettings(true)}
-                      className="rounded-xl h-9"
+                      className="rounded-xl h-8 px-3 bg-brand-navy hover:bg-brand-navy/90"
                     >
                       <SlidersHorizontal className="h-4 w-4 me-1" />
-                      {isRTL ? 'العرض' : 'Display'}
+                      <span className="hidden sm:inline">{isRTL ? 'إعدادات العرض' : 'Display'}</span>
                     </Button>
                   </div>
                 </div>
 
-                {/* Custom Date Range */}
+                {/* Custom Date Range (when selected) */}
                 {filters.timeWindow === 'custom' && (
-                  <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+                  <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-border/50 bg-muted/20 -mx-4 -mb-4 px-4 pb-4 rounded-b-xl">
+                    <span className="text-sm font-medium">{isRTL ? 'نطاق مخصص:' : 'Custom Range:'}</span>
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm">{isRTL ? 'من:' : 'From:'}</Label>
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</Label>
                       <Input 
                         type="date" 
                         value={filters.customDateFrom}
                         onChange={(e) => setFilters({ ...filters, customDateFrom: e.target.value })}
-                        className="w-40 rounded-xl h-9"
+                        className="w-36 rounded-xl h-8 text-sm"
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm">{isRTL ? 'إلى:' : 'To:'}</Label>
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</Label>
                       <Input 
                         type="date" 
                         value={filters.customDateTo}
                         onChange={(e) => setFilters({ ...filters, customDateTo: e.target.value })}
-                        className="w-40 rounded-xl h-9"
+                        className="w-36 rounded-xl h-8 text-sm"
                       />
                     </div>
-                    <Button size="sm" className="rounded-xl h-9 bg-brand-turquoise">
+                    <Button size="sm" className="rounded-xl h-8 bg-brand-turquoise hover:bg-brand-turquoise/90">
+                      <Check className="h-3 w-3 me-1" />
                       {isRTL ? 'تطبيق' : 'Apply'}
                     </Button>
                   </div>
