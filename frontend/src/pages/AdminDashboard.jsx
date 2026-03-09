@@ -935,7 +935,7 @@ export const AdminDashboard = () => {
                   </Avatar>
                   <div>
                     <h1 className="font-cairo text-xl font-bold text-brand-navy" data-testid="user-display">
-                      {isRTL ? `مرحباً أستاذ ${user?.full_name || 'أحمد زلط'}` : `Welcome, ${user?.full_name || 'Ahmed'}`}
+                      {isRTL ? 'مرحباً أستاذ أحمد زلط' : 'Welcome, Ahmed Zalt'}
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">
                       {isRTL ? 'مركز القيادة' : 'Command Center'}
