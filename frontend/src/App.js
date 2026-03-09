@@ -33,7 +33,7 @@ import { SystemMonitoringPage } from "./pages/SystemMonitoringPage";
 import { IntegrationsPage } from "./pages/IntegrationsPage";
 import { SecurityCenterPage } from "./pages/SecurityCenterPage";
 import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
-import { TeacherRequestsPage } from "./pages/TeacherRequestsPage";
+// TeacherRequestsPage removed - now integrated in UsersManagement
 import TenantsManagement from "./pages/TenantsManagement";
 import ForcePasswordChange from "./pages/ForcePasswordChange";
 import UsersManagement from "./pages/UsersManagement";
@@ -182,14 +182,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin/teacher-requests"
-        element={
-          <ProtectedRoute allowedRoles={['platform_admin']}>
-            <TeacherRequestsPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* Teacher Requests page removed - functionality merged into UsersManagement */}
       <Route
         path="/admin/rules"
         element={
