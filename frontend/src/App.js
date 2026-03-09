@@ -31,7 +31,7 @@ import { RulesManagementPage } from "./pages/RulesManagementPage";
 import { SystemMonitoringPage } from "./pages/SystemMonitoringPage";
 import { IntegrationsPage } from "./pages/IntegrationsPage";
 import { SecurityCenterPage } from "./pages/SecurityCenterPage";
-import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
+import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
 import { TeacherRequestsPage } from "./pages/TeacherRequestsPage";
 
 // Protected Route Component
