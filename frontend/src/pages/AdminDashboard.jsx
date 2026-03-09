@@ -221,29 +221,16 @@ export const AdminDashboard = () => {
     }
   }, [api]);
 
-  // تحميل البيانات عند التحميل الأول
+  // تحميل قائمة المدارس عند التحميل الأول
   useEffect(() => {
-    fetchStats();
     fetchSchools();
-  }, []);
+  }, [fetchSchools]);
 
   // *** تحديث البيانات عند تغيير أي فلتر - Dynamic Data Refresh ***
+  // fetchStats يعتمد على filters، لذا سيتم استدعاؤه تلقائياً عند تغيير أي فلتر
   useEffect(() => {
-    if (!loading) {
-      fetchStats();
-    }
-  }, [
-    filters.scope,
-    filters.selectedSchool,
-    filters.selectedSchools,
-    filters.city,
-    filters.region,
-    filters.schoolType,
-    filters.timeWindow,
-    filters.customDateFrom,
-    filters.customDateTo,
-    filters.tenantStatus
-  ]);
+    fetchStats();
+  }, [fetchStats]);
 
   // تصدير البيانات - Export Data (تنزيل ملف فعلي)
   const handleExportData = (format) => {
