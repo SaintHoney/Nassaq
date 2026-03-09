@@ -733,11 +733,17 @@ export const PlatformSettingsPage = () => {
     }
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axios.post(`${API_URL}/api/auth/change-password`, {
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
       setShowPasswordDialog(false);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
+      console.error('Error changing password:', error);
       toast.error(isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password');
     } finally {
       setLoading(false);
@@ -745,13 +751,27 @@ export const PlatformSettingsPage = () => {
   };
   
   // End session
-  const handleEndSession = (sessionId) => {
-    toast.success(isRTL ? 'تم إنهاء الجلسة' : 'Session ended');
+  const handleEndSession = async (sessionId) => {
+    try {
+      await axios.delete(`${API_URL}/api/settings/sessions/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(isRTL ? 'تم إنهاء الجلسة' : 'Session ended');
+    } catch (error) {
+      toast.error(isRTL ? 'فشل إنهاء الجلسة' : 'Failed to end session');
+    }
   };
   
   // End all sessions
-  const handleEndAllSessions = () => {
-    toast.success(isRTL ? 'تم إنهاء جميع الجلسات الأخرى' : 'All other sessions ended');
+  const handleEndAllSessions = async () => {
+    try {
+      await axios.post(`${API_URL}/api/settings/sessions/end-all`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(isRTL ? 'تم إنهاء جميع الجلسات الأخرى' : 'All other sessions ended');
+    } catch (error) {
+      toast.error(isRTL ? 'فشل إنهاء الجلسات' : 'Failed to end sessions');
+    }
   };
   
   // Logout
@@ -762,10 +782,54 @@ export const PlatformSettingsPage = () => {
     navigate('/login');
   };
   
-  // Publish new version
-  const handlePublishVersion = () => {
-    toast.success(isRTL ? 'تم نشر النسخة الجديدة' : 'New version published');
-    setShowPublishDialog(false);
+  // Publish new version (terms or privacy)
+  const handlePublishVersion = async (docType = null) => {
+    const type = docType || (activeTab === 'terms' ? 'terms' : 'privacy');
+    const data = type === 'terms' ? termsData : privacyData;
+    const setData = type === 'terms' ? setTermsData : setPrivacyData;
+    
+    setLoading(true);
+    try {
+      // Increment version
+      const currentVersion = parseFloat(data.version) || 1.0;
+      const newVersion = (currentVersion + 0.1).toFixed(1);
+      
+      await axios.put(`${API_URL}/api/settings/platform/${type}`, {
+        content: data.content,
+        version: newVersion,
+        effective_date: new Date().toISOString(),
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setData(prev => ({
+        ...prev,
+        version: newVersion,
+        lastUpdated: new Date().toISOString(),
+      }));
+      
+      toast.success(isRTL ? 'تم نشر النسخة الجديدة' : 'New version published');
+      setShowPublishDialog(false);
+    } catch (error) {
+      console.error('Error publishing version:', error);
+      toast.error(isRTL ? 'فشل نشر النسخة' : 'Failed to publish version');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Load version history
+  const loadVersionHistory = async (docType) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/settings/legal-versions/${docType}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVersionHistory(response.data.versions || []);
+      setShowVersionHistoryDialog(true);
+    } catch (error) {
+      console.error('Error loading version history:', error);
+      toast.error(isRTL ? 'فشل تحميل سجل الإصدارات' : 'Failed to load version history');
+    }
   };
   
   return (
