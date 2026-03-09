@@ -506,45 +506,78 @@ export default function UsersManagement() {
   // Handle teacher request actions
   const handleApproveRequest = async (request) => {
     try {
-      // Create teacher account
-      const tempPassword = generateTempPassword();
-      const teacherId = `TCH-${Date.now().toString().slice(-8)}`;
-      
-      // Show success with credentials
-      setShowApproveRequest({
-        ...request,
-        teacher_id: teacherId,
-        temp_password: tempPassword,
-        qr_code: `https://nassaq.com/t/${teacherId}`,
+      // Call the new approve API
+      const response = await api.post(`/api/registration-requests/${request.id}/approve`, {
+        send_notification: true
       });
       
-      // Update request status
-      await api.put(`/api/registration-requests/${request.id}/status`, { status: 'approved' });
-      
-      toast.success('تم الموافقة على الطلب وإنشاء الحساب بنجاح');
-      fetchTeacherRequests();
+      if (response.data?.success) {
+        // Show success dialog with credentials
+        setShowApproveRequest({
+          ...request,
+          teacher_id: response.data.teacher_id,
+          temp_password: response.data.temporary_password,
+          qr_code: response.data.qr_code,
+          email: response.data.email,
+          message_template: response.data.message_template,
+        });
+        
+        toast.success('تم الموافقة على الطلب وإنشاء الحساب بنجاح');
+        fetchTeacherRequests();
+      }
     } catch (error) {
-      toast.success('تم الموافقة على الطلب وإنشاء الحساب بنجاح');
+      console.error('Error approving request:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء الموافقة على الطلب';
+      toast.error(errorMessage);
     }
   };
   
   const handleRejectRequest = async (request) => {
+    if (!rejectionReason || rejectionReason.trim().length < 5) {
+      toast.error('يرجى إدخال سبب الرفض');
+      return;
+    }
+    
     try {
-      await api.put(`/api/registration-requests/${request.id}/status`, { 
-        status: 'rejected',
-        rejection_reason: rejectionReason 
+      const response = await api.post(`/api/registration-requests/${request.id}/reject`, {
+        reason: rejectionReason
       });
-      toast.success('تم رفض الطلب وإرسال إشعار للمعلم');
-      fetchTeacherRequests();
+      
+      if (response.data?.success) {
+        toast.success('تم رفض الطلب وإرسال إشعار للمعلم');
+        fetchTeacherRequests();
+      }
     } catch (error) {
-      toast.success('تم رفض الطلب');
+      console.error('Error rejecting request:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء رفض الطلب';
+      toast.error(errorMessage);
     }
     setShowRejectRequest(null);
     setRejectionReason('');
   };
   
   const handleRequestMoreInfo = async (request) => {
-    toast.success('تم إرسال طلب المعلومات الإضافية للمعلم');
+    if (!moreInfoMessage || moreInfoMessage.trim().length < 10) {
+      toast.error('يرجى إدخال المعلومات المطلوبة بشكل واضح');
+      return;
+    }
+    
+    try {
+      const response = await api.post(`/api/registration-requests/${request.id}/request-info`, {
+        message: moreInfoMessage
+      });
+      
+      if (response.data?.success) {
+        toast.success('تم إرسال طلب المعلومات الإضافية للمعلم');
+        fetchTeacherRequests();
+      }
+    } catch (error) {
+      console.error('Error requesting more info:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إرسال الطلب';
+      toast.error(errorMessage);
+    }
+    setShowMoreInfoRequest(null);
+    setMoreInfoMessage('');
   };
   
   // Generate temp password
