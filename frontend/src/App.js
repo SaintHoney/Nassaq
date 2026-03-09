@@ -34,6 +34,7 @@ import { IntegrationsPage } from "./pages/IntegrationsPage";
 import { SecurityCenterPage } from "./pages/SecurityCenterPage";
 import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
 import { TeacherRequestsPage } from "./pages/TeacherRequestsPage";
+import TenantsManagement from "./pages/TenantsManagement";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
