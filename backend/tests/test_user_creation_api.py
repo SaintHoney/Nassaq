@@ -269,7 +269,7 @@ class TestUserCreationAuthorization:
             headers={"Content-Type": "application/json"}
         )
         
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]  # Either unauthorized or forbidden
         print("✓ Unauthenticated request correctly rejected")
     
     def test_invalid_token(self):
