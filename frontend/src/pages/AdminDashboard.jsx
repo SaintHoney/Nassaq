@@ -233,6 +233,7 @@ export const AdminDashboard = () => {
   };
 
   // ============== SECTION 3: Quick Actions ==============
+  // Based on Platform Admin Documentation: Add School, Manage Users, Manage Rules, System Monitoring, Reports, System Settings
   const quickActions = [
     {
       title: isRTL ? 'إضافة مدرسة' : 'Add School',
@@ -241,22 +242,34 @@ export const AdminDashboard = () => {
       action: () => setCreateDialogOpen(true),
     },
     {
-      title: isRTL ? 'إنشاء مستخدم' : 'Create User',
-      icon: UserPlus,
+      title: isRTL ? 'إدارة المستخدمين' : 'Manage Users',
+      icon: Users,
       color: 'bg-brand-purple',
-      action: () => toast.info(isRTL ? 'قريباً...' : 'Coming soon...'),
+      href: '/admin/users',
     },
     {
-      title: isRTL ? 'إنشاء فصل' : 'Create Class',
-      icon: FolderPlus,
+      title: isRTL ? 'إدارة القواعد' : 'Manage Rules',
+      icon: BookOpen,
       color: 'bg-brand-turquoise',
-      action: () => toast.info(isRTL ? 'قريباً...' : 'Coming soon...'),
+      href: '/admin/rules',
     },
     {
-      title: isRTL ? 'الإعدادات' : 'Settings',
+      title: isRTL ? 'مراقبة النظام' : 'System Monitoring',
+      icon: Activity,
+      color: 'bg-green-500',
+      href: '/admin/monitoring',
+    },
+    {
+      title: isRTL ? 'التقارير' : 'Reports',
+      icon: BarChart3,
+      color: 'bg-yellow-500',
+      href: '/admin/reports',
+    },
+    {
+      title: isRTL ? 'إعدادات النظام' : 'System Settings',
       icon: Settings,
       color: 'bg-gray-600',
-      action: () => toast.info(isRTL ? 'قريباً...' : 'Coming soon...'),
+      href: '/settings',
     },
   ];
 
