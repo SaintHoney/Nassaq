@@ -246,8 +246,8 @@ export const AttendancePage = () => {
 
       const response = await api.post('/attendance/bulk', {
         class_id: selectedClass,
-        subject_id: selectedSubject || null,
-        time_slot_id: selectedTimeSlot || null,
+        subject_id: selectedSubject && selectedSubject !== 'none' ? selectedSubject : null,
+        time_slot_id: selectedTimeSlot && selectedTimeSlot !== 'none' ? selectedTimeSlot : null,
         date: selectedDate,
         records
       });
