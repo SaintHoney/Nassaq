@@ -288,8 +288,8 @@ class IdentityEngine:
         self,
         user_id: str,
         role: UserRole,
-        tenant_id: Optional[str] = None,
-        removed_by: str
+        removed_by: str,
+        tenant_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Remove a role from a user"""
         now = datetime.now(timezone.utc).isoformat()
