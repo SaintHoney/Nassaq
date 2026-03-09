@@ -1524,18 +1524,39 @@ export const AdminDashboard = () => {
           {/* 3. الإجراءات السريعة - Quick Actions (Operational Launch Pad) */}
           {/* ============================================ */}
           <section data-testid="quick-actions-section">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-cairo text-lg font-bold flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
+            <div className="flex items-center justify-between mb-3 lg:mb-4">
+              <h2 className="font-cairo text-base lg:text-lg font-bold flex items-center gap-2">
+                <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-500" />
                 {isRTL ? 'الإجراءات السريعة' : 'Quick Actions'}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] lg:text-xs text-muted-foreground hidden sm:block">
                 {isRTL ? 'لوحة التشغيل الفورية' : 'Operational Launch Pad'}
               </p>
             </div>
             
-            {/* شريط أفقي رئيسي - Main Horizontal Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Mobile: Horizontal Scroll / Desktop: Grid */}
+            <div className="lg:hidden overflow-x-auto pb-2 -mx-4 px-4">
+              <div className="flex gap-3 min-w-max">
+                {quickActions.map((action, index) => (
+                  <Card
+                    key={index}
+                    className="card-nassaq hover:shadow-lg transition-all cursor-pointer group w-28 flex-shrink-0"
+                    onClick={action.action}
+                    data-testid={`quick-action-mobile-${index}`}
+                  >
+                    <CardContent className="p-3 flex flex-col items-center text-center gap-2">
+                      <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                        <action.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <p className="font-cairo font-bold text-xs line-clamp-2">{action.label}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+            
+            {/* Desktop: Grid Layout */}
+            <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {quickActions.map((action, index) => (
                 <Card
                   key={index}
