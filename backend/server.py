@@ -4849,6 +4849,278 @@ async def get_notification_analytics(
 
 app.include_router(api_router)
 
+# ============== DEMO DATA & ACTIVITY APIs ==============
+@api_router.get("/demo/schools")
+async def get_demo_schools(current_user: dict = Depends(get_current_user)):
+    """Get all demo schools with related stats"""
+    schools = await db.demo_schools.find({}, {"_id": 0}).to_list(100)
+    return schools
+
+@api_router.get("/demo/teachers")
+async def get_demo_teachers(
+    current_user: dict = Depends(get_current_user),
+    school_id: Optional[str] = None
+):
+    """Get demo teachers, optionally filtered by school"""
+    query = {"school_id": school_id} if school_id else {}
+    teachers = await db.demo_teachers.find(query, {"_id": 0}).to_list(500)
+    return teachers
+
+@api_router.get("/demo/students")
+async def get_demo_students(
+    current_user: dict = Depends(get_current_user),
+    school_id: Optional[str] = None,
+    class_id: Optional[str] = None
+):
+    """Get demo students, optionally filtered by school/class"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    if class_id:
+        query["class_id"] = class_id
+    students = await db.demo_students.find(query, {"_id": 0}).to_list(1000)
+    return students
+
+@api_router.get("/demo/classes")
+async def get_demo_classes(
+    current_user: dict = Depends(get_current_user),
+    school_id: Optional[str] = None
+):
+    """Get demo classes, optionally filtered by school"""
+    query = {"school_id": school_id} if school_id else {}
+    classes = await db.demo_classes.find(query, {"_id": 0}).to_list(200)
+    return classes
+
+@api_router.get("/demo/stats")
+async def get_demo_stats(current_user: dict = Depends(get_current_user)):
+    """Get aggregated demo data statistics"""
+    schools_count = await db.demo_schools.count_documents({})
+    teachers_count = await db.demo_teachers.count_documents({})
+    students_count = await db.demo_students.count_documents({})
+    classes_count = await db.demo_classes.count_documents({})
+    
+    return {
+        "schools": schools_count,
+        "teachers": teachers_count,
+        "students": students_count,
+        "classes": classes_count
+    }
+
+@api_router.get("/activity/daily")
+async def get_daily_activity(
+    current_user: dict = Depends(get_current_user),
+    period: str = "today",
+    view_by: str = "hour",
+    school_id: Optional[str] = None
+):
+    """
+    Get daily platform activity data for charts
+    
+    Parameters:
+    - period: 'today', '24h', 'week', 'month'
+    - view_by: 'hour', 'school', 'type'
+    - school_id: optional filter by school
+    """
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Determine date range
+    if period == "today":
+        start_date = today
+    elif period == "24h":
+        start_date = now - timedelta(hours=24)
+    elif period == "week":
+        start_date = today - timedelta(days=7)
+    elif period == "month":
+        start_date = today - timedelta(days=30)
+    else:
+        start_date = today
+    
+    # Build query
+    query = {"timestamp": {"$gte": start_date.isoformat()}}
+    if school_id:
+        query["school_id"] = school_id
+    
+    # Get activity logs
+    logs = await db.activity_logs.find(query, {"_id": 0}).to_list(10000)
+    
+    # Process data based on view_by
+    if view_by == "hour":
+        # Group by hour
+        hourly_data = {}
+        for hour in range(24):
+            hourly_data[hour] = {"lessons": 0, "attendance": 0, "grades": 0, "user_activity": 0}
+        
+        for log in logs:
+            try:
+                log_time = datetime.fromisoformat(log["timestamp"].replace("Z", "+00:00"))
+                hour = log_time.hour
+                log_type = log.get("type", "")
+                
+                if log_type == "lesson":
+                    hourly_data[hour]["lessons"] += 1
+                elif log_type == "attendance":
+                    hourly_data[hour]["attendance"] += 1
+                elif log_type == "grade":
+                    hourly_data[hour]["grades"] += 1
+                elif log_type == "user_activity":
+                    hourly_data[hour]["user_activity"] += 1
+            except:
+                continue
+        
+        # Convert to list for chart
+        chart_data = []
+        for hour in range(7, 17):  # 7 AM to 5 PM
+            chart_data.append({
+                "hour": f"{hour:02d}:00",
+                "lessons": hourly_data[hour]["lessons"],
+                "attendance": hourly_data[hour]["attendance"],
+                "grades": hourly_data[hour]["grades"],
+                "users": hourly_data[hour]["user_activity"]
+            })
+        
+        return {"chart_data": chart_data, "period": period, "view_by": view_by}
+    
+    elif view_by == "school":
+        # Group by school
+        school_data = {}
+        for log in logs:
+            school_name = log.get("school_name", "Unknown")
+            if school_name not in school_data:
+                school_data[school_name] = {"lessons": 0, "attendance": 0, "grades": 0, "users": 0}
+            
+            log_type = log.get("type", "")
+            if log_type == "lesson":
+                school_data[school_name]["lessons"] += 1
+            elif log_type == "attendance":
+                school_data[school_name]["attendance"] += 1
+            elif log_type == "grade":
+                school_data[school_name]["grades"] += 1
+            elif log_type == "user_activity":
+                school_data[school_name]["users"] += 1
+        
+        chart_data = [{"school": k, **v} for k, v in school_data.items()]
+        return {"chart_data": chart_data, "period": period, "view_by": view_by}
+    
+    else:
+        # Default to type breakdown
+        type_data = {"lessons": 0, "attendance": 0, "grades": 0, "users": 0}
+        for log in logs:
+            log_type = log.get("type", "")
+            if log_type == "lesson":
+                type_data["lessons"] += 1
+            elif log_type == "attendance":
+                type_data["attendance"] += 1
+            elif log_type == "grade":
+                type_data["grades"] += 1
+            elif log_type == "user_activity":
+                type_data["users"] += 1
+        
+        return {"chart_data": type_data, "period": period, "view_by": view_by}
+
+@api_router.get("/activity/summary")
+async def get_activity_summary(current_user: dict = Depends(get_current_user)):
+    """Get quick summary of today's activity"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = today - timedelta(days=1)
+    
+    # Today's counts
+    today_query = {"timestamp": {"$gte": today.isoformat()}}
+    today_lessons = await db.activity_logs.count_documents({**today_query, "type": "lesson"})
+    today_attendance = await db.activity_logs.count_documents({**today_query, "type": "attendance"})
+    today_grades = await db.activity_logs.count_documents({**today_query, "type": "grade"})
+    today_users = await db.activity_logs.count_documents({**today_query, "type": "user_activity"})
+    
+    # Yesterday's counts for comparison
+    yesterday_query = {"timestamp": {"$gte": yesterday.isoformat(), "$lt": today.isoformat()}}
+    yesterday_lessons = await db.activity_logs.count_documents({**yesterday_query, "type": "lesson"}) or 1
+    yesterday_attendance = await db.activity_logs.count_documents({**yesterday_query, "type": "attendance"}) or 1
+    yesterday_grades = await db.activity_logs.count_documents({**yesterday_query, "type": "grade"}) or 1
+    yesterday_users = await db.activity_logs.count_documents({**yesterday_query, "type": "user_activity"}) or 1
+    
+    # Calculate changes
+    def calc_change(today_val, yesterday_val):
+        if yesterday_val == 0:
+            return 100 if today_val > 0 else 0
+        return round(((today_val - yesterday_val) / yesterday_val) * 100, 1)
+    
+    return {
+        "lessons": {
+            "count": today_lessons,
+            "change": calc_change(today_lessons, yesterday_lessons),
+            "status": "high" if today_lessons > yesterday_lessons * 1.2 else "low" if today_lessons < yesterday_lessons * 0.8 else "normal"
+        },
+        "attendance": {
+            "count": today_attendance,
+            "change": calc_change(today_attendance, yesterday_attendance),
+            "status": "high" if today_attendance > yesterday_attendance * 1.2 else "low" if today_attendance < yesterday_attendance * 0.8 else "normal"
+        },
+        "grades": {
+            "count": today_grades,
+            "change": calc_change(today_grades, yesterday_grades),
+            "status": "high" if today_grades > yesterday_grades * 1.2 else "low" if today_grades < yesterday_grades * 0.8 else "normal"
+        },
+        "users": {
+            "count": today_users,
+            "change": calc_change(today_users, yesterday_users),
+            "status": "high" if today_users > yesterday_users * 1.2 else "low" if today_users < yesterday_users * 0.8 else "normal"
+        }
+    }
+
+@api_router.get("/activity/alerts")
+async def get_activity_alerts(current_user: dict = Depends(get_current_user)):
+    """Get smart activity alerts"""
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    alerts = []
+    
+    # Check for low attendance registration
+    today_attendance = await db.activity_logs.count_documents({
+        "timestamp": {"$gte": today.isoformat()},
+        "type": "attendance"
+    })
+    
+    if today_attendance < 50 and now.hour > 9:
+        alerts.append({
+            "type": "warning",
+            "title": "انخفاض تسجيل الحضور",
+            "message": f"تم تسجيل {today_attendance} عملية حضور فقط اليوم",
+            "action": "attendance_report"
+        })
+    
+    # Check for schools with no activity
+    schools = await db.demo_schools.find({}, {"id": 1, "name": 1, "_id": 0}).to_list(100)
+    for school in schools:
+        school_activity = await db.activity_logs.count_documents({
+            "timestamp": {"$gte": today.isoformat()},
+            "school_id": school["id"]
+        })
+        if school_activity == 0 and now.hour > 8:
+            alerts.append({
+                "type": "critical",
+                "title": f"لا يوجد نشاط من {school['name']}",
+                "message": "المدرسة لم تسجل أي نشاط اليوم",
+                "action": "school_details",
+                "school_id": school["id"]
+            })
+    
+    # Check for high activity (unusual)
+    today_total = await db.activity_logs.count_documents({
+        "timestamp": {"$gte": today.isoformat()}
+    })
+    
+    if today_total > 500:
+        alerts.append({
+            "type": "info",
+            "title": "نشاط مرتفع غير عادي",
+            "message": f"تم تسجيل {today_total} عملية اليوم - أعلى من المعدل الطبيعي",
+            "action": "activity_report"
+        })
+    
+    return {"alerts": alerts[:5]}  # Return max 5 alerts
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
