@@ -350,6 +350,55 @@ async def update_preferences(
     await db.users.update_one({"id": current_user["id"]}, {"$set": updates})
     return {"message": "تم تحديث الإعدادات"}
 
+# ============== PASSWORD CHANGE ROUTE ==============
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.post("/auth/change-password")
+async def change_password(
+    request: PasswordChangeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Change user password. Required for first-time login with temporary password.
+    """
+    # Verify current password
+    if not verify_password(request.current_password, current_user.get("password_hash", "")):
+        raise HTTPException(status_code=400, detail="كلمة المرور الحالية غير صحيحة")
+    
+    # Validate new password
+    if len(request.new_password) < 8:
+        raise HTTPException(status_code=400, detail="كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+    
+    if request.current_password == request.new_password:
+        raise HTTPException(status_code=400, detail="كلمة المرور الجديدة يجب أن تكون مختلفة")
+    
+    # Update password and clear must_change_password flag
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {
+            "password_hash": hash_password(request.new_password),
+            "must_change_password": False,
+            "password_changed_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Log password change
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "password_changed",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": current_user["id"],
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تغيير كلمة المرور بنجاح"}
+
 # ============== USER MANAGEMENT ROUTES ==============
 class PlatformUserCreate(BaseModel):
     email: EmailStr
