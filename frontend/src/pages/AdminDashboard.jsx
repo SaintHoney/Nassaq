@@ -1107,62 +1107,6 @@ export const AdminDashboard = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
-
-                  {/* فاصل */}
-                  <div className="h-6 w-px bg-border hidden lg:block" />
-
-                  {/* فلتر المدينة */}
-                  <Select 
-                    value={filters.city || 'all_cities'} 
-                    onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-32 rounded-xl h-8 text-sm" data-testid="city-filter">
-                      <MapPin className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
-                      {SAUDI_CITIES.map((city) => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* فلتر المنطقة */}
-                  <Select 
-                    value={filters.region || 'all_regions'} 
-                    onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm" data-testid="region-filter">
-                      <Globe className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_regions">{isRTL ? 'كل المناطق' : 'All Regions'}</SelectItem>
-                      <SelectItem value="central">{isRTL ? 'الوسطى' : 'Central'}</SelectItem>
-                      <SelectItem value="western">{isRTL ? 'الغربية' : 'Western'}</SelectItem>
-                      <SelectItem value="eastern">{isRTL ? 'الشرقية' : 'Eastern'}</SelectItem>
-                      <SelectItem value="northern">{isRTL ? 'الشمالية' : 'Northern'}</SelectItem>
-                      <SelectItem value="southern">{isRTL ? 'الجنوبية' : 'Southern'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* فلتر نوع المدرسة */}
-                  <Select 
-                    value={filters.schoolType || 'all_types'} 
-                    onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
-                  >
-                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm" data-testid="type-filter">
-                      <GraduationCap className="h-3 w-3 me-1 text-muted-foreground" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_types">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
-                      <SelectItem value="public">{isRTL ? 'حكومي' : 'Public'}</SelectItem>
-                      <SelectItem value="private">{isRTL ? 'خاص' : 'Private'}</SelectItem>
-                      <SelectItem value="international">{isRTL ? 'عالمي' : 'International'}</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 {/* الصف الثاني: الفترة الزمنية + حالة المدارس + الأزرار */}
