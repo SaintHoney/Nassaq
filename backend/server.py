@@ -160,11 +160,28 @@ class DashboardStats(BaseModel):
     total_teachers: int = 0
     active_schools: int = 0
     pending_schools: int = 0
+    suspended_schools: int = 0
+    setup_schools: int = 0
     total_users: int = 0
     pending_requests: int = 0
     active_users: int = 0
     total_classes: int = 0
     total_subjects: int = 0
+    total_operations: int = 0
+    teachers_without_classes: int = 0
+    incomplete_schedules: int = 0
+    schools_without_principal: int = 0
+    students_missing_data: int = 0
+    teachers_without_rank: int = 0
+
+class AIOperationResult(BaseModel):
+    success: bool
+    message: str
+    message_en: str
+    health_score: Optional[int] = None
+    issues_found: int = 0
+    recommendations: int = 0
+    details: Optional[dict] = None
 
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
