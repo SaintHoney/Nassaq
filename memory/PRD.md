@@ -382,3 +382,72 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - ✅ User Creation: Platform Admin and Teacher creation working
 - ✅ Teacher Requests: Approve, Reject, Request Info all functional
 - ✅ Generated data: Teacher ID (TCH-format), QR Code (base64), temp password
+
+---
+
+### Latest Changes (March 9, 2026 - Phase 12 - Foundation Hardening):
+
+## 🏗️ مرحلة تأسيس الأساس المعماري
+
+1. **Foundation Models Created** ✅
+   - `/app/backend/models/foundation.py` - نماذج البيانات الأساسية
+     - UserIdentity, UserRelationship, LinkedRole
+     - Tenant, TenantConfiguration
+     - Grade, Section, PhysicalClassroom, Subject
+     - BehaviourType, BehaviourRecord, DisciplinaryAction
+     - AuditLog, NotificationTemplate
+     - ReportDefinition, GeneratedReport
+     - AIRecommendation, StudentRiskIndicator
+
+2. **Core Engines Created** ✅
+   - `/app/backend/engines/identity_engine.py` - محرك الهوية
+   - `/app/backend/engines/tenant_engine.py` - محرك المستأجرين
+   - `/app/backend/engines/behaviour_engine.py` - محرك السلوك
+
+3. **Behaviour Engine - Complete Implementation** ✅
+   - POST /api/behaviour-types/seed-defaults - زرع أنواع السلوك الافتراضية (11 نوع)
+   - GET /api/behaviour-types - جلب أنواع السلوك
+   - POST /api/behaviour-types - إنشاء نوع سلوك جديد
+   - POST /api/behaviour-records - تسجيل سلوك (معلم/مدير فقط)
+   - GET /api/behaviour-records/student/{id} - سجل سلوك الطالب
+   - GET /api/behaviour-records/class/{id} - ملخص سلوك الفصل
+   - PUT /api/behaviour-records/{id} - تعديل سجل (مع فترة التعديل 48 ساعة)
+   - POST /api/behaviour-records/{id}/principal-review - مراجعة المدير
+   - POST /api/behaviour-records/{id}/notify-parent - إشعار ولي الأمر
+   - POST /api/disciplinary-actions - إنشاء إجراء تأديبي
+   - GET /api/disciplinary-actions/student/{id} - إجراءات الطالب التأديبية
+   - GET /api/behaviour-profile/student/{id} - ملف السلوك الشامل
+
+4. **Multi-Role Support** ✅
+   - GET /api/users/{id}/roles - جلب أدوار المستخدم
+   - POST /api/users/{id}/add-role - إضافة دور للمستخدم
+   - POST /api/users/{id}/switch-role - تبديل الدور النشط
+
+5. **Public Contact API** ✅
+   - GET /api/public/contact-info - بيانات التواصل للـ Landing Page (بدون auth)
+
+6. **UserRole Enum Extended** ✅
+   - platform_operations_manager
+   - platform_technical_admin
+   - platform_support_specialist
+   - platform_data_analyst
+   - platform_security_officer
+   - school_admin
+   - testing_account
+
+### Test Results (iteration_29.json):
+- ✅ Backend: 100% (28/28 tests passed)
+- ✅ Behaviour Engine: All APIs working
+- ✅ Multi-Role: Get/Add/Switch roles working
+- ✅ Public API: Contact info accessible without auth
+
+---
+
+## 📋 Audit Report Location
+`/app/memory/FOUNDATION_AUDIT.md`
+
+## Test Reports Summary
+- iteration_27.json - Platform Settings (100%)
+- iteration_28.json - User Creation & Teacher Requests (100%)
+- iteration_29.json - Foundation & Behaviour Engine (100%)
+
