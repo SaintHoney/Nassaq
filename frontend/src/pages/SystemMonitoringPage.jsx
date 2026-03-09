@@ -1,269 +1,1160 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
+import { PageHeader } from '../components/layout/PageHeader';
 import { useTheme } from '../contexts/ThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '../components/ui/sheet';
 import {
   Activity,
+  Server,
   Cpu,
   HardDrive,
-  Database,
   Wifi,
-  Server,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Users,
-  Zap,
+  Database,
   Globe,
+  Brain,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Zap,
+  Play,
+  Pause,
+  RotateCcw,
+  Download,
+  Upload,
+  FileText,
+  Eye,
+  Settings,
+  Bell,
+  Shield,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ArrowUp,
+  ArrowDown,
+  Link2,
+  CloudOff,
+  Cloud,
+  Timer,
+  Hash,
+  Layers,
+  Terminal,
+  AlertCircle,
+  Info,
+  ChevronRight,
+  BarChart3,
+  PieChart,
 } from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from 'recharts';
+
+// Translations
+const translations = {
+  ar: {
+    pageTitle: 'مراقبة النظام',
+    pageSubtitle: 'المركز الفني لمتابعة الحالة التشغيلية للمنصة',
+    refresh: 'تحديث',
+    autoRefresh: 'تحديث تلقائي',
+    lastUpdate: 'آخر تحديث',
+    systemHealth: 'صحة النظام',
+    healthy: 'سليم',
+    warning: 'تحذير',
+    critical: 'حرج',
+    serverResources: 'موارد الخوادم',
+    cpuUsage: 'استهلاك المعالج',
+    memoryUsage: 'استهلاك الذاكرة',
+    diskUsage: 'استهلاك التخزين',
+    networkUsage: 'استهلاك الشبكة',
+    databasePerformance: 'أداء قواعد البيانات',
+    activeConnections: 'اتصالات نشطة',
+    queryTime: 'زمن الاستعلام',
+    slowQueries: 'استعلامات بطيئة',
+    apiPerformance: 'أداء الـ APIs',
+    avgResponseTime: 'متوسط زمن الاستجابة',
+    requestsPerMin: 'طلبات/دقيقة',
+    successRate: 'نسبة النجاح',
+    failedRequests: 'طلبات فاشلة',
+    systemOperations: 'عمليات النظام',
+    totalOperations: 'إجمالي العمليات',
+    activeUsers: 'مستخدمون نشطون',
+    errorCount: 'عدد الأخطاء',
+    errors: 'الأخطاء',
+    viewErrorLogs: 'عرض سجل الأخطاء',
+    errorType: 'نوع الخطأ',
+    errorMessage: 'رسالة الخطأ',
+    errorTime: 'وقت الحدوث',
+    errorSeverity: 'مستوى الخطورة',
+    backgroundJobs: 'المهام الخلفية',
+    jobsQueue: 'طابور المهام',
+    running: 'قيد التنفيذ',
+    pending: 'في الانتظار',
+    completed: 'مكتمل',
+    failed: 'فشل',
+    integrationsStatus: 'حالة التكاملات',
+    integration: 'التكامل',
+    status: 'الحالة',
+    lastSync: 'آخر مزامنة',
+    connected: 'متصل',
+    disconnected: 'غير متصل',
+    aiStatus: 'حالة الذكاء الاصطناعي',
+    aiOperations: 'عمليات AI',
+    aiModels: 'نماذج AI',
+    aiUsage: 'استخدام AI',
+    tools: 'الأدوات',
+    viewLogs: 'عرض السجلات',
+    monitorAPIs: 'مراقبة APIs',
+    monitorJobs: 'مراقبة المهام',
+    restartService: 'إعادة تشغيل خدمة',
+    reSync: 'إعادة المزامنة',
+    escalateAlert: 'تصعيد تنبيه',
+    downloadReport: 'تنزيل تقرير',
+    runDiagnostics: 'تشغيل التشخيص',
+    aiDiagnosis: 'تشخيص AI',
+    overview: 'نظرة عامة',
+    details: 'التفاصيل',
+    alerts: 'التنبيهات',
+    noAlerts: 'لا توجد تنبيهات',
+    allSystemsOperational: 'جميع الأنظمة تعمل بشكل طبيعي',
+    ms: 'مللي ثانية',
+    seconds: 'ثانية',
+    minutes: 'دقيقة',
+    hours: 'ساعة',
+    today: 'اليوم',
+    thisWeek: 'هذا الأسبوع',
+    thisMonth: 'هذا الشهر',
+  },
+  en: {
+    pageTitle: 'System Monitoring',
+    pageSubtitle: 'Technical center for monitoring platform operational status',
+    refresh: 'Refresh',
+    autoRefresh: 'Auto Refresh',
+    lastUpdate: 'Last Update',
+    systemHealth: 'System Health',
+    healthy: 'Healthy',
+    warning: 'Warning',
+    critical: 'Critical',
+    serverResources: 'Server Resources',
+    cpuUsage: 'CPU Usage',
+    memoryUsage: 'Memory Usage',
+    diskUsage: 'Disk Usage',
+    networkUsage: 'Network Usage',
+    databasePerformance: 'Database Performance',
+    activeConnections: 'Active Connections',
+    queryTime: 'Query Time',
+    slowQueries: 'Slow Queries',
+    apiPerformance: 'API Performance',
+    avgResponseTime: 'Avg Response Time',
+    requestsPerMin: 'Requests/min',
+    successRate: 'Success Rate',
+    failedRequests: 'Failed Requests',
+    systemOperations: 'System Operations',
+    totalOperations: 'Total Operations',
+    activeUsers: 'Active Users',
+    errorCount: 'Error Count',
+    errors: 'Errors',
+    viewErrorLogs: 'View Error Logs',
+    errorType: 'Error Type',
+    errorMessage: 'Error Message',
+    errorTime: 'Time',
+    errorSeverity: 'Severity',
+    backgroundJobs: 'Background Jobs',
+    jobsQueue: 'Jobs Queue',
+    running: 'Running',
+    pending: 'Pending',
+    completed: 'Completed',
+    failed: 'Failed',
+    integrationsStatus: 'Integrations Status',
+    integration: 'Integration',
+    status: 'Status',
+    lastSync: 'Last Sync',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    aiStatus: 'AI Status',
+    aiOperations: 'AI Operations',
+    aiModels: 'AI Models',
+    aiUsage: 'AI Usage',
+    tools: 'Tools',
+    viewLogs: 'View Logs',
+    monitorAPIs: 'Monitor APIs',
+    monitorJobs: 'Monitor Jobs',
+    restartService: 'Restart Service',
+    reSync: 'Re-Sync',
+    escalateAlert: 'Escalate Alert',
+    downloadReport: 'Download Report',
+    runDiagnostics: 'Run Diagnostics',
+    aiDiagnosis: 'AI Diagnosis',
+    overview: 'Overview',
+    details: 'Details',
+    alerts: 'Alerts',
+    noAlerts: 'No Alerts',
+    allSystemsOperational: 'All systems are operational',
+    ms: 'ms',
+    seconds: 'seconds',
+    minutes: 'minutes',
+    hours: 'hours',
+    today: 'Today',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+  }
+};
+
+// Generate performance data
+const generatePerformanceData = () => {
+  const data = [];
+  for (let i = 23; i >= 0; i--) {
+    data.push({
+      time: `${(24 - i).toString().padStart(2, '0')}:00`,
+      cpu: Math.floor(Math.random() * 30) + 40,
+      memory: Math.floor(Math.random() * 20) + 55,
+      network: Math.floor(Math.random() * 50) + 20,
+      requests: Math.floor(Math.random() * 500) + 200,
+    });
+  }
+  return data;
+};
+
+// Sample error logs
+const SAMPLE_ERRORS = [
+  { id: 1, type: 'API Error', message: 'Timeout connecting to external service', time: '10:45', severity: 'warning', service: 'Integration Service' },
+  { id: 2, type: 'Database Error', message: 'Slow query detected (>5s)', time: '10:30', severity: 'low', service: 'Database' },
+  { id: 3, type: 'Auth Error', message: 'Multiple failed login attempts', time: '10:15', severity: 'warning', service: 'Auth Service' },
+  { id: 4, type: 'System Error', message: 'Memory usage exceeded 80%', time: '09:45', severity: 'warning', service: 'Server' },
+];
+
+// Sample jobs
+const SAMPLE_JOBS = [
+  { id: 1, name: 'إرسال الإشعارات', name_en: 'Send Notifications', status: 'running', progress: 67, started: '10:30' },
+  { id: 2, name: 'مزامنة البيانات', name_en: 'Data Sync', status: 'pending', progress: 0, started: '-' },
+  { id: 3, name: 'إنشاء التقارير', name_en: 'Generate Reports', status: 'completed', progress: 100, started: '10:00' },
+  { id: 4, name: 'تحليل AI', name_en: 'AI Analysis', status: 'running', progress: 45, started: '10:35' },
+  { id: 5, name: 'النسخ الاحتياطي', name_en: 'Backup', status: 'pending', progress: 0, started: '-' },
+];
+
+// Sample integrations
+const SAMPLE_INTEGRATIONS = [
+  { id: 1, name: 'نظام نور', name_en: 'Noor System', status: 'connected', lastSync: '2026-03-09 10:30', health: 98 },
+  { id: 2, name: 'خدمات الرسائل', name_en: 'SMS Service', status: 'connected', lastSync: '2026-03-09 10:45', health: 100 },
+  { id: 3, name: 'خدمات البريد', name_en: 'Email Service', status: 'connected', lastSync: '2026-03-09 10:40', health: 95 },
+  { id: 4, name: 'بوابة الدفع', name_en: 'Payment Gateway', status: 'disconnected', lastSync: '2026-03-09 09:00', health: 0 },
+  { id: 5, name: 'التخزين السحابي', name_en: 'Cloud Storage', status: 'connected', lastSync: '2026-03-09 10:35', health: 92 },
+];
+
+// Sample alerts
+const SAMPLE_ALERTS = [
+  { id: 1, title: 'بوابة الدفع غير متصلة', title_en: 'Payment Gateway Disconnected', severity: 'critical', time: '09:15', resolved: false },
+  { id: 2, title: 'استهلاك الذاكرة مرتفع', title_en: 'High Memory Usage', severity: 'warning', time: '09:45', resolved: true },
+];
 
 export const SystemMonitoringPage = () => {
-  const { isRTL, isDark } = useTheme();
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Simulated system metrics
-  const systemMetrics = {
-    cpu: 45,
-    memory: 62,
-    disk: 38,
-    network: 85,
-  };
-
-  const services = [
-    { name: 'API Server', status: 'healthy', uptime: '99.9%', latency: '45ms' },
-    { name: 'Database (MongoDB)', status: 'healthy', uptime: '99.8%', latency: '12ms' },
-    { name: 'Authentication', status: 'healthy', uptime: '100%', latency: '23ms' },
-    { name: 'File Storage', status: 'healthy', uptime: '99.5%', latency: '89ms' },
-    { name: 'AI Services', status: 'healthy', uptime: '98.2%', latency: '250ms' },
-    { name: 'Notification Service', status: 'healthy', uptime: '99.7%', latency: '34ms' },
-  ];
-
-  const recentActivities = [
-    { time: '2 min ago', event: isRTL ? 'تسجيل دخول - مدير المنصة' : 'Login - Platform Admin', type: 'auth' },
-    { time: '5 min ago', event: isRTL ? 'إنشاء مدرسة جديدة' : 'New school created', type: 'create' },
-    { time: '12 min ago', event: isRTL ? 'تحديث بيانات المستخدم' : 'User data updated', type: 'update' },
-    { time: '18 min ago', event: isRTL ? 'تشغيل عملية AI' : 'AI operation executed', type: 'ai' },
-    { time: '25 min ago', event: isRTL ? 'تصدير تقرير' : 'Report exported', type: 'export' },
-  ];
-
+  const { isRTL = true, isDark } = useTheme();
+  const t = translations[isRTL ? 'ar' : 'en'];
+  
+  // States
+  const [activeTab, setActiveTab] = useState('overview');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [performanceData, setPerformanceData] = useState(generatePerformanceData());
+  const [showErrorLogs, setShowErrorLogs] = useState(false);
+  const [showJobsSheet, setShowJobsSheet] = useState(false);
+  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  
+  // System metrics (simulated)
+  const [metrics, setMetrics] = useState({
+    cpu: 58,
+    memory: 72,
+    disk: 45,
+    network: 34,
+    dbConnections: 127,
+    dbQueryTime: 23,
+    dbSlowQueries: 3,
+    apiResponseTime: 145,
+    apiRequestsPerMin: 842,
+    apiSuccessRate: 99.2,
+    apiFailedRequests: 7,
+    totalOperations: 15420,
+    activeUsers: 1247,
+    errors: 4,
+    jobsRunning: 2,
+    jobsPending: 3,
+    jobsCompleted: 156,
+    jobsFailed: 2,
+    aiOperations: 523,
+    aiModelsActive: 3,
+  });
+  
+  // Auto refresh
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      // Simulate metric updates
+      setMetrics(prev => ({
+        ...prev,
+        cpu: Math.min(100, Math.max(30, prev.cpu + (Math.random() - 0.5) * 10)),
+        memory: Math.min(100, Math.max(50, prev.memory + (Math.random() - 0.5) * 5)),
+        network: Math.min(100, Math.max(10, prev.network + (Math.random() - 0.5) * 15)),
+        apiRequestsPerMin: Math.floor(prev.apiRequestsPerMin + (Math.random() - 0.5) * 50),
+        activeUsers: Math.floor(prev.activeUsers + (Math.random() - 0.5) * 20),
+      }));
+      setLastUpdate(new Date());
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+  
+  // Manual refresh
   const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
+    setPerformanceData(generatePerformanceData());
+    setLastUpdate(new Date());
+    toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed');
   };
-
+  
+  // Get health status
+  const getHealthStatus = () => {
+    if (metrics.cpu > 90 || metrics.memory > 90) return 'critical';
+    if (metrics.cpu > 75 || metrics.memory > 80 || metrics.errors > 10) return 'warning';
+    return 'healthy';
+  };
+  
+  // Get health color
+  const getHealthColor = (status) => {
+    switch (status) {
+      case 'healthy': return 'text-green-500 bg-green-500';
+      case 'warning': return 'text-yellow-500 bg-yellow-500';
+      case 'critical': return 'text-red-500 bg-red-500';
+      default: return 'text-gray-500 bg-gray-500';
+    }
+  };
+  
+  // Get metric color
+  const getMetricColor = (value, thresholds = { warning: 70, critical: 90 }) => {
+    if (value >= thresholds.critical) return 'text-red-500';
+    if (value >= thresholds.warning) return 'text-yellow-500';
+    return 'text-green-500';
+  };
+  
+  // Get progress color
+  const getProgressColor = (value, thresholds = { warning: 70, critical: 90 }) => {
+    if (value >= thresholds.critical) return 'bg-red-500';
+    if (value >= thresholds.warning) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+  
+  // Format time
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  
+  // Run AI diagnosis
+  const runDiagnosis = () => {
+    setIsDiagnosing(true);
+    setTimeout(() => {
+      setIsDiagnosing(false);
+      setShowDiagnosticDialog(false);
+      toast.success(isRTL ? 'تم إكمال التشخيص - النظام سليم' : 'Diagnosis complete - System healthy');
+    }, 3000);
+  };
+  
+  const healthStatus = getHealthStatus();
+  const healthColor = getHealthColor(healthStatus);
+  
+  // Pie chart data
+  const jobsPieData = [
+    { name: t.running, value: metrics.jobsRunning, color: '#3B82F6' },
+    { name: t.pending, value: metrics.jobsPending, color: '#F59E0B' },
+    { name: t.completed, value: metrics.jobsCompleted, color: '#10B981' },
+    { name: t.failed, value: metrics.jobsFailed, color: '#EF4444' },
+  ];
+  
   return (
     <Sidebar>
-      <div className="min-h-screen bg-background" data-testid="system-monitoring-page">
+      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'} data-testid="system-monitoring-page">
         {/* Header */}
-        <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-cairo text-2xl font-bold text-foreground">
-                {isRTL ? 'مراقبة النظام' : 'System Monitoring'}
-              </h1>
-              <p className="text-sm text-muted-foreground font-tajawal">
-                {isRTL ? 'مراقبة أداء وصحة النظام في الوقت الفعلي' : 'Real-time system health and performance monitoring'}
-              </p>
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 lg:px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <PageHeader 
+                title={t.pageTitle} 
+                subtitle={t.pageSubtitle}
+                icon={Activity}
+                className="mb-0"
+              />
+              <div className="flex items-center gap-3">
+                {/* System Health Badge */}
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${healthColor.split(' ')[1]}/10`}>
+                  <div className={`w-3 h-3 rounded-full ${healthColor.split(' ')[1]} animate-pulse`}></div>
+                  <span className={`font-bold ${healthColor.split(' ')[0]}`}>
+                    {healthStatus === 'healthy' ? t.healthy : healthStatus === 'warning' ? t.warning : t.critical}
+                  </span>
+                </div>
+                
+                {/* Auto Refresh Toggle */}
+                <Button 
+                  variant={autoRefresh ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className="rounded-xl"
+                >
+                  {autoRefresh ? <Pause className="h-4 w-4 me-2" /> : <Play className="h-4 w-4 me-2" />}
+                  {t.autoRefresh}
+                </Button>
+                
+                <Button variant="outline" onClick={handleRefresh} className="rounded-xl">
+                  <RefreshCw className="h-4 w-4 me-2" />
+                  {t.refresh}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                <div className="w-2 h-2 rounded-full bg-green-500 me-2 animate-pulse" />
-                {isRTL ? 'جميع الخدمات تعمل' : 'All Services Operational'}
-              </Badge>
-              <Button variant="outline" className="rounded-xl" onClick={handleRefresh} disabled={refreshing}>
-                <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''}`} />
-                {isRTL ? 'تحديث' : 'Refresh'}
-              </Button>
+            
+            {/* Last Update */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              {t.lastUpdate}: {formatTime(lastUpdate)}
             </div>
           </div>
         </header>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Under Development Banner */}
-          <Card className="card-nassaq border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
+        
+        {/* Main Content */}
+        <main className="container mx-auto px-4 lg:px-6 py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="overview">{t.overview}</TabsTrigger>
+              <TabsTrigger value="details">{t.details}</TabsTrigger>
+              <TabsTrigger value="alerts" className="relative">
+                {t.alerts}
+                {SAMPLE_ALERTS.filter(a => !a.resolved).length > 0 && (
+                  <span className="absolute -top-1 -end-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {SAMPLE_ALERTS.filter(a => !a.resolved).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="tools">{t.tools}</TabsTrigger>
+            </TabsList>
+            
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Server Resources */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* CPU */}
+                <Card className="card-nassaq">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Cpu className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <span className="font-medium">{t.cpuUsage}</span>
+                      </div>
+                      <span className={`text-2xl font-bold ${getMetricColor(metrics.cpu)}`}>
+                        {metrics.cpu.toFixed(0)}%
+                      </span>
+                    </div>
+                    <Progress value={metrics.cpu} className={`h-2 ${getProgressColor(metrics.cpu)}`} />
+                  </CardContent>
+                </Card>
+                
+                {/* Memory */}
+                <Card className="card-nassaq">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <HardDrive className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <span className="font-medium">{t.memoryUsage}</span>
+                      </div>
+                      <span className={`text-2xl font-bold ${getMetricColor(metrics.memory)}`}>
+                        {metrics.memory.toFixed(0)}%
+                      </span>
+                    </div>
+                    <Progress value={metrics.memory} className={`h-2 ${getProgressColor(metrics.memory)}`} />
+                  </CardContent>
+                </Card>
+                
+                {/* Disk */}
+                <Card className="card-nassaq">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Database className="h-5 w-5 text-green-600" />
+                        </div>
+                        <span className="font-medium">{t.diskUsage}</span>
+                      </div>
+                      <span className={`text-2xl font-bold ${getMetricColor(metrics.disk, { warning: 80, critical: 95 })}`}>
+                        {metrics.disk}%
+                      </span>
+                    </div>
+                    <Progress value={metrics.disk} className={`h-2 ${getProgressColor(metrics.disk, { warning: 80, critical: 95 })}`} />
+                  </CardContent>
+                </Card>
+                
+                {/* Network */}
+                <Card className="card-nassaq">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-cyan-100 rounded-lg">
+                          <Wifi className="h-5 w-5 text-cyan-600" />
+                        </div>
+                        <span className="font-medium">{t.networkUsage}</span>
+                      </div>
+                      <span className={`text-2xl font-bold ${getMetricColor(metrics.network)}`}>
+                        {metrics.network}%
+                      </span>
+                    </div>
+                    <Progress value={metrics.network} className={`h-2 ${getProgressColor(metrics.network)}`} />
+                  </CardContent>
+                </Card>
               </div>
-              <div>
-                <h3 className="font-cairo font-medium text-yellow-600">
-                  {isRTL ? 'هذه الصفحة قيد التطوير' : 'This Page is Under Development'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isRTL 
-                    ? 'البيانات المعروضة هي بيانات توضيحية. سيتم ربطها بالبيانات الفعلية قريباً.'
-                    : 'The data shown is placeholder data. It will be connected to real metrics soon.'}
-                </p>
+              
+              {/* Performance Chart */}
+              <Card className="card-nassaq">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-brand-navy" />
+                    {t.serverResources} - {t.today}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={performanceData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                        <XAxis dataKey="time" stroke="#9CA3AF" fontSize={12} />
+                        <YAxis stroke="#9CA3AF" fontSize={12} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <Area type="monotone" dataKey="cpu" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.2} name={t.cpuUsage} />
+                        <Area type="monotone" dataKey="memory" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.2} name={t.memoryUsage} />
+                        <Area type="monotone" dataKey="network" stroke="#06B6D4" fill="#06B6D4" fillOpacity={0.2} name={t.networkUsage} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* API Performance */}
+                <Card className="card-nassaq bg-gradient-to-br from-blue-50 to-blue-100/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-blue-500 rounded-lg">
+                        <Globe className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-medium">{t.apiPerformance}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.avgResponseTime}</span>
+                        <span className="font-bold">{metrics.apiResponseTime} {t.ms}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.requestsPerMin}</span>
+                        <span className="font-bold">{metrics.apiRequestsPerMin}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.successRate}</span>
+                        <span className="font-bold text-green-600">{metrics.apiSuccessRate}%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Database */}
+                <Card className="card-nassaq bg-gradient-to-br from-green-50 to-green-100/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-green-500 rounded-lg">
+                        <Database className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-medium">{t.databasePerformance}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.activeConnections}</span>
+                        <span className="font-bold">{metrics.dbConnections}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.queryTime}</span>
+                        <span className="font-bold">{metrics.dbQueryTime} {t.ms}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.slowQueries}</span>
+                        <span className={`font-bold ${metrics.dbSlowQueries > 5 ? 'text-yellow-600' : 'text-green-600'}`}>
+                          {metrics.dbSlowQueries}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Operations */}
+                <Card className="card-nassaq bg-gradient-to-br from-purple-50 to-purple-100/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-purple-500 rounded-lg">
+                        <Zap className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-medium">{t.systemOperations}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.totalOperations}</span>
+                        <span className="font-bold">{metrics.totalOperations.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.activeUsers}</span>
+                        <span className="font-bold">{metrics.activeUsers}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.errorCount}</span>
+                        <span className={`font-bold ${metrics.errors > 5 ? 'text-red-600' : 'text-green-600'}`}>
+                          {metrics.errors}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* AI Status */}
+                <Card className="card-nassaq bg-gradient-to-br from-pink-50 to-pink-100/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-pink-500 rounded-lg">
+                        <Brain className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-medium">{t.aiStatus}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.aiOperations}</span>
+                        <span className="font-bold">{metrics.aiOperations}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.aiModels}</span>
+                        <span className="font-bold">{metrics.aiModelsActive} {t.active}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{t.status}</span>
+                        <Badge className="bg-green-500">{t.healthy}</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* System Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="card-nassaq">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <Cpu className="h-5 w-5 text-blue-600" />
+              
+              {/* Integrations & Jobs Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Integrations */}
+                <Card className="card-nassaq">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Link2 className="h-5 w-5 text-brand-navy" />
+                      {t.integrationsStatus}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {SAMPLE_INTEGRATIONS.map((integration) => (
+                        <div 
+                          key={integration.id}
+                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            {integration.status === 'connected' ? (
+                              <Cloud className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <CloudOff className="h-5 w-5 text-red-500" />
+                            )}
+                            <span className="font-medium">
+                              {isRTL ? integration.name : integration.name_en}
+                            </span>
+                          </div>
+                          <Badge className={integration.status === 'connected' ? 'bg-green-500' : 'bg-red-500'}>
+                            {integration.status === 'connected' ? t.connected : t.disconnected}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Background Jobs */}
+                <Card className="card-nassaq">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-brand-navy" />
+                        {t.backgroundJobs}
+                      </CardTitle>
+                      <Button variant="outline" size="sm" onClick={() => setShowJobsSheet(true)}>
+                        <Eye className="h-4 w-4 me-2" />
+                        {t.details}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-4 gap-4 text-center">
+                      <div className="p-3 bg-blue-50 rounded-xl">
+                        <p className="text-2xl font-bold text-blue-600">{metrics.jobsRunning}</p>
+                        <p className="text-xs text-muted-foreground">{t.running}</p>
+                      </div>
+                      <div className="p-3 bg-yellow-50 rounded-xl">
+                        <p className="text-2xl font-bold text-yellow-600">{metrics.jobsPending}</p>
+                        <p className="text-xs text-muted-foreground">{t.pending}</p>
+                      </div>
+                      <div className="p-3 bg-green-50 rounded-xl">
+                        <p className="text-2xl font-bold text-green-600">{metrics.jobsCompleted}</p>
+                        <p className="text-xs text-muted-foreground">{t.completed}</p>
+                      </div>
+                      <div className="p-3 bg-red-50 rounded-xl">
+                        <p className="text-2xl font-bold text-red-600">{metrics.jobsFailed}</p>
+                        <p className="text-xs text-muted-foreground">{t.failed}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            {/* Details Tab */}
+            <TabsContent value="details" className="space-y-6">
+              {/* Recent Errors */}
+              <Card className="card-nassaq">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                      {t.errors}
+                    </CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => setShowErrorLogs(true)}>
+                      <FileText className="h-4 w-4 me-2" />
+                      {t.viewErrorLogs}
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'المعالج' : 'CPU'}</p>
-                    <p className="text-2xl font-bold">{systemMetrics.cpu}%</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {SAMPLE_ERRORS.map((error) => (
+                      <div 
+                        key={error.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          error.severity === 'critical' ? 'border-red-200 bg-red-50' :
+                          error.severity === 'warning' ? 'border-yellow-200 bg-yellow-50' :
+                          'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {error.severity === 'critical' ? (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          ) : error.severity === 'warning' ? (
+                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                          ) : (
+                            <Info className="h-5 w-5 text-blue-500" />
+                          )}
+                          <div>
+                            <p className="font-medium">{error.type}</p>
+                            <p className="text-sm text-muted-foreground">{error.message}</p>
+                          </div>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm">{error.time}</p>
+                          <p className="text-xs text-muted-foreground">{error.service}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                </CardContent>
+              </Card>
+              
+              {/* Jobs Details */}
+              <Card className="card-nassaq">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-brand-navy" />
+                    {t.jobsQueue}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {SAMPLE_JOBS.map((job) => (
+                      <div key={job.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {job.status === 'running' && <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />}
+                            {job.status === 'pending' && <Clock className="h-4 w-4 text-yellow-500" />}
+                            {job.status === 'completed' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                            {job.status === 'failed' && <XCircle className="h-4 w-4 text-red-500" />}
+                            <span className="font-medium">{isRTL ? job.name : job.name_en}</span>
+                          </div>
+                          <Badge className={
+                            job.status === 'running' ? 'bg-blue-500' :
+                            job.status === 'pending' ? 'bg-yellow-500' :
+                            job.status === 'completed' ? 'bg-green-500' :
+                            'bg-red-500'
+                          }>
+                            {t[job.status]}
+                          </Badge>
+                        </div>
+                        {job.status === 'running' && (
+                          <Progress value={job.progress} className="h-2" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Alerts Tab */}
+            <TabsContent value="alerts" className="space-y-6">
+              {SAMPLE_ALERTS.filter(a => !a.resolved).length === 0 ? (
+                <Card className="p-12 text-center">
+                  <CheckCircle2 className="h-16 w-16 mx-auto text-green-500 mb-4" />
+                  <h3 className="font-bold text-lg mb-2">{t.noAlerts}</h3>
+                  <p className="text-muted-foreground">{t.allSystemsOperational}</p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {SAMPLE_ALERTS.map((alert) => (
+                    <Card 
+                      key={alert.id}
+                      className={`card-nassaq ${
+                        alert.severity === 'critical' ? 'border-red-500 bg-red-50' :
+                        alert.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                        ''
+                      } ${alert.resolved ? 'opacity-50' : ''}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {alert.severity === 'critical' ? (
+                              <XCircle className="h-6 w-6 text-red-500" />
+                            ) : (
+                              <AlertTriangle className="h-6 w-6 text-yellow-500" />
+                            )}
+                            <div>
+                              <h4 className="font-bold">{isRTL ? alert.title : alert.title_en}</h4>
+                              <p className="text-sm text-muted-foreground">{alert.time}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {alert.resolved ? (
+                              <Badge className="bg-green-500">{isRTL ? 'تم الحل' : 'Resolved'}</Badge>
+                            ) : (
+                              <>
+                                <Button variant="outline" size="sm">
+                                  <Bell className="h-4 w-4 me-2" />
+                                  {t.escalateAlert}
+                                </Button>
+                                <Button size="sm" className="bg-brand-navy">
+                                  {isRTL ? 'معالجة' : 'Handle'}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-                <Progress value={systemMetrics.cpu} className="h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="card-nassaq">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <Server className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'الذاكرة' : 'Memory'}</p>
-                    <p className="text-2xl font-bold">{systemMetrics.memory}%</p>
-                  </div>
-                </div>
-                <Progress value={systemMetrics.memory} className="h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="card-nassaq">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <HardDrive className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'التخزين' : 'Disk'}</p>
-                    <p className="text-2xl font-bold">{systemMetrics.disk}%</p>
-                  </div>
-                </div>
-                <Progress value={systemMetrics.disk} className="h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="card-nassaq">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                    <Wifi className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'الشبكة' : 'Network'}</p>
-                    <p className="text-2xl font-bold">{systemMetrics.network}%</p>
-                  </div>
-                </div>
-                <Progress value={systemMetrics.network} className="h-2" />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Services Status */}
-          <Card className="card-nassaq">
-            <CardHeader>
-              <CardTitle className="font-cairo flex items-center gap-2">
-                <Activity className="h-5 w-5 text-brand-turquoise" />
-                {isRTL ? 'حالة الخدمات' : 'Services Status'}
-              </CardTitle>
-              <CardDescription>
-                {isRTL ? 'مراقبة حالة جميع خدمات النظام' : 'Monitor all system services status'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {services.map((service, index) => (
+              )}
+            </TabsContent>
+            
+            {/* Tools Tab */}
+            <TabsContent value="tools" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* View Error Logs */}
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => setShowErrorLogs(true)}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-red-100 flex items-center justify-center">
+                      <FileText className="h-7 w-7 text-red-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.viewLogs}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'عرض سجل الأخطاء التفصيلي' : 'View detailed error logs'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Monitor APIs */}
+                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-100 flex items-center justify-center">
+                      <Globe className="h-7 w-7 text-blue-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.monitorAPIs}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'مراقبة واجهات البرمجة' : 'Monitor API endpoints'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Monitor Jobs */}
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => setShowJobsSheet(true)}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-purple-100 flex items-center justify-center">
+                      <Layers className="h-7 w-7 text-purple-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.monitorJobs}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'مراقبة المهام الخلفية' : 'Monitor background jobs'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Restart Service */}
+                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-orange-100 flex items-center justify-center">
+                      <RotateCcw className="h-7 w-7 text-orange-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.restartService}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'إعادة تشغيل خدمة معينة' : 'Restart a specific service'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Re-Sync */}
+                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-cyan-100 flex items-center justify-center">
+                      <RefreshCw className="h-7 w-7 text-cyan-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.reSync}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'إعادة مزامنة التكاملات' : 'Re-sync integrations'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Escalate Alert */}
+                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-yellow-100 flex items-center justify-center">
+                      <Bell className="h-7 w-7 text-yellow-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.escalateAlert}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'تصعيد تنبيه للفريق التقني' : 'Escalate alert to tech team'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Download Report */}
+                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-green-100 flex items-center justify-center">
+                      <Download className="h-7 w-7 text-green-600" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.downloadReport}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'تنزيل تقرير تشخيصي' : 'Download diagnostic report'}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* AI Diagnosis */}
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-pink-50 to-purple-50"
+                  onClick={() => setShowDiagnosticDialog(true)}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                      <Brain className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="font-bold mb-2">{t.aiDiagnosis}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'تشغيل تشخيص ذكي للنظام' : 'Run AI system diagnosis'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+        
+        {/* Error Logs Sheet */}
+        <Sheet open={showErrorLogs} onOpenChange={setShowErrorLogs}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[500px] sm:w-[700px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-brand-navy" />
+                {t.viewErrorLogs}
+              </SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-120px)] mt-6">
+              <div className="space-y-4 pe-4">
+                {SAMPLE_ERRORS.concat(SAMPLE_ERRORS).concat(SAMPLE_ERRORS).map((error, index) => (
                   <div 
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-xl"
+                    key={`${error.id}-${index}`}
+                    className="p-4 border rounded-lg space-y-2"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        service.status === 'healthy' ? 'bg-green-500' : 'bg-yellow-500'
-                      }`} />
-                      <span className="font-medium">{service.name}</span>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                      <span>{isRTL ? 'وقت التشغيل' : 'Uptime'}: {service.uptime}</span>
-                      <span>{isRTL ? 'التأخير' : 'Latency'}: {service.latency}</span>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        {isRTL ? 'يعمل' : 'Healthy'}
+                    <div className="flex items-center justify-between">
+                      <Badge className={
+                        error.severity === 'critical' ? 'bg-red-500' :
+                        error.severity === 'warning' ? 'bg-yellow-500' :
+                        'bg-blue-500'
+                      }>
+                        {error.severity}
                       </Badge>
+                      <span className="text-sm text-muted-foreground">{error.time}</span>
                     </div>
+                    <p className="font-medium">{error.type}</p>
+                    <p className="text-sm text-muted-foreground">{error.message}</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
+                      Service: {error.service}
+                    </p>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activities & Quick Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Activities */}
-            <Card className="card-nassaq">
-              <CardHeader>
-                <CardTitle className="font-cairo flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-brand-purple" />
-                  {isRTL ? 'آخر الأنشطة' : 'Recent Activities'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentActivities.map((activity, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-2 border-b border-border/50 last:border-0"
-                    >
-                      <span className="text-sm">{activity.event}</span>
-                      <span className="text-xs text-muted-foreground">{activity.time}</span>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+        
+        {/* Jobs Sheet */}
+        <Sheet open={showJobsSheet} onOpenChange={setShowJobsSheet}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[500px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-brand-navy" />
+                {t.backgroundJobs}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              {SAMPLE_JOBS.map((job) => (
+                <Card key={job.id}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{isRTL ? job.name : job.name_en}</span>
+                      <Badge className={
+                        job.status === 'running' ? 'bg-blue-500' :
+                        job.status === 'pending' ? 'bg-yellow-500' :
+                        job.status === 'completed' ? 'bg-green-500' :
+                        'bg-red-500'
+                      }>
+                        {t[job.status]}
+                      </Badge>
                     </div>
-                  ))}
+                    {job.status === 'running' && (
+                      <>
+                        <Progress value={job.progress} className="h-2" />
+                        <p className="text-sm text-muted-foreground">{job.progress}%</p>
+                      </>
+                    )}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{isRTL ? 'بدأ في:' : 'Started:'} {job.started}</span>
+                      {job.status === 'running' && (
+                        <Button variant="ghost" size="sm">
+                          <Pause className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* AI Diagnostic Dialog */}
+        <Dialog open={showDiagnosticDialog} onOpenChange={setShowDiagnosticDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-brand-navy" />
+                {t.aiDiagnosis}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL 
+                  ? 'سيقوم النظام بتحليل شامل للحالة التقنية باستخدام الذكاء الاصطناعي'
+                  : 'The system will perform comprehensive technical analysis using AI'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {isDiagnosing ? (
+              <div className="py-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand-navy/10 flex items-center justify-center">
+                  <RefreshCw className="h-8 w-8 text-brand-navy animate-spin" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="card-nassaq">
-              <CardHeader>
-                <CardTitle className="font-cairo flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-brand-navy" />
-                  {isRTL ? 'إحصائيات سريعة' : 'Quick Stats'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-brand-turquoise" />
-                    <span>{isRTL ? 'مستخدمون نشطون الآن' : 'Active Users Now'}</span>
+                <p className="font-medium">
+                  {isRTL ? 'جاري التشخيص...' : 'Running diagnosis...'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {isRTL ? 'يرجى الانتظار' : 'Please wait'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="py-4 space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{isRTL ? 'تحليل مؤشرات الأداء' : 'Performance metrics analysis'}</span>
                   </div>
-                  <span className="text-2xl font-bold">127</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-5 w-5 text-yellow-500" />
-                    <span>{isRTL ? 'طلبات API/دقيقة' : 'API Requests/min'}</span>
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{isRTL ? 'مراجعة استهلاك الموارد' : 'Resource consumption review'}</span>
                   </div>
-                  <span className="text-2xl font-bold">1,234</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-5 w-5 text-brand-purple" />
-                    <span>{isRTL ? 'متوسط وقت الاستجابة' : 'Avg Response Time'}</span>
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{isRTL ? 'فحص التكاملات' : 'Integrations check'}</span>
                   </div>
-                  <span className="text-2xl font-bold">45ms</span>
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{isRTL ? 'تحليل الأخطاء المتكررة' : 'Error pattern analysis'}</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                <DialogFooter className="flex-row-reverse gap-2">
+                  <Button variant="outline" onClick={() => setShowDiagnosticDialog(false)}>
+                    {t.cancel}
+                  </Button>
+                  <Button onClick={runDiagnosis} className="bg-brand-navy">
+                    <Brain className="h-4 w-4 me-2" />
+                    {t.runDiagnostics}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
 };
+
+export default SystemMonitoringPage;
