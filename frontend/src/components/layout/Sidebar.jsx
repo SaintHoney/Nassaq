@@ -13,6 +13,7 @@ import {
   BookOpen,
   Calendar,
   CalendarCheck,
+  ClipboardList,
   BarChart3,
   Settings,
   ChevronRight,
