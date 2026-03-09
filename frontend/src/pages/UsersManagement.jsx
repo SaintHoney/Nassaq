@@ -235,14 +235,17 @@ export default function UsersManagement() {
   const fetchTeacherRequests = useCallback(async () => {
     try {
       const response = await api.get('/api/registration-requests', {
-        params: { status: 'pending' }
+        params: { status: 'pending', account_type: 'teacher' }
       });
-      setTeacherRequests(response.data || []);
+      // Handle new API response format
+      const requests = response.data?.requests || response.data || [];
+      setTeacherRequests(requests);
     } catch (error) {
-      // Mock data
+      console.error('Error fetching teacher requests:', error);
+      // Mock data for demo
       setTeacherRequests(generateMockTeacherRequests());
     }
-  }, []);
+  }, [api]);
   
   useEffect(() => {
     fetchUsers();
