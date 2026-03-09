@@ -84,9 +84,9 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: BarChart3,
-        label: isRTL ? 'التحليلات' : 'Analytics',
-        href: '/admin/reports',
-        roles: ['platform_admin', 'ministry_rep'],
+        label: isRTL ? 'التقارير والتحليلات' : 'Analytics & Reports',
+        href: '/admin/analytics',
+        roles: ['platform_admin'],
       },
       {
         icon: Link2,
