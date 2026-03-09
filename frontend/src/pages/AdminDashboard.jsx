@@ -280,6 +280,101 @@ export const AdminDashboard = () => {
     }
   };
 
+  // تصدير البيانات - Export Data (تنزيل ملف فعلي)
+  const handleExportData = (format) => {
+    const data = {
+      exportDate: new Date().toISOString(),
+      filters: filters,
+      stats: {
+        totalSchools: stats?.total_schools || 0,
+        activeSchools: stats?.active_schools || 0,
+        suspendedSchools: stats?.suspended_schools || 0,
+        pendingSchools: stats?.pending_schools || 0,
+        totalStudents: stats?.total_students || 0,
+        totalTeachers: stats?.total_teachers || 0,
+        totalAdmins: stats?.total_admins || 0,
+        activeUsersToday: stats?.active_users_today || 0,
+        apiCallsToday: stats?.api_calls_today || 0,
+      }
+    };
+
+    if (format === 'excel') {
+      // تصدير كملف CSV (يفتح في Excel)
+      const csvContent = [
+        ['تقرير المؤشرات العامة للمنصة - NASSAQ Platform Report'],
+        ['تاريخ التصدير', new Date().toLocaleDateString('ar-SA')],
+        [''],
+        ['المؤشر', 'القيمة'],
+        ['إجمالي المدارس', data.stats.totalSchools],
+        ['المدارس النشطة', data.stats.activeSchools],
+        ['المدارس الموقوفة', data.stats.suspendedSchools],
+        ['المدارس المعلقة', data.stats.pendingSchools],
+        ['إجمالي الطلاب', data.stats.totalStudents],
+        ['إجمالي المعلمين', data.stats.totalTeachers],
+        ['إجمالي المسؤولين', data.stats.totalAdmins],
+        ['المستخدمين النشطين اليوم', data.stats.activeUsersToday],
+        ['طلبات API اليوم', data.stats.apiCallsToday],
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `nassaq_report_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(isRTL ? 'تم تنزيل ملف Excel بنجاح' : 'Excel file downloaded');
+    } else {
+      // تصدير كملف HTML (يمكن طباعته كـ PDF)
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8">
+          <title>تقرير نَسَّق - NASSAQ Report</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; direction: rtl; }
+            h1 { color: #1e3a5f; border-bottom: 2px solid #38b2ac; padding-bottom: 10px; }
+            .date { color: #666; margin-bottom: 30px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+            th { background: #1e3a5f; color: white; }
+            tr:nth-child(even) { background: #f9f9f9; }
+            .footer { margin-top: 40px; color: #999; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>📊 تقرير المؤشرات العامة للمنصة</h1>
+          <p class="date">تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')} | ${getCurrentHijriDate().hijri}</p>
+          <table>
+            <tr><th>المؤشر</th><th>القيمة</th></tr>
+            <tr><td>إجمالي المدارس المسجلة</td><td>${data.stats.totalSchools}</td></tr>
+            <tr><td>المدارس النشطة</td><td>${data.stats.activeSchools}</td></tr>
+            <tr><td>المدارس الموقوفة</td><td>${data.stats.suspendedSchools}</td></tr>
+            <tr><td>المدارس قيد الإعداد</td><td>${data.stats.pendingSchools}</td></tr>
+            <tr><td>إجمالي الطلاب</td><td>${data.stats.totalStudents.toLocaleString()}</td></tr>
+            <tr><td>إجمالي المعلمين</td><td>${data.stats.totalTeachers.toLocaleString()}</td></tr>
+            <tr><td>إجمالي المسؤولين</td><td>${data.stats.totalAdmins}</td></tr>
+            <tr><td>المستخدمين النشطين اليوم</td><td>${data.stats.activeUsersToday.toLocaleString()}</td></tr>
+            <tr><td>طلبات API اليوم</td><td>${data.stats.apiCallsToday.toLocaleString()}</td></tr>
+          </table>
+          <p class="footer">تم إنشاء هذا التقرير بواسطة نظام نَسَّق | NASSAQ School Management System</p>
+          <script>window.print();</script>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `nassaq_report_${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(isRTL ? 'تم تنزيل ملف PDF بنجاح (افتحه واطبعه كـ PDF)' : 'PDF file downloaded');
+    }
+  };
+
   // AI Operations Handler
   const handleAiOperation = async (operation) => {
     toast.success(isRTL ? `جاري تشغيل: ${operation}` : `Running: ${operation}`);
