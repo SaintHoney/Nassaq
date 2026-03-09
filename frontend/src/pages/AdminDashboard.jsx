@@ -293,7 +293,7 @@ export const AdminDashboard = () => {
                 className={`text-xs ${item.color || 'bg-muted/50'}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1.5`}></span>
-                {item.label}: {item.value}
+                {item.label}: {item.value ?? 0}
               </Badge>
             ))}
           </div>
