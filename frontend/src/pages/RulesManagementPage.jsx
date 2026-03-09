@@ -1,10 +1,40 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
+import { PageHeader } from '../components/layout/PageHeader';
 import { useTheme } from '../contexts/ThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Switch } from '../components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '../components/ui/sheet';
 import {
   BookOpen,
   Plus,
@@ -12,6 +42,7 @@ import {
   Filter,
   Clock,
   CheckCircle,
+  CheckCircle2,
   Settings,
   FileText,
   AlertCircle,
@@ -20,219 +51,1241 @@ import {
   Users,
   GraduationCap,
   Building2,
+  Edit,
+  Trash2,
+  Copy,
+  Eye,
+  EyeOff,
+  ChevronRight,
+  XCircle,
+  AlertTriangle,
+  Shield,
+  Percent,
+  Hash,
+  ToggleRight,
+  List,
+  Zap,
+  Brain,
+  Globe,
+  Lock,
+  Unlock,
+  Save,
+  X,
+  Info,
+  ArrowLeft,
+  LayoutGrid,
+  Table,
+  Download,
+  Upload,
+  History,
+  Play,
+  Pause,
 } from 'lucide-react';
 
+// Translations
+const translations = {
+  ar: {
+    pageTitle: 'إدارة القواعد',
+    pageSubtitle: 'إدارة القواعد التعليمية والتشغيلية للمنصة',
+    newRule: 'قاعدة جديدة',
+    refresh: 'تحديث',
+    search: 'البحث في القواعد...',
+    filter: 'تصفية',
+    totalRules: 'إجمالي القواعد',
+    activeRules: 'قواعد نشطة',
+    draftRules: 'قواعد مسودة',
+    categories: 'الفئات',
+    allRules: 'جميع القواعد',
+    byCategory: 'حسب الفئة',
+    recent: 'الأحدث',
+    active: 'نشط',
+    draft: 'مسودة',
+    disabled: 'معطل',
+    view: 'عرض',
+    edit: 'تعديل',
+    delete: 'حذف',
+    duplicate: 'نسخ',
+    enable: 'تفعيل',
+    disable: 'تعطيل',
+    rule: 'قاعدة',
+    rules: 'قواعد',
+    cancel: 'إلغاء',
+    save: 'حفظ',
+    create: 'إنشاء',
+    createRule: 'إنشاء قاعدة جديدة',
+    editRule: 'تعديل القاعدة',
+    ruleName: 'اسم القاعدة',
+    ruleDescription: 'وصف القاعدة',
+    ruleCategory: 'فئة القاعدة',
+    ruleType: 'نوع القاعدة',
+    ruleValue: 'قيمة القاعدة',
+    ruleStatus: 'حالة القاعدة',
+    appliesTo: 'تطبق على',
+    priority: 'الأولوية',
+    high: 'عالية',
+    medium: 'متوسطة',
+    low: 'منخفضة',
+    allSchools: 'جميع المدارس',
+    specificSchools: 'مدارس محددة',
+    deleteConfirm: 'هل أنت متأكد من حذف هذه القاعدة؟',
+    deleteWarning: 'هذا الإجراء لا يمكن التراجع عنه.',
+    ruleCreated: 'تم إنشاء القاعدة بنجاح',
+    ruleUpdated: 'تم تحديث القاعدة بنجاح',
+    ruleDeleted: 'تم حذف القاعدة بنجاح',
+    ruleDuplicated: 'تم نسخ القاعدة بنجاح',
+    ruleEnabled: 'تم تفعيل القاعدة',
+    ruleDisabled: 'تم تعطيل القاعدة',
+    export: 'تصدير',
+    import: 'استيراد',
+    history: 'السجل',
+    conditions: 'الشروط',
+    actions: 'الإجراءات',
+    noRules: 'لا توجد قواعد',
+    noRulesDesc: 'ابدأ بإنشاء قاعدة جديدة',
+  },
+  en: {
+    pageTitle: 'Rules Management',
+    pageSubtitle: 'Manage educational and operational platform rules',
+    newRule: 'New Rule',
+    refresh: 'Refresh',
+    search: 'Search rules...',
+    filter: 'Filter',
+    totalRules: 'Total Rules',
+    activeRules: 'Active Rules',
+    draftRules: 'Draft Rules',
+    categories: 'Categories',
+    allRules: 'All Rules',
+    byCategory: 'By Category',
+    recent: 'Recent',
+    active: 'Active',
+    draft: 'Draft',
+    disabled: 'Disabled',
+    view: 'View',
+    edit: 'Edit',
+    delete: 'Delete',
+    duplicate: 'Duplicate',
+    enable: 'Enable',
+    disable: 'Disable',
+    rule: 'rule',
+    rules: 'rules',
+    cancel: 'Cancel',
+    save: 'Save',
+    create: 'Create',
+    createRule: 'Create New Rule',
+    editRule: 'Edit Rule',
+    ruleName: 'Rule Name',
+    ruleDescription: 'Rule Description',
+    ruleCategory: 'Rule Category',
+    ruleType: 'Rule Type',
+    ruleValue: 'Rule Value',
+    ruleStatus: 'Rule Status',
+    appliesTo: 'Applies To',
+    priority: 'Priority',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Low',
+    allSchools: 'All Schools',
+    specificSchools: 'Specific Schools',
+    deleteConfirm: 'Are you sure you want to delete this rule?',
+    deleteWarning: 'This action cannot be undone.',
+    ruleCreated: 'Rule created successfully',
+    ruleUpdated: 'Rule updated successfully',
+    ruleDeleted: 'Rule deleted successfully',
+    ruleDuplicated: 'Rule duplicated successfully',
+    ruleEnabled: 'Rule enabled',
+    ruleDisabled: 'Rule disabled',
+    export: 'Export',
+    import: 'Import',
+    history: 'History',
+    conditions: 'Conditions',
+    actions: 'Actions',
+    noRules: 'No rules found',
+    noRulesDesc: 'Start by creating a new rule',
+  }
+};
+
+// Rule Categories
+const RULE_CATEGORIES = {
+  attendance: {
+    id: 'attendance',
+    title_ar: 'قواعد الحضور والغياب',
+    title_en: 'Attendance Rules',
+    description_ar: 'إدارة قواعد تسجيل الحضور والتأخر والغياب',
+    description_en: 'Manage attendance, tardiness, and absence rules',
+    icon: Clock,
+    color: 'bg-blue-500',
+  },
+  grading: {
+    id: 'grading',
+    title_ar: 'قواعد التقييم والدرجات',
+    title_en: 'Grading Rules',
+    description_ar: 'نظام الدرجات والتقييمات والاختبارات',
+    description_en: 'Grading system, assessments, and exams rules',
+    icon: FileText,
+    color: 'bg-green-500',
+  },
+  scheduling: {
+    id: 'scheduling',
+    title_ar: 'قواعد الجدولة',
+    title_en: 'Scheduling Rules',
+    description_ar: 'قواعد توزيع الحصص ونصاب المعلمين',
+    description_en: 'Class distribution and teacher workload rules',
+    icon: Calendar,
+    color: 'bg-purple-500',
+  },
+  behavior: {
+    id: 'behavior',
+    title_ar: 'قواعد السلوك',
+    title_en: 'Behavior Rules',
+    description_ar: 'نظام نقاط السلوك والمكافآت والعقوبات',
+    description_en: 'Behavior points, rewards, and penalties system',
+    icon: Users,
+    color: 'bg-orange-500',
+  },
+  academic: {
+    id: 'academic',
+    title_ar: 'القواعد الأكاديمية',
+    title_en: 'Academic Rules',
+    description_ar: 'متطلبات النجاح والانتقال بين المراحل',
+    description_en: 'Pass requirements and grade progression rules',
+    icon: GraduationCap,
+    color: 'bg-teal-500',
+  },
+  tenant: {
+    id: 'tenant',
+    title_ar: 'قواعد المدارس',
+    title_en: 'Tenant Rules',
+    description_ar: 'قواعد إنشاء وإدارة المدارس',
+    description_en: 'School creation and management rules',
+    icon: Building2,
+    color: 'bg-indigo-500',
+  },
+  security: {
+    id: 'security',
+    title_ar: 'قواعد الأمان',
+    title_en: 'Security Rules',
+    description_ar: 'قواعد كلمات المرور والوصول',
+    description_en: 'Password and access control rules',
+    icon: Shield,
+    color: 'bg-red-500',
+  },
+  ai: {
+    id: 'ai',
+    title_ar: 'قواعد الذكاء الاصطناعي',
+    title_en: 'AI Rules',
+    description_ar: 'قواعد استخدام وتفعيل الذكاء الاصطناعي',
+    description_en: 'AI usage and activation rules',
+    icon: Brain,
+    color: 'bg-pink-500',
+  },
+};
+
+// Rule Types
+const RULE_TYPES = {
+  numeric: { label_ar: 'رقمي', label_en: 'Numeric', icon: Hash },
+  percentage: { label_ar: 'نسبة مئوية', label_en: 'Percentage', icon: Percent },
+  boolean: { label_ar: 'نعم/لا', label_en: 'Yes/No', icon: ToggleRight },
+  list: { label_ar: 'قائمة', label_en: 'List', icon: List },
+  text: { label_ar: 'نص', label_en: 'Text', icon: FileText },
+};
+
+// Sample Rules Data
+const SAMPLE_RULES = [
+  {
+    id: '1',
+    name_ar: 'الحد الأقصى للغياب',
+    name_en: 'Maximum Absence Days',
+    description_ar: 'عدد أيام الغياب المسموحة قبل الإنذار',
+    description_en: 'Allowed absence days before warning',
+    category: 'attendance',
+    type: 'numeric',
+    value: 15,
+    unit: 'يوم',
+    status: 'active',
+    priority: 'high',
+    applies_to: 'all',
+    created_at: '2026-01-15',
+    updated_at: '2026-03-01',
+  },
+  {
+    id: '2',
+    name_ar: 'نسبة النجاح الدنيا',
+    name_en: 'Minimum Pass Percentage',
+    description_ar: 'الحد الأدنى للنجاح في المواد',
+    description_en: 'Minimum percentage to pass subjects',
+    category: 'grading',
+    type: 'percentage',
+    value: 50,
+    unit: '%',
+    status: 'active',
+    priority: 'high',
+    applies_to: 'all',
+    created_at: '2026-01-10',
+    updated_at: '2026-02-20',
+  },
+  {
+    id: '3',
+    name_ar: 'نصاب المعلم الأسبوعي',
+    name_en: 'Teacher Weekly Load',
+    description_ar: 'الحد الأقصى لحصص المعلم أسبوعياً',
+    description_en: 'Maximum weekly classes for teachers',
+    category: 'scheduling',
+    type: 'numeric',
+    value: 24,
+    unit: 'حصة',
+    status: 'active',
+    priority: 'medium',
+    applies_to: 'all',
+    created_at: '2026-01-20',
+    updated_at: '2026-02-15',
+  },
+  {
+    id: '4',
+    name_ar: 'تفعيل نقاط السلوك',
+    name_en: 'Enable Behavior Points',
+    description_ar: 'تفعيل نظام نقاط السلوك',
+    description_en: 'Enable behavior points system',
+    category: 'behavior',
+    type: 'boolean',
+    value: true,
+    status: 'active',
+    priority: 'medium',
+    applies_to: 'all',
+    created_at: '2026-02-01',
+    updated_at: '2026-02-28',
+  },
+  {
+    id: '5',
+    name_ar: 'الحد الأقصى للطلاب في الفصل',
+    name_en: 'Maximum Students per Class',
+    description_ar: 'العدد الأقصى للطلاب في الفصل الواحد',
+    description_en: 'Maximum number of students per class',
+    category: 'tenant',
+    type: 'numeric',
+    value: 35,
+    unit: 'طالب',
+    status: 'active',
+    priority: 'high',
+    applies_to: 'all',
+    created_at: '2026-01-05',
+    updated_at: '2026-03-05',
+  },
+  {
+    id: '6',
+    name_ar: 'طول كلمة المرور الأدنى',
+    name_en: 'Minimum Password Length',
+    description_ar: 'الحد الأدنى لطول كلمة المرور',
+    description_en: 'Minimum password length required',
+    category: 'security',
+    type: 'numeric',
+    value: 8,
+    unit: 'حرف',
+    status: 'active',
+    priority: 'high',
+    applies_to: 'all',
+    created_at: '2026-01-01',
+    updated_at: '2026-01-01',
+  },
+  {
+    id: '7',
+    name_ar: 'تفعيل AI للمدارس الجديدة',
+    name_en: 'Enable AI for New Schools',
+    description_ar: 'تفعيل الذكاء الاصطناعي تلقائياً للمدارس الجديدة',
+    description_en: 'Automatically enable AI for new schools',
+    category: 'ai',
+    type: 'boolean',
+    value: false,
+    status: 'draft',
+    priority: 'low',
+    applies_to: 'all',
+    created_at: '2026-03-01',
+    updated_at: '2026-03-08',
+  },
+  {
+    id: '8',
+    name_ar: 'فترة التأخر المسموحة',
+    name_en: 'Allowed Late Period',
+    description_ar: 'الوقت المسموح للتأخر قبل احتساب غياب',
+    description_en: 'Allowed time for being late before absence',
+    category: 'attendance',
+    type: 'numeric',
+    value: 15,
+    unit: 'دقيقة',
+    status: 'active',
+    priority: 'medium',
+    applies_to: 'all',
+    created_at: '2026-01-15',
+    updated_at: '2026-02-10',
+  },
+];
+
 export const RulesManagementPage = () => {
-  const { isRTL, isDark } = useTheme();
+  const { isRTL = true, isDark } = useTheme();
+  const navigate = useNavigate();
+  const t = translations[isRTL ? 'ar' : 'en'];
+  
+  // States
+  const [rules, setRules] = useState(SAMPLE_RULES);
+  const [filteredRules, setFilteredRules] = useState(SAMPLE_RULES);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Placeholder rule categories
-  const ruleCategories = [
-    {
-      id: 'attendance',
-      title: isRTL ? 'قواعد الحضور والغياب' : 'Attendance Rules',
-      description: isRTL ? 'إدارة قواعد تسجيل الحضور والتأخر والغياب' : 'Manage attendance, tardiness, and absence rules',
-      icon: Clock,
-      count: 12,
-      status: 'active',
-    },
-    {
-      id: 'grading',
-      title: isRTL ? 'قواعد التقييم والدرجات' : 'Grading Rules',
-      description: isRTL ? 'نظام الدرجات والتقييمات والاختبارات' : 'Grading system, assessments, and exams rules',
-      icon: FileText,
-      count: 8,
-      status: 'active',
-    },
-    {
-      id: 'scheduling',
-      title: isRTL ? 'قواعد الجدولة' : 'Scheduling Rules',
-      description: isRTL ? 'قواعد توزيع الحصص ونصاب المعلمين' : 'Class distribution and teacher workload rules',
-      icon: Calendar,
-      count: 15,
-      status: 'active',
-    },
-    {
-      id: 'behavior',
-      title: isRTL ? 'قواعد السلوك' : 'Behavior Rules',
-      description: isRTL ? 'نظام نقاط السلوك والمكافآت والعقوبات' : 'Behavior points, rewards, and penalties system',
-      icon: Users,
-      count: 20,
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const [activeTab, setActiveTab] = useState('all');
+  
+  // Dialogs
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(null);
+  const [showViewSheet, setShowViewSheet] = useState(null);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name_ar: '',
+    name_en: '',
+    description_ar: '',
+    description_en: '',
+    category: 'attendance',
+    type: 'numeric',
+    value: '',
+    unit: '',
+    status: 'draft',
+    priority: 'medium',
+    applies_to: 'all',
+  });
+  
+  // Stats
+  const stats = {
+    total: rules.length,
+    active: rules.filter(r => r.status === 'active').length,
+    draft: rules.filter(r => r.status === 'draft').length,
+    disabled: rules.filter(r => r.status === 'disabled').length,
+  };
+  
+  // Category stats
+  const categoryStats = Object.keys(RULE_CATEGORIES).map(catId => ({
+    ...RULE_CATEGORIES[catId],
+    count: rules.filter(r => r.category === catId).length,
+  }));
+  
+  // Filter rules
+  useEffect(() => {
+    let result = [...rules];
+    
+    // Search
+    if (searchTerm) {
+      const query = searchTerm.toLowerCase();
+      result = result.filter(rule => 
+        rule.name_ar?.toLowerCase().includes(query) ||
+        rule.name_en?.toLowerCase().includes(query) ||
+        rule.description_ar?.toLowerCase().includes(query) ||
+        rule.description_en?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Category filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(r => r.category === selectedCategory);
+    }
+    
+    // Status filter
+    if (selectedStatus !== 'all') {
+      result = result.filter(r => r.status === selectedStatus);
+    }
+    
+    setFilteredRules(result);
+  }, [rules, searchTerm, selectedCategory, selectedStatus]);
+  
+  // Reset filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setSelectedStatus('all');
+  };
+  
+  // Handle create rule
+  const handleCreateRule = () => {
+    const newRule = {
+      id: Date.now().toString(),
+      ...formData,
+      created_at: new Date().toISOString().split('T')[0],
+      updated_at: new Date().toISOString().split('T')[0],
+    };
+    setRules(prev => [newRule, ...prev]);
+    toast.success(t.ruleCreated);
+    setShowCreateDialog(false);
+    resetForm();
+  };
+  
+  // Handle edit rule
+  const handleEditRule = () => {
+    setRules(prev => prev.map(r => 
+      r.id === showEditSheet.id 
+        ? { ...r, ...formData, updated_at: new Date().toISOString().split('T')[0] }
+        : r
+    ));
+    toast.success(t.ruleUpdated);
+    setShowEditSheet(null);
+    resetForm();
+  };
+  
+  // Handle delete rule
+  const handleDeleteRule = () => {
+    setRules(prev => prev.filter(r => r.id !== showDeleteDialog.id));
+    toast.success(t.ruleDeleted);
+    setShowDeleteDialog(null);
+  };
+  
+  // Handle duplicate rule
+  const handleDuplicateRule = (rule) => {
+    const newRule = {
+      ...rule,
+      id: Date.now().toString(),
+      name_ar: rule.name_ar + ' (نسخة)',
+      name_en: rule.name_en + ' (Copy)',
       status: 'draft',
-    },
-    {
-      id: 'academic',
-      title: isRTL ? 'القواعد الأكاديمية' : 'Academic Rules',
-      description: isRTL ? 'متطلبات النجاح والانتقال بين المراحل' : 'Pass requirements and grade progression rules',
-      icon: GraduationCap,
-      count: 6,
-      status: 'active',
-    },
-    {
-      id: 'tenant',
-      title: isRTL ? 'قواعد المدارس' : 'Tenant Rules',
-      description: isRTL ? 'قواعد إنشاء وإدارة المدارس' : 'School creation and management rules',
-      icon: Building2,
-      count: 10,
-      status: 'active',
-    },
-  ];
-
+      created_at: new Date().toISOString().split('T')[0],
+      updated_at: new Date().toISOString().split('T')[0],
+    };
+    setRules(prev => [newRule, ...prev]);
+    toast.success(t.ruleDuplicated);
+  };
+  
+  // Handle toggle status
+  const handleToggleStatus = (rule) => {
+    const newStatus = rule.status === 'active' ? 'disabled' : 'active';
+    setRules(prev => prev.map(r => 
+      r.id === rule.id ? { ...r, status: newStatus, updated_at: new Date().toISOString().split('T')[0] } : r
+    ));
+    toast.success(newStatus === 'active' ? t.ruleEnabled : t.ruleDisabled);
+  };
+  
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      name_ar: '',
+      name_en: '',
+      description_ar: '',
+      description_en: '',
+      category: 'attendance',
+      type: 'numeric',
+      value: '',
+      unit: '',
+      status: 'draft',
+      priority: 'medium',
+      applies_to: 'all',
+    });
+  };
+  
+  // Open edit
+  const openEdit = (rule) => {
+    setFormData({
+      name_ar: rule.name_ar,
+      name_en: rule.name_en,
+      description_ar: rule.description_ar,
+      description_en: rule.description_en,
+      category: rule.category,
+      type: rule.type,
+      value: rule.value,
+      unit: rule.unit || '',
+      status: rule.status,
+      priority: rule.priority,
+      applies_to: rule.applies_to,
+    });
+    setShowEditSheet(rule);
+  };
+  
+  // Get category info
+  const getCategoryInfo = (catId) => RULE_CATEGORIES[catId] || RULE_CATEGORIES.attendance;
+  
+  // Get status badge
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500 text-white"><CheckCircle2 className="h-3 w-3 me-1" />{t.active}</Badge>;
+      case 'draft':
+        return <Badge className="bg-yellow-500 text-white"><Clock className="h-3 w-3 me-1" />{t.draft}</Badge>;
+      case 'disabled':
+        return <Badge className="bg-gray-500 text-white"><XCircle className="h-3 w-3 me-1" />{t.disabled}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  // Get priority badge
+  const getPriorityBadge = (priority) => {
+    switch (priority) {
+      case 'high':
+        return <Badge variant="outline" className="border-red-500 text-red-600">{t.high}</Badge>;
+      case 'medium':
+        return <Badge variant="outline" className="border-yellow-500 text-yellow-600">{t.medium}</Badge>;
+      case 'low':
+        return <Badge variant="outline" className="border-green-500 text-green-600">{t.low}</Badge>;
+      default:
+        return <Badge variant="outline">{priority}</Badge>;
+    }
+  };
+  
+  // Format value display
+  const formatValue = (rule) => {
+    if (rule.type === 'boolean') {
+      return rule.value ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No');
+    }
+    if (rule.type === 'percentage') {
+      return `${rule.value}%`;
+    }
+    return rule.unit ? `${rule.value} ${rule.unit}` : rule.value;
+  };
+  
   return (
     <Sidebar>
-      <div className="min-h-screen bg-background" data-testid="rules-management-page">
+      <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'} data-testid="rules-management-page">
         {/* Header */}
-        <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-cairo text-2xl font-bold text-foreground">
-                {isRTL ? 'إدارة القواعد' : 'Rules Management'}
-              </h1>
-              <p className="text-sm text-muted-foreground font-tajawal">
-                {isRTL ? 'إدارة القواعد التعليمية والتشغيلية للمنصة' : 'Manage educational and operational platform rules'}
-              </p>
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 lg:px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <PageHeader 
+                title={t.pageTitle} 
+                subtitle={t.pageSubtitle}
+                icon={BookOpen}
+                className="mb-0"
+              />
+              <div className="flex items-center gap-3">
+                <Button variant="outline" className="rounded-xl">
+                  <Download className="h-4 w-4 me-2" />
+                  {t.export}
+                </Button>
+                <Button 
+                  className="rounded-xl bg-brand-navy hover:bg-brand-navy/90"
+                  onClick={() => setShowCreateDialog(true)}
+                  data-testid="create-rule-btn"
+                >
+                  <Plus className="h-4 w-4 me-2" />
+                  {t.newRule}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="rounded-xl">
+            
+            {/* Stats Cards */}
+            <div className="grid grid-cols-4 gap-4 mb-4">
+              <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white/70 text-sm">{t.totalRules}</p>
+                      <p className="text-3xl font-bold">{stats.total}</p>
+                    </div>
+                    <BookOpen className="h-10 w-10 text-white/30" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-600 text-sm">{t.activeRules}</p>
+                      <p className="text-3xl font-bold text-green-700">{stats.active}</p>
+                    </div>
+                    <CheckCircle className="h-10 w-10 text-green-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-600 text-sm">{t.draftRules}</p>
+                      <p className="text-3xl font-bold text-yellow-700">{stats.draft}</p>
+                    </div>
+                    <Clock className="h-10 w-10 text-yellow-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-purple-200 bg-purple-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-600 text-sm">{t.categories}</p>
+                      <p className="text-3xl font-bold text-purple-700">{Object.keys(RULE_CATEGORIES).length}</p>
+                    </div>
+                    <Settings className="h-10 w-10 text-purple-200" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Search and Filters */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative flex-1 min-w-[300px]">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t.search}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="ps-10 rounded-xl"
+                />
+              </div>
+              
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-40 rounded-xl">
+                  <SelectValue placeholder={t.ruleCategory} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'جميع الفئات' : 'All Categories'}</SelectItem>
+                  {Object.entries(RULE_CATEGORIES).map(([key, cat]) => (
+                    <SelectItem key={key} value={key}>
+                      {isRTL ? cat.title_ar : cat.title_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-36 rounded-xl">
+                  <SelectValue placeholder={t.ruleStatus} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</SelectItem>
+                  <SelectItem value="active">{t.active}</SelectItem>
+                  <SelectItem value="draft">{t.draft}</SelectItem>
+                  <SelectItem value="disabled">{t.disabled}</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button variant="outline" onClick={resetFilters} className="rounded-xl">
                 <RefreshCw className="h-4 w-4 me-2" />
-                {isRTL ? 'تحديث' : 'Refresh'}
+                {isRTL ? 'إعادة ضبط' : 'Reset'}
               </Button>
-              <Button className="rounded-xl bg-brand-navy hover:bg-brand-navy/90">
-                <Plus className="h-4 w-4 me-2" />
-                {isRTL ? 'قاعدة جديدة' : 'New Rule'}
-              </Button>
+              
+              <div className="flex items-center border rounded-xl overflow-hidden">
+                <Button 
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                  size="icon" 
+                  className="rounded-none"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                  size="icon" 
+                  className="rounded-none"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </header>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Under Development Banner */}
-          <Card className="card-nassaq border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="font-cairo font-medium text-yellow-600">
-                  {isRTL ? 'هذه الصفحة قيد التطوير' : 'This Page is Under Development'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isRTL 
-                    ? 'نعمل على إضافة ميزات إدارة القواعد قريباً. ترقبوا التحديثات!'
-                    : 'We are working on adding rules management features soon. Stay tuned!'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Search and Filters */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative flex-1 min-w-[300px]">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={isRTL ? 'البحث في القواعد...' : 'Search rules...'}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="ps-10 rounded-xl"
-              />
-            </div>
-            <Button variant="outline" className="rounded-xl">
-              <Filter className="h-4 w-4 me-2" />
-              {isRTL ? 'تصفية' : 'Filter'}
-            </Button>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="card-nassaq">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-brand-navy" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">71</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'إجمالي القواعد' : 'Total Rules'}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="card-nassaq">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">51</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'قواعد نشطة' : 'Active Rules'}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="card-nassaq">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">20</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'قواعد مسودة' : 'Draft Rules'}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="card-nassaq">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-brand-purple/10 flex items-center justify-center">
-                  <Settings className="h-6 w-6 text-brand-purple" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">6</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'فئات القواعد' : 'Rule Categories'}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Rule Categories Grid */}
-          <div>
-            <h2 className="font-cairo text-xl font-bold mb-4">
-              {isRTL ? 'فئات القواعد' : 'Rule Categories'}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ruleCategories.map((category) => (
-                <Card 
-                  key={category.id} 
-                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
-                  data-testid={`rule-category-${category.id}`}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
-                        <category.icon className="h-6 w-6 text-brand-navy" />
-                      </div>
-                      <Badge variant={category.status === 'active' ? 'default' : 'secondary'}>
-                        {category.status === 'active' 
-                          ? (isRTL ? 'نشط' : 'Active')
-                          : (isRTL ? 'مسودة' : 'Draft')}
-                      </Badge>
-                    </div>
-                    <CardTitle className="font-cairo text-lg mt-3">{category.title}</CardTitle>
-                    <CardDescription className="font-tajawal">{category.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <span className="text-sm text-muted-foreground">
-                        {category.count} {isRTL ? 'قاعدة' : 'rules'}
-                      </span>
-                      <Button variant="ghost" size="sm">
-                        {isRTL ? 'عرض' : 'View'}
-                      </Button>
-                    </div>
-                  </CardContent>
+        
+        {/* Main Content */}
+        <main className="container mx-auto px-4 lg:px-6 py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="all">{t.allRules}</TabsTrigger>
+              <TabsTrigger value="category">{t.byCategory}</TabsTrigger>
+            </TabsList>
+            
+            {/* All Rules Tab */}
+            <TabsContent value="all" className="space-y-4">
+              {filteredRules.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <BookOpen className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                  <h3 className="font-bold text-lg mb-2">{t.noRules}</h3>
+                  <p className="text-muted-foreground mb-4">{t.noRulesDesc}</p>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-4 w-4 me-2" />
+                    {t.newRule}
+                  </Button>
                 </Card>
-              ))}
+              ) : viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredRules.map((rule) => {
+                    const category = getCategoryInfo(rule.category);
+                    const CategoryIcon = category.icon;
+                    
+                    return (
+                      <Card 
+                        key={rule.id}
+                        className="card-nassaq hover:shadow-lg transition-all"
+                        data-testid={`rule-card-${rule.id}`}
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <div className={`w-10 h-10 rounded-xl ${category.color} flex items-center justify-center`}>
+                              <CategoryIcon className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(rule.status)}
+                            </div>
+                          </div>
+                          <CardTitle className="font-cairo text-lg mt-3">
+                            {isRTL ? rule.name_ar : rule.name_en}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-2">
+                            {isRTL ? rule.description_ar : rule.description_en}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* Value */}
+                            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                              <span className="text-sm text-muted-foreground">{t.ruleValue}:</span>
+                              <span className="font-bold text-brand-navy">{formatValue(rule)}</span>
+                            </div>
+                            
+                            {/* Priority */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">{t.priority}:</span>
+                              {getPriorityBadge(rule.priority)}
+                            </div>
+                            
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 pt-3 border-t">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => setShowViewSheet(rule)}
+                              >
+                                <Eye className="h-3 w-3 me-1" />
+                                {t.view}
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => openEdit(rule)}
+                              >
+                                <Edit className="h-3 w-3 me-1" />
+                                {t.edit}
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => handleToggleStatus(rule)}
+                              >
+                                {rule.status === 'active' ? (
+                                  <Pause className="h-3 w-3" />
+                                ) : (
+                                  <Play className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Card>
+                  <div className="divide-y">
+                    {filteredRules.map((rule) => {
+                      const category = getCategoryInfo(rule.category);
+                      const CategoryIcon = category.icon;
+                      
+                      return (
+                        <div 
+                          key={rule.id}
+                          className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-xl ${category.color} flex items-center justify-center`}>
+                              <CategoryIcon className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold">{isRTL ? rule.name_ar : rule.name_en}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {isRTL ? category.title_ar : category.title_en}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="font-bold text-brand-navy">{formatValue(rule)}</span>
+                            {getStatusBadge(rule.status)}
+                            {getPriorityBadge(rule.priority)}
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => setShowViewSheet(rule)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => openEdit(rule)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDuplicateRule(rule)}>
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => setShowDeleteDialog(rule)}>
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
+            </TabsContent>
+            
+            {/* By Category Tab */}
+            <TabsContent value="category" className="space-y-6">
+              {categoryStats.map((category) => {
+                const CategoryIcon = category.icon;
+                const categoryRules = rules.filter(r => r.category === category.id);
+                
+                if (categoryRules.length === 0) return null;
+                
+                return (
+                  <div key={category.id}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-10 h-10 rounded-xl ${category.color} flex items-center justify-center`}>
+                        <CategoryIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{isRTL ? category.title_ar : category.title_en}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {category.count} {t.rules}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {categoryRules.map((rule) => (
+                        <Card 
+                          key={rule.id}
+                          className="card-nassaq"
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-bold">{isRTL ? rule.name_ar : rule.name_en}</h4>
+                              {getStatusBadge(rule.status)}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                              {isRTL ? rule.description_ar : rule.description_en}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-brand-navy">{formatValue(rule)}</span>
+                              <Button variant="ghost" size="sm" onClick={() => openEdit(rule)}>
+                                <Edit className="h-4 w-4 me-1" />
+                                {t.edit}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </TabsContent>
+          </Tabs>
+        </main>
+        
+        {/* Create Rule Dialog */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-brand-navy" />
+                {t.createRule}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t.ruleName} (عربي)</Label>
+                  <Input 
+                    value={formData.name_ar}
+                    onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                    placeholder="اسم القاعدة بالعربية"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t.ruleName} (English)</Label>
+                  <Input 
+                    value={formData.name_en}
+                    onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                    placeholder="Rule name in English"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t.ruleCategory}</Label>
+                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(RULE_CATEGORIES).map(([key, cat]) => (
+                        <SelectItem key={key} value={key}>
+                          {isRTL ? cat.title_ar : cat.title_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t.ruleType}</Label>
+                  <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(RULE_TYPES).map(([key, type]) => (
+                        <SelectItem key={key} value={key}>
+                          {isRTL ? type.label_ar : type.label_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t.ruleValue}</Label>
+                  {formData.type === 'boolean' ? (
+                    <Select 
+                      value={formData.value?.toString()} 
+                      onValueChange={(v) => setFormData({ ...formData, value: v === 'true' })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">{isRTL ? 'نعم' : 'Yes'}</SelectItem>
+                        <SelectItem value="false">{isRTL ? 'لا' : 'No'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input 
+                      type={formData.type === 'numeric' || formData.type === 'percentage' ? 'number' : 'text'}
+                      value={formData.value}
+                      onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                    />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>{t.priority}</Label>
+                  <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">{t.high}</SelectItem>
+                      <SelectItem value="medium">{t.medium}</SelectItem>
+                      <SelectItem value="low">{t.low}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>{t.ruleDescription} (عربي)</Label>
+                <Textarea 
+                  value={formData.description_ar}
+                  onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
+                  placeholder="وصف القاعدة بالعربية"
+                  rows={2}
+                />
+              </div>
             </div>
-          </div>
-        </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>
+                {t.cancel}
+              </Button>
+              <Button onClick={handleCreateRule} className="bg-brand-navy">
+                <Plus className="h-4 w-4 me-2" />
+                {t.create}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Edit Sheet */}
+        <Sheet open={!!showEditSheet} onOpenChange={() => { setShowEditSheet(null); resetForm(); }}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-brand-navy" />
+                {t.editRule}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 py-6">
+              <div className="space-y-2">
+                <Label>{t.ruleName} (عربي)</Label>
+                <Input 
+                  value={formData.name_ar}
+                  onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.ruleName} (English)</Label>
+                <Input 
+                  value={formData.name_en}
+                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.ruleValue}</Label>
+                {formData.type === 'boolean' ? (
+                  <Select 
+                    value={formData.value?.toString()} 
+                    onValueChange={(v) => setFormData({ ...formData, value: v === 'true' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">{isRTL ? 'نعم' : 'Yes'}</SelectItem>
+                      <SelectItem value="false">{isRTL ? 'لا' : 'No'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input 
+                    type={formData.type === 'numeric' || formData.type === 'percentage' ? 'number' : 'text'}
+                    value={formData.value}
+                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                  />
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>{t.ruleStatus}</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">{t.active}</SelectItem>
+                    <SelectItem value="draft">{t.draft}</SelectItem>
+                    <SelectItem value="disabled">{t.disabled}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t.priority}</Label>
+                <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">{t.high}</SelectItem>
+                    <SelectItem value="medium">{t.medium}</SelectItem>
+                    <SelectItem value="low">{t.low}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t.ruleDescription}</Label>
+                <Textarea 
+                  value={formData.description_ar}
+                  onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleEditRule} className="flex-1 bg-brand-navy">
+                  <Save className="h-4 w-4 me-2" />
+                  {t.save}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={() => { setShowDeleteDialog(showEditSheet); setShowEditSheet(null); }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* View Sheet */}
+        <Sheet open={!!showViewSheet} onOpenChange={() => setShowViewSheet(null)}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px]">
+            {showViewSheet && (
+              <>
+                <SheetHeader>
+                  <SheetTitle>{isRTL ? showViewSheet.name_ar : showViewSheet.name_en}</SheetTitle>
+                  <SheetDescription>
+                    {isRTL ? showViewSheet.description_ar : showViewSheet.description_en}
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-6 py-6">
+                  <div className="p-4 bg-brand-navy/5 rounded-xl text-center">
+                    <p className="text-sm text-muted-foreground mb-1">{t.ruleValue}</p>
+                    <p className="text-4xl font-bold text-brand-navy">{formatValue(showViewSheet)}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground">{t.ruleStatus}</p>
+                      <div className="mt-1">{getStatusBadge(showViewSheet.status)}</div>
+                    </div>
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground">{t.priority}</p>
+                      <div className="mt-1">{getPriorityBadge(showViewSheet.priority)}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground">{t.ruleCategory}</p>
+                    <p className="font-medium mt-1">
+                      {isRTL 
+                        ? getCategoryInfo(showViewSheet.category).title_ar 
+                        : getCategoryInfo(showViewSheet.category).title_en}
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button onClick={() => { openEdit(showViewSheet); setShowViewSheet(null); }} className="flex-1">
+                      <Edit className="h-4 w-4 me-2" />
+                      {t.edit}
+                    </Button>
+                    <Button variant="outline" onClick={() => handleDuplicateRule(showViewSheet)}>
+                      <Copy className="h-4 w-4 me-2" />
+                      {t.duplicate}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </SheetContent>
+        </Sheet>
+        
+        {/* Delete Dialog */}
+        <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+                {t.delete}
+              </DialogTitle>
+              <DialogDescription>
+                {t.deleteConfirm}
+                <br />
+                <strong className="text-red-600">{t.deleteWarning}</strong>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(null)}>{t.cancel}</Button>
+              <Button variant="destructive" onClick={handleDeleteRule}>
+                <Trash2 className="h-4 w-4 me-2" />
+                {t.delete}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
 };
+
+export default RulesManagementPage;
