@@ -221,6 +221,8 @@
 | iteration_11 | Attendance Engine | Backend 11/11 + Frontend ✅ (100%) |
 | iteration_12 | Assessment Engine | Backend 20/20 + Frontend ✅ (100%) |
 | iteration_13 | Notification Engine | Backend 91% + Frontend ✅ (100%) |
+| iteration_15 | Global Filters Bar | 100% ✅ |
+| iteration_16 | Enhanced Analytics Cards + Filter Backend Integration | Backend 93% + Frontend 100% ✅ |
 
 ---
 
