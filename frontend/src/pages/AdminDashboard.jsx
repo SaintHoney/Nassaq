@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 import { jsPDF } from 'jspdf';
 import CreateSchoolWizard from '../components/wizards/CreateSchoolWizard';
+import QuickAIOperationsPanel from '../components/ai/QuickAIOperationsPanel';
 
 // Hakim Avatar
 const HAKIM_AVATAR = 'https://customer-assets.emergentagent.com/job_nassaq-school/artifacts/mtvfci3y_HAKIM%201.png';
