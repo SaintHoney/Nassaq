@@ -661,7 +661,7 @@ export const AdminDashboard = () => {
                 () => setShowAddSchoolWizard(true)
               )}
 
-              {renderAnalyticsCard(
+              {visibleCards.students && renderAnalyticsCard(
                 <GraduationCap className="h-6 w-6 text-brand-turquoise" />,
                 isRTL ? 'الطلاب المسجلين' : 'Enrolled Students',
                 stats?.total_students,
@@ -673,7 +673,7 @@ export const AdminDashboard = () => {
                 () => navigate('/admin/reports')
               )}
 
-              {renderAnalyticsCard(
+              {visibleCards.teachers && renderAnalyticsCard(
                 <UserCheck className="h-6 w-6 text-brand-purple" />,
                 isRTL ? 'المعلمين' : 'Teachers',
                 stats?.total_teachers,
@@ -685,7 +685,7 @@ export const AdminDashboard = () => {
                 () => navigate('/admin/users')
               )}
 
-              {renderAnalyticsCard(
+              {visibleCards.admins && renderAnalyticsCard(
                 <Users className="h-6 w-6 text-orange-500" />,
                 isRTL ? 'المسؤولين' : 'Administrators',
                 stats?.total_admins,
@@ -697,7 +697,7 @@ export const AdminDashboard = () => {
                 () => navigate('/admin/users')
               )}
 
-              {renderAnalyticsCard(
+              {visibleCards.activeUsers && renderAnalyticsCard(
                 <Activity className="h-6 w-6 text-green-500" />,
                 isRTL ? 'المستخدمين النشطين' : 'Active Users Today',
                 stats?.active_users_today,
@@ -709,7 +709,7 @@ export const AdminDashboard = () => {
                 () => navigate('/admin/monitoring')
               )}
 
-              {renderAnalyticsCard(
+              {visibleCards.apiCalls && renderAnalyticsCard(
                 <Server className="h-6 w-6 text-teal-500" />,
                 isRTL ? 'طلبات API اليوم' : 'API Requests Today',
                 stats?.api_calls_today,
