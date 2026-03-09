@@ -1988,6 +1988,19 @@ export const AdminDashboard = () => {
         />
 
         {/* ============================================ */}
+        {/* Wizard: إنشاء مستخدم جديد - Create User Wizard */}
+        {/* ============================================ */}
+        <CreateUserWizard
+          open={showCreateUserWizard}
+          onOpenChange={setShowCreateUserWizard}
+          onSuccess={(newUser) => {
+            toast.success(isRTL ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!');
+          }}
+          api={api}
+          isRTL={isRTL}
+        />
+
+        {/* ============================================ */}
         {/* Dialog: إعدادات العرض - Display Settings */}
         {/* ============================================ */}
         <Dialog open={showDisplaySettings} onOpenChange={setShowDisplaySettings}>
