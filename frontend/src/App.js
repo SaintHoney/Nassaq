@@ -184,6 +184,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      
+      {/* Assessment Route */}
+      <Route
+        path="/admin/assessments"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin', 'teacher']}>
+            <AssessmentPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* School Management Routes - Only for School Principal and Sub Admin (NOT Platform Admin) */}
       <Route
