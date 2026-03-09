@@ -90,6 +90,7 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     is_active: bool
+    must_change_password: bool = False
     preferred_language: str
     preferred_theme: str
     created_at: str
