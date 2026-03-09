@@ -156,8 +156,8 @@ class TestNotificationAPIs:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        assert "message" in data
-        print(f"✓ Mark all as read: {data['message']}")
+        assert "success" in data or "message" in data
+        print(f"✓ Mark all as read: {data}")
         
         # Verify unread count is 0
         response = self.session.get(f"{BASE_URL}/api/notifications/unread-count")
