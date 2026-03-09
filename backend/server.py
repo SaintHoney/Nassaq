@@ -506,33 +506,171 @@ async def update_user_status(
 
 # ============== DASHBOARD STATS ==============
 @api_router.get("/dashboard/stats", response_model=DashboardStats)
-async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
+async def get_dashboard_stats(
+    current_user: dict = Depends(get_current_user),
+    scope: Optional[str] = None,
+    school_id: Optional[str] = None,
+    school_ids: Optional[str] = None,
+    city: Optional[str] = None,
+    region: Optional[str] = None,
+    school_type: Optional[str] = None,
+    time_window: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    status: Optional[str] = None
+):
+    """
+    Get dashboard statistics with optional filtering.
+    
+    Filters:
+    - scope: 'all', 'single', 'multi' - Data scope
+    - school_id: Single school ID when scope='single'
+    - school_ids: Comma-separated school IDs when scope='multi'
+    - city: Filter by city name
+    - region: Filter by region (central, western, eastern, northern, southern)
+    - school_type: Filter by type (public, private, international)
+    - time_window: 'live', 'today', 'week', 'month', 'custom'
+    - date_from, date_to: Custom date range (ISO format)
+    - status: 'all', 'active', 'suspended', 'setup', 'expired'
+    """
+    
     if current_user["role"] == UserRole.PLATFORM_ADMIN.value:
-        total_schools = await db.schools.count_documents({})
-        active_schools = await db.schools.count_documents({"status": "active"})
-        pending_schools = await db.schools.count_documents({"status": "pending"})
-        suspended_schools = await db.schools.count_documents({"status": "suspended"})
-        setup_schools = await db.schools.count_documents({"status": "setup"})
+        # Build school filter query
+        school_filter = {}
+        student_filter = {}
+        teacher_filter = {}
+        
+        # Handle scope and school selection
+        if scope == 'single' and school_id:
+            school_filter["id"] = school_id
+            student_filter["school_id"] = school_id
+            teacher_filter["school_id"] = school_id
+        elif scope == 'multi' and school_ids:
+            school_id_list = [s.strip() for s in school_ids.split(',') if s.strip()]
+            if school_id_list:
+                school_filter["id"] = {"$in": school_id_list}
+                student_filter["school_id"] = {"$in": school_id_list}
+                teacher_filter["school_id"] = {"$in": school_id_list}
+        
+        # Filter by city
+        if city:
+            school_filter["city"] = city
+        
+        # Filter by region
+        if region:
+            school_filter["region"] = region
+        
+        # Filter by school type
+        if school_type:
+            school_filter["school_type"] = school_type
+        
+        # Filter by status
+        if status and status != 'all':
+            if status == 'expired':
+                school_filter["status"] = "suspended"
+            else:
+                school_filter["status"] = status
+        
+        # Handle time window filtering for operations/events
+        time_filter = {}
+        if time_window:
+            now = datetime.now(timezone.utc)
+            if time_window == 'live' or time_window == 'today':
+                start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                time_filter = {"created_at": {"$gte": start_of_day.isoformat()}}
+            elif time_window == 'week':
+                start_of_week = now - timedelta(days=now.weekday())
+                start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+                time_filter = {"created_at": {"$gte": start_of_week.isoformat()}}
+            elif time_window == 'month':
+                start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                time_filter = {"created_at": {"$gte": start_of_month.isoformat()}}
+            elif time_window == 'custom' and date_from:
+                time_filter["created_at"] = {"$gte": date_from}
+                if date_to:
+                    time_filter["created_at"]["$lte"] = date_to
+        
+        # Count schools with filters
+        total_schools = await db.schools.count_documents(school_filter)
+        
+        # Status-specific counts (apply other filters but override status)
+        active_filter = {**school_filter, "status": "active"}
+        if "status" in active_filter and status and status != 'all':
+            del active_filter["status"]
+            active_filter["status"] = "active"
+        active_schools = await db.schools.count_documents(active_filter)
+        
+        pending_filter = {**school_filter, "status": "pending"}
+        if "status" in pending_filter and status and status != 'all':
+            pending_filter["status"] = "pending"
+        pending_schools = await db.schools.count_documents(pending_filter)
+        
+        suspended_filter = {**school_filter, "status": "suspended"}
+        if "status" in suspended_filter and status and status != 'all':
+            suspended_filter["status"] = "suspended"
+        suspended_schools = await db.schools.count_documents(suspended_filter)
+        
+        setup_filter = {**school_filter, "status": "setup"}
+        if "status" in setup_filter and status and status != 'all':
+            setup_filter["status"] = "setup"
+        setup_schools = await db.schools.count_documents(setup_filter)
+        
+        # If filtering by status, recalculate total to show only that status
+        if status and status != 'all':
+            if status == 'active':
+                total_schools = active_schools
+            elif status == 'suspended' or status == 'expired':
+                total_schools = suspended_schools
+            elif status == 'pending':
+                total_schools = pending_schools
+            elif status == 'setup':
+                total_schools = setup_schools
+        
+        # Get filtered school IDs for student/teacher queries if we have school filters
+        filtered_school_ids = []
+        if school_filter:
+            schools_cursor = db.schools.find(school_filter, {"id": 1})
+            async for school in schools_cursor:
+                filtered_school_ids.append(school.get("id"))
+            
+            if filtered_school_ids:
+                student_filter["school_id"] = {"$in": filtered_school_ids}
+                teacher_filter["school_id"] = {"$in": filtered_school_ids}
+        
+        # Count students and teachers with filters
+        total_students = await db.students.count_documents(student_filter)
+        total_teachers = await db.teachers.count_documents(teacher_filter)
+        
+        # User counts (platform-wide as they're not school-specific)
         total_users = await db.users.count_documents({})
         active_users = await db.users.count_documents({"is_active": True})
-        total_students = await db.students.count_documents({})
-        total_teachers = await db.teachers.count_documents({})
-        total_classes = await db.classes.count_documents({})
-        total_subjects = await db.subjects.count_documents({})
+        
+        # Other counts
+        total_classes = await db.classes.count_documents({} if not filtered_school_ids else {"school_id": {"$in": filtered_school_ids}})
+        total_subjects = await db.subjects.count_documents({} if not filtered_school_ids else {"school_id": {"$in": filtered_school_ids}})
         pending_requests = await db.registration_requests.count_documents({"status": "pending"})
         
-        # Additional stats
-        teachers_without_classes = await db.teachers.count_documents({"assigned_classes": {"$size": 0}})
-        incomplete_schedules = await db.teachers.count_documents({"schedule_complete": False})
-        schools_without_principal = 0  # Would need principal check
+        # Additional stats with time filter
+        teachers_without_classes = await db.teachers.count_documents({**teacher_filter, "assigned_classes": {"$size": 0}})
+        incomplete_schedules = await db.teachers.count_documents({**teacher_filter, "schedule_complete": False})
+        schools_without_principal = 0
         students_missing_data = await db.students.count_documents({
+            **student_filter,
             "$or": [{"parent_phone": None}, {"parent_phone": ""}]
         })
         teachers_without_rank = await db.teachers.count_documents({
+            **teacher_filter,
             "$or": [{"rank": None}, {"rank": ""}]
         })
-        total_operations = await db.events.count_documents({})
+        
+        # Operations with time filter
+        operations_filter = {**time_filter}
+        if filtered_school_ids:
+            operations_filter["tenant_id"] = {"$in": filtered_school_ids}
+        total_operations = await db.events.count_documents(operations_filter)
+        
     else:
+        # Non-admin users get school-specific data
         tenant_id = current_user.get("tenant_id")
         total_schools = 1
         active_schools = 1
