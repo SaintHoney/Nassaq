@@ -3713,6 +3713,52 @@ async def create_bulk_grades(
                     "recorded_by": current_user['id'],
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 })
+                
+                # Create notification for new grade
+                student_info = await db.students.find_one({"id": grade.student_id}, {"_id": 0})
+                if student_info:
+                    student_name = student_info.get('full_name', 'طالب')
+                    percentage = round((grade.score / assessment['max_score']) * 100, 1)
+                    assessment_title = assessment.get('title', 'تقييم')
+                    
+                    # Notify the student if they have a user account
+                    if student_info.get('user_id'):
+                        await create_notification_internal(
+                            title=f"درجة جديدة: {assessment_title}",
+                            title_en=f"New Grade: {assessment_title}",
+                            message=f"حصلت على درجة {grade.score}/{assessment['max_score']} ({percentage}%) في {assessment_title}",
+                            message_en=f"You scored {grade.score}/{assessment['max_score']} ({percentage}%) in {assessment_title}",
+                            recipient_id=student_info['user_id'],
+                            notification_type="assessment",
+                            priority="medium",
+                            sender_id=current_user['id'],
+                            related_entity="assessment",
+                            related_entity_id=data.assessment_id,
+                            action_url="/student/grades",
+                            school_id=current_user.get('tenant_id')
+                        )
+                    
+                    # Notify parent if exists
+                    if student_info.get('parent_phone'):
+                        parent_user = await db.users.find_one({
+                            "phone": student_info.get('parent_phone'),
+                            "role": "parent"
+                        }, {"_id": 0})
+                        if parent_user:
+                            await create_notification_internal(
+                                title=f"درجة جديدة لـ {student_name}",
+                                title_en=f"New Grade for {student_name}",
+                                message=f"حصل {student_name} على درجة {grade.score}/{assessment['max_score']} ({percentage}%) في {assessment_title}",
+                                message_en=f"{student_name} scored {grade.score}/{assessment['max_score']} ({percentage}%) in {assessment_title}",
+                                recipient_id=parent_user['id'],
+                                notification_type="assessment",
+                                priority="medium",
+                                sender_id=current_user['id'],
+                                related_entity="assessment",
+                                related_entity_id=data.assessment_id,
+                                action_url="/parent/grades",
+                                school_id=current_user.get('tenant_id')
+                            )
         except Exception as e:
             errors.append(f"Error processing grade for student {grade.student_id}: {str(e)}")
     
