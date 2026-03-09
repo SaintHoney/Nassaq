@@ -7080,6 +7080,805 @@ async def end_session(
     return {"message": "تم إنهاء الجلسة"}
 
 
+# ============== BEHAVIOUR ENGINE ROUTES ==============
+# Import behaviour engine models
+class BehaviourCategoryEnum(str, Enum):
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+    NEUTRAL = "neutral"
+
+class BehaviourSeverityEnum(str, Enum):
+    MINOR = "minor"
+    MODERATE = "moderate"
+    MAJOR = "major"
+    SEVERE = "severe"
+
+class BehaviourStatusEnum(str, Enum):
+    PENDING = "pending"
+    REVIEWED = "reviewed"
+    ESCALATED = "escalated"
+    RESOLVED = "resolved"
+    ARCHIVED = "archived"
+
+class BehaviourTypeCreate(BaseModel):
+    name_ar: str
+    name_en: Optional[str] = None
+    description: Optional[str] = None
+    category: BehaviourCategoryEnum
+    default_severity: BehaviourSeverityEnum
+    default_points: int = 0
+    auto_escalate: bool = False
+    escalation_threshold: Optional[int] = None
+
+class BehaviourRecordCreate(BaseModel):
+    student_id: str
+    behaviour_type_id: str
+    title: str
+    incident_date: str
+    description: Optional[str] = None
+    class_id: Optional[str] = None
+    category: Optional[BehaviourCategoryEnum] = None
+    severity: Optional[BehaviourSeverityEnum] = None
+    points: Optional[int] = None
+    incident_location: Optional[str] = None
+    witnesses: List[str] = []
+    requires_follow_up: bool = False
+    follow_up_date: Optional[str] = None
+    is_confidential: bool = False
+    visible_to_parent: bool = True
+
+class DisciplinaryActionCreate(BaseModel):
+    behaviour_record_id: str
+    student_id: str
+    action_type: str
+    description: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+@api_router.post("/behaviour-types")
+async def create_behaviour_type(
+    data: BehaviourTypeCreate,
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Create a new behaviour type"""
+    type_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    type_doc = {
+        "id": type_id,
+        "tenant_id": school_id,
+        "name_ar": data.name_ar,
+        "name_en": data.name_en,
+        "description": data.description,
+        "category": data.category.value,
+        "default_severity": data.default_severity.value,
+        "default_points": data.default_points,
+        "auto_escalate": data.auto_escalate,
+        "escalation_threshold": data.escalation_threshold,
+        "is_active": True,
+        "is_global": school_id is None,
+        "created_at": now,
+        "created_by": current_user["id"],
+    }
+    
+    await db.behaviour_types.insert_one(type_doc)
+    type_doc.pop("_id", None)
+    return type_doc
+
+
+@api_router.get("/behaviour-types")
+async def get_behaviour_types(
+    school_id: Optional[str] = None,
+    category: Optional[str] = None,
+    include_global: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get behaviour types"""
+    query = {"is_active": True}
+    
+    if school_id:
+        if include_global:
+            query["$or"] = [
+                {"tenant_id": school_id},
+                {"is_global": True}
+            ]
+        else:
+            query["tenant_id"] = school_id
+    else:
+        query["is_global"] = True
+    
+    if category:
+        query["category"] = category
+    
+    types = await db.behaviour_types.find(query, {"_id": 0}).to_list(1000)
+    return {"behaviour_types": types, "total": len(types)}
+
+
+@api_router.post("/behaviour-types/seed-defaults")
+async def seed_default_behaviour_types(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Seed default behaviour types"""
+    default_types = [
+        {"name_ar": "تميز أكاديمي", "name_en": "Academic Excellence", "category": "positive", "default_severity": "minor", "default_points": 10},
+        {"name_ar": "مساعدة الزملاء", "name_en": "Helping Peers", "category": "positive", "default_severity": "minor", "default_points": 5},
+        {"name_ar": "مشاركة فعالة", "name_en": "Active Participation", "category": "positive", "default_severity": "minor", "default_points": 3},
+        {"name_ar": "سلوك قيادي", "name_en": "Leadership Behaviour", "category": "positive", "default_severity": "moderate", "default_points": 15},
+        {"name_ar": "تأخر عن الحصة", "name_en": "Late to Class", "category": "negative", "default_severity": "minor", "default_points": -2},
+        {"name_ar": "عدم إحضار الواجب", "name_en": "Missing Homework", "category": "negative", "default_severity": "minor", "default_points": -3},
+        {"name_ar": "تشويش في الفصل", "name_en": "Classroom Disruption", "category": "negative", "default_severity": "moderate", "default_points": -5, "auto_escalate": True, "escalation_threshold": 3},
+        {"name_ar": "استخدام الهاتف", "name_en": "Phone Usage", "category": "negative", "default_severity": "moderate", "default_points": -5},
+        {"name_ar": "تنمر", "name_en": "Bullying", "category": "negative", "default_severity": "major", "default_points": -20, "auto_escalate": True, "escalation_threshold": 1},
+        {"name_ar": "شجار", "name_en": "Fighting", "category": "negative", "default_severity": "severe", "default_points": -30, "auto_escalate": True, "escalation_threshold": 1},
+        {"name_ar": "غش في الاختبار", "name_en": "Cheating", "category": "negative", "default_severity": "major", "default_points": -25, "auto_escalate": True, "escalation_threshold": 1},
+    ]
+    
+    count = 0
+    for bt in default_types:
+        existing = await db.behaviour_types.find_one({"name_ar": bt["name_ar"], "is_global": True})
+        if not existing:
+            bt["id"] = str(uuid.uuid4())
+            bt["tenant_id"] = None
+            bt["is_global"] = True
+            bt["is_active"] = True
+            bt["created_at"] = datetime.now(timezone.utc).isoformat()
+            bt["created_by"] = current_user["id"]
+            await db.behaviour_types.insert_one(bt)
+            count += 1
+    
+    return {"message": f"تم إضافة {count} نوع سلوك افتراضي", "added": count}
+
+
+@api_router.post("/behaviour-records")
+async def create_behaviour_record(
+    data: BehaviourRecordCreate,
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.TEACHER, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN]))
+):
+    """Record a new behaviour incident"""
+    record_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get behaviour type
+    behaviour_type = await db.behaviour_types.find_one({"id": data.behaviour_type_id}, {"_id": 0})
+    if not behaviour_type:
+        raise HTTPException(status_code=404, detail="نوع السلوك غير موجود")
+    
+    # Get student
+    student = await db.students.find_one({"id": data.student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    
+    # Edit window (48 hours)
+    from datetime import timedelta
+    edit_until = (datetime.now(timezone.utc) + timedelta(hours=48)).isoformat()
+    
+    record_doc = {
+        "id": record_id,
+        "tenant_id": school_id,
+        "student_id": data.student_id,
+        "student_name": student.get("full_name"),
+        "class_id": data.class_id or student.get("class_id"),
+        "behaviour_type_id": data.behaviour_type_id,
+        "behaviour_type_name": behaviour_type.get("name_ar"),
+        "category": (data.category.value if data.category else behaviour_type.get("category")),
+        "severity": (data.severity.value if data.severity else behaviour_type.get("default_severity")),
+        "title": data.title,
+        "description": data.description,
+        "points": data.points if data.points is not None else behaviour_type.get("default_points", 0),
+        "incident_date": data.incident_date,
+        "incident_location": data.incident_location,
+        "witnesses": data.witnesses,
+        "status": "pending",
+        "requires_follow_up": data.requires_follow_up,
+        "follow_up_date": data.follow_up_date,
+        "parent_notified": False,
+        "principal_reviewed": False,
+        "is_confidential": data.is_confidential,
+        "visible_to_parent": data.visible_to_parent,
+        "recorded_by": current_user["id"],
+        "recorded_by_name": current_user.get("full_name"),
+        "recorded_at": now,
+        "editable_until": edit_until,
+    }
+    
+    await db.behaviour_records.insert_one(record_doc)
+    
+    # Auto-escalation check
+    if behaviour_type.get("auto_escalate"):
+        from datetime import timedelta
+        thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        count = await db.behaviour_records.count_documents({
+            "tenant_id": school_id,
+            "student_id": data.student_id,
+            "behaviour_type_id": data.behaviour_type_id,
+            "incident_date": {"$gte": thirty_days_ago}
+        })
+        threshold = behaviour_type.get("escalation_threshold", 3)
+        if count >= threshold:
+            await db.behaviour_records.update_one(
+                {"id": record_id},
+                {"$set": {"status": "escalated", "requires_follow_up": True}}
+            )
+            record_doc["status"] = "escalated"
+            record_doc["requires_follow_up"] = True
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "behaviour_recorded",
+        "action_category": "behaviour",
+        "actor_id": current_user["id"],
+        "actor_name": current_user.get("full_name", ""),
+        "target_type": "student",
+        "target_id": data.student_id,
+        "target_name": student.get("full_name"),
+        "tenant_id": school_id,
+        "details": {"behaviour_type": behaviour_type.get("name_ar"), "category": record_doc["category"]},
+        "timestamp": now
+    })
+    
+    record_doc.pop("_id", None)
+    return record_doc
+
+
+@api_router.get("/behaviour-records/student/{student_id}")
+async def get_student_behaviour_history(
+    student_id: str,
+    school_id: str,
+    category: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get behaviour history for a student"""
+    query = {"tenant_id": school_id, "student_id": student_id}
+    
+    if category:
+        query["category"] = category
+    
+    if start_date or end_date:
+        query["incident_date"] = {}
+        if start_date:
+            query["incident_date"]["$gte"] = start_date
+        if end_date:
+            query["incident_date"]["$lte"] = end_date
+    
+    total = await db.behaviour_records.count_documents(query)
+    records = await db.behaviour_records.find(query, {"_id": 0}).sort("incident_date", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Summary
+    all_records = await db.behaviour_records.find(
+        {"tenant_id": school_id, "student_id": student_id},
+        {"category": 1, "points": 1, "severity": 1, "_id": 0}
+    ).to_list(10000)
+    
+    summary = {
+        "total_records": len(all_records),
+        "positive_count": sum(1 for r in all_records if r.get("category") == "positive"),
+        "negative_count": sum(1 for r in all_records if r.get("category") == "negative"),
+        "total_points": sum(r.get("points", 0) for r in all_records),
+    }
+    
+    return {"records": records, "total": total, "summary": summary, "skip": skip, "limit": limit}
+
+
+@api_router.get("/behaviour-records/class/{class_id}")
+async def get_class_behaviour_summary(
+    class_id: str,
+    school_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get behaviour summary for a class"""
+    query = {"tenant_id": school_id, "class_id": class_id}
+    
+    if start_date or end_date:
+        query["incident_date"] = {}
+        if start_date:
+            query["incident_date"]["$gte"] = start_date
+        if end_date:
+            query["incident_date"]["$lte"] = end_date
+    
+    records = await db.behaviour_records.find(query, {"_id": 0}).to_list(10000)
+    
+    # Group by student
+    student_stats = {}
+    for record in records:
+        sid = record.get("student_id")
+        if sid not in student_stats:
+            student_stats[sid] = {
+                "student_id": sid,
+                "student_name": record.get("student_name"),
+                "positive_count": 0,
+                "negative_count": 0,
+                "total_points": 0
+            }
+        
+        if record.get("category") == "positive":
+            student_stats[sid]["positive_count"] += 1
+        else:
+            student_stats[sid]["negative_count"] += 1
+        
+        student_stats[sid]["total_points"] += record.get("points", 0)
+    
+    sorted_students = sorted(student_stats.values(), key=lambda x: x["total_points"], reverse=True)
+    
+    return {
+        "class_id": class_id,
+        "total_records": len(records),
+        "positive_total": sum(1 for r in records if r.get("category") == "positive"),
+        "negative_total": sum(1 for r in records if r.get("category") == "negative"),
+        "student_rankings": sorted_students
+    }
+
+
+@api_router.get("/behaviour-records/{record_id}")
+async def get_behaviour_record(
+    record_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a single behaviour record"""
+    record = await db.behaviour_records.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="سجل السلوك غير موجود")
+    return record
+
+
+@api_router.put("/behaviour-records/{record_id}")
+async def update_behaviour_record(
+    record_id: str,
+    updates: dict,
+    force: bool = False,
+    current_user: dict = Depends(require_roles([UserRole.TEACHER, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Update a behaviour record"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    record = await db.behaviour_records.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="سجل السلوك غير موجود")
+    
+    # Check edit window
+    if not force and record.get("editable_until"):
+        if now > record["editable_until"]:
+            raise HTTPException(status_code=400, detail="انتهت فترة التعديل المسموحة")
+    
+    # Protected fields
+    protected = ["id", "tenant_id", "student_id", "recorded_by", "recorded_at"]
+    for field in protected:
+        updates.pop(field, None)
+    
+    updates["updated_at"] = now
+    updates["updated_by"] = current_user["id"]
+    
+    await db.behaviour_records.update_one({"id": record_id}, {"$set": updates})
+    
+    return await db.behaviour_records.find_one({"id": record_id}, {"_id": 0})
+
+
+@api_router.post("/behaviour-records/{record_id}/principal-review")
+async def principal_review_behaviour(
+    record_id: str,
+    notes: Optional[str] = None,
+    new_status: str = "reviewed",
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Principal reviews a behaviour record"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    record = await db.behaviour_records.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="سجل السلوك غير موجود")
+    
+    await db.behaviour_records.update_one(
+        {"id": record_id},
+        {
+            "$set": {
+                "principal_reviewed": True,
+                "principal_reviewed_by": current_user["id"],
+                "principal_reviewed_at": now,
+                "principal_notes": notes,
+                "status": new_status,
+                "updated_at": now
+            }
+        }
+    )
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "behaviour_reviewed",
+        "action_category": "behaviour",
+        "actor_id": current_user["id"],
+        "actor_name": current_user.get("full_name", ""),
+        "target_type": "behaviour_record",
+        "target_id": record_id,
+        "target_name": record.get("student_name"),
+        "tenant_id": record.get("tenant_id"),
+        "details": {"new_status": new_status},
+        "timestamp": now
+    })
+    
+    return await db.behaviour_records.find_one({"id": record_id}, {"_id": 0})
+
+
+@api_router.post("/behaviour-records/{record_id}/notify-parent")
+async def notify_parent_about_behaviour(
+    record_id: str,
+    current_user: dict = Depends(require_roles([UserRole.TEACHER, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Mark parent as notified about behaviour"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.behaviour_records.update_one(
+        {"id": record_id},
+        {
+            "$set": {
+                "parent_notified": True,
+                "parent_notified_at": now,
+                "parent_notified_by": current_user["id"]
+            }
+        }
+    )
+    
+    return {"message": "تم تسجيل إشعار ولي الأمر"}
+
+
+@api_router.post("/disciplinary-actions")
+async def create_disciplinary_action(
+    data: DisciplinaryActionCreate,
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Create a disciplinary action"""
+    action_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    action_doc = {
+        "id": action_id,
+        "tenant_id": school_id,
+        "behaviour_record_id": data.behaviour_record_id,
+        "student_id": data.student_id,
+        "action_type": data.action_type,
+        "description": data.description,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_active": True,
+        "is_completed": False,
+        "approved_by": current_user["id"],
+        "approved_at": now,
+        "created_by": current_user["id"],
+        "created_at": now,
+    }
+    
+    await db.disciplinary_actions.insert_one(action_doc)
+    
+    # Update behaviour record
+    await db.behaviour_records.update_one(
+        {"id": data.behaviour_record_id},
+        {
+            "$set": {
+                "disciplinary_action": data.action_type,
+                "disciplinary_action_date": now,
+                "status": "resolved"
+            }
+        }
+    )
+    
+    # Get student for audit
+    student = await db.students.find_one({"id": data.student_id}, {"full_name": 1, "_id": 0})
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "disciplinary_action",
+        "action_category": "behaviour",
+        "actor_id": current_user["id"],
+        "actor_name": current_user.get("full_name", ""),
+        "target_type": "student",
+        "target_id": data.student_id,
+        "target_name": student.get("full_name") if student else None,
+        "tenant_id": school_id,
+        "details": {"action_type": data.action_type},
+        "is_sensitive": True,
+        "timestamp": now
+    })
+    
+    action_doc.pop("_id", None)
+    return action_doc
+
+
+@api_router.get("/disciplinary-actions/student/{student_id}")
+async def get_student_disciplinary_actions(
+    student_id: str,
+    school_id: str,
+    active_only: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get disciplinary actions for a student"""
+    query = {"tenant_id": school_id, "student_id": student_id}
+    
+    if active_only:
+        query["is_active"] = True
+        query["is_completed"] = False
+    
+    actions = await db.disciplinary_actions.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"actions": actions, "total": len(actions)}
+
+
+@api_router.get("/behaviour-profile/student/{student_id}")
+async def get_student_behaviour_profile(
+    student_id: str,
+    school_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get comprehensive behaviour profile for a student"""
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    
+    # Get all records
+    records = await db.behaviour_records.find(
+        {"tenant_id": school_id, "student_id": student_id},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Calculate metrics
+    total_points = sum(r.get("points", 0) for r in records)
+    positive_count = sum(1 for r in records if r.get("category") == "positive")
+    negative_count = sum(1 for r in records if r.get("category") == "negative")
+    
+    # Active disciplinary actions
+    active_actions = await db.disciplinary_actions.count_documents({
+        "tenant_id": school_id,
+        "student_id": student_id,
+        "is_active": True,
+        "is_completed": False
+    })
+    
+    # Behaviour score (0-100)
+    if len(records) > 0:
+        behaviour_score = min(100, max(0, 100 + total_points))
+    else:
+        behaviour_score = 100
+    
+    # Behaviour level
+    if behaviour_score >= 90:
+        behaviour_level = "ممتاز"
+    elif behaviour_score >= 75:
+        behaviour_level = "جيد جداً"
+    elif behaviour_score >= 60:
+        behaviour_level = "جيد"
+    elif behaviour_score >= 50:
+        behaviour_level = "مقبول"
+    else:
+        behaviour_level = "يحتاج متابعة"
+    
+    return {
+        "student_id": student_id,
+        "student_name": student.get("full_name"),
+        "total_records": len(records),
+        "positive_count": positive_count,
+        "negative_count": negative_count,
+        "total_points": total_points,
+        "behaviour_score": behaviour_score,
+        "behaviour_level": behaviour_level,
+        "active_disciplinary_actions": active_actions,
+        "last_incident": records[0]["incident_date"] if records else None,
+        "needs_attention": behaviour_score < 60 or active_actions > 0
+    }
+
+
+# ============== PLATFORM CONTACT API (PUBLIC) ==============
+@api_router.get("/public/contact-info")
+async def get_public_contact_info():
+    """Get public contact information for landing page (no auth required)"""
+    settings = await db.platform_settings.find_one({"type": "platform"}, {"_id": 0})
+    
+    if not settings:
+        # Return defaults
+        return {
+            "primary_email": "info@nassaqapp.com",
+            "support_email": "support@nassaqapp.com",
+            "primary_phone": "+966 11 234 5678",
+            "address": "الرياض، المملكة العربية السعودية",
+            "working_hours": "الأحد - الخميس: 8:00 ص - 4:00 م",
+            "website": "https://nassaqapp.com",
+            "owner_name": "شركة نَسَّق للتقنية التعليمية",
+            "social_media": {
+                "twitter": "",
+                "facebook": "",
+                "instagram": "",
+                "linkedin": "",
+                "youtube": ""
+            }
+        }
+    
+    contact = settings.get("contact", {})
+    return {
+        "primary_email": contact.get("primary_email", "info@nassaqapp.com"),
+        "support_email": contact.get("support_email", "support@nassaqapp.com"),
+        "primary_phone": contact.get("primary_phone", "+966 11 234 5678"),
+        "alternate_phone": contact.get("alternate_phone"),
+        "address": contact.get("address", "الرياض، المملكة العربية السعودية"),
+        "working_hours": contact.get("working_hours", "الأحد - الخميس: 8:00 ص - 4:00 م"),
+        "website": contact.get("website", "https://nassaqapp.com"),
+        "owner_name": contact.get("owner_name", "شركة نَسَّق للتقنية التعليمية"),
+        "social_media": contact.get("social_media", {})
+    }
+
+
+# ============== USER ROLE SWITCHING ==============
+@api_router.get("/users/{user_id}/roles")
+async def get_user_roles(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all roles for a user"""
+    # Only allow self or platform admin
+    if current_user["id"] != user_id and current_user["role"] != "platform_admin":
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    roles = []
+    
+    # Primary role
+    roles.append({
+        "role": user.get("role") or user.get("primary_role"),
+        "tenant_id": user.get("tenant_id") or user.get("primary_tenant_id"),
+        "is_primary": True,
+        "is_active": True
+    })
+    
+    # Linked roles
+    for linked in user.get("linked_roles", []):
+        if linked.get("is_active"):
+            roles.append({
+                "role": linked.get("role"),
+                "tenant_id": linked.get("tenant_id"),
+                "scope_id": linked.get("scope_id"),
+                "is_primary": False,
+                "is_active": True
+            })
+    
+    return {"roles": roles, "total": len(roles)}
+
+
+@api_router.post("/users/{user_id}/switch-role")
+async def switch_user_role(
+    user_id: str,
+    target_role: str,
+    target_tenant_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Switch active role for a user"""
+    # Only allow self
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="يمكنك فقط تبديل دورك الخاص")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Get available roles
+    available_roles = []
+    primary_role = user.get("role") or user.get("primary_role")
+    primary_tenant = user.get("tenant_id") or user.get("primary_tenant_id")
+    
+    available_roles.append({"role": primary_role, "tenant_id": primary_tenant})
+    
+    for linked in user.get("linked_roles", []):
+        if linked.get("is_active"):
+            available_roles.append({
+                "role": linked.get("role"),
+                "tenant_id": linked.get("tenant_id")
+            })
+    
+    # Check if target role is valid
+    role_valid = any(
+        r["role"] == target_role and r["tenant_id"] == target_tenant_id
+        for r in available_roles
+    )
+    
+    if not role_valid:
+        raise HTTPException(status_code=400, detail="ليس لديك صلاحية الوصول لهذا الدور")
+    
+    # Audit log
+    now = datetime.now(timezone.utc).isoformat()
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "role_switched",
+        "action_category": "identity",
+        "actor_id": user_id,
+        "actor_name": user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "tenant_id": target_tenant_id,
+        "details": {
+            "from_role": primary_role,
+            "to_role": target_role
+        },
+        "timestamp": now
+    })
+    
+    # Return new token context (in real implementation, would generate new JWT)
+    return {
+        "message": "تم تبديل الدور بنجاح",
+        "user_id": user_id,
+        "active_role": target_role,
+        "active_tenant_id": target_tenant_id,
+        "full_name": user.get("full_name"),
+        "email": user.get("email")
+    }
+
+
+@api_router.post("/users/{user_id}/add-role")
+async def add_role_to_user(
+    user_id: str,
+    role: str,
+    tenant_id: Optional[str] = None,
+    scope_id: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Add an additional role to a user"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Check if role already exists
+    existing_roles = user.get("linked_roles", [])
+    for existing in existing_roles:
+        if (existing.get("role") == role and 
+            existing.get("tenant_id") == tenant_id and
+            existing.get("is_active")):
+            raise HTTPException(status_code=400, detail="هذا الدور موجود مسبقاً للمستخدم")
+    
+    new_role = {
+        "role": role,
+        "tenant_id": tenant_id,
+        "scope_id": scope_id,
+        "is_active": True,
+        "assigned_at": now,
+        "assigned_by": current_user["id"],
+    }
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$push": {"linked_roles": new_role},
+            "$set": {"updated_at": now}
+        }
+    )
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "role_assigned",
+        "action_category": "identity",
+        "actor_id": current_user["id"],
+        "actor_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "target_name": user.get("full_name"),
+        "tenant_id": tenant_id,
+        "details": {"role": role, "scope_id": scope_id},
+        "timestamp": now
+    })
+    
+    return {"message": "تم إضافة الدور بنجاح", "role": new_role}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
