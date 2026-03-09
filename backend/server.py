@@ -51,6 +51,7 @@ class SchoolStatus(str, Enum):
     ACTIVE = "active"
     SUSPENDED = "suspended"
     PENDING = "pending"
+    SETUP = "setup"
 
 # ============== MODELS ==============
 class UserBase(BaseModel):
