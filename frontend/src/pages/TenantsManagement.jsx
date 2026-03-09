@@ -943,5 +943,6 @@ export default function TenantsManagement() {
         isRTL={isRTL}
       />
     </div>
+    </Sidebar>
   );
 }
