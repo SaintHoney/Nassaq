@@ -481,32 +481,49 @@ export default function TenantsManagement() {
             </div>
           </div>
           
-          {/* Stats Cards - Desktop */}
-          <div className="grid grid-cols-4 gap-4 mb-4">
+          {/* Stats Cards - Desktop - RTL Aligned */}
+          <div className={`grid grid-cols-4 gap-4 mb-4 ${isRTL ? 'direction-rtl' : ''}`}>
+            {/* إجمالي المعلمين */}
+            <Card className="border-teal-200 bg-teal-50">
+              <CardContent className="p-4">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="text-teal-600 text-sm">{isRTL ? 'إجمالي المعلمين' : 'Total Teachers'}</p>
+                    <p className="text-3xl font-bold text-teal-700">{stats.totalTeachers || 98}</p>
+                  </div>
+                  <GraduationCap className="h-10 w-10 text-teal-200" />
+                </div>
+              </CardContent>
+            </Card>
+            {/* إجمالي الطلاب */}
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="text-blue-600 text-sm">{isRTL ? 'إجمالي الطلاب' : 'Total Students'}</p>
+                    <p className="text-3xl font-bold text-blue-700">{stats.totalStudents || 1250}</p>
+                  </div>
+                  <Users className="h-10 w-10 text-blue-200" />
+                </div>
+              </CardContent>
+            </Card>
             {/* كارت إجمالي المدارس مع جميع الحالات */}
             <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white col-span-2">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
+                <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="text-white/70 text-sm">{isRTL ? 'إجمالي المدارس' : 'Total Schools'}</p>
                     <p className="text-4xl font-bold">{stats.total}</p>
                   </div>
                   <Building2 className="h-12 w-12 text-white/30" />
                 </div>
-                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/20">
+                <div className={`grid grid-cols-4 gap-2 pt-3 border-t border-white/20 ${isRTL ? 'direction-rtl' : ''}`}>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                      <span className="text-xl font-bold">{stats.active}</span>
+                      <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                      <span className="text-xl font-bold">{stats.expired || 0}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'نشطة' : 'Active'}</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                      <span className="text-xl font-bold">{stats.setup}</span>
-                    </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'إعداد' : 'Setup'}</p>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'منتهية' : 'Expired'}</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -517,35 +534,18 @@ export default function TenantsManagement() {
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                      <span className="text-xl font-bold">{stats.expired || 0}</span>
+                      <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
+                      <span className="text-xl font-bold">{stats.setup}</span>
                     </div>
-                    <p className="text-[10px] text-white/70">{isRTL ? 'منتهية' : 'Expired'}</p>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'إعداد' : 'Setup'}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            {/* إجمالي الطلاب */}
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-600 text-sm">{isRTL ? 'إجمالي الطلاب' : 'Total Students'}</p>
-                    <p className="text-3xl font-bold text-blue-700">{stats.totalStudents || 1250}</p>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                      <span className="text-xl font-bold">{stats.active}</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'نشطة' : 'Active'}</p>
                   </div>
-                  <Users className="h-10 w-10 text-blue-200" />
-                </div>
-              </CardContent>
-            </Card>
-            {/* إجمالي المعلمين */}
-            <Card className="border-teal-200 bg-teal-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-teal-600 text-sm">{isRTL ? 'إجمالي المعلمين' : 'Total Teachers'}</p>
-                    <p className="text-3xl font-bold text-teal-700">{stats.totalTeachers || 98}</p>
-                  </div>
-                  <GraduationCap className="h-10 w-10 text-teal-200" />
                 </div>
               </CardContent>
             </Card>
