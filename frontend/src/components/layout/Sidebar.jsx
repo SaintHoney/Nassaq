@@ -154,9 +154,15 @@ export const Sidebar = ({ children }) => {
         roles: ['teacher'],
       },
       {
-        icon: Calendar,
+        icon: CalendarCheck,
         label: isRTL ? 'الحضور والغياب' : 'Attendance',
         href: '/admin/attendance',
+        roles: ['teacher'],
+      },
+      {
+        icon: ClipboardList,
+        label: isRTL ? 'التقييمات والدرجات' : 'Assessments',
+        href: '/admin/assessments',
         roles: ['teacher'],
       },
       {
