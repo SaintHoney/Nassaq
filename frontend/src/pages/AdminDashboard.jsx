@@ -1775,61 +1775,57 @@ export const AdminDashboard = () => {
                   </ResponsiveContainer>
                 </div>
                 
-                {/* ملخص المؤشرات - Quick Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-green-800">{isRTL ? 'الحصص المنفذة' : 'Lessons'}</span>
-                      <Badge className={activitySummary.lessons.status === 'high' ? 'bg-green-500' : activitySummary.lessons.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
-                        {activitySummary.lessons.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.lessons.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                {/* ملخص المؤشرات - Quick Summary - Mobile Optimized */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 lg:p-4">
+                    <div className="flex items-center justify-between mb-1 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-medium text-green-800">{isRTL ? 'الحصص' : 'Lessons'}</span>
+                      <Badge className={`text-[10px] ${activitySummary.lessons.status === 'high' ? 'bg-green-500' : activitySummary.lessons.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}`}>
+                        {activitySummary.lessons.status === 'high' ? '↑' : activitySummary.lessons.status === 'low' ? '↓' : '→'}
                       </Badge>
                     </div>
-                    <p className="text-2xl font-bold text-green-700">{activitySummary.lessons.count}</p>
-                    <p className={`text-xs flex items-center gap-1 ${activitySummary.lessons.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {activitySummary.lessons.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {activitySummary.lessons.change >= 0 ? '+' : ''}{activitySummary.lessons.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    <p className="text-xl lg:text-2xl font-bold text-green-700">{activitySummary.lessons.count}</p>
+                    <p className={`text-[10px] lg:text-xs flex items-center gap-1 ${activitySummary.lessons.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.lessons.change >= 0 ? '+' : ''}{activitySummary.lessons.change}%
                     </p>
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-blue-800">{isRTL ? 'تسجيلات الحضور' : 'Attendance'}</span>
-                      <Badge className={activitySummary.attendance.status === 'high' ? 'bg-green-500' : activitySummary.attendance.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
-                        {activitySummary.attendance.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.attendance.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 lg:p-4">
+                    <div className="flex items-center justify-between mb-1 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-medium text-blue-800">{isRTL ? 'الحضور' : 'Attendance'}</span>
+                      <Badge className={`text-[10px] ${activitySummary.attendance.status === 'high' ? 'bg-green-500' : activitySummary.attendance.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}`}>
+                        {activitySummary.attendance.status === 'high' ? '↑' : activitySummary.attendance.status === 'low' ? '↓' : '→'}
                       </Badge>
                     </div>
-                    <p className="text-2xl font-bold text-blue-700">{activitySummary.attendance.count}</p>
-                    <p className={`text-xs flex items-center gap-1 ${activitySummary.attendance.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {activitySummary.attendance.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {activitySummary.attendance.change >= 0 ? '+' : ''}{activitySummary.attendance.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    <p className="text-xl lg:text-2xl font-bold text-blue-700">{activitySummary.attendance.count}</p>
+                    <p className={`text-[10px] lg:text-xs flex items-center gap-1 ${activitySummary.attendance.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.attendance.change >= 0 ? '+' : ''}{activitySummary.attendance.change}%
                     </p>
                   </div>
                   
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-purple-800">{isRTL ? 'إدخالات الدرجات' : 'Grades'}</span>
-                      <Badge className={activitySummary.grades.status === 'high' ? 'bg-green-500' : activitySummary.grades.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
-                        {activitySummary.grades.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.grades.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-2.5 lg:p-4">
+                    <div className="flex items-center justify-between mb-1 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-medium text-purple-800">{isRTL ? 'الدرجات' : 'Grades'}</span>
+                      <Badge className={`text-[10px] ${activitySummary.grades.status === 'high' ? 'bg-green-500' : activitySummary.grades.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}`}>
+                        {activitySummary.grades.status === 'high' ? '↑' : activitySummary.grades.status === 'low' ? '↓' : '→'}
                       </Badge>
                     </div>
-                    <p className="text-2xl font-bold text-purple-700">{activitySummary.grades.count}</p>
-                    <p className={`text-xs flex items-center gap-1 ${activitySummary.grades.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {activitySummary.grades.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {activitySummary.grades.change >= 0 ? '+' : ''}{activitySummary.grades.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    <p className="text-xl lg:text-2xl font-bold text-purple-700">{activitySummary.grades.count}</p>
+                    <p className={`text-[10px] lg:text-xs flex items-center gap-1 ${activitySummary.grades.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.grades.change >= 0 ? '+' : ''}{activitySummary.grades.change}%
                     </p>
                   </div>
                   
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-orange-800">{isRTL ? 'المستخدمين النشطين' : 'Active Users'}</span>
-                      <Badge className={activitySummary.users.status === 'high' ? 'bg-green-500' : activitySummary.users.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
-                        {activitySummary.users.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.users.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5 lg:p-4">
+                    <div className="flex items-center justify-between mb-1 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-medium text-orange-800">{isRTL ? 'النشطين' : 'Active'}</span>
+                      <Badge className={`text-[10px] ${activitySummary.users.status === 'high' ? 'bg-green-500' : activitySummary.users.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}`}>
+                        {activitySummary.users.status === 'high' ? '↑' : activitySummary.users.status === 'low' ? '↓' : '→'}
                       </Badge>
                     </div>
-                    <p className="text-2xl font-bold text-orange-700">{activitySummary.users.count}</p>
-                    <p className={`text-xs flex items-center gap-1 ${activitySummary.users.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {activitySummary.users.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {activitySummary.users.change >= 0 ? '+' : ''}{activitySummary.users.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    <p className="text-xl lg:text-2xl font-bold text-orange-700">{activitySummary.users.count}</p>
+                    <p className={`text-[10px] lg:text-xs flex items-center gap-1 ${activitySummary.users.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.users.change >= 0 ? '+' : ''}{activitySummary.users.change}%
                     </p>
                   </div>
                 </div>
