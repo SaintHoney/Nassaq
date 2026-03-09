@@ -244,29 +244,51 @@ export const Sidebar = ({ children }) => {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 flex flex-col items-center">
-        <div className="flex items-center justify-between w-full">
-          <Link to="/" className={`${collapsed ? 'hidden' : 'block'}`}>
-            <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 w-auto rounded-xl" />
-          </Link>
-          {collapsed && (
-            <Link to="/" className="mx-auto">
-              <img src={LOGO_WHITE} alt="نَسَّق" className="h-8 w-auto rounded-lg" />
+        {/* Logo and collapse button row */}
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full`}>
+          {!collapsed && (
+            <Link to="/">
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 w-auto rounded-xl" />
             </Link>
           )}
+          {collapsed && (
+            <Link to="/" className="flex-shrink-0">
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-8 w-8 rounded-lg object-contain" />
+            </Link>
+          )}
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(!collapsed)}
+              className="text-white/70 hover:text-white hover:bg-white/10 hidden lg:flex"
+              data-testid="sidebar-collapse-btn"
+            >
+              {isRTL ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </Button>
+          )}
+        </div>
+        
+        {/* Collapse button when collapsed */}
+        {collapsed && (
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="text-white/70 hover:text-white hover:bg-white/10 hidden lg:flex"
+            className="text-white/70 hover:text-white hover:bg-white/10 mt-2 hidden lg:flex"
             data-testid="sidebar-collapse-btn"
           >
             {isRTL ? (
-              collapsed ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" />
             ) : (
-              collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5" />
             )}
           </Button>
-        </div>
+        )}
         
         {/* User info when collapsed */}
         {collapsed && user && (
