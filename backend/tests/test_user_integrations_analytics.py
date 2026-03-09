@@ -282,6 +282,7 @@ class TestIntegrations:
         
         update_data = {
             "name": "TEST_Updated_Integration",
+            "type": "other",  # Required field
             "description": "تكامل محدث"
         }
         
