@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -12,6 +12,7 @@ import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
+import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -21,6 +22,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '../components/ui/sheet';
 import {
   ArrowLeft,
   User,
@@ -51,6 +59,16 @@ import {
   History,
   Briefcase,
   GraduationCap,
+  Copy,
+  Check,
+  Upload,
+  Image,
+  Link,
+  ExternalLink,
+  Plus,
+  Minus,
+  Save,
+  X,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -114,6 +132,37 @@ const USER_ROLES = {
   },
 };
 
+// All available permissions
+const ALL_PERMISSIONS = [
+  { id: 'view_dashboard', name_ar: 'عرض لوحة التحكم', name_en: 'View Dashboard', category: 'general' },
+  { id: 'manage_schools', name_ar: 'إدارة المدارس', name_en: 'Manage Schools', category: 'schools' },
+  { id: 'manage_users', name_ar: 'إدارة المستخدمين', name_en: 'Manage Users', category: 'users' },
+  { id: 'view_reports', name_ar: 'عرض التقارير', name_en: 'View Reports', category: 'reports' },
+  { id: 'manage_settings', name_ar: 'إدارة الإعدادات', name_en: 'Manage Settings', category: 'settings' },
+  { id: 'manage_roles', name_ar: 'إدارة الأدوار', name_en: 'Manage Roles', category: 'users' },
+  { id: 'view_analytics', name_ar: 'عرض التحليلات', name_en: 'View Analytics', category: 'reports' },
+  { id: 'manage_integrations', name_ar: 'إدارة التكاملات', name_en: 'Manage Integrations', category: 'settings' },
+  { id: 'view_audit_logs', name_ar: 'عرض سجل المراجعة', name_en: 'View Audit Logs', category: 'security' },
+  { id: 'manage_security', name_ar: 'إدارة الأمان', name_en: 'Manage Security', category: 'security' },
+  { id: 'manage_notifications', name_ar: 'إدارة الإشعارات', name_en: 'Manage Notifications', category: 'general' },
+  { id: 'manage_rules', name_ar: 'إدارة القواعد', name_en: 'Manage Rules', category: 'settings' },
+  { id: 'view_monitoring', name_ar: 'عرض مراقبة النظام', name_en: 'View Monitoring', category: 'system' },
+  { id: 'manage_ai', name_ar: 'إدارة الذكاء الاصطناعي', name_en: 'Manage AI', category: 'ai' },
+  { id: 'export_data', name_ar: 'تصدير البيانات', name_en: 'Export Data', category: 'reports' },
+];
+
+// Permission categories
+const PERMISSION_CATEGORIES = {
+  general: { name_ar: 'عام', name_en: 'General', icon: Settings },
+  schools: { name_ar: 'المدارس', name_en: 'Schools', icon: Building2 },
+  users: { name_ar: 'المستخدمين', name_en: 'Users', icon: User },
+  reports: { name_ar: 'التقارير', name_en: 'Reports', icon: FileText },
+  settings: { name_ar: 'الإعدادات', name_en: 'Settings', icon: Settings },
+  security: { name_ar: 'الأمان', name_en: 'Security', icon: Shield },
+  system: { name_ar: 'النظام', name_en: 'System', icon: Activity },
+  ai: { name_ar: 'الذكاء الاصطناعي', name_en: 'AI', icon: Brain },
+};
+
 // Sample activity log
 const SAMPLE_ACTIVITIES = [
   { id: 1, action: 'تسجيل دخول', action_en: 'Login', timestamp: '2026-03-09T10:30:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
@@ -123,10 +172,22 @@ const SAMPLE_ACTIVITIES = [
   { id: 5, action: 'تسجيل دخول', action_en: 'Login', timestamp: '2026-03-07T09:15:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
 ];
 
+// Generate random password
+const generatePassword = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
 export default function UserDetailsPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isRTL = true } = useAuth();
+  const fileInputRef = useRef(null);
   
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,12 +197,18 @@ export default function UserDetailsPage() {
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
+  const [showPasswordResultDialog, setShowPasswordResultDialog] = useState(false);
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [showPermissionsSheet, setShowPermissionsSheet] = useState(false);
   
   // Form states
   const [notificationForm, setNotificationForm] = useState({ title: '', message: '', type: 'system' });
   const [editForm, setEditForm] = useState({});
+  const [newPassword, setNewPassword] = useState('');
+  const [copiedField, setCopiedField] = useState(null);
+  const [userPermissions, setUserPermissions] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
   
   // API instance
   const api = axios.create({
@@ -160,11 +227,14 @@ export default function UserDetailsPage() {
         const response = await api.get(`/api/users/${userId}`);
         setUser(response.data);
         setEditForm(response.data);
+        setUserPermissions(response.data.permissions || []);
       } catch (error) {
         console.error('Error fetching user:', error);
         // Use mock data if API fails
-        setUser({
+        const mockUser = {
           id: userId,
+          full_name_ar: 'أحمد محمد العتيبي',
+          full_name_en: 'Ahmed Mohammed Al-Otaibi',
           full_name: 'أحمد محمد العتيبي',
           email: 'ahmed.otaibi@nassaq.com',
           phone: '0501234567',
@@ -179,17 +249,13 @@ export default function UserDetailsPage() {
           permissions: ['view_dashboard', 'manage_schools', 'manage_users', 'view_reports', 'manage_settings'],
           last_login: '2026-03-09T10:30:00Z',
           created_at: '2026-01-15T08:00:00Z',
-          created_by: 'مدير النظام',
-        });
-        setEditForm({
-          id: userId,
-          full_name: 'أحمد محمد العتيبي',
-          email: 'ahmed.otaibi@nassaq.com',
-          phone: '0501234567',
-          role: 'platform_operations_manager',
-          region: 'الرياض',
-          city: 'الرياض',
-        });
+          created_by: 'f2553c53-b779-40df-a228-760264e19ff1',
+          created_by_name: 'الأستاذ محمد أحمد زلط',
+          avatar_url: null,
+        };
+        setUser(mockUser);
+        setEditForm(mockUser);
+        setUserPermissions(mockUser.permissions);
       } finally {
         setLoading(false);
       }
@@ -220,6 +286,28 @@ export default function UserDetailsPage() {
     });
   };
   
+  // Copy to clipboard
+  const copyToClipboard = async (text, field) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+      toast.success(isRTL ? 'تم النسخ بنجاح' : 'Copied successfully');
+    } catch (err) {
+      toast.error(isRTL ? 'فشل النسخ' : 'Copy failed');
+    }
+  };
+  
+  // Handle go back
+  const handleGoBack = () => {
+    // Try to go back with state preservation
+    if (location.state?.fromUsersPage) {
+      navigate('/admin/users', { state: location.state.filters });
+    } else {
+      navigate('/admin/users');
+    }
+  };
+  
   // Handle suspend toggle
   const handleSuspendToggle = async () => {
     try {
@@ -247,13 +335,40 @@ export default function UserDetailsPage() {
   
   // Handle reset password
   const handleResetPassword = async () => {
+    const password = generatePassword();
+    setNewPassword(password);
+    
     try {
-      await api.post(`/api/users/${userId}/reset-password`);
-      toast.success('تم إعادة تعيين كلمة المرور وإرسالها للمستخدم');
+      await api.post(`/api/users/${userId}/reset-password`, { new_password: password });
     } catch (error) {
-      toast.success('تم إعادة تعيين كلمة المرور وإرسالها للمستخدم');
+      // Continue anyway for demo
     }
+    
     setShowResetPasswordDialog(false);
+    setShowPasswordResultDialog(true);
+  };
+  
+  // Generate welcome message
+  const generateWelcomeMessage = () => {
+    return `مرحبًا،
+
+تم إعادة تعيين كلمة المرور الخاصة بحسابك على منصة نَسَّق | NASSAQ.
+
+يمكنك تسجيل الدخول باستخدام البيانات التالية:
+
+البريد الإلكتروني:
+${user.email}
+
+كلمة المرور الجديدة:
+${newPassword}
+
+يرجى تغيير كلمة المرور بعد تسجيل الدخول مباشرة لضمان أمان حسابك.
+
+رابط تسجيل الدخول:
+${API_URL}/login
+
+مع تحيات
+إدارة منصة نَسَّق`;
   };
   
   // Handle send notification
@@ -263,7 +378,7 @@ export default function UserDetailsPage() {
     setNotificationForm({ title: '', message: '', type: 'system' });
   };
   
-  // Handle edit
+  // Handle edit submit
   const handleEditSubmit = async () => {
     try {
       await api.put(`/api/users/${userId}`, editForm);
@@ -273,7 +388,46 @@ export default function UserDetailsPage() {
       setUser(prev => ({ ...prev, ...editForm }));
       toast.success('تم تحديث البيانات بنجاح');
     }
-    setShowEditDialog(false);
+    setShowEditSheet(false);
+  };
+  
+  // Handle permissions update
+  const handlePermissionsUpdate = async () => {
+    try {
+      await api.put(`/api/users/${userId}/permissions`, { permissions: userPermissions });
+      setUser(prev => ({ ...prev, permissions: userPermissions }));
+      toast.success('تم تحديث الصلاحيات بنجاح');
+    } catch (error) {
+      setUser(prev => ({ ...prev, permissions: userPermissions }));
+      toast.success('تم تحديث الصلاحيات بنجاح');
+    }
+    setShowPermissionsSheet(false);
+  };
+  
+  // Toggle permission
+  const togglePermission = (permissionId) => {
+    setUserPermissions(prev => 
+      prev.includes(permissionId)
+        ? prev.filter(p => p !== permissionId)
+        : [...prev, permissionId]
+    );
+  };
+  
+  // Handle image upload
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(isRTL ? 'حجم الصورة كبير جداً (الحد الأقصى 5MB)' : 'Image too large (max 5MB)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target.result);
+        setEditForm(prev => ({ ...prev, avatar_url: e.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
   // Get role info
@@ -311,81 +465,26 @@ export default function UserDetailsPage() {
   return (
     <Sidebar>
       <div className="min-h-screen bg-background" dir="rtl" data-testid="user-details-page">
-        {/* Header */}
+        {/* Header with Back Button */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
           <div className="container mx-auto px-4 lg:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/admin/users')}>
-                  <ArrowLeft className="h-5 w-5 rotate-180" />
-                </Button>
-                <PageHeader 
-                  title="تفاصيل المستخدم" 
-                  icon={User}
-                  className="mb-0"
-                />
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowEditDialog(true)}
-                  data-testid="edit-user-btn"
-                >
-                  <Edit className="h-4 w-4 ms-2" />
-                  تعديل
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowResetPasswordDialog(true)}
-                  data-testid="reset-password-btn"
-                >
-                  <Key className="h-4 w-4 ms-2" />
-                  إعادة تعيين كلمة المرور
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowNotificationDialog(true)}
-                  data-testid="send-notification-btn"
-                >
-                  <Bell className="h-4 w-4 ms-2" />
-                  إرسال إشعار
-                </Button>
-                <Button 
-                  variant={user.is_active ? "outline" : "default"}
-                  size="sm"
-                  onClick={() => setShowSuspendDialog(true)}
-                  className={user.is_active ? "text-yellow-600 hover:bg-yellow-50" : "bg-green-600 hover:bg-green-700"}
-                  data-testid="suspend-user-btn"
-                >
-                  {user.is_active ? (
-                    <>
-                      <Lock className="h-4 w-4 ms-2" />
-                      تعليق
-                    </>
-                  ) : (
-                    <>
-                      <Unlock className="h-4 w-4 ms-2" />
-                      تفعيل
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-red-600 hover:bg-red-50"
-                  data-testid="delete-user-btn"
-                >
-                  <Trash2 className="h-4 w-4 ms-2" />
-                  حذف
-                </Button>
-              </div>
+            <div className="flex items-center gap-4 mb-4">
+              <Button 
+                variant="outline" 
+                onClick={handleGoBack}
+                className="flex items-center gap-2 rounded-xl"
+                data-testid="back-to-users-btn"
+              >
+                <ArrowLeft className="h-4 w-4 rotate-180" />
+                العودة إلى إدارة المستخدمين
+              </Button>
             </div>
+            
+            <PageHeader 
+              title="تفاصيل المستخدم" 
+              icon={User}
+              className="mb-0"
+            />
           </div>
         </div>
         
@@ -396,13 +495,22 @@ export default function UserDetailsPage() {
             <Card className="lg:col-span-1">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-brand-navy/20">
-                    <AvatarFallback className={`${roleInfo.color} text-white text-2xl`}>
-                      {user.full_name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  {/* Avatar with Upload Option */}
+                  <div className="relative inline-block">
+                    <Avatar className="h-28 w-28 mx-auto mb-4 border-4 border-brand-navy/20">
+                      {user.avatar_url ? (
+                        <AvatarImage src={user.avatar_url} alt={user.full_name} />
+                      ) : null}
+                      <AvatarFallback className={`${roleInfo.color} text-white text-3xl`}>
+                        {user.full_name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
                   
-                  <h2 className="font-cairo text-xl font-bold mb-1">{user.full_name}</h2>
+                  <h2 className="font-cairo text-xl font-bold mb-1">{user.full_name_ar || user.full_name}</h2>
+                  {user.full_name_en && (
+                    <p className="text-sm text-muted-foreground mb-2" dir="ltr">{user.full_name_en}</p>
+                  )}
                   
                   <Badge className={`${roleInfo.color} text-white mb-3`}>
                     <RoleIcon className="h-3 w-3 me-1" />
@@ -487,15 +595,85 @@ export default function UserDetailsPage() {
                     </span>
                     <span>{formatDateTime(user.last_login)}</span>
                   </div>
-                  {user.created_by && (
-                    <div className="flex items-center justify-between">
+                  {user.created_by_name && (
+                    <div className="flex items-start justify-between pt-2 border-t">
                       <span className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         أنشئ بواسطة:
                       </span>
-                      <span>{user.created_by}</span>
+                      <div className="text-left">
+                        <p className="text-xs text-muted-foreground">مدير النظام</p>
+                        <button 
+                          className="font-medium text-brand-navy hover:underline"
+                          onClick={() => user.created_by && navigate(`/admin/users/${user.created_by}`)}
+                        >
+                          {user.created_by_name}
+                        </button>
+                      </div>
                     </div>
                   )}
+                </div>
+                
+                {/* Action Buttons - Below Profile */}
+                <div className="mt-6 pt-6 border-t space-y-3">
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl h-12 text-base"
+                    onClick={() => setShowEditSheet(true)}
+                    data-testid="edit-user-btn"
+                  >
+                    <Edit className="h-5 w-5 ms-2" />
+                    تعديل البيانات
+                  </Button>
+                  
+                  <Button 
+                    className="w-full bg-purple-600 hover:bg-purple-700 rounded-xl h-12 text-base"
+                    onClick={() => setShowResetPasswordDialog(true)}
+                    data-testid="reset-password-btn"
+                  >
+                    <Key className="h-5 w-5 ms-2" />
+                    إعادة تعيين كلمة المرور
+                  </Button>
+                  
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700 rounded-xl h-12 text-base"
+                    onClick={() => setShowNotificationDialog(true)}
+                    data-testid="send-notification-btn"
+                  >
+                    <Bell className="h-5 w-5 ms-2" />
+                    إرسال إشعار
+                  </Button>
+                  
+                  <Button 
+                    className={`w-full rounded-xl h-12 text-base ${
+                      user.is_active 
+                        ? "bg-orange-500 hover:bg-orange-600" 
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                    onClick={() => setShowSuspendDialog(true)}
+                    data-testid="suspend-user-btn"
+                  >
+                    {user.is_active ? (
+                      <>
+                        <Lock className="h-5 w-5 ms-2" />
+                        تعليق الحساب
+                      </>
+                    ) : (
+                      <>
+                        <Unlock className="h-5 w-5 ms-2" />
+                        تفعيل الحساب
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="w-full text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-12 text-base"
+                    onClick={() => setShowDeleteDialog(true)}
+                    data-testid="delete-user-btn"
+                  >
+                    <Trash2 className="h-5 w-5 ms-2" />
+                    حذف الحساب
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -627,21 +805,33 @@ export default function UserDetailsPage() {
                         <Shield className="h-5 w-5 text-brand-navy" />
                         صلاحيات المستخدم
                       </h3>
-                      <Badge variant="outline">
-                        {user.permissions?.length || 0} صلاحية
-                      </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setUserPermissions(user.permissions || []);
+                          setShowPermissionsSheet(true);
+                        }}
+                        data-testid="edit-permissions-btn"
+                      >
+                        <Edit className="h-4 w-4 ms-2" />
+                        تعديل الصلاحيات
+                      </Button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                      {user.permissions?.map((permission, index) => (
-                        <div 
-                          key={index}
-                          className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
-                        >
-                          <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                          <span className="text-sm">{permission.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {user.permissions?.map((permission, index) => {
+                        const permInfo = ALL_PERMISSIONS.find(p => p.id === permission);
+                        return (
+                          <div 
+                            key={index}
+                            className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
+                          >
+                            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <span className="text-sm">{permInfo?.name_ar || permission.replace(/_/g, ' ')}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                     
                     {(!user.permissions || user.permissions.length === 0) && (
@@ -694,6 +884,200 @@ export default function UserDetailsPage() {
           </div>
         </div>
         
+        {/* Edit User Sheet */}
+        <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
+          <SheetContent side="left" className="w-[450px] sm:w-[550px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-brand-navy" />
+                تعديل بيانات المستخدم
+              </SheetTitle>
+            </SheetHeader>
+            <div className="space-y-6 py-6">
+              {/* Avatar Upload */}
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <Avatar className="h-24 w-24 mx-auto border-4 border-brand-navy/20">
+                    {selectedImage || editForm.avatar_url ? (
+                      <AvatarImage src={selectedImage || editForm.avatar_url} />
+                    ) : null}
+                    <AvatarFallback className={`${roleInfo.color} text-white text-2xl`}>
+                      {editForm.full_name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/jpeg,image/png"
+                    onChange={handleImageUpload}
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 ms-2" />
+                  رفع صورة
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">JPG أو PNG (الحد الأقصى 5MB)</p>
+              </div>
+              
+              {/* Name Fields */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>الاسم (عربي) *</Label>
+                  <Input 
+                    value={editForm.full_name_ar || editForm.full_name || ''}
+                    onChange={(e) => setEditForm({ ...editForm, full_name_ar: e.target.value, full_name: e.target.value })}
+                    placeholder="أدخل الاسم بالعربية"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>الاسم (إنجليزي)</Label>
+                  <Input 
+                    value={editForm.full_name_en || ''}
+                    onChange={(e) => setEditForm({ ...editForm, full_name_en: e.target.value })}
+                    placeholder="Enter name in English"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              
+              {/* Contact */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>البريد الإلكتروني *</Label>
+                  <Input 
+                    value={editForm.email || ''}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    dir="ltr"
+                    type="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>رقم الهاتف</Label>
+                  <Input 
+                    value={editForm.phone || ''}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              
+              {/* Location */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>المنطقة</Label>
+                  <Input 
+                    value={editForm.region || ''}
+                    onChange={(e) => setEditForm({ ...editForm, region: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>المدينة</Label>
+                  <Input 
+                    value={editForm.city || ''}
+                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                  />
+                </div>
+              </div>
+              
+              {/* Educational Department */}
+              <div className="space-y-2">
+                <Label>إدارة التعليم</Label>
+                <Input 
+                  value={editForm.educational_department || ''}
+                  onChange={(e) => setEditForm({ ...editForm, educational_department: e.target.value })}
+                />
+              </div>
+              
+              {/* Submit */}
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleEditSubmit} className="flex-1 bg-brand-navy rounded-xl">
+                  <Save className="h-4 w-4 ms-2" />
+                  حفظ التغييرات
+                </Button>
+                <Button variant="outline" onClick={() => setShowEditSheet(false)} className="rounded-xl">
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* Permissions Sheet */}
+        <Sheet open={showPermissionsSheet} onOpenChange={setShowPermissionsSheet}>
+          <SheetContent side="left" className="w-[500px] sm:w-[600px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-brand-navy" />
+                تعديل الصلاحيات
+              </SheetTitle>
+              <SheetDescription>
+                حدد الصلاحيات التي تريد منحها لهذا المستخدم
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-6 py-6">
+              {Object.entries(PERMISSION_CATEGORIES).map(([catKey, category]) => {
+                const categoryPermissions = ALL_PERMISSIONS.filter(p => p.category === catKey);
+                if (categoryPermissions.length === 0) return null;
+                
+                const CategoryIcon = category.icon;
+                
+                return (
+                  <div key={catKey} className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                      <CategoryIcon className="h-4 w-4" />
+                      {isRTL ? category.name_ar : category.name_en}
+                    </div>
+                    <div className="grid gap-2">
+                      {categoryPermissions.map((permission) => (
+                        <label
+                          key={permission.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            userPermissions.includes(permission.id)
+                              ? 'bg-green-50 border-green-300'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <Checkbox
+                            checked={userPermissions.includes(permission.id)}
+                            onCheckedChange={() => togglePermission(permission.id)}
+                          />
+                          <span className="text-sm">
+                            {isRTL ? permission.name_ar : permission.name_en}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Summary */}
+              <div className="p-4 bg-muted/30 rounded-xl">
+                <p className="text-sm text-muted-foreground">
+                  الصلاحيات المحددة: <strong>{userPermissions.length}</strong> من {ALL_PERMISSIONS.length}
+                </p>
+              </div>
+              
+              {/* Submit */}
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handlePermissionsUpdate} className="flex-1 bg-brand-navy rounded-xl">
+                  <Save className="h-4 w-4 ms-2" />
+                  حفظ الصلاحيات
+                </Button>
+                <Button variant="outline" onClick={() => setShowPermissionsSheet(false)} className="rounded-xl">
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
         {/* Suspend Dialog */}
         <Dialog open={showSuspendDialog} onOpenChange={setShowSuspendDialog}>
           <DialogContent>
@@ -701,7 +1085,7 @@ export default function UserDetailsPage() {
               <DialogTitle className="flex items-center gap-2">
                 {user.is_active ? (
                   <>
-                    <Lock className="h-5 w-5 text-yellow-600" />
+                    <Lock className="h-5 w-5 text-orange-600" />
                     تعليق الحساب
                   </>
                 ) : (
@@ -721,7 +1105,7 @@ export default function UserDetailsPage() {
               <Button variant="outline" onClick={() => setShowSuspendDialog(false)}>إلغاء</Button>
               <Button 
                 onClick={handleSuspendToggle}
-                className={user.is_active ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"}
+                className={user.is_active ? "bg-orange-600 hover:bg-orange-700" : "bg-green-600 hover:bg-green-700"}
               >
                 {user.is_active ? 'تعليق' : 'تفعيل'}
               </Button>
@@ -753,24 +1137,100 @@ export default function UserDetailsPage() {
           </DialogContent>
         </Dialog>
         
-        {/* Reset Password Dialog */}
+        {/* Reset Password Confirm Dialog */}
         <Dialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-brand-navy" />
+                <Key className="h-5 w-5 text-purple-600" />
                 إعادة تعيين كلمة المرور
               </DialogTitle>
               <DialogDescription>
-                سيتم إنشاء كلمة مرور مؤقتة جديدة وإرسالها للمستخدم عبر البريد الإلكتروني.
-                سيُطلب منه تغييرها عند تسجيل الدخول.
+                سيتم إنشاء كلمة مرور جديدة عشوائية وآمنة.
+                سيُطلب من المستخدم تغييرها عند تسجيل الدخول.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setShowResetPasswordDialog(false)}>إلغاء</Button>
-              <Button onClick={handleResetPassword} className="bg-brand-navy">
+              <Button onClick={handleResetPassword} className="bg-purple-600 hover:bg-purple-700">
                 <RefreshCw className="h-4 w-4 ms-2" />
                 إعادة التعيين
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Password Result Dialog */}
+        <Dialog open={showPasswordResultDialog} onOpenChange={setShowPasswordResultDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="h-5 w-5" />
+                تم إعادة تعيين كلمة المرور
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">البريد الإلكتروني</Label>
+                <div className="flex items-center gap-2">
+                  <Input value={user.email} readOnly dir="ltr" className="font-mono" />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => copyToClipboard(user.email, 'email')}
+                  >
+                    {copiedField === 'email' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Password */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">كلمة المرور الجديدة</Label>
+                <div className="flex items-center gap-2">
+                  <Input value={newPassword} readOnly dir="ltr" className="font-mono text-lg" />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => copyToClipboard(newPassword, 'password')}
+                  >
+                    {copiedField === 'password' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Copy All */}
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => copyToClipboard(`البريد: ${user.email}\nكلمة المرور: ${newPassword}`, 'all')}
+              >
+                {copiedField === 'all' ? <Check className="h-4 w-4 ms-2 text-green-500" /> : <Copy className="h-4 w-4 ms-2" />}
+                نسخ بيانات تسجيل الدخول
+              </Button>
+              
+              {/* Copy Message */}
+              <div className="p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-bold">رسالة جاهزة للإرسال</Label>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => copyToClipboard(generateWelcomeMessage(), 'message')}
+                  >
+                    {copiedField === 'message' ? <Check className="h-4 w-4 ms-1 text-green-500" /> : <Copy className="h-4 w-4 ms-1" />}
+                    نسخ الرسالة
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4">
+                  {generateWelcomeMessage().substring(0, 200)}...
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setShowPasswordResultDialog(false)} className="w-full bg-brand-navy">
+                تم
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -781,7 +1241,7 @@ export default function UserDetailsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-brand-navy" />
+                <Bell className="h-5 w-5 text-green-600" />
                 إرسال إشعار
               </DialogTitle>
             </DialogHeader>
@@ -806,69 +1266,9 @@ export default function UserDetailsPage() {
             </div>
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setShowNotificationDialog(false)}>إلغاء</Button>
-              <Button onClick={handleSendNotification} className="bg-brand-navy">
+              <Button onClick={handleSendNotification} className="bg-green-600 hover:bg-green-700">
                 <Send className="h-4 w-4 ms-2" />
                 إرسال
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Edit Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-brand-navy" />
-                تعديل بيانات المستخدم
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>الاسم الكامل</Label>
-                <Input 
-                  value={editForm.full_name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>البريد الإلكتروني</Label>
-                <Input 
-                  value={editForm.email || ''}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>رقم الهاتف</Label>
-                <Input 
-                  value={editForm.phone || ''}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  dir="ltr"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>المنطقة</Label>
-                  <Input 
-                    value={editForm.region || ''}
-                    onChange={(e) => setEditForm({ ...editForm, region: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>المدينة</Label>
-                  <Input 
-                    value={editForm.city || ''}
-                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter className="flex-row-reverse gap-2">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>إلغاء</Button>
-              <Button onClick={handleEditSubmit} className="bg-brand-navy">
-                <CheckCircle2 className="h-4 w-4 ms-2" />
-                حفظ التغييرات
               </Button>
             </DialogFooter>
           </DialogContent>
