@@ -852,6 +852,9 @@ export const AdminDashboard = () => {
   const hasActiveFilters = filters.city || filters.region || filters.schoolType || 
     filters.tenantStatus !== 'all' || filters.scope !== 'all';
 
+  // Mobile menu state
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  
   if (loading) {
     return (
       <Sidebar>
@@ -865,8 +868,43 @@ export const AdminDashboard = () => {
   return (
     <Sidebar>
       <div className="min-h-screen bg-background" data-testid="admin-dashboard">
-        {/* Header */}
-        <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 z-30 glass border-b border-border/50 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-cairo text-lg font-bold text-foreground">
+                {isRTL ? 'مركز القيادة' : 'Command Center'}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {getCurrentHijriDate().hijri}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setMobileFiltersOpen(true)} 
+                className="rounded-xl relative"
+                data-testid="mobile-filters-btn"
+              >
+                <Filter className="h-5 w-5" />
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -end-1 w-4 h-4 bg-brand-purple text-white text-[10px] rounded-full flex items-center justify-center">
+                    {Object.values(filters).filter(v => v !== 'all' && v !== '' && v !== 'today').length}
+                  </span>
+                )}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-xl">
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <NotificationBell />
+            </div>
+          </div>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden lg:block sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-cairo text-2xl font-bold text-foreground">
