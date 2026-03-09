@@ -8388,6 +8388,27 @@ async def get_academic_structure(
 
 app.include_router(api_router)
 
+# ============== IMPORT AND REGISTER NEW ROUTERS ==============
+from routes.scheduling_routes import create_scheduling_router
+from routes.attendance_routes import create_attendance_router
+from routes.assessment_routes import create_assessment_router
+from routes.audit_routes import create_audit_router
+
+# Create and include the new routers
+scheduling_router = create_scheduling_router(db, get_current_user, require_roles, UserRole)
+attendance_router = create_attendance_router(db, get_current_user, require_roles, UserRole)
+assessment_router = create_assessment_router(db, get_current_user, require_roles, UserRole)
+audit_router = create_audit_router(db, get_current_user, require_roles, UserRole)
+
+# Add to API router
+api_router.include_router(scheduling_router)
+api_router.include_router(attendance_router)
+api_router.include_router(assessment_router)
+api_router.include_router(audit_router)
+
+# Re-include the main api_router to pick up nested routers
+app.include_router(api_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
