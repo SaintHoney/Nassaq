@@ -191,7 +191,7 @@ function AppRoutes() {
         path="/admin/communication"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
-            <CommunicationCenterPage />
+            <CommunicationNotificationsPage />
           </ProtectedRoute>
         }
       />
