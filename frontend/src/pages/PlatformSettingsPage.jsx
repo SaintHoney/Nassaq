@@ -598,16 +598,130 @@ export const PlatformSettingsPage = () => {
     }
   };
   
-  // Save handler
-  const handleSave = async () => {
+  // Save general settings
+  const handleSaveGeneralSettings = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axios.put(`${API_URL}/api/settings/platform/general`, {
+        platform_name_ar: generalSettings.platformNameAr,
+        platform_name_en: generalSettings.platformNameEn,
+        browser_title: generalSettings.browserTitle,
+        default_language: generalSettings.defaultLanguage,
+        date_format: generalSettings.dateFormat,
+        timezone: generalSettings.timezone,
+        email_notifications: generalSettings.emailNotifications,
+        sms_notifications: generalSettings.smsNotifications,
+        push_notifications: generalSettings.pushNotifications,
+        ai_features: generalSettings.aiFeatures,
+        registration_open: generalSettings.registrationOpen,
+        maintenance_mode: generalSettings.maintenanceMode,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success(t.savedSuccessfully);
     } catch (error) {
+      console.error('Error saving general settings:', error);
       toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Save brand settings
+  const handleSaveBrandSettings = async () => {
+    setLoading(true);
+    try {
+      await axios.put(`${API_URL}/api/settings/platform/brand`, {
+        logo: brandSettings.logo,
+        favicon: brandSettings.favicon,
+        primary_color: brandSettings.primaryColor,
+        secondary_color: brandSettings.secondaryColor,
+        accent_color: brandSettings.accentColor,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(t.savedSuccessfully);
+    } catch (error) {
+      console.error('Error saving brand settings:', error);
+      toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Save contact settings
+  const handleSaveContactSettings = async () => {
+    setLoading(true);
+    try {
+      await axios.put(`${API_URL}/api/settings/platform/contact`, {
+        primary_email: contactInfo.primaryEmail,
+        support_email: contactInfo.supportEmail,
+        primary_phone: contactInfo.primaryPhone,
+        alternate_phone: contactInfo.alternatePhone,
+        address: contactInfo.address,
+        working_hours: contactInfo.workingHours,
+        website: contactInfo.website,
+        owner_name: contactInfo.ownerName,
+        social_media: contactInfo.socialMedia,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(t.savedSuccessfully);
+    } catch (error) {
+      console.error('Error saving contact settings:', error);
+      toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Save security settings
+  const handleSaveSecuritySettings = async () => {
+    setLoading(true);
+    try {
+      await axios.put(`${API_URL}/api/settings/platform/security`, {
+        two_factor_enabled: securitySettings.twoFactorEnabled,
+        session_timeout: securitySettings.sessionTimeout,
+        max_sessions: securitySettings.maxSessions,
+        password_min_length: securitySettings.passwordMinLength,
+        password_require_uppercase: securitySettings.passwordRequireUppercase,
+        password_require_numbers: securitySettings.passwordRequireNumbers,
+        password_require_special: securitySettings.passwordRequireSpecial,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(t.savedSuccessfully);
+    } catch (error) {
+      console.error('Error saving security settings:', error);
+      toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Save handler - based on active tab
+  const handleSave = async () => {
+    switch(activeTab) {
+      case 'general':
+        await handleSaveGeneralSettings();
+        break;
+      case 'brand':
+        await handleSaveBrandSettings();
+        break;
+      case 'contact':
+        await handleSaveContactSettings();
+        break;
+      case 'security':
+        await handleSaveSecuritySettings();
+        break;
+      case 'terms':
+        await handlePublishVersion('terms');
+        break;
+      case 'privacy':
+        await handlePublishVersion('privacy');
+        break;
+      default:
+        toast.success(t.savedSuccessfully);
     }
   };
   
