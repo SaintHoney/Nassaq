@@ -243,23 +243,50 @@ export const Sidebar = ({ children }) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-4 flex items-center justify-between">
-        <Link to="/" className={`${collapsed ? 'hidden' : 'block'}`}>
-          <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 w-auto" />
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-white/70 hover:text-white hover:bg-white/10 hidden lg:flex"
-          data-testid="sidebar-collapse-btn"
-        >
-          {isRTL ? (
-            collapsed ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />
-          ) : (
-            collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />
+      <div className="p-4 flex flex-col items-center">
+        <div className="flex items-center justify-between w-full">
+          <Link to="/" className={`${collapsed ? 'hidden' : 'block'}`}>
+            <img src={LOGO_WHITE} alt="نَسَّق" className="h-10 w-auto rounded-xl" />
+          </Link>
+          {collapsed && (
+            <Link to="/" className="mx-auto">
+              <img src={LOGO_WHITE} alt="نَسَّق" className="h-8 w-auto rounded-lg" />
+            </Link>
           )}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-white/70 hover:text-white hover:bg-white/10 hidden lg:flex"
+            data-testid="sidebar-collapse-btn"
+          >
+            {isRTL ? (
+              collapsed ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />
+            ) : (
+              collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+        
+        {/* User info when collapsed */}
+        {collapsed && user && (
+          <div className="mt-3 text-center">
+            <p className="text-xs font-medium text-white truncate max-w-[60px]">
+              {user.full_name?.split(' ')[0]}
+            </p>
+            <p className="text-[10px] text-white/50 truncate max-w-[60px]">
+              {isRTL
+                ? user.role === 'platform_admin'
+                  ? 'مدير المنصة'
+                  : user.role === 'school_principal'
+                  ? 'مدير المدرسة'
+                  : user.role === 'teacher'
+                  ? 'معلم'
+                  : user.role?.replace('_', ' ')
+                : user.role?.replace('_', ' ')}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Menu Items */}

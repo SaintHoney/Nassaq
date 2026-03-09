@@ -310,6 +310,15 @@ const SAUDI_REGIONS = [
 
 const AVAILABLE_ROLES = [
   {
+    id: 'platform_admin',
+    name: 'مدير المنصة',
+    name_en: 'Platform Admin',
+    description: 'صلاحيات كاملة لإدارة المنصة والمدارس والمستخدمين',
+    description_en: 'Full access to manage platform, schools, and users',
+    icon: Shield,
+    color: 'bg-brand-navy',
+  },
+  {
     id: 'platform_operations_manager',
     name: 'مدير العمليات التشغيلية',
     name_en: 'Platform Operations Manager',
@@ -389,6 +398,97 @@ const TEACHER_PERMISSIONS = [
   { id: 'use_ai_assistant', name: 'استخدام مساعد AI التعليمي', name_en: 'Use AI Teaching Assistant', icon: Brain },
 ];
 
+// صلاحيات مدير المنصة
+const PLATFORM_ADMIN_PERMISSIONS = [
+  { id: 'manage_schools', name: 'إدارة المدارس', name_en: 'Manage Schools', icon: Building2 },
+  { id: 'manage_users', name: 'إدارة المستخدمين', name_en: 'Manage Users', icon: Users },
+  { id: 'manage_roles', name: 'إدارة الأدوار والصلاحيات', name_en: 'Manage Roles & Permissions', icon: Shield },
+  { id: 'view_reports', name: 'عرض التقارير', name_en: 'View Reports', icon: BarChart3 },
+  { id: 'manage_rules', name: 'إدارة القواعد', name_en: 'Manage Rules', icon: FileText },
+  { id: 'system_settings', name: 'إعدادات النظام', name_en: 'System Settings', icon: Settings },
+  { id: 'security_center', name: 'مركز الأمان', name_en: 'Security Center', icon: Shield },
+  { id: 'integrations', name: 'التكاملات', name_en: 'Integrations', icon: Link2 },
+  { id: 'communications', name: 'الاتصالات والإشعارات', name_en: 'Communications', icon: Bell },
+  { id: 'ai_tools', name: 'أدوات الذكاء الاصطناعي', name_en: 'AI Tools', icon: Brain },
+  { id: 'audit_logs', name: 'سجلات المراجعة', name_en: 'Audit Logs', icon: Activity },
+];
+
+// صلاحيات مدير العمليات
+const OPERATIONS_MANAGER_PERMISSIONS = [
+  { id: 'view_dashboard', name: 'عرض لوحة التحكم', name_en: 'View Dashboard', icon: LayoutDashboard },
+  { id: 'view_schools', name: 'عرض المدارس', name_en: 'View Schools', icon: Building2 },
+  { id: 'view_users', name: 'عرض المستخدمين', name_en: 'View Users', icon: Users },
+  { id: 'view_reports', name: 'عرض التقارير', name_en: 'View Reports', icon: BarChart3 },
+  { id: 'manage_support', name: 'إدارة الدعم الفني', name_en: 'Manage Support', icon: MessageSquare },
+  { id: 'view_activity', name: 'عرض سجل النشاط', name_en: 'View Activity Log', icon: Activity },
+];
+
+// صلاحيات المسؤول التقني
+const TECHNICAL_ADMIN_PERMISSIONS = [
+  { id: 'system_monitoring', name: 'مراقبة النظام', name_en: 'System Monitoring', icon: Activity },
+  { id: 'manage_integrations', name: 'إدارة التكاملات', name_en: 'Manage Integrations', icon: Link2 },
+  { id: 'manage_database', name: 'إدارة قاعدة البيانات', name_en: 'Manage Database', icon: Database },
+  { id: 'manage_servers', name: 'إدارة الخوادم', name_en: 'Manage Servers', icon: Server },
+  { id: 'security_settings', name: 'إعدادات الأمان', name_en: 'Security Settings', icon: Shield },
+  { id: 'api_management', name: 'إدارة الـ APIs', name_en: 'API Management', icon: Key },
+];
+
+// صلاحيات مسؤول الدعم
+const SUPPORT_SPECIALIST_PERMISSIONS = [
+  { id: 'view_tickets', name: 'عرض التذاكر', name_en: 'View Tickets', icon: FileText },
+  { id: 'respond_tickets', name: 'الرد على التذاكر', name_en: 'Respond to Tickets', icon: MessageSquare },
+  { id: 'view_users', name: 'عرض المستخدمين', name_en: 'View Users', icon: Users },
+  { id: 'reset_passwords', name: 'إعادة تعيين كلمات المرور', name_en: 'Reset Passwords', icon: Key },
+  { id: 'view_activity', name: 'عرض سجل النشاط', name_en: 'View Activity Log', icon: Activity },
+];
+
+// صلاحيات محلل البيانات
+const DATA_ANALYST_PERMISSIONS = [
+  { id: 'view_reports', name: 'عرض التقارير', name_en: 'View Reports', icon: BarChart3 },
+  { id: 'export_data', name: 'تصدير البيانات', name_en: 'Export Data', icon: Archive },
+  { id: 'view_analytics', name: 'عرض التحليلات', name_en: 'View Analytics', icon: Activity },
+  { id: 'create_reports', name: 'إنشاء التقارير', name_en: 'Create Reports', icon: FileText },
+];
+
+// صلاحيات مسؤول الأمان
+const SECURITY_OFFICER_PERMISSIONS = [
+  { id: 'security_monitoring', name: 'مراقبة الأمان', name_en: 'Security Monitoring', icon: Shield },
+  { id: 'audit_logs', name: 'سجلات المراجعة', name_en: 'Audit Logs', icon: Activity },
+  { id: 'manage_access', name: 'إدارة الوصول', name_en: 'Manage Access', icon: Key },
+  { id: 'incident_response', name: 'الاستجابة للحوادث', name_en: 'Incident Response', icon: AlertTriangle },
+  { id: 'security_reports', name: 'تقارير الأمان', name_en: 'Security Reports', icon: FileText },
+];
+
+// صلاحيات حساب الاختبار
+const TESTING_ACCOUNT_PERMISSIONS = [
+  { id: 'test_features', name: 'اختبار الميزات', name_en: 'Test Features', icon: Settings },
+  { id: 'view_test_data', name: 'عرض بيانات الاختبار', name_en: 'View Test Data', icon: Database },
+];
+
+// دالة للحصول على الصلاحيات حسب الدور
+const getPermissionsByRole = (roleId) => {
+  switch (roleId) {
+    case 'platform_admin':
+      return PLATFORM_ADMIN_PERMISSIONS;
+    case 'platform_operations_manager':
+      return OPERATIONS_MANAGER_PERMISSIONS;
+    case 'platform_technical_admin':
+      return TECHNICAL_ADMIN_PERMISSIONS;
+    case 'platform_support_specialist':
+      return SUPPORT_SPECIALIST_PERMISSIONS;
+    case 'platform_data_analyst':
+      return DATA_ANALYST_PERMISSIONS;
+    case 'platform_security_officer':
+      return SECURITY_OFFICER_PERMISSIONS;
+    case 'testing_account':
+      return TESTING_ACCOUNT_PERMISSIONS;
+    case 'teacher':
+      return TEACHER_PERMISSIONS;
+    default:
+      return [];
+  }
+};
+
 // توليد كلمة مرور آمنة
 const generateSecurePassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
@@ -440,10 +540,9 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
   
   // عند اختيار دور، تحميل الصلاحيات الافتراضية
   useEffect(() => {
-    if (formData.role === 'teacher') {
-      setSelectedPermissions(TEACHER_PERMISSIONS.map(p => p.id));
-    } else if (formData.role) {
-      setSelectedPermissions([]);
+    if (formData.role) {
+      const rolePermissions = getPermissionsByRole(formData.role);
+      setSelectedPermissions(rolePermissions.map(p => p.id));
     }
   }, [formData.role]);
   
@@ -505,10 +604,20 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
       case 1:
         return formData.role !== '';
       case 2:
-        if (formData.role === 'teacher') {
-          return formData.full_name && formData.email && formData.region && formData.city;
+        // التحقق من الاسم الكامل
+        if (!formData.full_name || formData.full_name.trim().length < 2) {
+          return false;
         }
-        return formData.full_name && formData.email;
+        // التحقق من البريد الإلكتروني
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email || !emailRegex.test(formData.email)) {
+          return false;
+        }
+        // للمعلم، يجب اختيار المنطقة والمدينة
+        if (formData.role === 'teacher') {
+          return formData.region !== '' && formData.city !== '';
+        }
+        return true;
       case 3:
         return selectedPermissions.length > 0;
       case 4:
@@ -897,19 +1006,23 @@ ${loginUrl}
                   </div>
                 </div>
                 
-                {/* قائمة الصلاحيات للمعلم */}
-                {formData.role === 'teacher' && (
+                {/* قائمة الصلاحيات حسب الدور المختار */}
+                {formData.role && (
                   <Card className="border-border">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                            <GraduationCap className="h-4 w-4 text-teal-600" />
+                          <div className={`w-8 h-8 rounded-lg ${selectedRole?.color || 'bg-gray-100'} flex items-center justify-center`}>
+                            {selectedRole?.icon && <selectedRole.icon className="h-4 w-4 text-white" />}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{isRTL ? 'صلاحيات المعلم' : 'Teacher Permissions'}</p>
+                            <p className="font-medium text-sm">
+                              {isRTL 
+                                ? `صلاحيات ${selectedRole?.name || 'الدور'}` 
+                                : `${selectedRole?.name_en || 'Role'} Permissions`}
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              {selectedPermissions.length} / {TEACHER_PERMISSIONS.length} {isRTL ? 'محددة' : 'selected'}
+                              {selectedPermissions.length} / {getPermissionsByRole(formData.role).length} {isRTL ? 'محددة' : 'selected'}
                             </p>
                           </div>
                         </div>
@@ -918,7 +1031,8 @@ ${loginUrl}
                           size="sm"
                           className="h-7 text-xs"
                           onClick={() => {
-                            const allIds = TEACHER_PERMISSIONS.map(p => p.id);
+                            const rolePerms = getPermissionsByRole(formData.role);
+                            const allIds = rolePerms.map(p => p.id);
                             const allSelected = allIds.every(id => selectedPermissions.includes(id));
                             if (allSelected) {
                               setSelectedPermissions([]);
@@ -927,7 +1041,7 @@ ${loginUrl}
                             }
                           }}
                         >
-                          {selectedPermissions.length === TEACHER_PERMISSIONS.length 
+                          {selectedPermissions.length === getPermissionsByRole(formData.role).length 
                             ? (isRTL ? 'إلغاء الكل' : 'Deselect All')
                             : (isRTL ? 'تحديد الكل' : 'Select All')
                           }
@@ -935,7 +1049,7 @@ ${loginUrl}
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {TEACHER_PERMISSIONS.map((perm) => {
+                        {getPermissionsByRole(formData.role).map((perm) => {
                           const isSelected = selectedPermissions.includes(perm.id);
                           const IconComp = perm.icon;
                           return (
@@ -966,14 +1080,14 @@ ${loginUrl}
                   </Card>
                 )}
                 
-                {/* رسالة للأدوار الأخرى */}
-                {formData.role !== 'teacher' && (
+                {/* رسالة إذا لم يتم اختيار دور */}
+                {!formData.role && (
                   <div className="p-6 bg-muted/30 rounded-xl text-center">
                     <Shield className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {isRTL 
-                        ? 'سيتم تعيين الصلاحيات الافتراضية لهذا الدور تلقائياً'
-                        : 'Default permissions will be automatically assigned for this role'}
+                        ? 'الرجاء اختيار دور أولاً لعرض الصلاحيات'
+                        : 'Please select a role first to view permissions'}
                     </p>
                   </div>
                 )}
