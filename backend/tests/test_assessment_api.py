@@ -194,7 +194,8 @@ class TestAssessmentEngine:
         assert response.status_code == 200, f"Failed: {response.text}"
         
         data = response.json()
-        assert "message" in data or "grades_created" in data or "grades_updated" in data
+        # API returns: success, created, updated, total_processed, errors
+        assert data.get("success") == True or "created" in data or "updated" in data
         print(f"SUCCESS: POST /api/grades/bulk - Response: {data}")
     
     def test_11_verify_grades_persisted(self):
