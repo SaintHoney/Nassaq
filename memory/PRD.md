@@ -220,6 +220,46 @@
 | iteration_10 | Platform Admin Pages + Permissions | 13/13 ✅ (100%) |
 | iteration_11 | Attendance Engine | Backend 11/11 + Frontend ✅ (100%) |
 | iteration_12 | Assessment Engine | Backend 20/20 + Frontend ✅ (100%) |
+| iteration_13 | Notification Engine | Backend 91% + Frontend ✅ (100%) |
+
+---
+
+## 👤 دور مدير المنصة (Platform Admin) - محدث 2026-03-09
+
+### تعريف الدور
+- **الاسم:** مدير المنصة (Platform Admin)
+- **المستوى:** Platform Level (أعلى مستوى إداري)
+- **النطاق:** إدارة المنصة بالكامل وليس مدرسة واحدة
+
+### الصفحات المتاحة
+| الصفحة | الاسم العربي | الوصف |
+|--------|-------------|-------|
+| /admin | مركز القيادة | لوحة القيادة الرئيسية |
+| /admin/schools | إدارة المدارس | إدارة جميع المدارس |
+| /admin/users | إدارة المستخدمين | إدارة الحسابات |
+| /admin/teacher-requests | طلبات المعلمين | إدارة طلبات حسابات المعلمين |
+| /admin/rules | إدارة القواعد | إدارة القواعد التعليمية |
+| /admin/monitoring | مراقبة النظام | مراقبة الأداء التقني |
+| /admin/reports | التحليلات | التقارير المتقدمة |
+| /admin/integrations | التكاملات | إدارة التكاملات الخارجية |
+| /admin/security | مركز الأمان | إدارة الحوادث الأمنية |
+| /admin/communication | مركز التواصل | إرسال الرسائل |
+| /notifications | الإشعارات | نظام الإشعارات |
+| /settings | إعدادات النظام | إدارة الإعدادات العامة |
+
+### صلاحيات AI
+- ✔ AI System Diagnosis
+- ✔ AI Data Quality Scan
+- ✔ AI Import Analyzer
+- ✔ AI Schedule Generator
+- ✔ AI Performance Analysis
+- ✔ AI Executive Summary
+
+### أقسام مركز القيادة
+1. **التحليلات العامة (Global Analytics Cards)** - إحصائيات المدارس والطلاب والمعلمين
+2. **نشاط المنصة اليومي (Daily Platform Activity)** - بيانات مباشرة
+3. **الإجراءات السريعة (Quick Actions)** - إضافة مدرسة، إدارة المستخدمين، إدارة القواعد، مراقبة النظام، التقارير، الإعدادات
+4. **لوحة عمليات الذكاء الاصطناعي (AI Operations Panel)** - عمليات ذكية للتحليل والتشخيص
 
 ---
 
