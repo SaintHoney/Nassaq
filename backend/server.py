@@ -355,28 +355,62 @@ async def create_school(
     school_data: SchoolCreate,
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
 ):
+    # Auto-generate code if not provided
+    if not school_data.code:
+        # Generate code: NSS-{COUNTRY}-{YEAR_LAST_2_DIGITS}-{SEQUENTIAL_NUMBER}
+        year_suffix = datetime.now().strftime("%y")
+        country_code = school_data.country[:2].upper() if school_data.country else "SA"
+        # Get next sequential number
+        last_school = await db.schools.find_one(
+            {"code": {"$regex": f"^NSS-{country_code}-{year_suffix}-"}},
+            sort=[("code", -1)]
+        )
+        if last_school and last_school.get("code"):
+            try:
+                last_num = int(last_school["code"].split("-")[-1])
+                next_num = last_num + 1
+            except:
+                next_num = 1
+        else:
+            next_num = 1
+        school_code = f"NSS-{country_code}-{year_suffix}-{str(next_num).zfill(4)}"
+    else:
+        school_code = school_data.code
+    
     # Check if code exists
-    existing = await db.schools.find_one({"code": school_data.code})
+    existing = await db.schools.find_one({"code": school_code})
     if existing:
         raise HTTPException(status_code=400, detail="رمز المدرسة مستخدم مسبقاً")
+    
+    # Use principal_email as school email if not provided
+    school_email = school_data.email or school_data.principal_email or f"school-{school_code.lower()}@nassaq.com"
+    school_phone = school_data.phone or school_data.principal_phone
     
     school_id = str(uuid.uuid4())
     school_doc = {
         "id": school_id,
         "name": school_data.name,
         "name_en": school_data.name_en,
-        "code": school_data.code,
-        "email": school_data.email,
-        "phone": school_data.phone,
+        "code": school_code,
+        "email": school_email,
+        "phone": school_phone,
         "address": school_data.address,
         "city": school_data.city,
         "region": school_data.region,
-        "country": "SA",
+        "country": school_data.country or "SA",
         "logo_url": None,
         "status": SchoolStatus.PENDING.value,
         "student_capacity": school_data.student_capacity,
         "current_students": 0,
         "current_teachers": 0,
+        # New fields
+        "language": school_data.language or "ar",
+        "calendar_system": school_data.calendar_system or "hijri_gregorian",
+        "school_type": school_data.school_type or "public",
+        "stage": school_data.stage or "primary",
+        "principal_name": school_data.principal_name,
+        "principal_email": school_data.principal_email,
+        "principal_phone": school_data.principal_phone,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -387,13 +421,13 @@ async def create_school(
         id=school_id,
         name=school_data.name,
         name_en=school_data.name_en,
-        code=school_data.code,
-        email=school_data.email,
-        phone=school_data.phone,
+        code=school_code,
+        email=school_email,
+        phone=school_phone,
         address=school_data.address,
         city=school_data.city,
         region=school_data.region,
-        country="SA",
+        country=school_data.country or "SA",
         logo_url=None,
         status=SchoolStatus.PENDING,
         student_capacity=school_data.student_capacity,
