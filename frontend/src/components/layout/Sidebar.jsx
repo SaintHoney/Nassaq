@@ -245,10 +245,10 @@ export const Sidebar = ({ children }) => {
         </nav>
       </ScrollArea>
 
-      {/* User Info */}
+      {/* User Info & Logout */}
       {!collapsed && user && (
         <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-brand-turquoise flex items-center justify-center">
               <span className="text-white font-semibold">
                 {user.full_name?.charAt(0)}
@@ -262,11 +262,40 @@ export const Sidebar = ({ children }) => {
                     ? 'مدير المنصة'
                     : user.role === 'school_principal'
                     ? 'مدير المدرسة'
+                    : user.role === 'teacher'
+                    ? 'معلم'
                     : user.role
                   : user.role.replace('_', ' ')}
               </p>
             </div>
           </div>
+          
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+            data-testid="logout-btn"
+          >
+            <LogOut className="h-4 w-4 me-2" />
+            {isRTL ? 'تسجيل الخروج' : 'Logout'}
+          </Button>
+        </div>
+      )}
+      
+      {/* Collapsed Logout */}
+      {collapsed && user && (
+        <div className="p-3 border-t border-white/10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="w-full text-white/70 hover:text-white hover:bg-white/10"
+            title={isRTL ? 'تسجيل الخروج' : 'Logout'}
+            data-testid="logout-btn-collapsed"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
       )}
     </div>
