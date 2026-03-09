@@ -267,7 +267,7 @@ export const AdminDashboard = () => {
     fetchStats();
   }, [fetchStats]);
 
-  // تصدير البيانات - Export Data (تنزيل ملف فعلي)
+  // تصدير البيانات - Export Data (PDF حقيقي باستخدام jsPDF)
   const handleExportData = (format) => {
     const data = {
       exportDate: new Date().toISOString(),
@@ -319,63 +319,91 @@ export const AdminDashboard = () => {
       URL.revokeObjectURL(link.href);
       toast.success(isRTL ? 'تم تنزيل ملف Excel بنجاح' : 'Excel file downloaded');
     } else if (format === 'pdf') {
-      // تصدير كملف HTML (يمكن طباعته كـ PDF)
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8">
-          <title>تقرير نَسَّق - NASSAQ Report</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; direction: rtl; }
-            h1 { color: #1e3a5f; border-bottom: 2px solid #38b2ac; padding-bottom: 10px; }
-            .date { color: #666; margin-bottom: 30px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-            th { background: #1e3a5f; color: white; }
-            tr:nth-child(even) { background: #f9f9f9; }
-            .footer { margin-top: 40px; color: #999; font-size: 12px; }
-            .filters { background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <h1>تقرير المؤشرات العامة للمنصة</h1>
-          <p class="date">
-            <strong>التاريخ الهجري:</strong> ${getCurrentHijriDate().hijri}<br/>
-            <strong>التاريخ الميلادي:</strong> ${getCurrentHijriDate().gregorian}
-          </p>
-          <div class="filters">
-            <strong>الفلاتر المطبقة:</strong>
-            النطاق: ${filters.scope === 'all' ? 'كل المنصة' : filters.scope} |
-            الفترة: ${filters.timeWindow} |
-            الحالة: ${filters.tenantStatus === 'all' ? 'الكل' : filters.tenantStatus}
-          </div>
-          <table>
-            <tr><th>المؤشر</th><th>القيمة</th></tr>
-            <tr><td>إجمالي المدارس المسجلة</td><td>${data.stats.totalSchools}</td></tr>
-            <tr><td>المدارس النشطة</td><td>${data.stats.activeSchools}</td></tr>
-            <tr><td>المدارس الموقوفة</td><td>${data.stats.suspendedSchools}</td></tr>
-            <tr><td>المدارس قيد الإعداد</td><td>${data.stats.pendingSchools}</td></tr>
-            <tr><td>إجمالي الطلاب</td><td>${data.stats.totalStudents.toLocaleString()}</td></tr>
-            <tr><td>إجمالي المعلمين</td><td>${data.stats.totalTeachers.toLocaleString()}</td></tr>
-            <tr><td>إجمالي المسؤولين</td><td>${data.stats.totalAdmins}</td></tr>
-            <tr><td>المستخدمين النشطين اليوم</td><td>${data.stats.activeUsersToday.toLocaleString()}</td></tr>
-            <tr><td>طلبات API اليوم</td><td>${data.stats.apiCallsToday.toLocaleString()}</td></tr>
-          </table>
-          <p class="footer">تم إنشاء هذا التقرير بواسطة نظام نَسَّق | NASSAQ School Management System</p>
-        </body>
-        </html>
-      `;
-
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `nassaq_report_${new Date().toISOString().split('T')[0]}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      toast.success(isRTL ? 'تم تنزيل الملف - افتحه واطبعه كـ PDF' : 'File downloaded - open and print as PDF');
+      // تصدير كملف PDF حقيقي باستخدام jsPDF
+      try {
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        
+        // إعداد الخط العربي
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(20);
+        
+        // العنوان
+        doc.setTextColor(30, 58, 95); // brand-navy
+        doc.text('NASSAQ Platform Report', 105, 25, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text('Platform Analytics Dashboard', 105, 35, { align: 'center' });
+        
+        // التاريخ
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Export Date: ${new Date().toLocaleDateString('en-US')}`, 105, 45, { align: 'center' });
+        doc.text(`Hijri: ${getCurrentHijriDate().hijri}`, 105, 52, { align: 'center' });
+        
+        // خط فاصل
+        doc.setDrawColor(56, 178, 172); // brand-turquoise
+        doc.setLineWidth(0.5);
+        doc.line(20, 58, 190, 58);
+        
+        // الفلاتر المطبقة
+        doc.setFontSize(11);
+        doc.setTextColor(30, 58, 95);
+        doc.text('Applied Filters:', 20, 68);
+        doc.setFontSize(9);
+        doc.setTextColor(80);
+        const scopeText = filters.scope === 'all' ? 'All Platform' : filters.scope === 'single' ? 'Single School' : 'Multiple Schools';
+        const statusText = filters.tenantStatus === 'all' ? 'All Status' : filters.tenantStatus;
+        doc.text(`Scope: ${scopeText} | Time: ${filters.timeWindow} | Status: ${statusText}`, 20, 75);
+        
+        // جدول البيانات
+        const tableData = [
+          ['Metric', 'Value'],
+          ['Total Schools', data.stats.totalSchools.toLocaleString()],
+          ['Active Schools', data.stats.activeSchools.toLocaleString()],
+          ['Suspended Schools', data.stats.suspendedSchools.toLocaleString()],
+          ['Pending Schools', data.stats.pendingSchools.toLocaleString()],
+          ['Total Students', data.stats.totalStudents.toLocaleString()],
+          ['Total Teachers', data.stats.totalTeachers.toLocaleString()],
+          ['Total Administrators', data.stats.totalAdmins.toLocaleString()],
+          ['Active Users Today', data.stats.activeUsersToday.toLocaleString()],
+          ['API Calls Today', data.stats.apiCallsToday.toLocaleString()],
+        ];
+        
+        let yPos = 85;
+        doc.setFillColor(30, 58, 95);
+        doc.rect(20, yPos, 170, 8, 'F');
+        doc.setTextColor(255);
+        doc.setFontSize(10);
+        doc.text('Metric', 25, yPos + 5.5);
+        doc.text('Value', 140, yPos + 5.5);
+        
+        yPos += 8;
+        doc.setTextColor(50);
+        tableData.slice(1).forEach((row, idx) => {
+          if (idx % 2 === 0) {
+            doc.setFillColor(245, 247, 250);
+            doc.rect(20, yPos, 170, 8, 'F');
+          }
+          doc.text(row[0], 25, yPos + 5.5);
+          doc.text(row[1], 140, yPos + 5.5);
+          yPos += 8;
+        });
+        
+        // حدود الجدول
+        doc.setDrawColor(200);
+        doc.rect(20, 85, 170, yPos - 85);
+        
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text('Generated by NASSAQ School Management System', 105, 280, { align: 'center' });
+        
+        // حفظ الملف
+        doc.save(`nassaq_report_${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success(isRTL ? 'تم تنزيل ملف PDF بنجاح' : 'PDF file downloaded successfully');
+      } catch (error) {
+        console.error('PDF generation error:', error);
+        toast.error(isRTL ? 'فشل إنشاء ملف PDF' : 'Failed to generate PDF');
+      }
     }
   };
 
