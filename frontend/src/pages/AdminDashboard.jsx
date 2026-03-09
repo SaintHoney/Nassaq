@@ -15,7 +15,8 @@ import {
   Building2, Users, GraduationCap, UserCheck, Plus, Sun, Moon, Globe, Activity, BarChart3, Brain,
   FileText, Zap, Download, Shield, Clock, RefreshCw, Sparkles, Calendar, Settings, UserPlus,
   BookOpen, ChevronRight, Filter, SlidersHorizontal, Play, MessageSquare, Send, Gauge, Server,
-  MapPin, Eye, Check, GripVertical, CheckCircle, LayoutGrid, LayoutList, Maximize2, ChevronUp, ChevronDown
+  MapPin, Eye, Check, GripVertical, CheckCircle, LayoutGrid, LayoutList, Maximize2, ChevronUp, ChevronDown,
+  TrendingUp, TrendingDown, Minus, AlertTriangle, Bell, ExternalLink, User
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -28,7 +29,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../components/ui/select';
 import {
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line,
 } from 'recharts';
 
 // Hakim Avatar
@@ -52,7 +53,7 @@ const SCHOOL_STAGES = [
   { value: 'high', label: 'ثانوي', label_en: 'High School' },
 ];
 
-// Sample chart data
+// Sample chart data for daily activity
 const sampleChartData = [
   { time: '6:00', students: 120, teachers: 45 },
   { time: '7:00', students: 450, teachers: 180 },
@@ -65,9 +66,39 @@ const sampleChartData = [
   { time: '14:00', students: 800, teachers: 200 },
 ];
 
+// Sparkline data generator for cards
+const generateSparklineData = (baseValue, trend) => {
+  const data = [];
+  let value = baseValue * 0.85;
+  for (let i = 0; i < 7; i++) {
+    const change = trend === 'up' ? Math.random() * 0.05 : trend === 'down' ? -Math.random() * 0.03 : (Math.random() - 0.5) * 0.02;
+    value = value * (1 + change);
+    data.push({ day: i + 1, value: Math.round(value) });
+  }
+  return data;
+};
+
+// Mini Sparkline Component
+const MiniSparkline = ({ data, color = '#38b2ac', height = 40 }) => {
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={data}>
+        <Line 
+          type="monotone" 
+          dataKey="value" 
+          stroke={color} 
+          strokeWidth={2} 
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { api } = useAuth();
+  const { api, user } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
   const chatContainerRef = useRef(null);
   
@@ -404,114 +435,241 @@ export const AdminDashboard = () => {
     { id: 'executive_summary', icon: FileText, title: isRTL ? 'ملخص تنفيذي' : 'Executive Summary', desc: isRTL ? 'تقرير شامل' : 'Comprehensive report' },
   ];
 
-  // Cards configuration for rendering
+  // Enhanced Cards configuration with Delta, Health, and Sparkline
   const cardsConfig = {
     schools: {
       icon: <Building2 className="h-6 w-6 text-brand-navy" />,
+      iconBg: 'bg-brand-navy/10',
       title: isRTL ? 'المدارس المسجلة' : 'Registered Schools',
       mainValue: stats?.total_schools,
+      delta: { value: 12, type: 'up', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      health: stats?.suspended_schools > 5 ? 'warning' : 'normal',
+      sparklineData: generateSparklineData(stats?.total_schools || 200, 'up'),
+      sparklineColor: '#1e3a5f',
       secondaryData: [
         { label: isRTL ? 'نشطة' : 'Active', value: stats?.active_schools, dotColor: 'bg-green-500' },
         { label: isRTL ? 'موقوفة' : 'Suspended', value: stats?.suspended_schools, dotColor: 'bg-red-500' },
         { label: isRTL ? 'معلقة' : 'Pending', value: stats?.pending_schools, dotColor: 'bg-yellow-500' },
       ],
-      actionLabel: isRTL ? 'إضافة' : 'Add',
-      actionFn: () => setShowAddSchoolWizard(true),
+      navigateTo: '/admin/schools',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/schools') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
     students: {
       icon: <GraduationCap className="h-6 w-6 text-brand-turquoise" />,
+      iconBg: 'bg-brand-turquoise/10',
       title: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students',
       mainValue: stats?.total_students,
+      delta: { value: 2.4, type: 'up', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      health: 'normal',
+      sparklineData: generateSparklineData(stats?.total_students || 50000, 'up'),
+      sparklineColor: '#38b2ac',
       secondaryData: [
         { label: isRTL ? 'نشط' : 'Active', value: stats?.active_students?.toLocaleString(), dotColor: 'bg-green-500' },
-        { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_students_this_month}`, dotColor: 'bg-blue-500' },
+        { label: isRTL ? 'جديد هذا الشهر' : 'New this month', value: `+${stats?.new_students_this_month?.toLocaleString()}`, dotColor: 'bg-blue-500' },
       ],
-      actionLabel: isRTL ? 'عرض' : 'View',
-      actionFn: () => navigate('/admin/reports'),
+      navigateTo: '/admin/reports',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
     teachers: {
       icon: <UserCheck className="h-6 w-6 text-brand-purple" />,
+      iconBg: 'bg-brand-purple/10',
       title: isRTL ? 'المعلمين' : 'Teachers',
       mainValue: stats?.total_teachers,
+      delta: { value: 2.8, type: 'up', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      health: stats?.teachers_without_rank > 100 ? 'warning' : 'normal',
+      sparklineData: generateSparklineData(stats?.total_teachers || 3000, 'up'),
+      sparklineColor: '#805ad5',
       secondaryData: [
         { label: isRTL ? 'نشط' : 'Active', value: stats?.active_teachers?.toLocaleString(), dotColor: 'bg-green-500' },
-        { label: isRTL ? 'جديد' : 'New', value: `+${stats?.new_teachers_this_month}`, dotColor: 'bg-blue-500' },
+        { label: isRTL ? 'جديد هذا الشهر' : 'New this month', value: `+${stats?.new_teachers_this_month}`, dotColor: 'bg-blue-500' },
       ],
-      actionLabel: isRTL ? 'عرض' : 'View',
-      actionFn: () => navigate('/admin/users'),
+      navigateTo: '/admin/users',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/users') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
     admins: {
       icon: <Users className="h-6 w-6 text-orange-500" />,
+      iconBg: 'bg-orange-500/10',
       title: isRTL ? 'المسؤولين' : 'Administrators',
       mainValue: stats?.total_admins,
+      delta: { value: 0, type: 'stable', period: isRTL ? 'مستقر' : 'Stable' },
+      health: 'normal',
+      sparklineData: generateSparklineData(stats?.total_admins || 245, 'stable'),
+      sparklineColor: '#f97316',
       secondaryData: [
-        { label: isRTL ? 'مدراء' : 'Principals', value: 200, dotColor: 'bg-purple-500' },
+        { label: isRTL ? 'مدراء مدارس' : 'Principals', value: 200, dotColor: 'bg-purple-500' },
         { label: isRTL ? 'منصة' : 'Platform', value: 45, dotColor: 'bg-blue-500' },
       ],
-      actionLabel: isRTL ? 'إدارة' : 'Manage',
-      actionFn: () => navigate('/admin/users'),
+      navigateTo: '/admin/users',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/users') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
     activeUsers: {
       icon: <Activity className="h-6 w-6 text-green-500" />,
-      title: isRTL ? 'المستخدمين النشطين' : 'Active Users Today',
+      iconBg: 'bg-green-500/10',
+      title: isRTL ? 'المستخدمون النشطون' : 'Active Users Today',
       mainValue: stats?.active_users_today,
+      delta: { value: 8.5, type: 'up', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
+      health: 'normal',
+      sparklineData: generateSparklineData(stats?.active_users_today || 12500, 'up'),
+      sparklineColor: '#22c55e',
       secondaryData: [
         { label: isRTL ? 'طلاب' : 'Students', value: '10.2K', dotColor: 'bg-green-500' },
         { label: isRTL ? 'معلمين' : 'Teachers', value: '2.1K', dotColor: 'bg-blue-500' },
       ],
-      actionLabel: isRTL ? 'تفاصيل' : 'Details',
-      actionFn: () => navigate('/admin/monitoring'),
+      navigateTo: '/admin/monitoring',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/monitoring') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
     apiCalls: {
       icon: <Server className="h-6 w-6 text-teal-500" />,
+      iconBg: 'bg-teal-500/10',
       title: isRTL ? 'طلبات API اليوم' : 'API Requests Today',
       mainValue: stats?.api_calls_today,
+      delta: { value: 5.2, type: 'down', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
+      health: 'normal',
+      sparklineData: generateSparklineData(stats?.api_calls_today || 45000, 'down'),
+      sparklineColor: '#14b8a6',
       secondaryData: [
         { label: isRTL ? 'نجاح' : 'Success', value: '99.8%', dotColor: 'bg-green-500' },
-        { label: isRTL ? 'متوسط' : 'Avg', value: '45ms', dotColor: 'bg-blue-500' },
+        { label: isRTL ? 'متوسط الاستجابة' : 'Avg Response', value: '45ms', dotColor: 'bg-blue-500' },
       ],
-      actionLabel: isRTL ? 'مراقبة' : 'Monitor',
-      actionFn: () => navigate('/admin/monitoring'),
+      navigateTo: '/admin/monitoring',
+      actions: [
+        { label: isRTL ? 'عرض التفاصيل' : 'View Details', action: () => navigate('/admin/monitoring') },
+        { label: isRTL ? 'فتح التقرير' : 'Open Report', action: () => navigate('/admin/reports') },
+        { label: isRTL ? 'ضبط تنبيه' : 'Set Alert', action: () => toast.info(isRTL ? 'سيتم إضافة هذه الميزة قريباً' : 'Coming soon') },
+      ],
     },
   };
 
-  // Render Analytics Card
+  // Get Health Status config
+  const getHealthConfig = (health) => {
+    switch (health) {
+      case 'normal':
+        return { label: isRTL ? 'طبيعي' : 'Normal', color: 'bg-green-100 text-green-700 border-green-200' };
+      case 'warning':
+        return { label: isRTL ? 'يحتاج متابعة' : 'Needs Attention', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
+      case 'danger':
+        return { label: isRTL ? 'خطر' : 'Critical', color: 'bg-red-100 text-red-700 border-red-200' };
+      default:
+        return { label: isRTL ? 'طبيعي' : 'Normal', color: 'bg-green-100 text-green-700 border-green-200' };
+    }
+  };
+
+  // Render Enhanced Analytics Card
   const renderAnalyticsCard = (cardKey) => {
     const card = cardsConfig[cardKey];
     if (!card || !visibleCards[cardKey]) return null;
     
+    const healthConfig = getHealthConfig(card.health);
+    
     return (
-      <Card key={cardKey} className="card-nassaq hover:shadow-lg transition-all" data-testid={`card-${cardKey}`}>
+      <Card 
+        key={cardKey} 
+        className="card-nassaq hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+        data-testid={`card-${cardKey}`}
+        onClick={() => navigate(card.navigateTo)}
+      >
         <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
-              {card.icon}
+          {/* Header: Icon, Title, Health Tag */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl ${card.iconBg} flex items-center justify-center`}>
+                {card.icon}
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">{card.title}</p>
+                {/* Health Tag */}
+                <Badge variant="outline" className={`text-[10px] mt-1 ${healthConfig.color}`}>
+                  {healthConfig.label}
+                </Badge>
+              </div>
             </div>
-            <Button 
-              size="sm" 
-              onClick={card.actionFn}
-              className="bg-brand-turquoise hover:bg-brand-turquoise/90 text-white rounded-lg text-xs px-3"
-            >
-              {card.actionLabel}
-            </Button>
+            
+            {/* Actions Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {card.actions?.map((action, idx) => (
+                  <DropdownMenuItem 
+                    key={idx} 
+                    onClick={(e) => { e.stopPropagation(); action.action(); }}
+                    className="cursor-pointer text-sm"
+                  >
+                    {idx === 0 && <Eye className="h-3.5 w-3.5 me-2" />}
+                    {idx === 1 && <FileText className="h-3.5 w-3.5 me-2" />}
+                    {idx === 2 && <Bell className="h-3.5 w-3.5 me-2" />}
+                    {action.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="space-y-3">
+          
+          {/* Main Value + Delta */}
+          <div className="flex items-end justify-between mb-3">
             <div>
               <p className="text-3xl font-bold">{card.mainValue?.toLocaleString() || 0}</p>
-              <p className="text-sm text-muted-foreground">{card.title}</p>
+              {/* Delta Indicator */}
+              <div className="flex items-center gap-1.5 mt-1">
+                {card.delta.type === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
+                {card.delta.type === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
+                {card.delta.type === 'stable' && <Minus className="h-4 w-4 text-gray-400" />}
+                <span className={`text-sm font-medium ${
+                  card.delta.type === 'up' ? 'text-green-600' : 
+                  card.delta.type === 'down' ? 'text-red-600' : 'text-gray-500'
+                }`}>
+                  {card.delta.type === 'up' ? '+' : card.delta.type === 'down' ? '-' : ''}{card.delta.value}%
+                </span>
+                <span className="text-xs text-muted-foreground">{card.delta.period}</span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {card.secondaryData?.map((item, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className="text-xs bg-muted/50"
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1.5`}></span>
-                  {item.label}: {item.value ?? 0}
-                </Badge>
-              ))}
+            
+            {/* Sparkline Chart */}
+            <div className="w-24 h-12">
+              <MiniSparkline data={card.sparklineData} color={card.sparklineColor} height={48} />
             </div>
+          </div>
+          
+          {/* Secondary Data Badges */}
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
+            {card.secondaryData?.map((item, idx) => (
+              <Badge 
+                key={idx} 
+                variant="outline" 
+                className="text-xs bg-muted/50"
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1.5`}></span>
+                {item.label}: {item.value ?? 0}
+              </Badge>
+            ))}
+          </div>
+          
+          {/* Hover Indicator */}
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
           </div>
         </CardContent>
       </Card>
@@ -614,22 +772,39 @@ export const AdminDashboard = () => {
         <div className="p-6 space-y-6">
           
           {/* ============================================ */}
-          {/* 1. التاريخ الهجري والميلادي - أول شيء في الصفحة */}
+          {/* 1. التاريخ واسم المستخدم - أول شيء في الصفحة */}
           {/* ============================================ */}
           <div className="flex justify-center" data-testid="date-display">
             <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20">
               <CardContent className="py-3 px-6">
-                <div className="flex items-center gap-4">
-                  <Calendar className="h-6 w-6 text-brand-navy" />
-                  <div className="text-center">
-                    <p className="font-cairo text-2xl font-bold text-brand-navy">
-                      {getCurrentHijriDate().hijri}
-                    </p>
-                    <p className="text-sm text-muted-foreground font-mono">
-                      ({getCurrentHijriDate().gregorian})
-                    </p>
+                <div className="flex items-center gap-6">
+                  {/* اسم المستخدم */}
+                  <div className="flex items-center gap-3 pe-6 border-e border-border" data-testid="user-display">
+                    <div className="w-10 h-10 rounded-full bg-brand-navy flex items-center justify-center">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{isRTL ? 'مرحباً' : 'Welcome'}</p>
+                      <p className="font-bold text-brand-navy">{user?.full_name || (isRTL ? 'مدير المنصة' : 'Platform Admin')}</p>
+                    </div>
                   </div>
+                  
+                  {/* التاريخ الهجري/الميلادي */}
+                  <div className="flex items-center gap-4">
+                    <Calendar className="h-6 w-6 text-brand-navy" />
+                    <div className="text-center">
+                      <p className="font-cairo text-2xl font-bold text-brand-navy">
+                        {getCurrentHijriDate().hijri}
+                      </p>
+                      <p className="text-sm text-muted-foreground font-mono">
+                        ({getCurrentHijriDate().gregorian})
+                      </p>
+                    </div>
+                  </div>
+                  
                   <div className="h-10 w-px bg-border" />
+                  
+                  {/* الفصل الدراسي */}
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">{isRTL ? 'الفصل الدراسي' : 'Semester'}</p>
                     <p className="font-bold text-brand-turquoise">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
@@ -1058,7 +1233,7 @@ export const AdminDashboard = () => {
             </Card>
 
             {/* ============================================ */}
-            {/* كروت المؤشرات - يتم ترتيبها حسب cardsOrder */}
+            {/* كروت المؤشرات المحسنة - Enhanced Analytics Cards */}
             {/* ============================================ */}
             <div className={`grid gap-4 ${
               viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' :
