@@ -6128,6 +6128,532 @@ async def delete_integration(
     return {"message": "تم حذف التكامل بنجاح"}
 
 
+# ============== PLATFORM SETTINGS MODELS ==============
+class GeneralSettingsModel(BaseModel):
+    platform_name_ar: str = "نَسَّق | NASSAQ"
+    platform_name_en: str = "NASSAQ"
+    browser_title: str = "نَسَّق - منصة إدارة المدارس الذكية"
+    default_language: str = "ar"
+    date_format: str = "hijri"
+    timezone: str = "Asia/Riyadh"
+    email_notifications: bool = True
+    sms_notifications: bool = False
+    push_notifications: bool = True
+    ai_features: bool = True
+    registration_open: bool = True
+    maintenance_mode: bool = False
+
+class BrandSettingsModel(BaseModel):
+    logo: Optional[str] = None
+    favicon: Optional[str] = None
+    primary_color: str = "#1e3a5f"
+    secondary_color: str = "#3b82f6"
+    accent_color: str = "#10b981"
+
+class SocialMediaModel(BaseModel):
+    twitter: Optional[str] = ""
+    facebook: Optional[str] = ""
+    instagram: Optional[str] = ""
+    linkedin: Optional[str] = ""
+    youtube: Optional[str] = ""
+
+class ContactInfoModel(BaseModel):
+    primary_email: str = "info@nassaqapp.com"
+    support_email: str = "support@nassaqapp.com"
+    primary_phone: str = "+966 11 234 5678"
+    alternate_phone: Optional[str] = ""
+    address: str = "الرياض، المملكة العربية السعودية"
+    working_hours: str = "الأحد - الخميس: 8:00 ص - 4:00 م"
+    website: str = "https://nassaqapp.com"
+    owner_name: str = "شركة نَسَّق للتقنية التعليمية"
+    social_media: SocialMediaModel = SocialMediaModel()
+
+class LegalContentModel(BaseModel):
+    content: str
+    version: str = "1.0"
+    effective_date: Optional[str] = None
+
+class SecuritySettingsModel(BaseModel):
+    two_factor_enabled: bool = False
+    session_timeout: int = 30
+    max_sessions: int = 5
+    password_min_length: int = 8
+    password_require_uppercase: bool = True
+    password_require_numbers: bool = True
+    password_require_special: bool = True
+
+class PlatformSettingsResponse(BaseModel):
+    general: GeneralSettingsModel
+    brand: BrandSettingsModel
+    contact: ContactInfoModel
+    terms: LegalContentModel
+    privacy: LegalContentModel
+    security: SecuritySettingsModel
+    updated_at: str
+
+class APIKeyCreate(BaseModel):
+    name: str
+    permissions: str = "read_only"  # read_only, read_write, full_access
+
+class APIKeyResponse(BaseModel):
+    id: str
+    name: str
+    key: str
+    secret: Optional[str] = None  # Only returned on creation
+    permissions: str
+    is_active: bool
+    created_at: str
+    last_used: Optional[str] = None
+
+
+# ============== PLATFORM SETTINGS ENDPOINTS ==============
+@api_router.get("/settings/platform")
+async def get_platform_settings(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get all platform settings"""
+    settings = await db.platform_settings.find_one({"type": "platform"})
+    
+    if not settings:
+        # Return default settings
+        default_settings = {
+            "general": GeneralSettingsModel().model_dump(),
+            "brand": BrandSettingsModel().model_dump(),
+            "contact": ContactInfoModel().model_dump(),
+            "terms": {
+                "content": """الشروط والأحكام الخاصة باستخدام منصة نَسَّق التعليمية
+
+1. مقدمة
+مرحباً بكم في منصة نَسَّق التعليمية. باستخدامكم لهذه المنصة، فإنكم توافقون على الالتزام بهذه الشروط والأحكام.
+
+2. التعريفات
+- "المنصة": تشير إلى منصة نَسَّق الإلكترونية وجميع خدماتها.
+- "المستخدم": أي شخص يستخدم المنصة بأي صفة.
+- "المدرسة": المؤسسة التعليمية المشتركة في المنصة.
+
+3. الاستخدام المقبول
+يتعهد المستخدم بعدم استخدام المنصة لأي أغراض غير مشروعة أو محظورة.
+
+4. الخصوصية وحماية البيانات
+نلتزم بحماية بيانات المستخدمين وفقاً لسياسة الخصوصية المعمول بها.
+
+5. حقوق الملكية الفكرية
+جميع حقوق الملكية الفكرية للمنصة محفوظة لشركة نَسَّق.""",
+                "version": "2.1",
+                "effective_date": datetime.now(timezone.utc).isoformat()
+            },
+            "privacy": {
+                "content": """سياسة الخصوصية لمنصة نَسَّق التعليمية
+
+1. جمع المعلومات
+نقوم بجمع المعلومات التي تقدمها لنا مباشرة عند:
+- إنشاء حساب
+- استخدام خدماتنا
+- التواصل معنا
+
+2. استخدام المعلومات
+نستخدم المعلومات المجمعة لـ:
+- تقديم وتحسين خدماتنا
+- التواصل معكم
+- ضمان أمان المنصة
+
+3. مشاركة المعلومات
+لا نشارك معلوماتكم الشخصية مع أطراف ثالثة إلا في الحالات التالية:
+- بموافقتكم الصريحة
+- للامتثال للقوانين
+- لحماية حقوقنا
+
+4. أمان البيانات
+نستخدم تقنيات تشفير متقدمة لحماية بياناتكم.
+
+5. حقوقكم
+لديكم الحق في الوصول إلى بياناتكم وتصحيحها أو حذفها.""",
+                "version": "2.0",
+                "effective_date": datetime.now(timezone.utc).isoformat()
+            },
+            "security": SecuritySettingsModel().model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        return default_settings
+    
+    # Remove MongoDB _id
+    settings.pop("_id", None)
+    settings.pop("type", None)
+    return settings
+
+
+@api_router.put("/settings/platform/general")
+async def update_general_settings(
+    settings: GeneralSettingsModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update general platform settings"""
+    update_data = {
+        "$set": {
+            "general": settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "settings_updated",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "platform_settings",
+        "target_id": "general",
+        "details": {"section": "general"},
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث الإعدادات العامة بنجاح", "settings": settings.model_dump()}
+
+
+@api_router.put("/settings/platform/brand")
+async def update_brand_settings(
+    settings: BrandSettingsModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update brand/identity settings"""
+    update_data = {
+        "$set": {
+            "brand": settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث إعدادات الهوية البصرية بنجاح", "settings": settings.model_dump()}
+
+
+@api_router.put("/settings/platform/contact")
+async def update_contact_settings(
+    settings: ContactInfoModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update contact information settings"""
+    update_data = {
+        "$set": {
+            "contact": settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث بيانات التواصل بنجاح", "settings": settings.model_dump()}
+
+
+@api_router.put("/settings/platform/terms")
+async def update_terms_settings(
+    content: LegalContentModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update terms and conditions"""
+    # Save to version history
+    version_history = {
+        "id": str(uuid.uuid4()),
+        "type": "terms",
+        "content": content.content,
+        "version": content.version,
+        "effective_date": content.effective_date or datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"],
+        "created_by_name": current_user.get("full_name", ""),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.legal_versions.insert_one(version_history)
+    
+    update_data = {
+        "$set": {
+            "terms": {
+                "content": content.content,
+                "version": content.version,
+                "effective_date": content.effective_date or datetime.now(timezone.utc).isoformat()
+            },
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث الشروط والأحكام بنجاح", "version": content.version}
+
+
+@api_router.put("/settings/platform/privacy")
+async def update_privacy_settings(
+    content: LegalContentModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update privacy policy"""
+    # Save to version history
+    version_history = {
+        "id": str(uuid.uuid4()),
+        "type": "privacy",
+        "content": content.content,
+        "version": content.version,
+        "effective_date": content.effective_date or datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"],
+        "created_by_name": current_user.get("full_name", ""),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.legal_versions.insert_one(version_history)
+    
+    update_data = {
+        "$set": {
+            "privacy": {
+                "content": content.content,
+                "version": content.version,
+                "effective_date": content.effective_date or datetime.now(timezone.utc).isoformat()
+            },
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث سياسة الخصوصية بنجاح", "version": content.version}
+
+
+@api_router.put("/settings/platform/security")
+async def update_security_settings(
+    settings: SecuritySettingsModel,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update security settings"""
+    update_data = {
+        "$set": {
+            "security": settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    await db.platform_settings.update_one(
+        {"type": "platform"},
+        update_data,
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث إعدادات الأمان بنجاح", "settings": settings.model_dump()}
+
+
+@api_router.get("/settings/legal-versions/{doc_type}")
+async def get_legal_versions(
+    doc_type: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get version history for terms or privacy"""
+    if doc_type not in ["terms", "privacy"]:
+        raise HTTPException(status_code=400, detail="نوع المستند غير صالح")
+    
+    versions = await db.legal_versions.find(
+        {"type": doc_type},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"versions": versions}
+
+
+# ============== API KEYS MANAGEMENT ENDPOINTS ==============
+@api_router.post("/settings/api-keys")
+async def create_api_key(
+    key_data: APIKeyCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Create a new API key"""
+    import secrets
+    
+    # Generate API key and secret
+    prefix = "nsk_live_" if key_data.permissions == "full_access" else "nsk_test_"
+    api_key = prefix + secrets.token_hex(16)
+    api_secret = "nss_" + secrets.token_hex(24)
+    
+    # Hash the secret for storage
+    hashed_secret = hash_password(api_secret)
+    
+    new_key = {
+        "id": str(uuid.uuid4()),
+        "name": key_data.name,
+        "key": api_key,
+        "secret_hash": hashed_secret,
+        "permissions": key_data.permissions,
+        "is_active": True,
+        "created_by": current_user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_used": None
+    }
+    
+    await db.api_keys.insert_one(new_key)
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "api_key_created",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "api_key",
+        "target_id": new_key["id"],
+        "target_name": key_data.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    # Return with the secret (only time it's shown)
+    return {
+        "id": new_key["id"],
+        "name": new_key["name"],
+        "key": api_key,
+        "secret": api_secret,  # Only returned on creation
+        "permissions": new_key["permissions"],
+        "is_active": new_key["is_active"],
+        "created_at": new_key["created_at"],
+        "last_used": None,
+        "message": "تم إنشاء مفتاح API بنجاح. يرجى حفظ المفتاح السري، لن يتم عرضه مرة أخرى."
+    }
+
+
+@api_router.get("/settings/api-keys")
+async def get_api_keys(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get all API keys"""
+    keys = await db.api_keys.find(
+        {},
+        {"_id": 0, "secret_hash": 0}  # Exclude MongoDB _id and secret hash
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"keys": keys}
+
+
+@api_router.post("/settings/api-keys/{key_id}/revoke")
+async def revoke_api_key(
+    key_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Revoke (deactivate) an API key"""
+    key = await db.api_keys.find_one({"id": key_id})
+    if not key:
+        raise HTTPException(status_code=404, detail="مفتاح API غير موجود")
+    
+    await db.api_keys.update_one(
+        {"id": key_id},
+        {"$set": {"is_active": False}}
+    )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "api_key_revoked",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "api_key",
+        "target_id": key_id,
+        "target_name": key.get("name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم إلغاء مفتاح API بنجاح"}
+
+
+@api_router.delete("/settings/api-keys/{key_id}")
+async def delete_api_key(
+    key_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Delete an API key"""
+    key = await db.api_keys.find_one({"id": key_id})
+    if not key:
+        raise HTTPException(status_code=404, detail="مفتاح API غير موجود")
+    
+    await db.api_keys.delete_one({"id": key_id})
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "api_key_deleted",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "api_key",
+        "target_id": key_id,
+        "target_name": key.get("name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم حذف مفتاح API بنجاح"}
+
+
+# ============== USER SESSIONS MANAGEMENT ==============
+@api_router.get("/settings/sessions")
+async def get_user_sessions(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get active sessions for the current user"""
+    sessions = await db.user_sessions.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("last_active", -1).to_list(20)
+    
+    return {"sessions": sessions}
+
+
+@api_router.post("/settings/sessions/end-all")
+async def end_all_sessions(
+    current_user: dict = Depends(get_current_user)
+):
+    """End all other sessions except current"""
+    # In a real implementation, you would invalidate all tokens except the current one
+    # For now, we'll just clear the sessions collection
+    await db.user_sessions.delete_many({
+        "user_id": current_user["id"],
+        "is_current": {"$ne": True}
+    })
+    
+    return {"message": "تم إنهاء جميع الجلسات الأخرى"}
+
+
+@api_router.delete("/settings/sessions/{session_id}")
+async def end_session(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """End a specific session"""
+    result = await db.user_sessions.delete_one({
+        "id": session_id,
+        "user_id": current_user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
+    
+    return {"message": "تم إنهاء الجلسة"}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
