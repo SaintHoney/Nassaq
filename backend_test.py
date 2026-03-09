@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class NassaqAPITester:
-    def __init__(self, base_url="https://edutech-platform-10.preview.emergentagent.com"):
+    def __init__(self, base_url="https://nassaq-school-4.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
