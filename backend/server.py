@@ -38,14 +38,21 @@ security = HTTPBearer()
 # ============== ENUMS ==============
 class UserRole(str, Enum):
     PLATFORM_ADMIN = "platform_admin"
+    PLATFORM_OPERATIONS_MANAGER = "platform_operations_manager"
+    PLATFORM_TECHNICAL_ADMIN = "platform_technical_admin"
+    PLATFORM_SUPPORT_SPECIALIST = "platform_support_specialist"
+    PLATFORM_DATA_ANALYST = "platform_data_analyst"
+    PLATFORM_SECURITY_OFFICER = "platform_security_officer"
     MINISTRY_REP = "ministry_rep"
     SCHOOL_PRINCIPAL = "school_principal"
+    SCHOOL_ADMIN = "school_admin"
     SCHOOL_SUB_ADMIN = "school_sub_admin"
     TEACHER = "teacher"
     STUDENT = "student"
     PARENT = "parent"
     DRIVER = "driver"
     GATEKEEPER = "gatekeeper"
+    TESTING_ACCOUNT = "testing_account"
 
 class SchoolStatus(str, Enum):
     ACTIVE = "active"
