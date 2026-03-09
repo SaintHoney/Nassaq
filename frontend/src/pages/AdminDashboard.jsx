@@ -84,33 +84,50 @@ const sampleChartData = [
   { time: '14:00', students: 800, teachers: 200 },
 ];
 
-// Sparkline data generator for cards
+// Sparkline data generator for cards - Enhanced for clarity
 const generateSparklineData = (baseValue, trend) => {
   const data = [];
   let value = baseValue * 0.85;
   for (let i = 0; i < 7; i++) {
-    const change = trend === 'up' ? Math.random() * 0.05 : trend === 'down' ? -Math.random() * 0.03 : (Math.random() - 0.5) * 0.02;
+    const change = trend === 'up' ? Math.random() * 0.05 + 0.01 : trend === 'down' ? -Math.random() * 0.03 - 0.01 : (Math.random() - 0.5) * 0.015;
     value = value * (1 + change);
     data.push({ day: i + 1, value: Math.round(value) });
   }
   return data;
 };
 
-// Mini Sparkline Component
-const MiniSparkline = ({ data, color = '#38b2ac', height = 40 }) => {
+// Enhanced Mini Sparkline Component - Professional Design
+const MiniSparkline = ({ data, trend = 'up', height = 36 }) => {
+  // تحديد اللون بناءً على الاتجاه
+  const trendColor = trend === 'up' ? '#22c55e' : trend === 'down' ? '#ef4444' : '#94a3b8';
+  const gradientId = `sparkGradient_${Math.random().toString(36).substr(2, 9)}`;
+  
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data}>
-        <Line 
-          type="monotone" 
-          dataKey="value" 
-          stroke={color} 
-          strokeWidth={2} 
-          dot={false}
-          isAnimationActive={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="relative w-full" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={trendColor} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={trendColor} stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            stroke={trendColor} 
+            strokeWidth={2}
+            fill={`url(#${gradientId})`}
+            dot={false}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+      {/* مؤشر الاتجاه */}
+      <div className={`absolute top-0 left-0 w-1.5 h-full rounded-full ${
+        trend === 'up' ? 'bg-green-500' : trend === 'down' ? 'bg-red-500' : 'bg-gray-400'
+      }`} />
+    </div>
   );
 };
 
