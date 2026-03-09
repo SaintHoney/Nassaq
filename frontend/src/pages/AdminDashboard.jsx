@@ -535,14 +535,43 @@ export const AdminDashboard = () => {
     }, 1500);
   };
 
-  // Quick Actions
+  // Quick Actions - الإجراءات السريعة (Operational Launch Pad)
   const quickActions = [
-    { icon: Plus, label: isRTL ? 'إضافة مدرسة' : 'Add School', color: 'bg-brand-navy', action: () => setShowAddSchoolWizard(true) },
-    { icon: UserPlus, label: isRTL ? 'إضافة مستخدم' : 'Add User', color: 'bg-brand-turquoise', action: () => navigate('/admin/users') },
-    { icon: FileText, label: isRTL ? 'تقرير جديد' : 'New Report', color: 'bg-brand-purple', action: () => navigate('/admin/reports') },
-    { icon: MessageSquare, label: isRTL ? 'إرسال إشعار' : 'Send Notice', color: 'bg-orange-500', action: () => navigate('/notifications') },
-    { icon: BookOpen, label: isRTL ? 'إدارة القواعد' : 'Manage Rules', color: 'bg-green-600', action: () => navigate('/admin/rules') },
-    { icon: Settings, label: isRTL ? 'الإعدادات' : 'Settings', color: 'bg-gray-600', action: () => navigate('/settings') },
+    { 
+      icon: Plus, 
+      label: isRTL ? 'إضافة مدرسة' : 'Add School', 
+      desc: isRTL ? 'إنشاء مستأجر جديد' : 'Create new tenant',
+      color: 'bg-brand-navy', 
+      action: () => setShowAddSchoolWizard(true) 
+    },
+    { 
+      icon: UserPlus, 
+      label: isRTL ? 'إنشاء مستخدم' : 'Create User', 
+      desc: isRTL ? 'إضافة حساب جديد' : 'Add new account',
+      color: 'bg-brand-turquoise', 
+      action: () => navigate('/admin/users') 
+    },
+    { 
+      icon: BookOpen, 
+      label: isRTL ? 'إدارة القواعد' : 'Manage Rules', 
+      desc: isRTL ? 'القواعد التعليمية' : 'Educational rules',
+      color: 'bg-green-600', 
+      action: () => navigate('/admin/rules') 
+    },
+    { 
+      icon: Settings, 
+      label: isRTL ? 'إعدادات النظام' : 'System Settings', 
+      desc: isRTL ? 'إعدادات المنصة' : 'Platform config',
+      color: 'bg-gray-600', 
+      action: () => navigate('/settings') 
+    },
+    { 
+      icon: FileText, 
+      label: isRTL ? 'التقارير' : 'Reports', 
+      desc: isRTL ? 'التحليلات والتقارير' : 'Analytics & reports',
+      color: 'bg-brand-purple', 
+      action: () => navigate('/admin/reports') 
+    },
   ];
 
   // AI Operations
