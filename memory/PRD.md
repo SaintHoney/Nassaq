@@ -443,11 +443,101 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ---
 
+### Latest Changes (March 9, 2026 - Phase 13 - Foundation Engines Expansion):
+
+## 🏗️ توسيع المحركات الأساسية
+
+1. **New Engines Created** ✅
+   - `/app/backend/engines/scheduling_engine.py` - محرك الجدولة
+     - Master schedules management
+     - Time slots and periods
+     - Teacher assignments
+     - Schedule sessions
+     - Conflict detection
+     - Schedule optimization
+   
+   - `/app/backend/engines/attendance_engine.py` - محرك الحضور
+     - Student attendance recording
+     - Bulk attendance operations
+     - Attendance reports and statistics
+     - Excuse management
+     - Late arrivals and early departures
+   
+   - `/app/backend/engines/assessment_engine.py` - محرك التقييم
+     - Assessment creation and management
+     - Grading and scoring
+     - Grade calculations and weighting
+     - Performance tracking
+     - Report card generation
+   
+   - `/app/backend/engines/notification_engine.py` - محرك الإشعارات
+     - In-app notifications
+     - Notification templates
+     - Recipient resolution
+     - Read/unread tracking
+     - Priority handling
+     - Event-triggered notifications
+   
+   - `/app/backend/engines/audit_engine.py` - محرك التدقيق
+     - Comprehensive action logging
+     - Structured audit format
+     - Sensitive action tracking
+     - Audit trail queries
+     - Compliance reporting
+
+2. **Footer Dynamic Contact Info** ✅
+   - `/app/frontend/src/components/layout/Footer.jsx`
+   - Fetches contact info from `/api/public/contact-info`
+   - Dynamic social media links
+   - Dynamic phone, email, address
+   - Dynamic owner name in copyright
+
+3. **Academic Stages API Verified** ✅
+   - POST /api/academic/stages/seed-defaults - تهيئة المراحل التعليمية
+   - GET /api/academic/stages - جلب المراحل التعليمية
+   - Default stages: KG, PRIMARY, INTERMEDIATE, SECONDARY
+
+### Test Results (iteration_30.json):
+- ✅ Backend: 100% (12/12 tests passed)
+- ✅ Frontend: 100% (Landing page, Footer, Login flow all working)
+- ✅ Public Contact API: Working without authentication
+- ✅ Academic Stages: Seeding and retrieval working
+- ✅ Footer: Dynamic contact info from API
+- ✅ New Engines: All created and importable (not connected to routes yet)
+
+---
+
 ## 📋 Audit Report Location
 `/app/memory/FOUNDATION_AUDIT.md`
+
+## 📁 Engines Directory Structure
+```
+/app/backend/engines/
+├── __init__.py
+├── academic_engine.py      # الهيكل الأكاديمي
+├── assessment_engine.py    # التقييم والاختبارات (NEW)
+├── attendance_engine.py    # الحضور والغياب (NEW)
+├── audit_engine.py         # سجل التدقيق (NEW)
+├── behaviour_engine.py     # السلوك
+├── identity_engine.py      # الهوية
+├── notification_engine.py  # الإشعارات (NEW)
+├── scheduling_engine.py    # الجدولة (NEW)
+└── tenant_engine.py        # المستأجرين
+```
 
 ## Test Reports Summary
 - iteration_27.json - Platform Settings (100%)
 - iteration_28.json - User Creation & Teacher Requests (100%)
 - iteration_29.json - Foundation & Behaviour Engine (100%)
+- iteration_30.json - Foundation Engines Expansion (100%)
+
+---
+
+## 📌 Next Steps (P0 Priority)
+1. Connect new engines to API routes in server.py
+2. Refactor remaining logic from server.py to engines
+3. Implement RBAC middleware
+4. Build frontend UI for new engine features
+
+## Last Updated: March 9, 2026
 
