@@ -1747,22 +1747,27 @@ export const AdminDashboard = () => {
           <QuickAIOperationsPanel api={api} isRTL={isRTL} />
 
           {/* ============================================ */}
-          {/* 6. مساعد حكيم الذكي - Hakim AI Assistant */}
+          {/* 6. مساعدك الذكي حكيم - Hakim AI Assistant */}
           {/* ============================================ */}
           <section data-testid="hakim-section">
             <Card className="card-nassaq">
               <CardHeader className="pb-2">
                 <CardTitle className="font-cairo text-lg flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden">
-                    <img src={HAKIM_AVATAR} alt="Hakim" className="w-full h-full object-cover" />
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                      <img src={HAKIM_AVATAR} alt="Hakim" className="w-full h-full object-cover" />
+                    </div>
+                    {/* Pulsing online indicator */}
+                    <div className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                   </div>
-                  {isRTL ? 'مساعد حكيم الذكي' : 'Hakim AI Assistant'}
-                  <Badge className="bg-green-500 text-white text-xs">
-                    {isRTL ? 'متصل' : 'Online'}
+                  {isRTL ? 'مساعدك الذكي حكيم' : 'Hakim - Your AI Assistant'}
+                  <Badge className="bg-green-500 text-white text-xs flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    {isRTL ? 'متاح الآن' : 'Online Now'}
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  {isRTL ? 'اسأل حكيم أي سؤال عن المنصة' : 'Ask Hakim any question about the platform'}
+                  {isRTL ? 'اسأل حكيم أي سؤال عن المنصة وسيساعدك فوراً' : 'Ask Hakim any question and get instant help'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
