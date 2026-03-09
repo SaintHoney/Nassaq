@@ -223,6 +223,7 @@
 | iteration_13 | Notification Engine | Backend 91% + Frontend ✅ (100%) |
 | iteration_15 | Global Filters Bar | 100% ✅ |
 | iteration_16 | Enhanced Analytics Cards + Filter Backend Integration | Backend 93% + Frontend 100% ✅ |
+| iteration_17 | UI/UX Improvements (PDF Export, Sparklines, Welcome Card, Cascading Filters) | Frontend 100% ✅ |
 
 ---
 
