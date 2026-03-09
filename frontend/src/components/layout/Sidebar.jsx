@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme, useTranslation } from '../../contexts/ThemeContext';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
+import { NotificationBell } from '../notifications/NotificationBell';
 import {
   LayoutDashboard,
   Building2,
@@ -22,6 +23,7 @@ import {
   X,
   Bell,
   MessageSquare,
+  LogOut,
 } from 'lucide-react';
 
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
