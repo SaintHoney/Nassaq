@@ -154,15 +154,15 @@ function AppRoutes() {
         path="/admin/schools"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
-            <PlatformSchoolsPage />
+            <TenantsManagement />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin/tenants"
+        path="/admin/schools-table"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
-            <TenantsManagement />
+            <PlatformSchoolsPage />
           </ProtectedRoute>
         }
       />
