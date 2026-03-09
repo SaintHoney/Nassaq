@@ -452,7 +452,7 @@ export default function UsersManagement() {
   
   // Handle user actions
   const handleViewUser = (user) => {
-    setShowUserDetails(user);
+    navigate(`/admin/users/${user.id}`);
   };
   
   const handleSuspendUser = async (user) => {
