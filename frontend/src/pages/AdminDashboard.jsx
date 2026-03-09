@@ -555,7 +555,7 @@ export const AdminDashboard = () => {
       label: isRTL ? 'إنشاء مستخدم' : 'Create User', 
       desc: isRTL ? 'إضافة حساب جديد' : 'Add new account',
       color: 'bg-brand-turquoise', 
-      action: () => navigate('/admin/users') 
+      action: () => setShowCreateUserWizard(true) 
     },
     { 
       icon: BookOpen, 
