@@ -438,6 +438,30 @@ export const AdminDashboard = () => {
         </header>
 
         <div className="p-6 space-y-6">
+          {/* أول شيء في الصفحة: التاريخ الهجري والميلادي */}
+          <div className="flex justify-center">
+            <Card className="card-nassaq bg-gradient-to-r from-brand-navy/5 via-brand-turquoise/5 to-brand-purple/5 border-brand-navy/20">
+              <CardContent className="py-3 px-6">
+                <div className="flex items-center gap-4">
+                  <Calendar className="h-6 w-6 text-brand-navy" />
+                  <div className="text-center">
+                    <p className="font-cairo text-2xl font-bold text-brand-navy">
+                      {getCurrentHijriDate().hijri}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-mono">
+                      ({getCurrentHijriDate().gregorian})
+                    </p>
+                  </div>
+                  <div className="h-10 w-px bg-border" />
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'الفصل الدراسي' : 'Semester'}</p>
+                    <p className="font-bold text-brand-turquoise">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Section 1: Analytics Cards */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -447,20 +471,22 @@ export const AdminDashboard = () => {
               </h2>
             </div>
 
-            {/* Global Filters Bar */}
-            <Card className="card-nassaq mb-4">
+            {/* Global Filters Bar - شريط التحكم العلوي */}
+            <Card className="card-nassaq mb-4 border-2 border-brand-turquoise/20">
               <CardContent className="p-4">
-                {/* Row 1: Main Filters */}
-                <div className="flex flex-wrap items-center gap-3">
+                {/* Row 1: نطاق البيانات والفلاتر الإضافية */}
+                <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-border/50">
                   {/* A. نطاق البيانات - Scope */}
-                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-xl">
-                    <Filter className="h-4 w-4 text-brand-turquoise" />
-                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'النطاق:' : 'Scope:'}</span>
+                  <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-2 rounded-xl border border-brand-navy/10">
+                    <Filter className="h-4 w-4 text-brand-navy" />
+                    <span className="text-xs font-bold text-brand-navy">{isRTL ? 'النطاق' : 'Scope'}</span>
                     <Select 
                       value={filters.scope} 
-                      onValueChange={(v) => setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] })}
+                      onValueChange={(v) => {
+                        setFilters({ ...filters, scope: v, selectedSchool: '', selectedSchools: [] });
+                      }}
                     >
-                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-0 bg-background">
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-navy/20 bg-background">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -473,31 +499,348 @@ export const AdminDashboard = () => {
 
                   {/* School Selector (when scope is single) */}
                   {filters.scope === 'single' && (
-                    <div className="relative">
-                      <Select 
-                        value={filters.selectedSchool} 
-                        onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
-                      >
-                        <SelectTrigger className="w-52 rounded-xl h-8 text-sm">
-                          <SelectValue placeholder={isRTL ? '🔍 ابحث واختر مدرسة' : '🔍 Search & select'} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                          {schools.map((school) => (
-                            <SelectItem key={school.id} value={school.id}>
-                              <span className="flex items-center gap-2">
-                                <Building2 className="h-3 w-3" />
-                                {school.name}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select 
+                      value={filters.selectedSchool} 
+                      onValueChange={(v) => setFilters({ ...filters, selectedSchool: v })}
+                    >
+                      <SelectTrigger className="w-56 rounded-xl h-8 text-sm border-brand-turquoise/30">
+                        <Building2 className="h-3 w-3 me-1" />
+                        <SelectValue placeholder={isRTL ? 'ابحث واختر مدرسة...' : 'Search school...'} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        <div className="p-2 border-b">
+                          <Input placeholder={isRTL ? 'بحث...' : 'Search...'} className="h-8 text-sm" />
+                        </div>
+                        {schools.map((school) => (
+                          <SelectItem key={school.id} value={school.id}>
+                            <span className="flex items-center gap-2">
+                              <Building2 className="h-3 w-3" />
+                              {school.name}
+                              <Badge variant="outline" className="text-[10px] ms-auto">{school.city}</Badge>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
 
                   {/* Multi-Select Schools (when scope is multi) */}
                   {filters.scope === 'multi' && (
                     <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[220px] justify-between border-brand-turquoise/30">
+                          <span className="flex items-center gap-2">
+                            <Building2 className="h-3 w-3" />
+                            {filters.selectedSchools.length > 0 
+                              ? `${filters.selectedSchools.length} ${isRTL ? 'مدرسة محددة' : 'schools selected'}`
+                              : (isRTL ? 'اختر المدارس...' : 'Select schools...')}
+                          </span>
+                          <ChevronRight className="h-3 w-3 rotate-90" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-72 max-h-80 overflow-y-auto">
+                        <div className="p-2 border-b sticky top-0 bg-background z-10">
+                          <Input placeholder={isRTL ? 'ابحث عن مدرسة...' : 'Search...'} className="h-8 text-sm" />
+                        </div>
+                        <div className="p-1">
+                          {schools.map((school) => (
+                            <div 
+                              key={school.id}
+                              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted/50 ${
+                                filters.selectedSchools.includes(school.id) ? 'bg-brand-turquoise/10' : ''
+                              }`}
+                              onClick={() => {
+                                const isSelected = filters.selectedSchools.includes(school.id);
+                                setFilters({
+                                  ...filters,
+                                  selectedSchools: isSelected 
+                                    ? filters.selectedSchools.filter(id => id !== school.id)
+                                    : [...filters.selectedSchools, school.id]
+                                });
+                              }}
+                            >
+                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                filters.selectedSchools.includes(school.id) 
+                                  ? 'bg-brand-turquoise border-brand-turquoise' 
+                                  : 'border-gray-300'
+                              }`}>
+                                {filters.selectedSchools.includes(school.id) && (
+                                  <Check className="h-3 w-3 text-white" />
+                                )}
+                              </div>
+                              <span className="text-sm flex-1">{school.name}</span>
+                              <Badge variant="outline" className="text-[10px]">{school.status === 'active' ? (isRTL ? 'نشط' : 'Active') : school.status}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
+                  {/* فاصل */}
+                  <div className="h-6 w-px bg-border hidden lg:block" />
+
+                  {/* فلاتر إضافية: المدينة */}
+                  <Select 
+                    value={filters.city || 'all_cities'} 
+                    onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
+                  >
+                    <SelectTrigger className="w-32 rounded-xl h-8 text-sm">
+                      <MapPin className="h-3 w-3 me-1 text-muted-foreground" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
+                      {SAUDI_CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* فلاتر إضافية: المنطقة */}
+                  <Select 
+                    value={filters.region || 'all_regions'} 
+                    onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v })}
+                  >
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                      <Globe className="h-3 w-3 me-1 text-muted-foreground" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_regions">{isRTL ? 'كل المناطق' : 'All Regions'}</SelectItem>
+                      <SelectItem value="central">{isRTL ? 'الوسطى' : 'Central'}</SelectItem>
+                      <SelectItem value="western">{isRTL ? 'الغربية' : 'Western'}</SelectItem>
+                      <SelectItem value="eastern">{isRTL ? 'الشرقية' : 'Eastern'}</SelectItem>
+                      <SelectItem value="northern">{isRTL ? 'الشمالية' : 'Northern'}</SelectItem>
+                      <SelectItem value="southern">{isRTL ? 'الجنوبية' : 'Southern'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* فلاتر إضافية: نوع المدرسة */}
+                  <Select 
+                    value={filters.schoolType || 'all_types'} 
+                    onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
+                  >
+                    <SelectTrigger className="w-28 rounded-xl h-8 text-sm">
+                      <GraduationCap className="h-3 w-3 me-1 text-muted-foreground" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_types">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
+                      <SelectItem value="public">{isRTL ? 'حكومي' : 'Public'}</SelectItem>
+                      <SelectItem value="private">{isRTL ? 'خاص' : 'Private'}</SelectItem>
+                      <SelectItem value="international">{isRTL ? 'عالمي' : 'International'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Row 2: الفترة الزمنية + حالة المدارس + الأزرار */}
+                <div className="flex flex-wrap items-center gap-3 pt-3">
+                  {/* B. الفترة الزمنية - Time Window */}
+                  <div className="flex items-center gap-2 bg-brand-purple/5 px-3 py-2 rounded-xl border border-brand-purple/10">
+                    <Clock className="h-4 w-4 text-brand-purple" />
+                    <span className="text-xs font-bold text-brand-purple">{isRTL ? 'الفترة' : 'Time'}</span>
+                    <Select 
+                      value={filters.timeWindow} 
+                      onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}
+                    >
+                      <SelectTrigger className="w-36 rounded-lg h-8 text-sm border-brand-purple/20 bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="live">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            {isRTL ? 'الآن (Live)' : 'Live Now'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                        <SelectItem value="week">{isRTL ? 'الأسبوع الحالي' : 'This Week'}</SelectItem>
+                        <SelectItem value="month">{isRTL ? 'الشهر الحالي' : 'This Month'}</SelectItem>
+                        <SelectItem value="custom">{isRTL ? 'نطاق مخصص' : 'Custom Range'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* فاصل */}
+                  <div className="h-6 w-px bg-border hidden lg:block" />
+
+                  {/* C. حالة المدارس - Tenant Status - واضحة جداً بصرياً */}
+                  <div className="flex items-center gap-2 bg-orange-500/5 px-3 py-2 rounded-xl border border-orange-500/10">
+                    <Shield className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs font-bold text-orange-600">{isRTL ? 'الحالة' : 'Status'}</span>
+                    <Select 
+                      value={filters.tenantStatus} 
+                      onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}
+                    >
+                      <SelectTrigger className="w-40 rounded-lg h-8 text-sm border-orange-500/20 bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          <span className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500" />
+                            {isRTL ? 'كل الحالات' : 'All Status'}
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="active">
+                          <span className="flex items-center gap-2">
+                            <Badge className="w-3 h-3 p-0 bg-green-500 rounded-full" />
+                            <span className="text-green-700 font-medium">{isRTL ? 'نشطة' : 'Active'}</span>
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="suspended">
+                          <span className="flex items-center gap-2">
+                            <Badge className="w-3 h-3 p-0 bg-red-500 rounded-full" />
+                            <span className="text-red-700 font-medium">{isRTL ? 'موقوفة' : 'Suspended'}</span>
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="setup">
+                          <span className="flex items-center gap-2">
+                            <Badge className="w-3 h-3 p-0 bg-yellow-500 rounded-full" />
+                            <span className="text-yellow-700 font-medium">{isRTL ? 'قيد الإعداد' : 'Setup'}</span>
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="expired">
+                          <span className="flex items-center gap-2">
+                            <Badge className="w-3 h-3 p-0 bg-gray-400 rounded-full" />
+                            <span className="text-gray-600 font-medium">{isRTL ? 'انتهى الاشتراك' : 'Expired'}</span>
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Spacer */}
+                  <div className="flex-1" />
+
+                  {/* D. أزرار الإجراءات - Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {/* تحديث الآن - Refresh Now */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => { 
+                        setLoading(true);
+                        fetchStats().then(() => {
+                          toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
+                        });
+                      }}
+                      className="rounded-xl h-9 px-4 border-green-500/30 hover:bg-green-500/10 hover:border-green-500"
+                      disabled={loading}
+                    >
+                      <RefreshCw className={`h-4 w-4 me-2 ${loading ? 'animate-spin' : ''} text-green-600`} />
+                      <span className="font-medium">{isRTL ? 'تحديث الآن' : 'Refresh'}</span>
+                    </Button>
+
+                    {/* تصدير البيانات - Export (ينزل ملف فعلي) */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500">
+                          <Download className="h-4 w-4 me-2 text-blue-600" />
+                          <span className="font-medium">{isRTL ? 'تصدير' : 'Export'}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleExportData('pdf')} className="cursor-pointer">
+                          <FileText className="h-4 w-4 me-2 text-red-500" />
+                          <span>{isRTL ? 'تنزيل PDF' : 'Download PDF'}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportData('excel')} className="cursor-pointer">
+                          <BarChart3 className="h-4 w-4 me-2 text-green-600" />
+                          <span>{isRTL ? 'تنزيل Excel' : 'Download Excel'}</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* إعدادات العرض - Display Settings */}
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => setShowDisplaySettings(true)}
+                      className="rounded-xl h-9 px-4 bg-brand-navy hover:bg-brand-navy/90"
+                    >
+                      <SlidersHorizontal className="h-4 w-4 me-2" />
+                      <span className="font-medium">{isRTL ? 'إعدادات العرض' : 'Display'}</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* نطاق تاريخ مخصص */}
+                {filters.timeWindow === 'custom' && (
+                  <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-border/50 bg-brand-purple/5 -mx-4 -mb-4 px-4 pb-4 rounded-b-xl">
+                    <span className="text-sm font-bold text-brand-purple">{isRTL ? 'تحديد النطاق:' : 'Select Range:'}</span>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.customDateFrom}
+                        onChange={(e) => setFilters({ ...filters, customDateFrom: e.target.value })}
+                        className="w-40 rounded-xl h-8 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.customDateTo}
+                        onChange={(e) => setFilters({ ...filters, customDateTo: e.target.value })}
+                        className="w-40 rounded-xl h-8 text-sm"
+                      />
+                    </div>
+                    <Button size="sm" className="rounded-xl h-8 bg-brand-purple hover:bg-brand-purple/90">
+                      <Check className="h-3 w-3 me-1" />
+                      {isRTL ? 'تطبيق' : 'Apply'}
+                    </Button>
+                  </div>
+                )}
+
+                {/* عرض الفلاتر النشطة */}
+                {(filters.city || filters.region || filters.schoolType || filters.tenantStatus !== 'all' || filters.scope !== 'all') && (
+                  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground">{isRTL ? 'الفلاتر النشطة:' : 'Active filters:'}</span>
+                    {filters.scope !== 'all' && (
+                      <Badge variant="secondary" className="rounded-full text-xs">
+                        {filters.scope === 'single' ? (isRTL ? 'مدرسة واحدة' : 'Single School') : (isRTL ? 'مجموعة مدارس' : 'Multi-Select')}
+                        <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, scope: 'all', selectedSchool: '', selectedSchools: [] })}>×</button>
+                      </Badge>
+                    )}
+                    {filters.city && (
+                      <Badge variant="secondary" className="rounded-full text-xs">
+                        {filters.city}
+                        <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, city: '' })}>×</button>
+                      </Badge>
+                    )}
+                    {filters.region && (
+                      <Badge variant="secondary" className="rounded-full text-xs">
+                        {filters.region === 'central' ? (isRTL ? 'الوسطى' : 'Central') : filters.region}
+                        <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, region: '' })}>×</button>
+                      </Badge>
+                    )}
+                    {filters.schoolType && (
+                      <Badge variant="secondary" className="rounded-full text-xs">
+                        {filters.schoolType === 'public' ? (isRTL ? 'حكومي' : 'Public') : filters.schoolType}
+                        <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, schoolType: '' })}>×</button>
+                      </Badge>
+                    )}
+                    {filters.tenantStatus !== 'all' && (
+                      <Badge variant="secondary" className="rounded-full text-xs">
+                        {filters.tenantStatus === 'active' ? (isRTL ? 'نشطة' : 'Active') : 
+                         filters.tenantStatus === 'suspended' ? (isRTL ? 'موقوفة' : 'Suspended') :
+                         filters.tenantStatus === 'setup' ? (isRTL ? 'قيد الإعداد' : 'Setup') : (isRTL ? 'منتهية' : 'Expired')}
+                        <button className="ms-1 hover:text-red-500" onClick={() => setFilters({ ...filters, tenantStatus: 'all' })}>×</button>
+                      </Badge>
+                    )}
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-red-500 hover:text-red-700" onClick={() => setFilters({
+                      scope: 'all', selectedSchool: '', selectedSchools: [], city: '', region: '', schoolType: '',
+                      timeWindow: 'today', customDateFrom: '', customDateTo: '', tenantStatus: 'all'
+                    })}>
+                      {isRTL ? 'مسح الكل' : 'Clear All'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="rounded-xl h-8 min-w-[200px] justify-between">
                           <span className="flex items-center gap-2">
