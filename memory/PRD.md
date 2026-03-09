@@ -625,10 +625,10 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ---
 
 ## 📌 Next Steps (P0 Priority)
-1. Connect new engines to API routes in server.py
-2. Refactor remaining logic from server.py to engines
-3. Implement RBAC middleware
-4. Build frontend UI for new engine features
+1. Build frontend pages for other user roles (School Principal, Teacher, Student, Parent)
+2. Apply RBAC middleware to existing endpoints in server.py
+3. Continue refactoring remaining logic from server.py to engines
+4. Build frontend UI for Scheduling, Attendance, and Assessment features
 
 ## Last Updated: March 9, 2026
 
