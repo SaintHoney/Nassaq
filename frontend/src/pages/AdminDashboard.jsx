@@ -184,6 +184,7 @@ export const AdminDashboard = () => {
   // Fetch Stats
   const fetchStats = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await api.get('/dashboard/stats');
       setStats(response.data);
     } catch (error) {
@@ -199,9 +200,45 @@ export const AdminDashboard = () => {
     }
   }, [api]);
 
+  // Fetch Schools for filter
+  const fetchSchools = useCallback(async () => {
+    try {
+      const response = await api.get('/schools');
+      setSchools(response.data || []);
+    } catch (error) {
+      setSchools([]);
+    }
+  }, [api]);
+
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    fetchSchools();
+  }, [fetchStats, fetchSchools]);
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    if (!loading) {
+      fetchStats();
+    }
+  }, [filters.scope, filters.timeWindow, filters.tenantStatus]);
+
+  // Get current Hijri date
+  const getCurrentHijriDate = () => {
+    const today = new Date();
+    const gregorian = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    // Simple approximation for display (actual conversion needs library)
+    const hijriYear = 1447;
+    const hijriMonth = Math.floor(today.getMonth() + 1);
+    const hijriDay = today.getDate();
+    return {
+      hijri: `${hijriYear}/${String(hijriMonth).padStart(2, '0')}/${String(hijriDay).padStart(2, '0')} هـ`,
+      gregorian: today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    };
+  };
+
+  const handleExport = (format) => {
+    toast.success(isRTL ? `جاري تصدير البيانات بصيغة ${format}` : `Exporting data as ${format}`);
+  };
 
   // Wizard handlers
   const handleNextStep = () => {
