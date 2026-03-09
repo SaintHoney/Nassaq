@@ -456,13 +456,18 @@ export default function TenantsManagement() {
       {/* Desktop Header */}
       <header className="hidden lg:block sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="font-cairo text-2xl font-bold flex items-center gap-2">
+          <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Button 
+              className="bg-brand-navy hover:bg-brand-navy/90 rounded-xl px-6 py-6 text-lg shadow-lg" 
+              onClick={() => setShowCreateWizard(true)}
+              data-testid="add-school-btn"
+            >
+              <Plus className="h-6 w-6 me-2" />
+              {isRTL ? 'إضافة مدرسة جديدة' : 'Add New School'}
+            </Button>
+            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <h1 className={`font-cairo text-2xl font-bold flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <Building2 className="h-7 w-7 text-brand-navy" />
                   {isRTL ? 'إدارة المدارس' : 'Tenants Management'}
                 </h1>
@@ -470,14 +475,10 @@ export default function TenantsManagement() {
                   {isRTL ? 'إدارة جميع المدارس والمؤسسات التعليمية' : 'Manage all schools and educational institutions'}
                 </p>
               </div>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+              </Button>
             </div>
-            <Button 
-              className="bg-brand-navy hover:bg-brand-navy/90 rounded-xl px-6 py-6 text-lg shadow-lg" 
-              onClick={() => setShowCreateWizard(true)}
-            >
-              <Plus className="h-6 w-6 me-2" />
-              {isRTL ? 'إضافة مدرسة جديدة' : 'Add New School'}
-            </Button>
           </div>
           
           {/* Stats Cards - Desktop */}
