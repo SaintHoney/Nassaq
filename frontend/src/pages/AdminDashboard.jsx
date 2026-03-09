@@ -185,6 +185,24 @@ export const AdminDashboard = () => {
   const [hakimInput, setHakimInput] = useState('');
   const [hakimLoading, setHakimLoading] = useState(false);
 
+  // Daily Activity States - نشاط المنصة اليومي
+  const [activityData, setActivityData] = useState([]);
+  const [activitySummary, setActivitySummary] = useState({
+    lessons: { count: 0, change: 0, status: 'normal' },
+    attendance: { count: 0, change: 0, status: 'normal' },
+    grades: { count: 0, change: 0, status: 'normal' },
+    users: { count: 0, change: 0, status: 'normal' }
+  });
+  const [activityAlerts, setActivityAlerts] = useState([]);
+  const [activityPeriod, setActivityPeriod] = useState('today');
+  const [activityViewBy, setActivityViewBy] = useState('hour');
+  const [activityFilters, setActivityFilters] = useState({
+    showLessons: true,
+    showAttendance: true,
+    showGrades: true,
+    showUsers: true
+  });
+
   // Get current Hijri date
   const getCurrentHijriDate = useCallback(() => {
     const today = new Date();
