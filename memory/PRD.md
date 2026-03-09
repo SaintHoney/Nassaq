@@ -192,8 +192,31 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ### User Management
 - `POST /api/users/create` - Create platform user (admin, teacher)
 - `GET /api/users/platform-users` - List platform users with filters
+- `GET /api/users/{user_id}` - Get user details by ID
+- `PUT /api/users/{user_id}` - Update user information
+- `PUT /api/users/{user_id}/permissions` - Update user permissions
+- `POST /api/users/{user_id}/reset-password` - Reset user password
+- `POST /api/users/{user_id}/suspend` - Toggle user suspension
+- `POST /api/users/{user_id}/notify` - Send notification to user
+- `POST /api/users/{user_id}/upload-image` - Upload user avatar
+- `GET /api/users/{user_id}/activity` - Get user activity logs
 - `DELETE /api/users/{user_id}` - Soft delete user
-- `PATCH /api/users/{user_id}/status` - Update user status
+
+### Integrations Management
+- `GET /api/integrations` - List all integrations
+- `POST /api/integrations` - Create new integration
+- `GET /api/integrations/{id}` - Get integration details
+- `PUT /api/integrations/{id}` - Update integration
+- `POST /api/integrations/{id}/toggle` - Enable/disable integration
+- `POST /api/integrations/{id}/test` - Test integration connection
+- `POST /api/integrations/{id}/sync` - Trigger data sync
+- `GET /api/integrations/{id}/logs` - Get sync logs
+- `DELETE /api/integrations/{id}` - Delete integration
+
+### Analytics
+- `GET /api/analytics/overview` - Get platform analytics overview
+- `GET /api/analytics/reports` - Get available reports
+- `GET /api/analytics/insights` - Get AI-generated insights
 
 ### Authentication
 - `POST /api/auth/login` - Login
