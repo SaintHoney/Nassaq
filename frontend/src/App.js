@@ -131,6 +131,16 @@ function AppRoutes() {
         }
       />
 
+      {/* Force Password Change Route */}
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedRoute skipPasswordCheck={true}>
+            <ForcePasswordChange />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Platform Admin Routes */}
       <Route
         path="/admin"
