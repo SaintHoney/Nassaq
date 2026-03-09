@@ -84,6 +84,7 @@ const HAKIM_AVATAR = 'https://customer-assets.emergentagent.com/job_nassaq-schoo
 export const AdminDashboard = () => {
   const { user, api, logout } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [schools, setSchools] = useState([]);
   const [registrationRequests, setRegistrationRequests] = useState([]);
