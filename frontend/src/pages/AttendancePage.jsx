@@ -418,7 +418,7 @@ export const AttendancePage = () => {
                           <SelectValue placeholder={isRTL ? 'اختر المادة' : 'Select subject'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{isRTL ? 'بدون تحديد' : 'None'}</SelectItem>
+                          <SelectItem value="none">{isRTL ? 'بدون تحديد' : 'None'}</SelectItem>
                           {subjects.map((subject) => (
                             <SelectItem key={subject.id} value={subject.id}>
                               {subject.name}
@@ -435,7 +435,7 @@ export const AttendancePage = () => {
                           <SelectValue placeholder={isRTL ? 'اختر الحصة' : 'Select period'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{isRTL ? 'بدون تحديد' : 'None'}</SelectItem>
+                          <SelectItem value="none">{isRTL ? 'بدون تحديد' : 'None'}</SelectItem>
                           {timeSlots.map((slot) => (
                             <SelectItem key={slot.id} value={slot.id}>
                               {slot.name} ({slot.start_time} - {slot.end_time})
