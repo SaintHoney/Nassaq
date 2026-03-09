@@ -136,18 +136,32 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-white/70 text-sm font-tajawal">
                 <Mail className="h-5 w-5 text-brand-turquoise flex-shrink-0" />
-                <span>info@nassaqapp.com</span>
+                <span data-testid="footer-email">{contactInfo?.primary_email || 'info@nassaqapp.com'}</span>
               </li>
               <li className="flex items-center gap-3 text-white/70 text-sm font-tajawal">
                 <Phone className="h-5 w-5 text-brand-turquoise flex-shrink-0" />
-                <span dir="ltr">+966 50 000 0000</span>
+                <span dir="ltr" data-testid="footer-phone">{contactInfo?.primary_phone || '+966 11 234 5678'}</span>
               </li>
               <li className="flex items-start gap-3 text-white/70 text-sm font-tajawal">
                 <MapPin className="h-5 w-5 text-brand-turquoise flex-shrink-0 mt-0.5" />
-                <span>
-                  {isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia'}
+                <span data-testid="footer-address">
+                  {contactInfo?.address || (isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia')}
                 </span>
               </li>
+              {contactInfo?.website && (
+                <li className="flex items-center gap-3 text-white/70 text-sm font-tajawal">
+                  <Globe className="h-5 w-5 text-brand-turquoise flex-shrink-0" />
+                  <a 
+                    href={contactInfo.website.startsWith('http') ? contactInfo.website : `https://${contactInfo.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-brand-turquoise transition-colors"
+                    data-testid="footer-website"
+                  >
+                    {contactInfo.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
