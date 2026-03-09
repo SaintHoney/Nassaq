@@ -61,6 +61,8 @@ import {
   Phone,
   Mail,
   MapPin,
+  Eye,
+  Check,
 } from 'lucide-react';
 import {
   DropdownMenu,
