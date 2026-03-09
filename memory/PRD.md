@@ -296,6 +296,7 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - `/app/test_reports/iteration_24.json` - User creation, TenantsManagement enhancements
 - `/app/test_reports/iteration_25.json` - P1 features: Rules, Monitoring, UserDetails (ALL PASSED)
 - `/app/test_reports/iteration_26.json` - UserDetails enhancements, Analytics, Integrations (100% PASSED)
+- `/app/test_reports/iteration_27.json` - Platform Settings APIs & Integration (100% PASSED)
 
 ## Test Credentials
 - **Platform Admin**: info@nassaqapp.com / NassaqAdmin2026!##$$HBJ
@@ -305,35 +306,36 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ## Last Updated: March 9, 2026
 
-### Latest Changes (March 9, 2026 - Phase 9):
-1. **UserDetailsPage Enhancements** ✅
-   - Back button to return to Users Management
-   - Edit form with Arabic/English name fields
-   - Password reset with welcome message template
-   - Image upload support (Base64)
-   - Creator name display with clickable link
-   - Redesigned action buttons with correct colors
-   - Backend APIs: GET/PUT user, permissions, reset-password, suspend, notify, upload-image
+### Latest Changes (March 9, 2026 - Phase 10):
 
-2. **PlatformAnalyticsPage** ✅
-   - 10 Report Categories
-   - Interactive Charts (Recharts)
-   - AI Insights Panel
-   - AI Report Builder
-   - Scheduled Reports
-   - Filters & Export
-   - Backend APIs: overview, reports, insights
+1. **PlatformSettingsPage Backend & Integration** ✅
+   - Full Backend APIs for platform settings management
+   - GET /api/settings/platform - جلب جميع إعدادات المنصة
+   - PUT /api/settings/platform/general - تحديث الإعدادات العامة
+   - PUT /api/settings/platform/brand - تحديث الهوية البصرية
+   - PUT /api/settings/platform/contact - تحديث بيانات التواصل
+   - PUT /api/settings/platform/terms - تحديث الشروط والأحكام
+   - PUT /api/settings/platform/privacy - تحديث سياسة الخصوصية
+   - PUT /api/settings/platform/security - تحديث إعدادات الأمان
+   - Frontend connected to all backend APIs
+   
+2. **API Keys Management** ✅
+   - POST /api/settings/api-keys - إنشاء مفتاح API جديد
+   - GET /api/settings/api-keys - جلب جميع مفاتيح API
+   - POST /api/settings/api-keys/{key_id}/revoke - إلغاء مفتاح API
+   - DELETE /api/settings/api-keys/{key_id} - حذف مفتاح API
+   - Secure key generation with hashed secrets
+   
+3. **Legal Version History** ✅
+   - GET /api/settings/legal-versions/{type} - جلب سجل إصدارات الشروط والخصوصية
+   - Version tracking for terms and privacy updates
 
-3. **IntegrationsPage** ✅
-   - 7 Integration Types
-   - CRUD operations
-   - Test Connection & Sync
-   - Logs viewer
-   - Backend APIs: full CRUD + toggle, test, sync, logs
+4. **Bug Fix** ✅
+   - Fixed SecurityCenterPage import error (changed from named to default export)
 
-### Test Results (iteration_26.json):
-- ✅ Backend: 100% (21/21 tests passed)
+### Test Results (iteration_27.json):
+- ✅ Backend: 100% (18/18 tests passed)
 - ✅ Frontend: 100% (all features working)
-- ✅ UserDetailsPage: Back button, edit form, reset password, action buttons, creator name
-- ✅ IntegrationsPage: Page load, add/edit/delete, toggle, test, sync
-- ✅ PlatformAnalyticsPage: Charts, stats, AI builder, tabs, filters
+- ✅ PlatformSettingsPage: All 7 tabs fully functional with backend integration
+- ✅ API Keys Management: Create, list, revoke working correctly
+- ✅ IntegrationsPage: All features verified
