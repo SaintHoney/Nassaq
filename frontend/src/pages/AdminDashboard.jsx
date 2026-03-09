@@ -37,6 +37,7 @@ import {
 } from 'recharts';
 import { jsPDF } from 'jspdf';
 import CreateSchoolWizard from '../components/wizards/CreateSchoolWizard';
+import CreateUserWizard from '../components/wizards/CreateUserWizard';
 import QuickAIOperationsPanel from '../components/ai/QuickAIOperationsPanel';
 
 // Hakim Avatar
