@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
-import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import {
   Dialog,
@@ -25,17 +24,290 @@ import { toast } from 'sonner';
 import {
   User, Mail, Phone, MapPin, Shield, Eye, EyeOff, Copy, Check,
   ChevronLeft, ChevronRight, UserPlus, Settings, Lock, Send,
-  CheckCircle2, XCircle, Plus, Minus, AlertTriangle, Sparkles,
+  CheckCircle2, XCircle, Plus, AlertTriangle, Sparkles,
   Building2, Users, BarChart3, Activity, FileText, Brain,
   GraduationCap, UserCheck, CalendarCheck, Bell, MessageSquare,
-  Link2, Archive, Server, Database, Search, Key
+  Link2, Archive, Server, Database, Key, School
 } from 'lucide-react';
+
+// =============================================================
+// مناطق ومدن المملكة العربية السعودية
+// =============================================================
+
+const SAUDI_REGIONS = [
+  {
+    id: 'riyadh',
+    name: 'منطقة الرياض',
+    name_en: 'Riyadh Region',
+    cities: [
+      { id: 'riyadh', name: 'الرياض', name_en: 'Riyadh' },
+      { id: 'kharj', name: 'الخرج', name_en: 'Al-Kharj' },
+      { id: 'dawadmi', name: 'الدوادمي', name_en: 'Dawadmi' },
+      { id: 'majmaah', name: 'المجمعة', name_en: 'Al-Majmaah' },
+      { id: 'quwayiyah', name: 'القويعية', name_en: 'Al-Quwayiyah' },
+      { id: 'wadi_dawasir', name: 'وادي الدواسر', name_en: 'Wadi Al-Dawasir' },
+      { id: 'aflaj', name: 'الأفلاج', name_en: 'Al-Aflaj' },
+      { id: 'zulfi', name: 'الزلفي', name_en: 'Az-Zulfi' },
+      { id: 'shaqra', name: 'شقراء', name_en: 'Shaqra' },
+      { id: 'hotat_bani_tamim', name: 'حوطة بني تميم', name_en: 'Hotat Bani Tamim' },
+      { id: 'afif', name: 'عفيف', name_en: 'Afif' },
+      { id: 'sulayil', name: 'السليل', name_en: 'As-Sulayyil' },
+      { id: 'dhruma', name: 'ضرما', name_en: 'Dhurma' },
+      { id: 'muzahimiyah', name: 'المزاحمية', name_en: 'Al-Muzahimiyah' },
+      { id: 'rumah', name: 'رماح', name_en: 'Rumah' },
+      { id: 'thadiq', name: 'ثادق', name_en: 'Thadiq' },
+      { id: 'huraymila', name: 'حريملاء', name_en: 'Huraymila' },
+      { id: 'diriyah', name: 'الدرعية', name_en: 'Diriyah' },
+    ],
+    educationalDepartments: [
+      { id: 'riyadh_edu', name: 'إدارة تعليم الرياض', name_en: 'Riyadh Education' },
+      { id: 'kharj_edu', name: 'إدارة تعليم الخرج', name_en: 'Al-Kharj Education' },
+      { id: 'dawadmi_edu', name: 'إدارة تعليم الدوادمي', name_en: 'Dawadmi Education' },
+      { id: 'majmaah_edu', name: 'إدارة تعليم المجمعة', name_en: 'Al-Majmaah Education' },
+      { id: 'quwayiyah_edu', name: 'إدارة تعليم القويعية', name_en: 'Al-Quwayiyah Education' },
+      { id: 'wadi_dawasir_edu', name: 'إدارة تعليم وادي الدواسر', name_en: 'Wadi Al-Dawasir Education' },
+      { id: 'aflaj_edu', name: 'إدارة تعليم الأفلاج', name_en: 'Al-Aflaj Education' },
+      { id: 'zulfi_edu', name: 'إدارة تعليم الزلفي', name_en: 'Az-Zulfi Education' },
+      { id: 'shaqra_edu', name: 'إدارة تعليم شقراء', name_en: 'Shaqra Education' },
+      { id: 'hotat_bani_tamim_edu', name: 'إدارة تعليم حوطة بني تميم', name_en: 'Hotat Bani Tamim Education' },
+      { id: 'afif_edu', name: 'إدارة تعليم عفيف', name_en: 'Afif Education' },
+    ]
+  },
+  {
+    id: 'makkah',
+    name: 'منطقة مكة المكرمة',
+    name_en: 'Makkah Region',
+    cities: [
+      { id: 'makkah', name: 'مكة المكرمة', name_en: 'Makkah' },
+      { id: 'jeddah', name: 'جدة', name_en: 'Jeddah' },
+      { id: 'taif', name: 'الطائف', name_en: 'Taif' },
+      { id: 'qunfudhah', name: 'القنفذة', name_en: 'Al-Qunfudhah' },
+      { id: 'lith', name: 'الليث', name_en: 'Al-Lith' },
+      { id: 'rabigh', name: 'رابغ', name_en: 'Rabigh' },
+      { id: 'khulais', name: 'خليص', name_en: 'Khulais' },
+      { id: 'jumum', name: 'الجموم', name_en: 'Al-Jumum' },
+      { id: 'kamil', name: 'الكامل', name_en: 'Al-Kamil' },
+      { id: 'moya', name: 'ميسان', name_en: 'Maysan' },
+      { id: 'adham', name: 'أضم', name_en: 'Adham' },
+      { id: 'turubah', name: 'تربة', name_en: 'Turubah' },
+      { id: 'ranyah', name: 'رنية', name_en: 'Ranyah' },
+      { id: 'khurma', name: 'الخرمة', name_en: 'Al-Khurma' },
+      { id: 'muwayh', name: 'المويه', name_en: 'Al-Muwayh' },
+    ],
+    educationalDepartments: [
+      { id: 'makkah_edu', name: 'إدارة تعليم مكة المكرمة', name_en: 'Makkah Education' },
+      { id: 'jeddah_edu', name: 'إدارة تعليم جدة', name_en: 'Jeddah Education' },
+      { id: 'taif_edu', name: 'إدارة تعليم الطائف', name_en: 'Taif Education' },
+      { id: 'qunfudhah_edu', name: 'إدارة تعليم القنفذة', name_en: 'Al-Qunfudhah Education' },
+      { id: 'lith_edu', name: 'إدارة تعليم الليث', name_en: 'Al-Lith Education' },
+    ]
+  },
+  {
+    id: 'madinah',
+    name: 'منطقة المدينة المنورة',
+    name_en: 'Madinah Region',
+    cities: [
+      { id: 'madinah', name: 'المدينة المنورة', name_en: 'Madinah' },
+      { id: 'yanbu', name: 'ينبع', name_en: 'Yanbu' },
+      { id: 'ula', name: 'العلا', name_en: 'Al-Ula' },
+      { id: 'mahd', name: 'مهد الذهب', name_en: 'Mahd Al-Dhahab' },
+      { id: 'badr', name: 'بدر', name_en: 'Badr' },
+      { id: 'khaybar', name: 'خيبر', name_en: 'Khaybar' },
+      { id: 'hanakiyah', name: 'الحناكية', name_en: 'Al-Hanakiyah' },
+    ],
+    educationalDepartments: [
+      { id: 'madinah_edu', name: 'إدارة تعليم المدينة المنورة', name_en: 'Madinah Education' },
+      { id: 'yanbu_edu', name: 'إدارة تعليم ينبع', name_en: 'Yanbu Education' },
+      { id: 'ula_edu', name: 'إدارة تعليم العلا', name_en: 'Al-Ula Education' },
+      { id: 'mahd_edu', name: 'إدارة تعليم مهد الذهب', name_en: 'Mahd Al-Dhahab Education' },
+    ]
+  },
+  {
+    id: 'eastern',
+    name: 'المنطقة الشرقية',
+    name_en: 'Eastern Province',
+    cities: [
+      { id: 'dammam', name: 'الدمام', name_en: 'Dammam' },
+      { id: 'dhahran', name: 'الظهران', name_en: 'Dhahran' },
+      { id: 'khobar', name: 'الخبر', name_en: 'Al-Khobar' },
+      { id: 'qatif', name: 'القطيف', name_en: 'Qatif' },
+      { id: 'jubail', name: 'الجبيل', name_en: 'Jubail' },
+      { id: 'hofuf', name: 'الهفوف', name_en: 'Al-Hofuf' },
+      { id: 'mubarraz', name: 'المبرز', name_en: 'Al-Mubarraz' },
+      { id: 'hafr_albatin', name: 'حفر الباطن', name_en: 'Hafr Al-Batin' },
+      { id: 'ras_tanura', name: 'رأس تنورة', name_en: 'Ras Tanura' },
+      { id: 'buqayq', name: 'بقيق', name_en: 'Buqayq' },
+      { id: 'khafji', name: 'الخفجي', name_en: 'Al-Khafji' },
+      { id: 'nuayriyah', name: 'النعيرية', name_en: "An-Nu'ayriyah" },
+      { id: 'qaryat_ulya', name: 'قرية العليا', name_en: "Qaryat Al-'Ulya" },
+    ],
+    educationalDepartments: [
+      { id: 'eastern_edu', name: 'إدارة تعليم المنطقة الشرقية', name_en: 'Eastern Province Education' },
+      { id: 'ahsa_edu', name: 'إدارة تعليم الأحساء', name_en: 'Al-Ahsa Education' },
+      { id: 'hafr_edu', name: 'إدارة تعليم حفر الباطن', name_en: 'Hafr Al-Batin Education' },
+    ]
+  },
+  {
+    id: 'asir',
+    name: 'منطقة عسير',
+    name_en: 'Asir Region',
+    cities: [
+      { id: 'abha', name: 'أبها', name_en: 'Abha' },
+      { id: 'khamis_mushait', name: 'خميس مشيط', name_en: 'Khamis Mushait' },
+      { id: 'bisha', name: 'بيشة', name_en: 'Bisha' },
+      { id: 'namas', name: 'النماص', name_en: 'An-Namas' },
+      { id: 'muhayil', name: 'محايل عسير', name_en: 'Muhayil Asir' },
+      { id: 'sarat_abidah', name: 'سراة عبيدة', name_en: 'Sarat Abidah' },
+      { id: 'rijal_alma', name: 'رجال ألمع', name_en: 'Rijal Almaa' },
+      { id: 'ahad_rufaydah', name: 'أحد رفيدة', name_en: 'Ahad Rufaydah' },
+      { id: 'dhahran_aljanoub', name: 'ظهران الجنوب', name_en: 'Dhahran Al-Janoub' },
+      { id: 'tathlith', name: 'تثليث', name_en: 'Tathlith' },
+      { id: 'balqarn', name: 'بلقرن', name_en: 'Balqarn' },
+      { id: 'majardah', name: 'المجاردة', name_en: 'Al-Majardah' },
+      { id: 'bariq', name: 'بارق', name_en: 'Bariq' },
+    ],
+    educationalDepartments: [
+      { id: 'asir_edu', name: 'إدارة تعليم عسير', name_en: 'Asir Education' },
+      { id: 'bisha_edu', name: 'إدارة تعليم بيشة', name_en: 'Bisha Education' },
+      { id: 'namas_edu', name: 'إدارة تعليم النماص', name_en: 'An-Namas Education' },
+      { id: 'muhayil_edu', name: 'إدارة تعليم محايل عسير', name_en: 'Muhayil Asir Education' },
+      { id: 'sarat_abidah_edu', name: 'إدارة تعليم سراة عبيدة', name_en: 'Sarat Abidah Education' },
+    ]
+  },
+  {
+    id: 'qassim',
+    name: 'منطقة القصيم',
+    name_en: 'Qassim Region',
+    cities: [
+      { id: 'buraidah', name: 'بريدة', name_en: 'Buraidah' },
+      { id: 'unayzah', name: 'عنيزة', name_en: 'Unayzah' },
+      { id: 'rass', name: 'الرس', name_en: 'Ar-Rass' },
+      { id: 'bukayriyah', name: 'البكيرية', name_en: 'Al-Bukayriyah' },
+      { id: 'badaya', name: 'البدائع', name_en: 'Al-Badaya' },
+      { id: 'mithnab', name: 'المذنب', name_en: 'Al-Mithnab' },
+      { id: 'shimasiyah', name: 'الشماسية', name_en: 'Ash-Shimasiyah' },
+      { id: 'asyah', name: 'عيون الجواء', name_en: "Uyun Al-Jawa" },
+      { id: 'riyadh_alkhabra', name: 'رياض الخبراء', name_en: 'Riyadh Al-Khabra' },
+    ],
+    educationalDepartments: [
+      { id: 'qassim_edu', name: 'إدارة تعليم القصيم', name_en: 'Qassim Education' },
+      { id: 'rass_edu', name: 'إدارة تعليم الرس', name_en: 'Ar-Rass Education' },
+    ]
+  },
+  {
+    id: 'tabuk',
+    name: 'منطقة تبوك',
+    name_en: 'Tabuk Region',
+    cities: [
+      { id: 'tabuk', name: 'تبوك', name_en: 'Tabuk' },
+      { id: 'umluj', name: 'أملج', name_en: 'Umluj' },
+      { id: 'wajh', name: 'الوجه', name_en: 'Al-Wajh' },
+      { id: 'duba', name: 'ضباء', name_en: 'Duba' },
+      { id: 'tayma', name: 'تيماء', name_en: 'Tayma' },
+      { id: 'haql', name: 'حقل', name_en: 'Haql' },
+    ],
+    educationalDepartments: [
+      { id: 'tabuk_edu', name: 'إدارة تعليم تبوك', name_en: 'Tabuk Education' },
+      { id: 'wajh_edu', name: 'إدارة تعليم الوجه', name_en: 'Al-Wajh Education' },
+    ]
+  },
+  {
+    id: 'hail',
+    name: 'منطقة حائل',
+    name_en: 'Hail Region',
+    cities: [
+      { id: 'hail', name: 'حائل', name_en: 'Hail' },
+      { id: 'baqaa', name: 'بقعاء', name_en: "Baqa'a" },
+      { id: 'ghazalah', name: 'الغزالة', name_en: 'Al-Ghazalah' },
+      { id: 'shinan', name: 'الشنان', name_en: 'Ash-Shinan' },
+      { id: 'shamli', name: 'الشملي', name_en: 'Ash-Shamli' },
+    ],
+    educationalDepartments: [
+      { id: 'hail_edu', name: 'إدارة تعليم حائل', name_en: 'Hail Education' },
+    ]
+  },
+  {
+    id: 'northern_borders',
+    name: 'منطقة الحدود الشمالية',
+    name_en: 'Northern Borders Region',
+    cities: [
+      { id: 'arar', name: 'عرعر', name_en: 'Arar' },
+      { id: 'rafha', name: 'رفحاء', name_en: 'Rafha' },
+      { id: 'turayf', name: 'طريف', name_en: 'Turayf' },
+    ],
+    educationalDepartments: [
+      { id: 'northern_borders_edu', name: 'إدارة تعليم الحدود الشمالية', name_en: 'Northern Borders Education' },
+    ]
+  },
+  {
+    id: 'jazan',
+    name: 'منطقة جازان',
+    name_en: 'Jazan Region',
+    cities: [
+      { id: 'jazan', name: 'جازان', name_en: 'Jazan' },
+      { id: 'sabya', name: 'صبيا', name_en: 'Sabya' },
+      { id: 'abu_arish', name: 'أبو عريش', name_en: 'Abu Arish' },
+      { id: 'samtah', name: 'صامطة', name_en: 'Samtah' },
+      { id: 'ahad_almasarihah', name: 'أحد المسارحة', name_en: 'Ahad Al-Masarihah' },
+      { id: 'damad', name: 'ضمد', name_en: 'Damad' },
+      { id: 'farasan', name: 'فرسان', name_en: 'Farasan' },
+    ],
+    educationalDepartments: [
+      { id: 'jazan_edu', name: 'إدارة تعليم جازان', name_en: 'Jazan Education' },
+      { id: 'sabya_edu', name: 'إدارة تعليم صبيا', name_en: 'Sabya Education' },
+    ]
+  },
+  {
+    id: 'najran',
+    name: 'منطقة نجران',
+    name_en: 'Najran Region',
+    cities: [
+      { id: 'najran', name: 'نجران', name_en: 'Najran' },
+      { id: 'sharorah', name: 'شرورة', name_en: 'Sharorah' },
+      { id: 'habuna', name: 'حبونا', name_en: 'Habuna' },
+      { id: 'badr_aljanoub', name: 'بدر الجنوب', name_en: 'Badr Al-Janoub' },
+    ],
+    educationalDepartments: [
+      { id: 'najran_edu', name: 'إدارة تعليم نجران', name_en: 'Najran Education' },
+      { id: 'sharorah_edu', name: 'إدارة تعليم شرورة', name_en: 'Sharorah Education' },
+    ]
+  },
+  {
+    id: 'bahah',
+    name: 'منطقة الباحة',
+    name_en: 'Al-Bahah Region',
+    cities: [
+      { id: 'bahah', name: 'الباحة', name_en: 'Al-Bahah' },
+      { id: 'baljurashi', name: 'بلجرشي', name_en: 'Baljurashi' },
+      { id: 'mandaq', name: 'المندق', name_en: 'Al-Mandaq' },
+      { id: 'makhwah', name: 'المخواة', name_en: 'Al-Makhwah' },
+      { id: 'qilwah', name: 'قلوة', name_en: 'Qilwah' },
+    ],
+    educationalDepartments: [
+      { id: 'bahah_edu', name: 'إدارة تعليم الباحة', name_en: 'Al-Bahah Education' },
+    ]
+  },
+  {
+    id: 'jouf',
+    name: 'منطقة الجوف',
+    name_en: 'Al-Jouf Region',
+    cities: [
+      { id: 'sakakah', name: 'سكاكا', name_en: 'Sakakah' },
+      { id: 'dumat_aljandal', name: 'دومة الجندل', name_en: 'Dumat Al-Jandal' },
+      { id: 'qurayyat', name: 'القريات', name_en: 'Al-Qurayyat' },
+      { id: 'tabarjal', name: 'طبرجل', name_en: 'Tabarjal' },
+    ],
+    educationalDepartments: [
+      { id: 'jouf_edu', name: 'إدارة تعليم الجوف', name_en: 'Al-Jouf Education' },
+      { id: 'qurayyat_edu', name: 'إدارة تعليم القريات', name_en: 'Al-Qurayyat Education' },
+    ]
+  },
+];
 
 // =============================================================
 // نظام الأدوار والصلاحيات - Roles & Permissions System (RBAC)
 // =============================================================
 
-// الأدوار المتاحة لمدير المنصة
 const AVAILABLE_ROLES = [
   {
     id: 'platform_operations_manager',
@@ -102,644 +374,20 @@ const AVAILABLE_ROLES = [
   },
 ];
 
-// تعريف جميع الصلاحيات المتاحة
-const ALL_PERMISSIONS = {
-  // صلاحيات عرض وتحليل النظام
-  view_platform_dashboard: {
-    id: 'view_platform_dashboard',
-    name: 'عرض لوحة التحكم',
-    name_en: 'View Platform Dashboard',
-    category: 'system_view',
-    icon: Activity,
-  },
-  view_platform_analytics: {
-    id: 'view_platform_analytics',
-    name: 'عرض مؤشرات المنصة',
-    name_en: 'View Platform Analytics',
-    category: 'system_view',
-    icon: BarChart3,
-  },
-  view_daily_activity: {
-    id: 'view_daily_activity',
-    name: 'عرض النشاط اليومي',
-    name_en: 'View Daily Activity',
-    category: 'system_view',
-    icon: Activity,
-  },
-  view_operational_reports: {
-    id: 'view_operational_reports',
-    name: 'عرض التقارير التشغيلية',
-    name_en: 'View Operational Reports',
-    category: 'system_view',
-    icon: FileText,
-  },
-  
-  // صلاحيات إدارة المدارس
-  view_schools: {
-    id: 'view_schools',
-    name: 'عرض المدارس',
-    name_en: 'View Schools',
-    category: 'schools',
-    icon: Building2,
-  },
-  open_school_panel: {
-    id: 'open_school_panel',
-    name: 'فتح لوحة المدرسة',
-    name_en: 'Open School Panel',
-    category: 'schools',
-    icon: Building2,
-  },
-  view_school_data: {
-    id: 'view_school_data',
-    name: 'عرض بيانات المدرسة',
-    name_en: 'View School Data',
-    category: 'schools',
-    icon: Eye,
-  },
-  review_subscription: {
-    id: 'review_subscription',
-    name: 'مراجعة حالة الاشتراك',
-    name_en: 'Review Subscription Status',
-    category: 'schools',
-    icon: CheckCircle2,
-  },
-  review_data_completeness: {
-    id: 'review_data_completeness',
-    name: 'مراجعة اكتمال البيانات',
-    name_en: 'Review Data Completeness',
-    category: 'schools',
-    icon: Database,
-  },
-  delete_schools: {
-    id: 'delete_schools',
-    name: 'حذف المدارس',
-    name_en: 'Delete Schools',
-    category: 'schools',
-    icon: XCircle,
-    dangerous: true,
-  },
-  
-  // صلاحيات المستخدمين
-  view_users: {
-    id: 'view_users',
-    name: 'عرض المستخدمين',
-    name_en: 'View Users',
-    category: 'users',
-    icon: Users,
-  },
-  review_user_accounts: {
-    id: 'review_user_accounts',
-    name: 'مراجعة بيانات الحسابات',
-    name_en: 'Review User Accounts',
-    category: 'users',
-    icon: UserCheck,
-  },
-  resend_login_invitation: {
-    id: 'resend_login_invitation',
-    name: 'إعادة إرسال دعوة الدخول',
-    name_en: 'Resend Login Invitation',
-    category: 'users',
-    icon: Send,
-  },
-  reset_password: {
-    id: 'reset_password',
-    name: 'إعادة تعيين كلمة المرور',
-    name_en: 'Reset Password',
-    category: 'users',
-    icon: Lock,
-  },
-  activate_accounts: {
-    id: 'activate_accounts',
-    name: 'تفعيل الحسابات',
-    name_en: 'Activate Accounts',
-    category: 'users',
-    icon: CheckCircle2,
-  },
-  suspend_accounts: {
-    id: 'suspend_accounts',
-    name: 'تعليق الحسابات مؤقتاً',
-    name_en: 'Suspend Accounts',
-    category: 'users',
-    icon: AlertTriangle,
-  },
-  create_admin_users: {
-    id: 'create_admin_users',
-    name: 'إنشاء مستخدمين إداريين',
-    name_en: 'Create Admin Users',
-    category: 'users',
-    icon: UserPlus,
-    dangerous: true,
-  },
-  delete_users: {
-    id: 'delete_users',
-    name: 'حذف المستخدمين',
-    name_en: 'Delete Users',
-    category: 'users',
-    icon: XCircle,
-    dangerous: true,
-  },
-  modify_permissions: {
-    id: 'modify_permissions',
-    name: 'تعديل الصلاحيات',
-    name_en: 'Modify Permissions',
-    category: 'users',
-    icon: Shield,
-    dangerous: true,
-  },
-  
-  // صلاحيات طلبات الحسابات
-  view_teacher_requests: {
-    id: 'view_teacher_requests',
-    name: 'عرض طلبات المعلمين',
-    name_en: 'View Teacher Requests',
-    category: 'requests',
-    icon: FileText,
-  },
-  review_requests: {
-    id: 'review_requests',
-    name: 'مراجعة الطلبات',
-    name_en: 'Review Requests',
-    category: 'requests',
-    icon: Eye,
-  },
-  request_additional_info: {
-    id: 'request_additional_info',
-    name: 'طلب معلومات إضافية',
-    name_en: 'Request Additional Info',
-    category: 'requests',
-    icon: MessageSquare,
-  },
-  
-  // صلاحيات التقارير
-  view_performance_reports: {
-    id: 'view_performance_reports',
-    name: 'عرض تقارير الأداء',
-    name_en: 'View Performance Reports',
-    category: 'reports',
-    icon: BarChart3,
-  },
-  view_activity_reports: {
-    id: 'view_activity_reports',
-    name: 'عرض تقارير النشاط',
-    name_en: 'View Activity Reports',
-    category: 'reports',
-    icon: Activity,
-  },
-  create_operational_reports: {
-    id: 'create_operational_reports',
-    name: 'إنشاء تقارير تشغيلية',
-    name_en: 'Create Operational Reports',
-    category: 'reports',
-    icon: FileText,
-  },
-  export_reports: {
-    id: 'export_reports',
-    name: 'تصدير التقارير',
-    name_en: 'Export Reports',
-    category: 'reports',
-    icon: Archive,
-  },
-  
-  // صلاحيات الذكاء الاصطناعي
-  run_ai_analytics: {
-    id: 'run_ai_analytics',
-    name: 'تشغيل تحليلات AI',
-    name_en: 'Run AI Analytics',
-    category: 'ai',
-    icon: Brain,
-  },
-  view_ai_insights: {
-    id: 'view_ai_insights',
-    name: 'عرض AI Insights',
-    name_en: 'View AI Insights',
-    category: 'ai',
-    icon: Sparkles,
-  },
-  run_ai_summary: {
-    id: 'run_ai_summary',
-    name: 'تشغيل AI Executive Summary',
-    name_en: 'Run AI Executive Summary',
-    category: 'ai',
-    icon: FileText,
-  },
-  run_ai_data_quality: {
-    id: 'run_ai_data_quality',
-    name: 'تشغيل AI Data Quality Scan',
-    name_en: 'Run AI Data Quality Scan',
-    category: 'ai',
-    icon: Database,
-  },
-  run_ai_import_analyzer: {
-    id: 'run_ai_import_analyzer',
-    name: 'تشغيل AI Import Analyzer',
-    name_en: 'Run AI Import Analyzer',
-    category: 'ai',
-    icon: Archive,
-  },
-  run_ai_security: {
-    id: 'run_ai_security',
-    name: 'تشغيل AI Security Analysis',
-    name_en: 'Run AI Security Analysis',
-    category: 'ai',
-    icon: Shield,
-  },
-  
-  // صلاحيات مراقبة النظام
-  access_system_monitoring: {
-    id: 'access_system_monitoring',
-    name: 'الوصول لمراقبة النظام',
-    name_en: 'Access System Monitoring',
-    category: 'system',
-    icon: Server,
-  },
-  view_server_status: {
-    id: 'view_server_status',
-    name: 'عرض حالة الخوادم',
-    name_en: 'View Server Status',
-    category: 'system',
-    icon: Server,
-  },
-  view_resource_usage: {
-    id: 'view_resource_usage',
-    name: 'عرض استهلاك الموارد',
-    name_en: 'View Resource Usage',
-    category: 'system',
-    icon: Activity,
-  },
-  view_db_performance: {
-    id: 'view_db_performance',
-    name: 'عرض أداء قواعد البيانات',
-    name_en: 'View Database Performance',
-    category: 'system',
-    icon: Database,
-  },
-  view_api_performance: {
-    id: 'view_api_performance',
-    name: 'عرض أداء API',
-    name_en: 'View API Performance',
-    category: 'system',
-    icon: Link2,
-  },
-  run_health_check: {
-    id: 'run_health_check',
-    name: 'تشغيل System Health Check',
-    name_en: 'Run System Health Check',
-    category: 'system',
-    icon: CheckCircle2,
-  },
-  restart_services: {
-    id: 'restart_services',
-    name: 'إعادة تشغيل الخدمات',
-    name_en: 'Restart Services',
-    category: 'system',
-    icon: Settings,
-    dangerous: true,
-  },
-  
-  // صلاحيات السجلات
-  view_system_logs: {
-    id: 'view_system_logs',
-    name: 'عرض سجلات النظام',
-    name_en: 'View System Logs',
-    category: 'logs',
-    icon: FileText,
-  },
-  view_error_logs: {
-    id: 'view_error_logs',
-    name: 'عرض سجلات الأخطاء',
-    name_en: 'View Error Logs',
-    category: 'logs',
-    icon: AlertTriangle,
-  },
-  view_performance_logs: {
-    id: 'view_performance_logs',
-    name: 'عرض سجلات الأداء',
-    name_en: 'View Performance Logs',
-    category: 'logs',
-    icon: BarChart3,
-  },
-  view_audit_logs: {
-    id: 'view_audit_logs',
-    name: 'عرض Audit Logs',
-    name_en: 'View Audit Logs',
-    category: 'logs',
-    icon: FileText,
-  },
-  view_security_logs: {
-    id: 'view_security_logs',
-    name: 'عرض Security Logs',
-    name_en: 'View Security Logs',
-    category: 'logs',
-    icon: Shield,
-  },
-  
-  // صلاحيات التكاملات
-  view_integrations: {
-    id: 'view_integrations',
-    name: 'عرض التكاملات',
-    name_en: 'View Integrations',
-    category: 'integrations',
-    icon: Link2,
-  },
-  test_external_connections: {
-    id: 'test_external_connections',
-    name: 'اختبار الاتصالات الخارجية',
-    name_en: 'Test External Connections',
-    category: 'integrations',
-    icon: Link2,
-  },
-  resync_data: {
-    id: 'resync_data',
-    name: 'إعادة مزامنة البيانات',
-    name_en: 'Resync Data',
-    category: 'integrations',
-    icon: Settings,
-  },
-  manage_integrations: {
-    id: 'manage_integrations',
-    name: 'إدارة التكاملات',
-    name_en: 'Manage Integrations',
-    category: 'integrations',
-    icon: Settings,
-    dangerous: true,
-  },
-  
-  // صلاحيات الأمان
-  access_security_center: {
-    id: 'access_security_center',
-    name: 'الوصول لمركز الأمان',
-    name_en: 'Access Security Center',
-    category: 'security',
-    icon: Shield,
-  },
-  view_security_incidents: {
-    id: 'view_security_incidents',
-    name: 'عرض الحوادث الأمنية',
-    name_en: 'View Security Incidents',
-    category: 'security',
-    icon: AlertTriangle,
-  },
-  view_failed_logins: {
-    id: 'view_failed_logins',
-    name: 'عرض محاولات الدخول الفاشلة',
-    name_en: 'View Failed Login Attempts',
-    category: 'security',
-    icon: XCircle,
-  },
-  view_locked_accounts: {
-    id: 'view_locked_accounts',
-    name: 'عرض الحسابات المقفلة',
-    name_en: 'View Locked Accounts',
-    category: 'security',
-    icon: Lock,
-  },
-  end_user_sessions: {
-    id: 'end_user_sessions',
-    name: 'إنهاء جلسات المستخدمين',
-    name_en: 'End User Sessions',
-    category: 'security',
-    icon: XCircle,
-  },
-  lock_suspicious_accounts: {
-    id: 'lock_suspicious_accounts',
-    name: 'قفل الحسابات المشبوهة',
-    name_en: 'Lock Suspicious Accounts',
-    category: 'security',
-    icon: Lock,
-  },
-  create_security_reports: {
-    id: 'create_security_reports',
-    name: 'إنشاء تقارير أمنية',
-    name_en: 'Create Security Reports',
-    category: 'security',
-    icon: FileText,
-  },
-  export_security_logs: {
-    id: 'export_security_logs',
-    name: 'تصدير سجلات الأمان',
-    name_en: 'Export Security Logs',
-    category: 'security',
-    icon: Archive,
-  },
-  
-  // صلاحيات الرسائل
-  send_user_messages: {
-    id: 'send_user_messages',
-    name: 'إرسال رسائل للمستخدمين',
-    name_en: 'Send User Messages',
-    category: 'communication',
-    icon: MessageSquare,
-  },
-  send_notifications: {
-    id: 'send_notifications',
-    name: 'إرسال إشعارات',
-    name_en: 'Send Notifications',
-    category: 'communication',
-    icon: Bell,
-  },
-  
-  // صلاحيات إعدادات النظام
-  modify_system_settings: {
-    id: 'modify_system_settings',
-    name: 'تعديل إعدادات النظام',
-    name_en: 'Modify System Settings',
-    category: 'settings',
-    icon: Settings,
-    dangerous: true,
-  },
-  modify_rules: {
-    id: 'modify_rules',
-    name: 'تعديل القواعد التعليمية',
-    name_en: 'Modify Educational Rules',
-    category: 'settings',
-    icon: FileText,
-    dangerous: true,
-  },
-  
-  // صلاحيات المعلم
-  view_classes: {
-    id: 'view_classes',
-    name: 'عرض الفصول',
-    name_en: 'View Classes',
-    category: 'teacher',
-    icon: Building2,
-  },
-  manage_own_class: {
-    id: 'manage_own_class',
-    name: 'إدارة فصله الخاص',
-    name_en: 'Manage Own Class',
-    category: 'teacher',
-    icon: Settings,
-  },
-  view_class_students: {
-    id: 'view_class_students',
-    name: 'عرض طلاب فصوله',
-    name_en: 'View Class Students',
-    category: 'teacher',
-    icon: Users,
-  },
-  record_attendance: {
-    id: 'record_attendance',
-    name: 'تسجيل الحضور',
-    name_en: 'Record Attendance',
-    category: 'teacher',
-    icon: CalendarCheck,
-  },
-  create_assignments: {
-    id: 'create_assignments',
-    name: 'إنشاء واجبات',
-    name_en: 'Create Assignments',
-    category: 'teacher',
-    icon: FileText,
-  },
-  grade_assignments: {
-    id: 'grade_assignments',
-    name: 'تصحيح الواجبات',
-    name_en: 'Grade Assignments',
-    category: 'teacher',
-    icon: CheckCircle2,
-  },
-  enter_grades: {
-    id: 'enter_grades',
-    name: 'إدخال الدرجات',
-    name_en: 'Enter Grades',
-    category: 'teacher',
-    icon: BarChart3,
-  },
-  view_student_reports: {
-    id: 'view_student_reports',
-    name: 'عرض تقارير الطلاب',
-    name_en: 'View Student Reports',
-    category: 'teacher',
-    icon: FileText,
-  },
-  message_students: {
-    id: 'message_students',
-    name: 'مراسلة الطلاب',
-    name_en: 'Message Students',
-    category: 'teacher',
-    icon: MessageSquare,
-  },
-  message_parents: {
-    id: 'message_parents',
-    name: 'مراسلة أولياء الأمور',
-    name_en: 'Message Parents',
-    category: 'teacher',
-    icon: MessageSquare,
-  },
-  use_ai_assistant: {
-    id: 'use_ai_assistant',
-    name: 'استخدام مساعد AI التعليمي',
-    name_en: 'Use AI Teaching Assistant',
-    category: 'teacher',
-    icon: Brain,
-  },
-  
-  // صلاحيات الاختبار
-  access_all_pages: {
-    id: 'access_all_pages',
-    name: 'الوصول لصفحات النظام',
-    name_en: 'Access System Pages',
-    category: 'testing',
-    icon: Eye,
-  },
-  test_features: {
-    id: 'test_features',
-    name: 'تجربة الميزات',
-    name_en: 'Test Features',
-    category: 'testing',
-    icon: Settings,
-  },
-  create_test_data: {
-    id: 'create_test_data',
-    name: 'إنشاء بيانات اختبارية',
-    name_en: 'Create Test Data',
-    category: 'testing',
-    icon: Plus,
-  },
-  test_ai_features: {
-    id: 'test_ai_features',
-    name: 'تجربة ميزات AI',
-    name_en: 'Test AI Features',
-    category: 'testing',
-    icon: Brain,
-  },
-  modify_real_data: {
-    id: 'modify_real_data',
-    name: 'تعديل بيانات حقيقية',
-    name_en: 'Modify Real Data',
-    category: 'testing',
-    icon: Settings,
-    dangerous: true,
-  },
-};
-
-// الصلاحيات الافتراضية لكل دور
-const DEFAULT_ROLE_PERMISSIONS = {
-  platform_operations_manager: [
-    'view_platform_dashboard', 'view_platform_analytics', 'view_daily_activity', 'view_operational_reports',
-    'view_schools', 'open_school_panel', 'view_school_data', 'review_subscription', 'review_data_completeness',
-    'view_users', 'review_user_accounts', 'resend_login_invitation',
-    'view_performance_reports', 'view_activity_reports', 'create_operational_reports',
-    'run_ai_analytics', 'view_ai_insights', 'run_ai_summary',
-  ],
-  platform_technical_admin: [
-    'access_system_monitoring', 'view_server_status', 'view_resource_usage', 'view_db_performance', 'view_api_performance',
-    'view_system_logs', 'view_error_logs', 'view_performance_logs',
-    'run_health_check', 'restart_services',
-    'view_integrations', 'test_external_connections', 'resync_data',
-    'run_ai_data_quality', 'run_ai_import_analyzer',
-  ],
-  platform_support_specialist: [
-    'view_users', 'review_user_accounts', 'reset_password', 'resend_login_invitation', 'activate_accounts', 'suspend_accounts',
-    'view_teacher_requests', 'review_requests', 'request_additional_info',
-    'view_schools', 'open_school_panel', 'view_school_data',
-    'send_user_messages', 'send_notifications',
-  ],
-  platform_data_analyst: [
-    'view_platform_analytics',
-    'view_performance_reports', 'view_activity_reports', 'create_operational_reports', 'export_reports',
-    'view_schools', 'view_school_data',
-    'view_users',
-    'run_ai_analytics', 'run_ai_summary', 'run_ai_data_quality',
-  ],
-  platform_security_officer: [
-    'access_security_center', 'view_security_incidents', 'view_failed_logins', 'view_locked_accounts',
-    'end_user_sessions', 'lock_suspicious_accounts',
-    'view_audit_logs', 'view_security_logs',
-    'create_security_reports', 'export_security_logs',
-    'run_ai_security',
-  ],
-  testing_account: [
-    'access_all_pages', 'test_features', 'create_test_data',
-    'view_performance_reports',
-    'test_ai_features',
-  ],
-  teacher: [
-    'view_classes', 'manage_own_class', 'view_class_students', 'record_attendance',
-    'create_assignments', 'grade_assignments', 'enter_grades', 'view_student_reports',
-    'message_students', 'message_parents',
-    'use_ai_assistant',
-  ],
-};
-
-// فئات الصلاحيات
-const PERMISSION_CATEGORIES = {
-  system_view: { label: 'عرض وتحليل النظام', label_en: 'System View & Analytics', icon: Activity },
-  schools: { label: 'إدارة المدارس', label_en: 'Schools Management', icon: Building2 },
-  users: { label: 'إدارة المستخدمين', label_en: 'Users Management', icon: Users },
-  requests: { label: 'طلبات الحسابات', label_en: 'Account Requests', icon: FileText },
-  reports: { label: 'التقارير', label_en: 'Reports', icon: BarChart3 },
-  ai: { label: 'الذكاء الاصطناعي', label_en: 'Artificial Intelligence', icon: Brain },
-  system: { label: 'مراقبة النظام', label_en: 'System Monitoring', icon: Server },
-  logs: { label: 'السجلات', label_en: 'Logs', icon: FileText },
-  integrations: { label: 'التكاملات', label_en: 'Integrations', icon: Link2 },
-  security: { label: 'الأمان', label_en: 'Security', icon: Shield },
-  communication: { label: 'التواصل', label_en: 'Communication', icon: MessageSquare },
-  settings: { label: 'الإعدادات', label_en: 'Settings', icon: Settings },
-  teacher: { label: 'صلاحيات المعلم', label_en: 'Teacher Permissions', icon: GraduationCap },
-  testing: { label: 'الاختبار', label_en: 'Testing', icon: Settings },
-};
+// تعريف الصلاحيات (مختصرة للمعلم)
+const TEACHER_PERMISSIONS = [
+  { id: 'view_classes', name: 'عرض الفصول', name_en: 'View Classes', icon: Building2 },
+  { id: 'manage_own_class', name: 'إدارة فصله الخاص', name_en: 'Manage Own Class', icon: Settings },
+  { id: 'view_class_students', name: 'عرض طلاب فصوله', name_en: 'View Class Students', icon: Users },
+  { id: 'record_attendance', name: 'تسجيل الحضور', name_en: 'Record Attendance', icon: CalendarCheck },
+  { id: 'create_assignments', name: 'إنشاء واجبات', name_en: 'Create Assignments', icon: FileText },
+  { id: 'grade_assignments', name: 'تصحيح الواجبات', name_en: 'Grade Assignments', icon: CheckCircle2 },
+  { id: 'enter_grades', name: 'إدخال الدرجات', name_en: 'Enter Grades', icon: BarChart3 },
+  { id: 'view_student_reports', name: 'عرض تقارير الطلاب', name_en: 'View Student Reports', icon: FileText },
+  { id: 'message_students', name: 'مراسلة الطلاب', name_en: 'Message Students', icon: MessageSquare },
+  { id: 'message_parents', name: 'مراسلة أولياء الأمور', name_en: 'Message Parents', icon: MessageSquare },
+  { id: 'use_ai_assistant', name: 'استخدام مساعد AI التعليمي', name_en: 'Use AI Teaching Assistant', icon: Brain },
+];
 
 // توليد كلمة مرور آمنة
 const generateSecurePassword = () => {
@@ -756,7 +404,6 @@ const generateSecurePassword = () => {
 // =============================================================
 
 export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, isRTL }) {
-  // خطوات المعالج
   const [step, setStep] = useState(1);
   const totalSteps = 5;
   
@@ -766,16 +413,15 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
     full_name: '',
     email: '',
     phone: '',
-    country: 'SA',
+    region: '',
     city: '',
-    department: '',
-    notes: '',
-    is_active: true,
+    educational_department: '',
+    school_name_ar: '',
+    school_name_en: '',
   });
   
   // الصلاحيات
   const [selectedPermissions, setSelectedPermissions] = useState([]);
-  const [expandedCategories, setExpandedCategories] = useState({});
   
   // كلمة المرور المؤقتة
   const [tempPassword, setTempPassword] = useState('');
@@ -787,13 +433,24 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdUser, setCreatedUser] = useState(null);
   
+  // الحصول على المنطقة والمدن والإدارات التعليمية
+  const selectedRegion = SAUDI_REGIONS.find(r => r.id === formData.region);
+  const availableCities = selectedRegion?.cities || [];
+  const availableEducationalDepts = selectedRegion?.educationalDepartments || [];
+  
   // عند اختيار دور، تحميل الصلاحيات الافتراضية
   useEffect(() => {
-    if (formData.role) {
-      const defaultPerms = DEFAULT_ROLE_PERMISSIONS[formData.role] || [];
-      setSelectedPermissions(defaultPerms);
+    if (formData.role === 'teacher') {
+      setSelectedPermissions(TEACHER_PERMISSIONS.map(p => p.id));
+    } else if (formData.role) {
+      setSelectedPermissions([]);
     }
   }, [formData.role]);
+  
+  // إعادة تعيين المدينة والإدارة عند تغيير المنطقة
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, city: '', educational_department: '' }));
+  }, [formData.region]);
   
   // إعادة تعيين النموذج عند الفتح
   useEffect(() => {
@@ -804,11 +461,11 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
         full_name: '',
         email: '',
         phone: '',
-        country: 'SA',
+        region: '',
         city: '',
-        department: '',
-        notes: '',
-        is_active: true,
+        educational_department: '',
+        school_name_ar: '',
+        school_name_en: '',
       });
       setSelectedPermissions([]);
       setTempPassword('');
@@ -825,26 +482,10 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
     );
   };
   
-  // تبديل فئة كاملة
-  const toggleCategory = (categoryId) => {
-    const categoryPerms = Object.values(ALL_PERMISSIONS)
-      .filter(p => p.category === categoryId)
-      .map(p => p.id);
-    
-    const allSelected = categoryPerms.every(p => selectedPermissions.includes(p));
-    
-    if (allSelected) {
-      setSelectedPermissions(prev => prev.filter(p => !categoryPerms.includes(p)));
-    } else {
-      setSelectedPermissions(prev => [...new Set([...prev, ...categoryPerms])]);
-    }
-  };
-  
   // الانتقال للخطوة التالية
   const nextStep = () => {
     if (step < totalSteps) {
       if (step === 4) {
-        // توليد كلمة المرور المؤقتة
         setTempPassword(generateSecurePassword());
       }
       setStep(step + 1);
@@ -864,6 +505,9 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
       case 1:
         return formData.role !== '';
       case 2:
+        if (formData.role === 'teacher') {
+          return formData.full_name && formData.email && formData.region && formData.city;
+        }
         return formData.full_name && formData.email;
       case 3:
         return selectedPermissions.length > 0;
@@ -874,28 +518,35 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
     }
   };
   
-  // حفظ الحساب
+  // حفظ الحساب - الربط مع Backend API
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // محاكاة إنشاء الحساب
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newUser = {
-        id: `user_${Date.now()}`,
-        ...formData,
+      const userData = {
+        email: formData.email,
+        password: tempPassword,
+        full_name: formData.full_name,
+        role: formData.role,
+        phone: formData.phone || null,
+        region: formData.region || null,
+        city: formData.city || null,
+        educational_department: formData.educational_department || null,
+        school_name_ar: formData.school_name_ar || null,
+        school_name_en: formData.school_name_en || null,
         permissions: selectedPermissions,
-        temp_password: tempPassword,
-        created_at: new Date().toISOString(),
       };
       
-      setCreatedUser(newUser);
-      setStep(5); // الانتقال لصفحة النجاح
+      const response = await api.post('/api/users/create', userData);
       
-      if (onSuccess) {
-        onSuccess(newUser);
+      if (response.data) {
+        setCreatedUser(response.data);
+        setStep(5);
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
       }
     } catch (error) {
+      console.error('Error creating user:', error);
       toast.error(isRTL ? 'حدث خطأ أثناء إنشاء الحساب' : 'Error creating account');
     } finally {
       setIsSubmitting(false);
@@ -941,35 +592,13 @@ ${loginUrl}
     toast.success(isRTL ? 'تم نسخ رسالة الترحيب' : 'Welcome message copied');
   };
   
-  // الحصول على معلومات الدور المختار
   const selectedRole = AVAILABLE_ROLES.find(r => r.id === formData.role);
-  
-  // تصنيف الصلاحيات حسب الفئة
-  const groupedPermissions = Object.values(ALL_PERMISSIONS).reduce((acc, perm) => {
-    if (!acc[perm.category]) acc[perm.category] = [];
-    acc[perm.category].push(perm);
-    return acc;
-  }, {});
-  
-  // فلترة الفئات المناسبة للدور
-  const relevantCategories = Object.keys(groupedPermissions).filter(cat => {
-    // للمعلم، عرض فقط الصلاحيات المتعلقة
-    if (formData.role === 'teacher') {
-      return ['teacher', 'communication'].includes(cat);
-    }
-    // لحسابات الاختبار
-    if (formData.role === 'testing_account') {
-      return ['testing', 'reports', 'ai'].includes(cat);
-    }
-    // للأدوار الأخرى، إخفاء صلاحيات المعلم والاختبار
-    return !['teacher', 'testing'].includes(cat);
-  });
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5">
+        <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 flex-shrink-0">
           <DialogTitle className="font-cairo text-xl flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-navy flex items-center justify-center">
               <UserPlus className="h-5 w-5 text-white" />
@@ -977,7 +606,7 @@ ${loginUrl}
             {isRTL ? 'إنشاء حساب مستخدم جديد' : 'Create New User Account'}
           </DialogTitle>
           <DialogDescription>
-            {isRTL ? 'اتبع الخطوات لإنشاء حساب إداري أو تشغيلي جديد' : 'Follow the steps to create a new admin or operational account'}
+            {isRTL ? 'اتبع الخطوات لإنشاء حساب جديد' : 'Follow the steps to create a new account'}
           </DialogDescription>
           
           {/* Progress Steps */}
@@ -1008,8 +637,8 @@ ${loginUrl}
           </div>
         </DialogHeader>
         
-        {/* Content */}
-        <ScrollArea className="max-h-[60vh]">
+        {/* Content - Scrollable */}
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-6">
             
             {/* ====================================== */}
@@ -1131,87 +760,110 @@ ${loginUrl}
                     />
                   </div>
                   
-                  {/* المدينة */}
+                  {/* المنطقة */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
-                      {isRTL ? 'المدينة' : 'City'}
+                      {isRTL ? 'المنطقة *' : 'Region *'}
                     </Label>
-                    <Select value={formData.city} onValueChange={(v) => setFormData({ ...formData, city: v })}>
+                    <Select value={formData.region} onValueChange={(v) => setFormData({ ...formData, region: v })}>
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder={isRTL ? 'اختر المنطقة' : 'Select region'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SAUDI_REGIONS.map((region) => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {isRTL ? region.name : region.name_en}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* المدينة */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      {isRTL ? 'المدينة *' : 'City *'}
+                    </Label>
+                    <Select 
+                      value={formData.city} 
+                      onValueChange={(v) => setFormData({ ...formData, city: v })}
+                      disabled={!formData.region}
+                    >
                       <SelectTrigger className="rounded-xl">
                         <SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="riyadh">{isRTL ? 'الرياض' : 'Riyadh'}</SelectItem>
-                        <SelectItem value="jeddah">{isRTL ? 'جدة' : 'Jeddah'}</SelectItem>
-                        <SelectItem value="dammam">{isRTL ? 'الدمام' : 'Dammam'}</SelectItem>
-                        <SelectItem value="makkah">{isRTL ? 'مكة المكرمة' : 'Makkah'}</SelectItem>
-                        <SelectItem value="madinah">{isRTL ? 'المدينة المنورة' : 'Madinah'}</SelectItem>
+                        {availableCities.map((city) => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {isRTL ? city.name : city.name_en}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  {/* القسم */}
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      {isRTL ? 'القسم / الوحدة الإدارية' : 'Department'}
-                    </Label>
-                    <Input
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      placeholder={isRTL ? 'مثال: إدارة التشغيل' : 'e.g., Operations'}
-                      className="rounded-xl"
-                      data-testid="user-department-input"
-                    />
-                  </div>
-                  
-                  {/* حالة الحساب */}
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {isRTL ? 'حالة الحساب' : 'Account Status'}
-                    </Label>
-                    <Select 
-                      value={formData.is_active ? 'active' : 'inactive'} 
-                      onValueChange={(v) => setFormData({ ...formData, is_active: v === 'active' })}
-                    >
-                      <SelectTrigger className="rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500" />
-                            {isRTL ? 'نشط' : 'Active'}
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="inactive">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-gray-400" />
-                            {isRTL ? 'غير نشط' : 'Inactive'}
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* الإدارة التعليمية - للمعلم فقط */}
+                  {formData.role === 'teacher' && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4" />
+                        {isRTL ? 'الإدارة التعليمية' : 'Educational Department'}
+                      </Label>
+                      <Select 
+                        value={formData.educational_department} 
+                        onValueChange={(v) => setFormData({ ...formData, educational_department: v })}
+                        disabled={!formData.region}
+                      >
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue placeholder={isRTL ? 'اختر الإدارة التعليمية' : 'Select department'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableEducationalDepts.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {isRTL ? dept.name : dept.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 
-                {/* ملاحظات */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    {isRTL ? 'ملاحظات إدارية' : 'Admin Notes'}
-                  </Label>
-                  <Textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder={isRTL ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
-                    className="rounded-xl resize-none"
-                    rows={3}
-                    data-testid="user-notes-input"
-                  />
-                </div>
+                {/* حقول المدرسة - للمعلم فقط */}
+                {formData.role === 'teacher' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <School className="h-4 w-4" />
+                        {isRTL ? 'اسم المدرسة (عربي)' : 'School Name (Arabic)'}
+                      </Label>
+                      <Input
+                        value={formData.school_name_ar}
+                        onChange={(e) => setFormData({ ...formData, school_name_ar: e.target.value })}
+                        placeholder={isRTL ? 'أدخل اسم المدرسة بالعربي' : 'Enter school name in Arabic'}
+                        className="rounded-xl"
+                        data-testid="school-name-ar-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <School className="h-4 w-4" />
+                        {isRTL ? 'اسم المدرسة (English)' : 'School Name (English)'}
+                      </Label>
+                      <Input
+                        value={formData.school_name_en}
+                        onChange={(e) => setFormData({ ...formData, school_name_en: e.target.value })}
+                        placeholder="Enter school name in English"
+                        className="rounded-xl"
+                        dir="ltr"
+                        data-testid="school-name-en-input"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
@@ -1245,93 +897,86 @@ ${loginUrl}
                   </div>
                 </div>
                 
-                {/* قائمة الصلاحيات حسب الفئة */}
-                <div className="space-y-4">
-                  {relevantCategories.map((categoryId) => {
-                    const category = PERMISSION_CATEGORIES[categoryId];
-                    const perms = groupedPermissions[categoryId] || [];
-                    const selectedInCategory = perms.filter(p => selectedPermissions.includes(p.id));
-                    const allSelected = perms.every(p => selectedPermissions.includes(p.id));
-                    const isExpanded = expandedCategories[categoryId] !== false;
-                    
-                    return (
-                      <Card key={categoryId} className="border-border">
-                        <CardHeader 
-                          className="p-3 cursor-pointer"
-                          onClick={() => setExpandedCategories(prev => ({
-                            ...prev,
-                            [categoryId]: !isExpanded
-                          }))}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-brand-navy/10 flex items-center justify-center">
-                                <category.icon className="h-4 w-4 text-brand-navy" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm">{isRTL ? category.label : category.label_en}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {selectedInCategory.length} / {perms.length} {isRTL ? 'محددة' : 'selected'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleCategory(categoryId);
-                                }}
-                              >
-                                {allSelected ? (isRTL ? 'إلغاء الكل' : 'Deselect All') : (isRTL ? 'تحديد الكل' : 'Select All')}
-                              </Button>
-                              <ChevronRight className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                            </div>
+                {/* قائمة الصلاحيات للمعلم */}
+                {formData.role === 'teacher' && (
+                  <Card className="border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <GraduationCap className="h-4 w-4 text-teal-600" />
                           </div>
-                        </CardHeader>
-                        
-                        {isExpanded && (
-                          <CardContent className="px-3 pb-3 pt-0">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {perms.map((perm) => {
-                                const isSelected = selectedPermissions.includes(perm.id);
-                                return (
-                                  <div
-                                    key={perm.id}
-                                    onClick={() => togglePermission(perm.id)}
-                                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all border ${
-                                      isSelected 
-                                        ? 'bg-green-50 border-green-300' 
-                                        : 'bg-muted/30 border-transparent hover:border-muted-foreground/30'
-                                    } ${perm.dangerous ? 'border-red-200' : ''}`}
-                                    data-testid={`permission-${perm.id}`}
-                                  >
-                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${
-                                      isSelected ? 'bg-green-500' : 'bg-muted'
-                                    }`}>
-                                      {isSelected && <Check className="h-3 w-3 text-white" />}
-                                    </div>
-                                    <perm.icon className={`h-4 w-4 flex-shrink-0 ${
-                                      perm.dangerous ? 'text-red-500' : 'text-muted-foreground'
-                                    }`} />
-                                    <span className={`text-xs flex-1 ${perm.dangerous ? 'text-red-600' : ''}`}>
-                                      {isRTL ? perm.name : perm.name_en}
-                                    </span>
-                                    {perm.dangerous && (
-                                      <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                                    )}
-                                  </div>
-                                );
-                              })}
+                          <div>
+                            <p className="font-medium text-sm">{isRTL ? 'صلاحيات المعلم' : 'Teacher Permissions'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {selectedPermissions.length} / {TEACHER_PERMISSIONS.length} {isRTL ? 'محددة' : 'selected'}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            const allIds = TEACHER_PERMISSIONS.map(p => p.id);
+                            const allSelected = allIds.every(id => selectedPermissions.includes(id));
+                            if (allSelected) {
+                              setSelectedPermissions([]);
+                            } else {
+                              setSelectedPermissions(allIds);
+                            }
+                          }}
+                        >
+                          {selectedPermissions.length === TEACHER_PERMISSIONS.length 
+                            ? (isRTL ? 'إلغاء الكل' : 'Deselect All')
+                            : (isRTL ? 'تحديد الكل' : 'Select All')
+                          }
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {TEACHER_PERMISSIONS.map((perm) => {
+                          const isSelected = selectedPermissions.includes(perm.id);
+                          const IconComp = perm.icon;
+                          return (
+                            <div
+                              key={perm.id}
+                              onClick={() => togglePermission(perm.id)}
+                              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all border ${
+                                isSelected 
+                                  ? 'bg-green-50 border-green-300' 
+                                  : 'bg-muted/30 border-transparent hover:border-muted-foreground/30'
+                              }`}
+                              data-testid={`permission-${perm.id}`}
+                            >
+                              <div className={`w-5 h-5 rounded flex items-center justify-center ${
+                                isSelected ? 'bg-green-500' : 'bg-muted'
+                              }`}>
+                                {isSelected && <Check className="h-3 w-3 text-white" />}
+                              </div>
+                              <IconComp className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                              <span className="text-xs flex-1">
+                                {isRTL ? perm.name : perm.name_en}
+                              </span>
                             </div>
-                          </CardContent>
-                        )}
-                      </Card>
-                    );
-                  })}
-                </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* رسالة للأدوار الأخرى */}
+                {formData.role !== 'teacher' && (
+                  <div className="p-6 bg-muted/30 rounded-xl text-center">
+                    <Shield className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">
+                      {isRTL 
+                        ? 'سيتم تعيين الصلاحيات الافتراضية لهذا الدور تلقائياً'
+                        : 'Default permissions will be automatically assigned for this role'}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
@@ -1442,13 +1087,12 @@ ${loginUrl}
                 
                 {/* بيانات الدخول */}
                 <Card className="text-start">
-                  <CardHeader>
-                    <CardTitle className="font-cairo text-base flex items-center gap-2">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-3">
                       <Key className="h-5 w-5" />
-                      {isRTL ? 'بيانات تسجيل الدخول' : 'Login Credentials'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                      <span className="font-cairo font-medium">{isRTL ? 'بيانات تسجيل الدخول' : 'Login Credentials'}</span>
+                    </div>
+                    
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div>
                         <p className="text-xs text-muted-foreground">{isRTL ? 'البريد الإلكتروني' : 'Email'}</p>
@@ -1483,11 +1127,11 @@ ${loginUrl}
           </div>
         </ScrollArea>
         
-        {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30">
-          <div className="flex justify-between w-full">
+        {/* Footer - Fixed */}
+        <DialogFooter className="px-6 py-4 border-t bg-background flex-shrink-0">
+          <div className="flex justify-between w-full gap-3">
             {step > 1 && step < 5 ? (
-              <Button variant="outline" onClick={prevStep} className="rounded-xl">
+              <Button variant="outline" onClick={prevStep} className="rounded-xl min-w-[100px]">
                 <ChevronRight className="h-4 w-4 me-2 rtl:rotate-180" />
                 {isRTL ? 'السابق' : 'Previous'}
               </Button>
@@ -1499,7 +1143,7 @@ ${loginUrl}
               <Button 
                 onClick={nextStep} 
                 disabled={!isStepValid()}
-                className="bg-brand-navy rounded-xl"
+                className="bg-brand-navy rounded-xl min-w-[100px]"
               >
                 {isRTL ? 'التالي' : 'Next'}
                 <ChevronLeft className="h-4 w-4 ms-2 rtl:rotate-180" />
@@ -1510,7 +1154,7 @@ ${loginUrl}
               <Button 
                 onClick={handleSubmit} 
                 disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 rounded-xl"
+                className="bg-green-600 hover:bg-green-700 rounded-xl min-w-[120px]"
               >
                 {isSubmitting ? (
                   <>
@@ -1529,7 +1173,7 @@ ${loginUrl}
             {step === 5 && (
               <Button 
                 onClick={() => onOpenChange(false)}
-                className="bg-brand-navy rounded-xl"
+                className="bg-brand-navy rounded-xl min-w-[100px]"
               >
                 {isRTL ? 'إغلاق' : 'Close'}
               </Button>
