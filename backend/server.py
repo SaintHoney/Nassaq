@@ -331,6 +331,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         phone=current_user.get("phone"),
         avatar_url=current_user.get("avatar_url"),
         is_active=current_user.get("is_active", True),
+        must_change_password=current_user.get("must_change_password", False),
         preferred_language=current_user.get("preferred_language", "ar"),
         preferred_theme=current_user.get("preferred_theme", "light"),
         created_at=current_user["created_at"]
