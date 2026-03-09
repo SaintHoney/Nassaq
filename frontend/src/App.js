@@ -19,6 +19,7 @@ import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 import { AttendancePage } from "./pages/AttendancePage";
 import { AssessmentPage } from "./pages/AssessmentPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 
 // Platform Admin Pages
 import { PlatformSchoolsPage } from "./pages/PlatformSchoolsPage";
