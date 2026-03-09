@@ -30,7 +30,7 @@ import { PlatformNotificationsPage } from "./pages/PlatformNotificationsPage";
 import { PlatformSettingsPage } from "./pages/PlatformSettingsPage";
 import { RulesManagementPage } from "./pages/RulesManagementPage";
 import { SystemMonitoringPage } from "./pages/SystemMonitoringPage";
-import { IntegrationsPage } from "./pages/IntegrationsPage";
+import IntegrationsPage from "./pages/IntegrationsPage";
 import { SecurityCenterPage } from "./pages/SecurityCenterPage";
 import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
 // TeacherRequestsPage removed - now integrated in UsersManagement
