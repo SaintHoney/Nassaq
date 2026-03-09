@@ -27,6 +27,12 @@ import { PlatformUsersPage } from "./pages/PlatformUsersPage";
 import { PlatformReportsPage } from "./pages/PlatformReportsPage";
 import { PlatformNotificationsPage } from "./pages/PlatformNotificationsPage";
 import { PlatformSettingsPage } from "./pages/PlatformSettingsPage";
+import { RulesManagementPage } from "./pages/RulesManagementPage";
+import { SystemMonitoringPage } from "./pages/SystemMonitoringPage";
+import { IntegrationsPage } from "./pages/IntegrationsPage";
+import { SecurityCenterPage } from "./pages/SecurityCenterPage";
+import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
+import { TeacherRequestsPage } from "./pages/TeacherRequestsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
