@@ -148,6 +148,54 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/teacher-requests"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <TeacherRequestsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/rules"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <RulesManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/monitoring"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <SystemMonitoringPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/integrations"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <IntegrationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/security"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <SecurityCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/communication"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <CommunicationCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/reports"
         element={
           <ProtectedRoute allowedRoles={['platform_admin', 'ministry_rep']}>
