@@ -1,929 +1,151 @@
-# NASSAQ (نَسَّق) - نظام إدارة المدارس الذكي
-## AI-Powered Multi-Tenant School Management System
+# نَسَّق | NASSAQ - School Management System PRD
+
+## Original Problem Statement
+Build a comprehensive, AI-powered, multi-tenant school management system named "نَسَّق | NASSAQ" with multiple user roles and detailed user journeys.
+
+## User Personas
+- **Platform Admin (مدير المنصة)**: Full system control, manages all schools and users
+- **School Principal (مدير المدرسة)**: Manages their school's operations
+- **Teacher (معلم)**: Manages classes, students, attendance, grades
+- **Student (طالب)**: Views grades, assignments, schedule
+- **Parent (ولي الأمر)**: Monitors child's progress
+
+## Core Requirements
+1. Multi-tenant architecture with school isolation
+2. RTL (Arabic) first design with English support
+3. Role-based access control (RBAC)
+4. AI-powered analytics and insights
+5. Mobile-first responsive design
 
 ---
 
-## 📋 المتطلبات الأساسية (Original Requirements)
+## What's Been Implemented
 
-### رؤية المنصة
-منصة تعليمية ذكية متعددة الأطراف (Multi-Stakeholder AI-Driven Platform) لإدارة المدارس في المملكة العربية السعودية.
+### ✅ Phase 1: Foundation (Completed)
+- JWT Authentication with role-based routing
+- MongoDB database with demo data
+- Basic dashboard structure
+- Landing page with Arabic content
 
-### الأدوار التسعة في النظام
-1. **Platform Admin** - مدير المنصة (أعلى مستوى إداري)
-2. **Ministry Representative** - ممثل الوزارة
-3. **School Principal** - مدير المدرسة
-4. **School Sub Admin** - المسؤول الإداري
-5. **Teacher** - المعلم
-6. **Student** - الطالب
-7. **Parent/Guardian** - ولي الأمر
-8. **Driver** - السائق
-9. **Gatekeeper** - مسؤول البوابة
+### ✅ Phase 2: Platform Admin Dashboard (Completed - Dec 2025)
+- **mركز القيادة (Command Center)**:
+  - Global Filters Bar with region, city, school type filters
+  - Enhanced Analytics Cards with sparklines and health indicators
+  - Daily Platform Activity chart with real-time data
+  - Quick AI Operations Panel
+  - AI Suggested Tasks with navigation links
+  - Hakim AI Assistant section with online status
 
-### رتب المعلمين
-| الرتبة | النصاب الأدنى | النصاب الأقصى | الحد اليومي |
-|--------|---------------|---------------|-------------|
-| معلم خبير | 12 | 18 | 4 حصص |
-| معلم متقدم | 16 | 20 | 5 حصص |
-| معلم ممارس | 18 | 24 | 6 حصص |
-| معلم مساعد | 20 | 26 | 7 حصص |
+### ✅ Phase 3: Mobile-First Responsive Design (Completed - March 2026)
+- **AdminDashboard Mobile Optimization**:
+  - Mobile header with compact date display
+  - Mobile filters sheet (swipe from side)
+  - Horizontal scroll for quick actions
+  - Responsive analytics cards (2-column grid)
+  - Simplified activity chart for mobile
+  - Mobile-optimized sidebar with toggle
 
----
+### ✅ Phase 4: Tenants Management Page (Completed - March 2026)
+- **صفحة إدارة المستأجرين**:
+  - Statistics cards (total, active, suspended, AI-enabled)
+  - Global search (name, code, phone, email)
+  - Advanced filters (status, city, type, stage, AI status)
+  - Grid view with premium school cards
+  - Responsive design (desktop and mobile)
+  - Bulk actions support
+  - Create School Wizard integration
 
-## ✅ ما تم إنجازه
-
-### المرحلة 1: البنية الأساسية ✅
-- [x] إعداد بيئة التطوير (FastAPI + React + MongoDB)
-- [x] نظام المصادقة JWT مع RBAC
-- [x] الصفحة الرئيسية (Landing Page) مع دعم RTL/LTR
-- [x] تبديل اللغات (العربية/الإنجليزية)
-- [x] قسم Hero محدث مع اسم المنصة وإحصائيات التأثير
-- [x] تعبئة قاعدة البيانات (+200 مدرسة، +50,000 طالب، +3,000 معلم)
-
-### المرحلة 2: محرك الجدولة - Backend ✅ (2026-03-08)
-- [x] **نموذج بيانات إدارة الفصول (Class Management Data Model)**
-  - [x] إسناد المعلمين للفصول والمواد
-  - [x] ربط الطلاب بالفصول
-  - [x] ربط المواد بالفصول
-  
-- [x] **محرك الجدولة (Scheduling Engine)**
-  - [x] إدارة الفترات الزمنية (Time Slots)
-  - [x] إنشاء الجداول المدرسية
-  - [x] إضافة/حذف الحصص
-  - [x] التوليد التلقائي للجدول
-  - [x] اكتشاف التعارضات (معلم/فصل)
-  - [x] حساب نصاب المعلم
-  - [x] تحديث رتب المعلمين
-
-### المرحلة 3: محرك الجدولة - UI ✅ (2026-03-08)
-- [x] **صفحة إدارة الفترات الزمنية (Time Slots Page)**
-  - [x] عرض جميع الفترات الزمنية مرتبة
-  - [x] تمييز فترات الاستراحة باللون الأصفر
-  - [x] إضافة فترة جديدة عبر Dialog
-  - [x] حذف فترة زمنية
-  - [x] إنشاء فترات افتراضية (Seed)
-
-- [x] **صفحة إسناد المعلمين (Teacher Assignments Page)**
-  - [x] عرض الإسنادات مجمعة حسب المعلم
-  - [x] بطاقة المعلم مع رتبته
-  - [x] شريط النصاب مع ألوان (أخضر/أصفر/أحمر)
-  - [x] تغيير رتبة المعلم من القائمة المنسدلة
-  - [x] إضافة إسناد جديد
-  - [x] حذف إسناد
-
-- [x] **صفحة الجدول الأسبوعي (Weekly Schedule Grid)**
-  - [x] عرض شبكي (5 أيام × الفترات الزمنية)
-  - [x] تمييز الحصص بالألوان حسب المادة
-  - [x] تمييز التعارضات باللون الأحمر
-  - [x] عرض تفاصيل الحصة عند النقر
-  - [x] تصفية حسب المعلم
-  - [x] تصفية حسب الفصل
-  - [x] زر التوليد التلقائي
-  - [x] عرض التعارضات في Sheet جانبي
-  - [x] زر نشر الجدول
-  - [x] Legend ألوان المواد
-
-### المرحلة 4: السحب والإفلات + حسابات الاختبار ✅ (2026-03-08)
-- [x] **Drag & Drop للجدول الأسبوعي**
-  - [x] تثبيت مكتبة @dnd-kit
-  - [x] إضافة API لنقل الحصص `/api/schedule-sessions/{id}/move`
-  - [x] مكون DraggableSession قابل للسحب
-  - [x] مكون DroppableCell قابل للإفلات
-  - [x] التحقق من التعارضات عند النقل
-  - [x] ثلاث حالات: success, conflict_warning, hard_conflict
-  - [x] تغذية بصرية واضحة (ألوان، رسائل)
-
-- [x] **حسابات الاختبار**
-  - [x] حساب مدير المدرسة: principal@nassaq.com / NassaqPrincipal2026
-  - [x] حساب معلم: teacher@nassaq.com / NassaqTeacher2026
-  - [x] عرض بيانات الاختبار في صفحة تسجيل الدخول (قابلة للنقر)
-
-- [x] **تحسينات واجهة المستخدم**
-  - [x] إزالة صورة حكيم من صفحة التسجيل
-  - [x] تكبير الشعار في صفحة التسجيل
-
-### المرحلة 5: صفحات Platform Admin + الصلاحيات ✅ (2026-03-08)
-- [x] **صفحة إدارة المدارس (PlatformSchoolsPage)**
-  - [x] عرض جميع المدارس مع إحصائيات
-  - [x] إضافة مدرسة جديدة
-  - [x] تعديل حالة المدرسة (نشطة/معلقة/موقوفة)
-  - [x] الدخول لسياق المدرسة (للاطلاع فقط)
-  - [x] فلترة حسب الحالة والبحث
-
-- [x] **صفحة إدارة المستخدمين (PlatformUsersPage)**
-  - [x] عرض جميع مستخدمي المنصة
-  - [x] فلترة حسب الدور والحالة
-  - [x] تفعيل/تعطيل الحساب
-  - [x] عرض تفاصيل المستخدم
-
-- [x] **صفحة التقارير والتحليلات (PlatformReportsPage)**
-  - [x] مؤشرات الأداء الرئيسية (KPIs)
-  - [x] رسوم بيانية للمدارس حسب الحالة
-  - [x] المدارس حسب المنطقة
-  - [x] أكبر المدارس حسب عدد الطلاب
-  - [x] تصدير التقارير
-
-- [x] **صفحة الإشعارات (PlatformNotificationsPage)**
-  - [x] سجل الإشعارات المرسلة
-  - [x] فلترة حسب النوع والحالة
-  - [x] عرض تفاصيل الإشعار
-
-- [x] **صفحة الإعدادات (PlatformSettingsPage)**
-  - [x] الإعدادات العامة (اسم المنصة، اللغة، المنطقة الزمنية)
-  - [x] إعدادات الأمان (مهلة الجلسة، محاولات الدخول، كلمات المرور)
-  - [x] إعدادات البريد الإلكتروني (SMTP)
-  - [x] إعدادات الذكاء الاصطناعي (حكيم)
-  - [x] إعدادات الإشعارات
-  - [x] إعدادات النظام المتقدمة
-
-- [x] **ضبط صلاحيات Platform Admin**
-  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/schedule`
-  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/students`
-  - [x] Platform Admin لا يستطيع الوصول لـ `/admin/classes`
-  - [x] يتم إعادة توجيهه تلقائياً لـ `/admin`
-  - [x] School Principal يستطيع الوصول لجميع صفحات إدارة المدرسة
-
-### المرحلة 6: محرك الحضور (Attendance Engine) ✅ (2026-03-09)
-- [x] **صفحة تسجيل الحضور (AttendancePage)**
-  - [x] اختيار التاريخ والفصل والمادة والحصة
-  - [x] عرض قائمة الطلاب في الفصل المختار
-  - [x] أربع حالات للحضور: حاضر، غائب، متأخر، بعذر
-  - [x] إمكانية إضافة ملاحظات لكل طالب
-  - [x] زر "الكل حاضر" لتحديد الجميع
-  - [x] زر "حفظ الحضور" لحفظ السجلات
-  - [x] شريط نسبة الحضور متحرك
-  - [x] بطاقات إحصائيات (إجمالي، حاضر، غائب، متأخر، بعذر)
-
-- [x] **التقرير اليومي (Daily Report Tab)**
-  - [x] ملخص إحصائيات اليوم
-  - [x] جدول سجلات الحضور اليومية
-  - [x] عرض اسم الطالب والحالة والمسجل والملاحظات
-
-- [x] **ملخص الحضور (Summary Tab)**
-  - [x] الملخص العام (معدل الحضور، إجمالي السجلات)
-  - [x] إحصائيات حسب الحالة
-  - [x] جدول التقرير اليومي مع نسبة الحضور
-
-- [x] **APIs للحضور**
-  - [x] `POST /api/attendance/bulk` - تسجيل حضور دفعة واحدة
-  - [x] `GET /api/attendance/students-for-class/{class_id}` - جلب طلاب الفصل مع حالة الحضور
-  - [x] `GET /api/attendance/report/daily/{class_id}` - التقرير اليومي
-  - [x] `GET /api/attendance/report/summary` - ملخص الحضور العام
-
-### المرحلة 7: محرك التقييمات (Assessment Engine) ✅ (2026-03-09)
-- [x] **صفحة التقييمات والدرجات (AssessmentPage)**
-  - [x] ثلاث تبويبات: التقييمات، نظرة عامة، السجلات
-  - [x] فلاتر: الفصل، المادة، نوع التقييم
-  - [x] إحصائيات (إجمالي التقييمات، تم تقييمها، بانتظار التقييم)
-  - [x] جدول قائمة التقييمات مع الإجراءات
-
-- [x] **إنشاء التقييمات**
-  - [x] نافذة إنشاء تقييم جديد
-  - [x] 9 أنواع تقييم: اختبار قصير، واجب، اختبار، مشاركة، مشروع، منتصف الفصل، نهائي، شفهي، عملي
-  - [x] تحديد الدرجة القصوى والوزن والتاريخ والوصف
-
-- [x] **إدخال الدرجات**
-  - [x] نافذة إدخال الدرجات للطلاب
-  - [x] عرض الدرجات الموجودة مسبقاً
-  - [x] إمكانية إضافة ملاحظات لكل طالب
-  - [x] حفظ الدرجات بشكل جماعي
-
-- [x] **نظرة عامة على الفصل (Class Overview)**
-  - [x] متوسط الفصل، أعلى درجة، أقل درجة
-  - [x] توزيع الدرجات (ممتاز، جيد جداً، جيد، مقبول، راسب)
-  - [x] آخر التقييمات مع المتوسط
-
-- [x] **سجل درجات الطالب (Student History)**
-  - [x] عرض المتوسط العام للطالب
-  - [x] الدرجات مصنفة حسب المادة
-  - [x] آخر الدرجات مع التفاصيل
-
-- [x] **APIs للتقييمات**
-  - [x] `POST /api/assessments` - إنشاء تقييم
-  - [x] `GET /api/assessments` - جلب التقييمات مع الفلاتر
-  - [x] `GET /api/assessments/{id}` - جلب تقييم محدد
-  - [x] `PUT /api/assessments/{id}` - تعديل تقييم
-  - [x] `DELETE /api/assessments/{id}` - حذف تقييم
-  - [x] `GET /api/assessments/students-for-grading/{id}` - جلب طلاب الفصل للتقييم
-  - [x] `POST /api/grades/bulk` - إدخال درجات دفعة واحدة
-  - [x] `GET /api/grades/class/{id}/overview` - نظرة عامة على الفصل
-  - [x] `GET /api/grades/student/{id}` - سجل درجات الطالب
+### ✅ Phase 5: User Creation Wizard with RBAC (Completed - March 2026)
+- **معالج إنشاء حساب مستخدم**:
+  - **Step 1 - Role Selection**: 7 roles available:
+    - مدير العمليات التشغيلية (Platform Operations Manager)
+    - مسؤول الإدارة التقنية (Platform Technical Administrator)
+    - مسؤول دعم المستخدمين (Platform Support Specialist)
+    - محلل بيانات المنصة (Platform Data Analyst)
+    - مسؤول أمن المنصة (Platform Security Officer)
+    - حساب اختبار (Testing Account)
+    - معلم (Teacher)
+  - **Step 2 - User Data**: Full name, email, phone, city, department, status, notes
+  - **Step 3 - Permissions**: 60+ permissions in 14 categories with visual cards
+  - **Step 4 - Password**: Auto-generated secure temporary password
+  - **Step 5 - Success**: Copy credentials and welcome message functionality
 
 ---
 
-## 📊 إحصائيات الاختبار
-
-| التكرار | النوع | النتيجة |
-|---------|-------|---------|
-| iteration_7 | Backend (APIs) | 29/29 ✅ (100%) |
-| iteration_8 | Frontend (UI) | 36/36 ✅ (100%) |
-| iteration_9 | Drag & Drop | 100% ✅ |
-| iteration_10 | Platform Admin Pages + Permissions | 13/13 ✅ (100%) |
-| iteration_11 | Attendance Engine | Backend 11/11 + Frontend ✅ (100%) |
-| iteration_12 | Assessment Engine | Backend 20/20 + Frontend ✅ (100%) |
-| iteration_13 | Notification Engine | Backend 91% + Frontend ✅ (100%) |
-| iteration_15 | Global Filters Bar | 100% ✅ |
-| iteration_16 | Enhanced Analytics Cards + Filter Backend Integration | Backend 93% + Frontend 100% ✅ |
-| iteration_17 | UI/UX Improvements (PDF Export, Sparklines, Welcome Card, Cascading Filters) | Frontend 100% ✅ |
-| iteration_18 | Teacher Dashboard + Avatar Welcome Card | Frontend 100% ✅ |
-
----
-
-## 👨‍🏫 دور المعلم (Teacher) - محدث 2026-03-09
-
-### تعريف الدور
-- **الاسم:** المعلم (Teacher)
-- **المستوى:** School Level
-- **النطاق:** إدارة الصفوف والطلاب المسندين إليه
-
-### صفحة لوحة التحكم (/teacher)
-- **كارت الترحيب:** اسم المستخدم + Avatar + الفصل الدراسي + التاريخ
-- **الإجراءات السريعة:** تسجيل الحضور، إضافة تقييم، جدولي، الإشعارات
-- **إحصائيات:** صفوفي (5)، طلابي (125)، حصص اليوم (4)، حضور معلق (2)
-- **جدول اليوم:** عرض الحصص المتبقية مع الحصة الحالية
-- **آخر النشاطات:** سجل الأنشطة والتحديثات
-- **المهام المعلقة:** حضور غير مسجل، تقييمات معلقة
-
-### الصفحات المتاحة للمعلم
-| الصفحة | الاسم العربي | الوصف |
-|--------|-------------|-------|
-| /teacher | لوحة المعلم | لوحة التحكم الرئيسية |
-| /admin/attendance | الحضور والغياب | تسجيل حضور الطلاب |
-| /admin/assessments | التقييمات والدرجات | إدارة تقييمات الطلاب |
-| /notifications | الإشعارات | عرض الإشعارات |
-
----
-
-## 👤 دور مدير المنصة (Platform Admin) - محدث 2026-03-09
-
-### تعريف الدور
-- **الاسم:** مدير المنصة (Platform Admin)
-- **المستوى:** Platform Level (أعلى مستوى إداري)
-- **النطاق:** إدارة المنصة بالكامل وليس مدرسة واحدة
-
-### الصفحات المتاحة
-| الصفحة | الاسم العربي | الوصف |
-|--------|-------------|-------|
-| /admin | مركز القيادة | لوحة القيادة الرئيسية |
-| /admin/schools | إدارة المدارس | إدارة جميع المدارس |
-| /admin/users | إدارة المستخدمين | إدارة الحسابات |
-| /admin/teacher-requests | طلبات المعلمين | إدارة طلبات حسابات المعلمين |
-| /admin/rules | إدارة القواعد | إدارة القواعد التعليمية |
-| /admin/monitoring | مراقبة النظام | مراقبة الأداء التقني |
-| /admin/reports | التحليلات | التقارير المتقدمة |
-| /admin/integrations | التكاملات | إدارة التكاملات الخارجية |
-| /admin/security | مركز الأمان | إدارة الحوادث الأمنية |
-| /admin/communication | مركز التواصل | إرسال الرسائل |
-| /notifications | الإشعارات | نظام الإشعارات |
-| /settings | إعدادات النظام | إدارة الإعدادات العامة |
-
-### صلاحيات AI
-- ✔ AI System Diagnosis
-- ✔ AI Data Quality Scan
-- ✔ AI Import Analyzer
-- ✔ AI Schedule Generator
-- ✔ AI Performance Analysis
-- ✔ AI Executive Summary
-
-### أقسام مركز القيادة
-1. **التحليلات العامة (Global Analytics Cards)** - إحصائيات المدارس والطلاب والمعلمين
-2. **نشاط المنصة اليومي (Daily Platform Activity)** - بيانات مباشرة
-3. **الإجراءات السريعة (Quick Actions)** - إضافة مدرسة، إدارة المستخدمين، إدارة القواعد، مراقبة النظام، التقارير، الإعدادات
-4. **لوحة عمليات الذكاء الاصطناعي (AI Operations Panel)** - عمليات ذكية للتحليل والتشخيص
-
-### المرحلة 9: تحديث دور مدير المنصة (Platform Admin) ✅ (2026-03-09)
-- [x] **مركز القيادة (Platform Control Dashboard)**
-  - [x] شريط الفلاتر العلوي (النطاق، الفترة، الحالة) - يعمل
-  - [x] أزرار التحديث والتصدير (PDF/Excel)
-  - [x] المؤشرات العامة للمنصة (6 بطاقات تحليلية) - بيانات حقيقية من API
-  - [x] مؤشرات الصحة (Health Tags)
-  - [x] نسب التغيير (Delta)
-  - [x] نشاط المنصة اليومي (Live badge + ملخص إحصائيات)
-  - [x] الإجراءات السريعة (6 أزرار) - جميعها تعمل
-
-- [x] **Wizard إنشاء مدرسة جديدة (4 خطوات)**
-  - [x] الخطوة 1: بيانات المدرسة (الاسم، الشعار، الدولة، المدينة، العنوان)
-  - [x] الخطوة 2: إعدادات التشغيل (اللغة، التقويم، النوع، المرحلة)
-  - [x] الخطوة 3: حساب مدير المدرسة
-  - [x] الخطوة 4: مراجعة وتأكيد
-  - [x] أزرار: حفظ كمسودة، رجوع، إلغاء، التالي
-
-- [x] **لوحة العمليات الذكية السريعة (AI Operations Panel)**
-  - [x] شريط حالة AI (نشط، عدد العمليات اليوم)
-  - [x] 8 بطاقات عمليات AI
-  - [x] **APIs حقيقية تعمل:**
-    - [x] `/api/ai/diagnosis` - تشخيص النظام ✅
-    - [x] `/api/ai/data-quality` - فحص جودة البيانات ✅
-    - [x] `/api/ai/tenant-health` - فحص صحة المدارس ✅
-    - [x] `/api/ai/executive-summary` - الملخص التنفيذي ✅
-  - [x] سجل آخر العمليات الذكية
-  - [x] المساعد الذكي المصغر
-
-- [x] **APIs إضافية للـ Dashboard**
-  - [x] `/api/dashboard/stats` - إحصائيات موسعة:
-    - suspended_schools, setup_schools
-    - total_operations, teachers_without_classes
-    - incomplete_schedules, students_missing_data
-    - teachers_without_rank
-
-### المرحلة 10: ربط الفلاتر بالـ Backend + بطاقات التحليلات المحسنة ✅ (2026-03-09)
-- [x] **ربط الفلاتر العالمية (Global Filters) بالـ Backend API**
-  - [x] تحديث `/api/dashboard/stats` لدعم معاملات الفلترة:
-    - `scope`: all, single, multi (نطاق البيانات)
-    - `school_id`: معرف المدرسة عند اختيار مدرسة واحدة
-    - `school_ids`: قائمة معرفات المدارس عند اختيار عدة مدارس
-    - `city`: فلتر المدينة (الرياض، جدة، إلخ)
-    - `region`: فلتر المنطقة (central, western, eastern, northern, southern)
-    - `school_type`: نوع المدرسة (public, private, international)
-    - `time_window`: الفترة الزمنية (live, today, week, month, custom)
-    - `date_from`, `date_to`: النطاق الزمني المخصص
-    - `status`: حالة المدارس (all, active, suspended, setup, expired)
-  - [x] تحديث البيانات ديناميكياً عند تغيير أي فلتر بدون إعادة تحميل الصفحة
-  - [x] **النتائج المتحققة:**
-    - كل المنصة: 210 مدرسة
-    - فلتر نشطة: 141 مدرسة
-    - فلتر الرياض: 23 مدرسة
-    - فلتر موقوفة: 1 مدرسة
-
-- [x] **بطاقات التحليلات المحسنة (Enhanced Analytics Cards)**
-  - [x] عرض اسم المستخدم بجانب التاريخ الهجري/الميلادي
-  - [x] **Smart Delta Indicator:**
-    - عرض نسبة التغيير (+12%، -5.2%، إلخ)
-    - ألوان تفاعلية: أخضر للزيادة، أحمر للنقصان، رمادي للاستقرار
-  - [x] **Health Status Tag:**
-    - طبيعي (Normal): أخضر
-    - يحتاج متابعة (Needs Attention): أصفر
-    - خطر (Critical): أحمر
-  - [x] **Sparkline Charts:**
-    - مخططات خطية صغيرة داخل كل بطاقة
-    - ألوان مميزة لكل نوع بيانات
-  - [x] **Quick Actions:**
-    - قائمة منسدلة عند الضغط على أيقونة الإعدادات
-    - خيارات: عرض التفاصيل، فتح التقرير، ضبط تنبيه
-  - [x] **قابلية النقر:**
-    - البطاقة بالكامل قابلة للنقر
-    - تنتقل إلى صفحة التقرير المرتبط
-
-### المرحلة 11: تحسينات واجهة لوحة التحكم (UI/UX Improvements) ✅ (2026-03-09)
-- [x] **إصلاح تصدير PDF:**
-  - [x] استخدام مكتبة jsPDF لتوليد ملف PDF حقيقي
-  - [x] الملف يحمل امتداد .pdf ويفتح في أي قارئ PDF
-  - [x] المحتوى منسق واحترافي (جدول + عناوين + تاريخ)
-
-- [x] **تحسين Sparkline Charts:**
-  - [x] استخدام AreaChart بدلاً من LineChart
-  - [x] تدرج لوني (Gradient) أكثر وضوحاً
-  - [x] شريط ملون على اليسار يدل على الاتجاه:
-    - أخضر: صعود (up)
-    - أحمر: هبوط (down)
-    - رمادي: مستقر (stable)
-
-- [x] **كارت الترحيب الجديد (Welcome Card):**
-  - [x] عرض "مرحباً [اسم المستخدم]" بخط واضح وبارز
-  - [x] عرض "مركز القيادة" كعنوان فرعي
-  - [x] عرض الفصل الدراسي "الثاني 1446-1447"
-  - [x] عرض التاريخ الهجري والميلادي
-  - [x] بنفس عرض البطاقات الأخرى (Grid متناسق)
-
-- [x] **الفلاتر المتسلسلة (Cascading Filters):**
-  - [x] **ترتيب جديد:**
-    1. المنطقة (Region): الوسطى، الغربية، الشرقية، الشمالية، الجنوبية
-    2. المدينة (City): تتغير حسب المنطقة المختارة
-    3. النوع (Type): حكومية، أهلية، دولية، نموذجية
-    4. المدرسة (School): كل المدارس / مدرسة محددة
-  - [x] **سلوك تفاعلي:**
-    - اختيار المنطقة → يحدث قائمة المدن تلقائياً
-    - المنطقة الغربية تعرض: جدة، مكة، المدينة، الطائف، ينبع
-    - المنطقة الوسطى تعرض: الرياض، القصيم، حائل
-    - إلخ...
-
-### المرحلة 12: بيانات تجريبية مترابطة + نشاط المنصة اليومي ✅ (2026-03-09)
-
-- [x] **بيانات تجريبية مترابطة (Demo Linked Data):**
-  - [x] **المدارس التجريبية (5 مدارس):**
-    - مدرسة النور الأهلية - الرياض
-    - مدرسة الفيصل النموذجية - جدة
-    - مدرسة الأمل الحكومية - الدمام
-    - المدرسة الدولية السعودية - الرياض
-    - مدرسة التميز الأهلية - مكة المكرمة
-  - [x] **المعلمين:** 19 معلم مرتبطين بالمدارس
-  - [x] **الطلاب:** 612 طالب موزعين على الفصول
-  - [x] **الفصول:** 30 فصل (6 فصول لكل مدرسة)
-  - [x] **APIs للبيانات التجريبية:**
-    - `GET /api/demo/schools` - قائمة المدارس التجريبية
-    - `GET /api/demo/teachers?school_id=xxx` - المعلمين
-    - `GET /api/demo/students?school_id=xxx&class_id=xxx` - الطلاب
-    - `GET /api/demo/classes?school_id=xxx` - الفصول
-    - `GET /api/demo/stats` - إحصائيات مجمعة
-
-- [x] **قسم نشاط المنصة اليومي (Daily Platform Activity):**
-  - [x] **شريط التحكم:**
-    - الفترة الزمنية: اليوم، آخر 24 ساعة، الأسبوع، الشهر
-    - طريقة العرض: حسب الساعة، حسب المدرسة، حسب النوع
-    - فلاتر النشاط: الحصص، الحضور، الدرجات، المستخدمين
-  - [x] **الرسم البياني التفاعلي:**
-    - 4 خطوط ملونة تمثل أنواع النشاط
-    - Tooltip تفاعلي عند التمرير
-    - بيانات من 7 صباحاً إلى 4 مساءً
-  - [x] **ملخص المؤشرات:**
-    - الحصص المنفذة + نسبة التغيير + حالة الصحة
-    - تسجيلات الحضور
-    - إدخالات الدرجات
-    - المستخدمين النشطين
-  - [x] **تنبيهات النشاط الذكية:**
-    - انخفاض تسجيل الحضور
-    - عدم وجود نشاط من مدرسة
-    - نشاط مرتفع غير عادي
-  - [x] **APIs للنشاط:**
-    - `GET /api/activity/daily?period=today&view_by=hour`
-    - `GET /api/activity/summary`
-    - `GET /api/activity/alerts`
-
----
-
-## 🔴 المهام القادمة (P1)
-
-### محرك السلوك (Behaviour Engine)
-- [ ] تتبع سلوك الطلاب
-- [ ] نقاط السلوك الإيجابي والسلبي
-- [ ] إشعارات السلوك لأولياء الأمور
-
-### مركز التواصل (Communication Center)
-- [ ] رسائل داخلية بين المستخدمين
-- [ ] إشعارات للمجموعات
-
-### إشعارات SMS/Email
-- [ ] رسائل SMS
-- [ ] إشعارات البريد الإلكتروني
-- [ ] إشعارات الغياب لأولياء الأمور
-
----
-
-## 🟡 المهام المستقبلية (P2 - لوحات تحكم المستخدمين)
-
-## 🔵 المهام البعيدة (P3 - طبقة الذكاء)
-
-### محرك هوية المستخدم (User Identity Graph Engine)
-- [ ] الهوية الموحدة للمستخدمين
-- [ ] إدارة العلاقات (ولي أمر/طالب، معلم/فصل)
-- [ ] ربط الأدوار المتعددة
-
-### محرك دعوة المعلمين (Teacher Invite Engine)
-- [ ] نظام الترشيحات
-- [ ] مكافآت الدعوة
-
-### مركز التحكم الأمني (Security Control Center)
-- [ ] سجلات الأمان
-- [ ] مراقبة الدخول
-- [ ] اكتشاف النشاط المشبوه
-
----
-
-## 🏗️ البنية التقنية
-
-### Backend
-- **Framework:** FastAPI (Python)
-- **Database:** MongoDB
-- **Auth:** JWT + RBAC
-- **Location:** `/app/backend/`
+## Technical Architecture
 
 ### Frontend
-- **Framework:** React.js
-- **Styling:** TailwindCSS
-- **i18n:** i18next (AR/EN)
-- **UI Components:** Shadcn/UI
-- **Location:** `/app/frontend/`
+- React.js with React Router
+- TailwindCSS with custom NASSAQ theme
+- Shadcn/UI components
+- Recharts for data visualization
+- Arabic fonts (Cairo, Tajawal)
 
-### ملفات مهمة
-```
-/app/backend/
-├── server.py              # API Routes (2750+ lines)
-├── models/
-│   └── scheduling.py      # نماذج الجدولة
-├── services/
-│   └── scheduling_service.py  # خدمة الجدولة
-└── requirements.txt
+### Backend
+- FastAPI (Python)
+- MongoDB with pymongo
+- JWT authentication
+- Pydantic models
 
-/app/frontend/
-├── src/
-│   ├── pages/
-│   │   ├── LandingPage.jsx
-│   │   ├── AdminDashboard.jsx
-│   │   ├── SchedulePage.jsx              # Drag & Drop
-│   │   ├── TimeSlotsPage.jsx
-│   │   ├── TeacherAssignmentsPage.jsx
-│   │   ├── PlatformSchoolsPage.jsx       # NEW - Platform Admin
-│   │   ├── PlatformUsersPage.jsx         # NEW - Platform Admin
-│   │   ├── PlatformReportsPage.jsx       # NEW - Platform Admin
-│   │   ├── PlatformNotificationsPage.jsx # NEW - Platform Admin
-│   │   └── PlatformSettingsPage.jsx      # NEW - Platform Admin
-│   ├── components/ui/     # Shadcn Components
-│   └── i18n.js           # Translations
-└── package.json
-```
+### Database Schema
+- users, schools, students, teachers
+- classes, subjects, schedules
+- attendance, grades, notifications
 
 ---
 
-## 🖼️ واجهات المستخدم المنجزة
+## Prioritized Backlog
 
-### 1. صفحة الجدول المدرسي
-![Schedule Page](screenshot-schedule)
-- شبكة أسبوعية تفاعلية
-- تمييز التعارضات
-- ألوان المواد
-- فلاتر متقدمة
+### P0 - Critical
+- [x] Mobile-First Responsive Design
+- [x] Tenants Management Page
+- [x] User Creation Wizard with RBAC
+- [ ] **Connect User Creation to Backend API**
+- [ ] **User Management Page (list, edit, delete users)**
 
-### 2. صفحة إدارة الفترات الزمنية
-![Time Slots Page](screenshot-time-slots)
-- قائمة الفترات مرتبة
-- فترات الاستراحة مميزة
-- إضافة/حذف فترات
+### P1 - High Priority
+- [ ] Backend API for user CRUD operations
+- [ ] First-time login password change flow
+- [ ] Teacher Dashboard enhancements
+- [ ] School Principal Dashboard
 
-### 3. صفحة إسناد المعلمين
-![Teacher Assignments Page](screenshot-assignments)
-- بطاقات المعلمين
-- شريط النصاب
-- تغيير الرتب
+### P2 - Medium Priority
+- [ ] Parent Dashboard
+- [ ] Student Dashboard
+- [ ] AI Hakim Assistant backend integration
+- [ ] Notification Engine (SMS/Email)
 
----
-
-## 🔐 بيانات الاختبار
-
-```
-Platform Admin:
-- Email: info@nassaqapp.com
-- Password: NassaqAdmin2026!##$$HBJ
-
-Test School ID: d3addce7-919b-4f5a-ba0c-0c2dc71599e9
-Test Schedule ID: 4e1a3a8d-dcb5-4c09-8265-aed49e54e9be
-```
+### P3 - Low Priority
+- [ ] PDF Reports generation
+- [ ] Data import/export
+- [ ] Audit logs UI
+- [ ] System monitoring dashboard
 
 ---
 
-## 📊 إحصائيات البيانات
+## Known Issues & Technical Debt
 
-| الكيان | العدد |
-|--------|-------|
-| المدارس | +200 |
-| الطلاب | +50,000 |
-| المعلمين | +3,000 |
-| الفصول | ~2,400 |
-| المواد | ~450 |
-| الفترات الزمنية | 11 |
-| الإسنادات | 2 |
-| الحصص المجدولة | 9 |
+### Issues to Fix
+- [ ] Recharts console warnings (width/height -1)
 
----
+### Refactoring Needed
+- [ ] Break down AdminDashboard.jsx (currently ~2300 lines)
+- [ ] Break down server.py into routes/models/services structure
+- [ ] Extract reusable components
 
-## 📅 سجل التحديثات (Changelog)
-
-### 2026-03-09 (Session 3 - Part 2)
-- ✅ بناء محرك التقييمات الكامل (Assessment Engine)
-- ✅ صفحة التقييمات والدرجات `/admin/assessments`
-- ✅ 9 أنواع تقييم (Quiz, Assignment, Exam, Participation, Project, Midterm, Final, Oral, Practical)
-- ✅ إدخال الدرجات بشكل جماعي
-- ✅ تقارير الفصل وسجل درجات الطالب
-- ✅ اختبار شامل Backend + Frontend (100%)
-
-### 2026-03-09 (Session 3 - Part 1)
-- ✅ إصلاح مشكلة الشاشة البيضاء (SelectItem value="" error)
-- ✅ بناء محرك الحضور الكامل (Attendance Engine)
-- ✅ صفحة تسجيل الحضور التفاعلية
-- ✅ 4 حالات حضور (حاضر، غائب، متأخر، بعذر)
-- ✅ التقرير اليومي وملخص الحضور
-- ✅ اختبار شامل Backend + Frontend (100%)
-
-### 2026-03-08 (Session 2)
-- ✅ بناء واجهة مستخدم محرك الجدولة الكاملة
-- ✅ صفحة الجدول الأسبوعي التفاعلي
-- ✅ صفحة إدارة الفترات الزمنية
-- ✅ صفحة إسناد المعلمين مع النصاب
-- ✅ اختبار شامل للواجهة (36/36 tests - 100%)
-
-### 2026-03-08 (Session 1)
-- ✅ بناء محرك الجدولة الكامل (Backend APIs)
-- ✅ 18 API endpoint جديد للجدولة
-- ✅ اختبار شامل (29/29 tests - 100%)
-- ✅ نظام رتب المعلمين والنصاب
-- ✅ التوليد التلقائي للجداول
-- ✅ اكتشاف التعارضات
-
-### 2026-03-07
-- ✅ تحديث Hero Section
-- ✅ تعبئة قاعدة البيانات
-- ✅ إضافة إحصائيات التأثير
-
-### المرحلة 8: محرك الإشعارات (Notification Engine) ✅ (2026-03-09)
-- [x] **نظام الإشعارات داخل التطبيق**
-  - [x] إشعارات تلقائية من محرك الحضور (غياب/تأخر)
-  - [x] إشعارات تلقائية من محرك التقييمات (درجات جديدة)
-  - [x] إشعار لمدير المدرسة عند غياب/تأخر طالب
-  - [x] إشعار لولي الأمر (عند وجود حساب) عند غياب/تأخر ابنه
-  - [x] إشعار للطالب وولي الأمر عند نشر درجة جديدة
-
-- [x] **جرس الإشعارات (NotificationBell)**
-  - [x] عرض عدد الإشعارات غير المقروءة (Badge)
-  - [x] قائمة منسدلة بأحدث الإشعارات
-  - [x] تمييز الإشعارات غير المقروءة بصرياً
-  - [x] زر "الكل مقروء" في القائمة المنسدلة
-  - [x] رابط "عرض جميع الإشعارات"
-  - [x] تحديث تلقائي كل 30 ثانية
-
-- [x] **صفحة الإشعارات (NotificationsPage)**
-  - [x] عرض قائمة كاملة بالإشعارات
-  - [x] فلترة حسب النوع (الكل، حضور، تقييمات، نظام)
-  - [x] فلترة حسب حالة القراءة (الكل، مقروء، غير مقروء)
-  - [x] زر "تحديد الكل كمقروء"
-  - [x] إحصائيات الإشعارات (إجمالي، مقروء، غير مقروء، نسبة القراءة)
-  - [x] تفاصيل كل إشعار (العنوان، الرسالة، النوع، الأولوية، الوقت، المرسل)
-
-- [x] **زر تسجيل الخروج (Logout Button)**
-  - [x] زر "تسجيل الخروج" في الـ Sidebar
-  - [x] مسح الجلسة (localStorage)
-  - [x] إعادة التوجيه لصفحة تسجيل الدخول
-  - [x] حماية الصفحات من الوصول بعد تسجيل الخروج
-
-- [x] **APIs للإشعارات**
-  - [x] `GET /api/notifications` - جلب إشعارات المستخدم (مع فلاتر)
-  - [x] `GET /api/notifications/unread-count` - عدد الإشعارات غير المقروءة
-  - [x] `PUT /api/notifications/{id}/read` - تعليم إشعار كمقروء
-  - [x] `PUT /api/notifications/mark-all-read` - تعليم الكل كمقروء
-  - [x] `DELETE /api/notifications/{id}` - حذف إشعار
-  - [x] `GET /api/notifications/analytics` - إحصائيات الإشعارات
+### Mocked Features
+- **User Creation Wizard**: Uses setTimeout simulation, needs backend API connection
 
 ---
 
-### المرحلة 10: إصلاح معالج إضافة المدرسة + صفحات Platform Admin ✅ (2026-03-09)
-- [x] **إصلاح معالج إضافة المدرسة (Add School Wizard)**
-  - [x] تحديث `SchoolCreate` model في Backend لقبول الحقول الجديدة
-  - [x] توليد كود المدرسة تلقائياً (NSS-{COUNTRY}-{YEAR}-{SEQ})
-  - [x] إصلاح عدم تطابق الحقول بين Frontend و Backend
-  - [x] اختبار الـ Wizard بالكامل (4 خطوات + Success)
-
-- [x] **إنشاء صفحات Platform Admin الأساسية**
-  - [x] `/admin/rules` - صفحة إدارة القواعد (RulesManagementPage)
-  - [x] `/admin/monitoring` - صفحة مراقبة النظام (SystemMonitoringPage)
-  - [x] `/admin/integrations` - صفحة التكاملات (IntegrationsPage)
-  - [x] `/admin/security` - صفحة مركز الأمان (SecurityCenterPage)
-  - [x] `/admin/communication` - صفحة مركز التواصل (CommunicationCenterPage)
-  - [x] `/admin/teacher-requests` - صفحة طلبات المعلمين (TeacherRequestsPage)
-
-- [x] **تحديث App.js بالمسارات الجديدة**
-
-### المرحلة 11: تحسينات UI/UX للوحة التحكم ✅ (2026-03-09)
-- [x] **دمج صفحة الإشعارات مع مركز التواصل**
-  - [x] إنشاء صفحة موحدة `CommunicationNotificationsPage`
-  - [x] قسم الإشعارات: سجل، فلاتر، تحديد كمقروء
-  - [x] قسم التواصل: رسائل جماعية، سجل الرسائل
-  - [x] تحديث Sidebar للرابط الموحد
-
-- [x] **تحسين مركز القيادة (AdminDashboard)**
-  - [x] بطاقات التحليلات أبسط وأوضح
-  - [x] تغيير "إضافة مدرسة" إلى "إضافة"
-  - [x] معلومات ثانوية كـ Badges صغيرة ملونة
-  - [x] تبديل موقع الإجراءات السريعة ونشاط المنصة
-  - [x] كلمة "مباشر" باللون الأحمر
-  - [x] بيانات تجريبية للرسم البياني
-  - [x] تبسيط لوحة العمليات الذكية + زر "تشغيل"
-  - [x] قسم حكيم كواجهة Chat تفاعلية
-  - [x] أزرار تغيير العرض (Grid/Compact/Expanded)
-
-### المرحلة 12: شريط الفلاتر العلوي الشامل (Global Filters Bar) ✅ (2026-03-09)
-- [x] **إعادة كتابة AdminDashboard.jsx بالكامل**
-  - [x] التاريخ الهجري/الميلادي في أعلى الصفحة (أول عنصر ظاهر)
-  - [x] شريط تحكم علوي موحد (Global Filters Bar) أعلى كروت المؤشرات
-
-- [x] **A. نطاق البيانات (Scope)**
-  - [x] كل المنصة (All Tenants)
-  - [x] مدرسة محددة (Single School) - قابل للبحث
-  - [x] مجموعة مدارس (Multi-Select) - اختيار متعدد مع بحث
-  - [x] فلاتر إضافية: المدينة، المنطقة، نوع المدرسة
-
-- [x] **B. الفترة الزمنية (Time Window)**
-  - [x] الآن (Live) - مع مؤشر نبض أحمر
-  - [x] اليوم، الأسبوع الحالي، الشهر الحالي
-  - [x] نطاق مخصص (From/To Date Picker)
-
-- [x] **C. حالة المدارس (Tenant Status)**
-  - [x] كل الحالات - مع Gradient Badge
-  - [x] نشطة (Active) - أخضر
-  - [x] موقوفة (Suspended) - أحمر
-  - [x] قيد الإعداد (Setup) - أصفر
-  - [x] انتهى الاشتراك (Expired) - رمادي
-  - [x] واضحة بصرياً جداً مع Badges ملونة
-
-- [x] **D. أزرار الإجراءات (Action Buttons)**
-  - [x] تحديث الآن (Refresh Now) - يُحدث البيانات فوراً مع Toast
-  - [x] تصدير (Export) - PDF و Excel يُنزّلان ملفات فعلية على الجهاز
-  - [x] إعدادات العرض (Display Settings) - نافذة لتخصيص الكروت
-
-- [x] **إعدادات العرض (Display Settings Dialog)**
-  - [x] إظهار / إخفاء كل كرت من كروت المؤشرات
-  - [x] إعادة ترتيب الكروت باستخدام أزرار أعلى/أسفل
-  - [x] الكروت تتبع الترتيب المحدد في الصفحة فعلياً
-  - [x] زر إعادة تعيين + زر حفظ التغييرات
-
-- [x] **سلوك النظام (Dynamic Data Refresh)**
-  - [x] useEffect يراقب جميع تغييرات الفلاتر
-  - [x] تحديث جميع الكروت والمؤشرات فوراً عند تغيير أي فلتر
-  - [x] التحديث بدون إعادة تحميل الصفحة (Live Update)
-
-- [x] **عرض الفلاتر النشطة**
-  - [x] شريط الفلاتر النشطة مع Badges
-  - [x] زر × لإزالة كل فلتر على حدة
-  - [x] زر "مسح الكل" لإزالة جميع الفلاتر
-
-- [x] **متطلبات التصميم**
-  - [x] نفس Design System المستخدم في النظام
-  - [x] Rounded/Curved Cards
-  - [x] Responsive Layout
-  - [x] دعم كامل RTL/LTR
+## Test Credentials
+- **Platform Admin**: info@nassaqapp.com / NassaqAdmin2026!##$$HBJ
+- **Teacher**: teacher@nassaq.com / NassaqTeacher2026
 
 ---
 
-## 📊 نتائج اختبار شريط الفلاتر (iteration_15)
-| الاختبار | النتيجة |
-|----------|---------|
-| التاريخ الهجري/الميلادي | ✅ PASS |
-| فلتر النطاق (3 خيارات) | ✅ PASS |
-| فلتر المدينة (9 مدن) | ✅ PASS |
-| فلتر المنطقة (6 مناطق) | ✅ PASS |
-| فلتر نوع المدرسة (4 أنواع) | ✅ PASS |
-| فلتر الفترة الزمنية (5 خيارات) | ✅ PASS |
-| فلتر حالة المدارس (5 حالات) | ✅ PASS |
-| زر تحديث الآن | ✅ PASS |
-| زر التصدير (PDF + Excel) | ✅ PASS |
-| إعدادات العرض | ✅ PASS |
-| إعادة ترتيب الكروت | ✅ PASS |
-| تحديث تلقائي عند تغيير الفلاتر | ✅ PASS |
-| **إجمالي** | **100% (15/15)** |
-
----
-
-## 🔜 المراحل القادمة
-
-### ✅ المرحلة 9: الإجراءات السريعة ومعالج إنشاء المدرسة (2026-03-09)
-
-#### قسم الإجراءات السريعة (Quick Actions) ✅
-- [x] شريط أفقي بأزرار كبيرة وواضحة
-- [x] كل زر يحتوي: أيقونة + اسم + وصف
-- [x] 5 إجراءات:
-  - [x] إضافة مدرسة (يفتح معالج إنشاء المدرسة)
-  - [x] إنشاء مستخدم (يذهب لصفحة المستخدمين)
-  - [x] إدارة القواعد (يذهب لصفحة القواعد)
-  - [x] إعدادات النظام (يذهب للإعدادات)
-  - [x] التقارير (يذهب للتقارير)
-
-#### معالج إنشاء المدرسة (Create School Wizard) - 4 مراحل ✅
-- [x] **المرحلة 1: بيانات المدرسة (School Profile)**
-  - [x] رفع الشعار (اختياري) مع placeholder
-  - [x] اسم المدرسة (إجباري)
-  - [x] الدولة (إجباري) - قائمة دول الخليج
-  - [x] المدينة (إجباري) - تتغير حسب الدولة
-  - [x] العنوان التفصيلي (إجباري)
-  - [x] تحقق فوري من صحة البيانات
-
-- [x] **المرحلة 2: إعدادات التشغيل (School Operating Defaults)**
-  - [x] اللغة الافتراضية (العربية/الإنجليزية)
-  - [x] نظام التقويم (هجري/ميلادي/كلاهما)
-  - [x] نوع المدرسة (حكومية/أهلية)
-  - [x] المرحلة التعليمية (13 خيار)
-  - [x] نظام التقييم
-  - [x] زر إعادة الإعدادات للوضع الافتراضي
-
-- [x] **المرحلة 3: حساب مدير المدرسة (School Principal Account)**
-  - [x] اسم المدير (إجباري)
-  - [x] رقم التواصل الرئيسي (إجباري) - تحقق من الرقم السعودي
-  - [x] رقم تواصل إضافي (اختياري)
-  - [x] البريد الإلكتروني (إجباري) - تحقق من الصيغة
-  - [x] رسالة توضيحية عن إنشاء كلمة المرور التلقائية
-
-- [x] **المرحلة 4: مراجعة البيانات (Finalize Creation)**
-  - [x] عرض جميع البيانات للمراجعة
-  - [x] زر تعديل بجانب كل قسم
-  - [x] زر تأكيد إنشاء المدرسة
-
-- [x] **شاشة النجاح (Success Screen)**
-  - [x] القسم الأيسر: معلومات المدرسة
-    - [x] كود المدرسة (Tenant Code): NSS-SA-26-XXXX
-    - [x] اسم المدرسة
-    - [x] الحالة (نشطة)
-    - [x] زر لوحة تحكم المدرسة
-    - [x] زر العودة للإجراءات
-  - [x] القسم الأيمن: رسالة الترحيب
-    - [x] النص الكامل مع بيانات الدخول
-    - [x] زر نسخ رسالة الترحيب
-
-#### Backend API (/api/schools) ✅
-- [x] توليد كود المدرسة: NSS-{COUNTRY}-{YEAR}-{SEQUENTIAL}
-- [x] إنشاء حساب المدير تلقائياً مع كلمة مرور مؤقتة
-- [x] التحقق من عدم تكرار البريد والهاتف
-- [x] تسجيل العملية في Audit Logs
-
-#### نتائج الاختبار (iteration_19) ✅
-| الاختبار | النتيجة |
-|----------|---------|
-| قسم الإجراءات السريعة | ✅ PASS |
-| معالج إنشاء المدرسة - المرحلة 1 | ✅ PASS |
-| معالج إنشاء المدرسة - المرحلة 2 | ✅ PASS |
-| معالج إنشاء المدرسة - المرحلة 3 | ✅ PASS |
-| معالج إنشاء المدرسة - المرحلة 4 | ✅ PASS |
-| شاشة النجاح | ✅ PASS |
-| توليد كود المدرسة | ✅ PASS |
-| إنشاء حساب المدير | ✅ PASS |
-| Backend API Tests | ✅ 14/14 PASS |
-| **إجمالي** | **100%** |
-
----
-
-### ✅ المرحلة 10: لوحة العمليات الذكية السريعة (Quick AI Operations Panel) (2026-03-09)
-
-#### شريط الحالة الذكي (AI Status Bar) ✅
-- [x] حالة محرك AI (نشط/نشط جزئياً/متوقف)
-- [x] عدد العمليات المنفذة اليوم
-- [x] عدد التنبيهات المفتوحة
-- [x] عدد التوصيات غير المنفذة
-- [x] آخر وقت تحديث
-- [x] نسبة المدارس المفعّل لها AI
-- [x] أزرار: تحديث، تشخيص، السجل، إعدادات
-
-#### بطاقات العمليات الذكية (8 عمليات) ✅
-- [x] تشخيص النظام (System Diagnosis)
-- [x] فحص جودة البيانات (Data Quality Scan)
-- [x] تحليل ملفات الاستيراد (Import Analyzer)
-- [x] صحة المدارس (Tenant Health Check)
-- [x] اقتراح الإعدادات (Config Suggestion)
-- [x] الملخص التنفيذي (Executive Summary)
-- [x] منشئ التقارير (Report Builder)
-- [x] مراجعة التنبيهات (Alerts Review)
-
-#### Dialogs النتائج ✅
-- [x] عرض نتائج التشخيص مع التصنيف (حرج/تحذير/معلومات)
-- [x] عرض نسبة جودة البيانات مع Progress Bar
-- [x] عرض التوصيات مع checkmarks
-- [x] الملخص التنفيذي مع أزرار (نسخ/تصدير PDF/تحويل لمهام)
-
-#### المهام الذكية المقترحة ✅
-- [x] عرض قائمة المهام المقترحة
-- [x] تصنيف حسب الأولوية (أحمر/أصفر/أزرق)
-- [x] أزرار تنفيذ/تجاهل لكل مهمة
-
-#### سجل العمليات الأخيرة ✅
-- [x] آخر 3 عمليات مع الحالة
-- [x] حالات: ناجح (أخضر)، جزئي (أصفر)، فشل (أحمر)
-- [x] أزرار عرض/إعادة لكل عملية
-
----
-
-### ✅ تحديثات إضافية (2026-03-09)
-
-#### تعديلات على بطاقة الترحيب ✅
-- [x] تغيير "مرحباً أستاذ مدير المنصة" إلى "مرحباً أستاذ أحمد زلط"
-
-#### تحديثات لوحة العمليات الذكية ✅
-- [x] إزالة 4 عمليات: صحة المدارس، اقتراح الإعدادات، الملخص التنفيذي، منشئ التقارير
-- [x] الإبقاء على 4 عمليات فقط:
-  - [x] تشخيص النظام
-  - [x] فحص جودة البيانات
-  - [x] تحليل ملفات الاستيراد (مع إحصائيات: إجمالي/ناجح/فشل/معلق)
-  - [x] مراجعة التنبيهات (مع Badge عدد التنبيهات غير المقروءة + رابط)
-
-#### تحديثات المهام الذكية المقترحة ✅
-- [x] كل مهمة لديها زر رابط للانتقال للصفحة المناسبة:
-  - "إدارة المدارس" للمدارس الناقصة البيانات
-  - "إدارة المعلمين" للمعلمين بدون رتبة
-  - "ملفات الاستيراد" للملفات المعلقة
-
-#### تحديثات مساعدك الذكي حكيم ✅
-- [x] تغيير الاسم من "مساعد حكيم الذكي" إلى "مساعدك الذكي حكيم"
-- [x] إضافة وميض أخضر (Online indicator) بجانب الصورة
-- [x] تحديث Badge إلى "متاح الآن" مع نقطة متحركة
-- [x] تحديث الوصف إلى "اسأل حكيم أي سؤال عن المنصة وسيساعدك فوراً"
-
----
-
-### 🔜 المهام القادمة (P1)
-
-#### صفحة إدارة المدارس (Tenants Management)
-- [ ] عرض المدارس بتصميم Premium Grid Cards
-- [ ] بحث شامل (كود، اسم، هاتف، مدير)
-- [ ] فلاتر (الحالة، المدينة، المرحلة، النوع)
-- [ ] أدوات الإدارة:
-  - [ ] فتح لوحة تحكم المدرسة
-  - [ ] تعديل بيانات المدرسة
-  - [ ] تعليق المدرسة
-  - [ ] تشغيل/إيقاف الذكاء الاصطناعي
-  - [ ] حذف المدرسة (Soft Delete)
-
-#### معالج إنشاء حساب إداري (Admin User Wizard)
-- [ ] اختيار نوع الحساب (6 أنواع)
-- [ ] إدخال البيانات الأساسية
-- [ ] كروت الصلاحيات المتحركة (Permission Cards)
-- [ ] صلاحيات افتراضية حسب الدور
-- [ ] إضافة/إزالة صلاحيات مع Animation
-- [ ] رسالة الترحيب القابلة للنسخ
-
-### 🔜 المهام المستقبلية (P2+)
-- [ ] محرك السلوك (Behaviour Engine)
-- [ ] لوحات تحكم ولي الأمر والطالب
-- [ ] مساعد حكيم الذكي (AI Assistant)
-- [ ] إعادة هيكلة server.py
+## Last Updated: March 9, 2026
+- Added Mobile-First Responsive Design for Admin Dashboard
+- Created Tenants Management page with full functionality
+- Implemented User Creation Wizard with 7 roles and 60+ permissions
+- All frontend tests passing (100% success rate)
