@@ -1524,6 +1524,12 @@ export default function UsersManagement() {
                   className="rounded-xl text-right min-h-[100px]"
                   placeholder="اكتب سبب رفض الطلب... سيتم إرساله للمعلم"
                 />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button variant="outline" size="sm" onClick={() => setRejectionReason('بيانات غير مكتملة')}>بيانات غير مكتملة</Button>
+                  <Button variant="outline" size="sm" onClick={() => setRejectionReason('بيانات غير صحيحة')}>بيانات غير صحيحة</Button>
+                  <Button variant="outline" size="sm" onClick={() => setRejectionReason('حساب مكرر')}>حساب مكرر</Button>
+                  <Button variant="outline" size="sm" onClick={() => setRejectionReason('المعلم غير مؤهل')}>المعلم غير مؤهل</Button>
+                </div>
               </div>
             </div>
             <DialogFooter className="flex-row-reverse gap-2">
@@ -1535,6 +1541,114 @@ export default function UsersManagement() {
               >
                 <XCircle className="h-4 w-4 ms-2" />
                 رفض وإرسال
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Approve Confirmation Dialog */}
+        <Dialog open={!!showApproveConfirm} onOpenChange={() => setShowApproveConfirm(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 flex-row-reverse justify-end text-green-600">
+                <CheckCircle2 className="h-5 w-5" />
+                تأكيد الموافقة على طلب إنشاء حساب
+              </DialogTitle>
+              <DialogDescription className="text-right">
+                هل أنت متأكد من الموافقة على طلب إنشاء حساب لهذا المعلم؟
+              </DialogDescription>
+            </DialogHeader>
+            {showApproveConfirm && (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/30 rounded-xl space-y-2 text-right">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold">{showApproveConfirm.full_name}</span>
+                    <span className="text-muted-foreground">الاسم:</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span dir="ltr">{showApproveConfirm.email}</span>
+                    <span className="text-muted-foreground">البريد:</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span dir="ltr">{showApproveConfirm.phone}</span>
+                    <span className="text-muted-foreground">الهاتف:</span>
+                  </div>
+                  {showApproveConfirm.subject && (
+                    <div className="flex items-center justify-between">
+                      <span>{showApproveConfirm.subject}</span>
+                      <span className="text-muted-foreground">المادة:</span>
+                    </div>
+                  )}
+                  {showApproveConfirm.educational_level && (
+                    <div className="flex items-center justify-between">
+                      <span>{showApproveConfirm.educational_level}</span>
+                      <span className="text-muted-foreground">المرحلة:</span>
+                    </div>
+                  )}
+                  {showApproveConfirm.school_mentioned && (
+                    <div className="flex items-center justify-between">
+                      <span>{showApproveConfirm.school_mentioned}</span>
+                      <span className="text-muted-foreground">المدرسة:</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  سيتم إنشاء حساب للمعلم وتوليد بيانات الدخول و QR Code
+                </p>
+              </div>
+            )}
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowApproveConfirm(null)}>إلغاء</Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  handleApproveRequest(showApproveConfirm);
+                  setShowApproveConfirm(null);
+                }}
+              >
+                <CheckCircle2 className="h-4 w-4 ms-2" />
+                تأكيد الموافقة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Request More Info Dialog */}
+        <Dialog open={!!showMoreInfoRequest} onOpenChange={() => setShowMoreInfoRequest(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 flex-row-reverse justify-end text-blue-600">
+                <Info className="h-5 w-5" />
+                طلب معلومات إضافية من {showMoreInfoRequest?.full_name}
+              </DialogTitle>
+              <DialogDescription className="text-right">
+                سيتم إرسال رسالة للمعلم تطلب منه تزويدكم بالمعلومات المحددة أدناه
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-right block">المعلومات المطلوبة من المعلم *</Label>
+                <Textarea 
+                  value={moreInfoMessage}
+                  onChange={(e) => setMoreInfoMessage(e.target.value)}
+                  className="rounded-xl text-right min-h-[100px]"
+                  placeholder="مثال: يرجى رفع صورة الهوية وتحديد المادة التي تدرسها..."
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button variant="outline" size="sm" onClick={() => setMoreInfoMessage('يرجى رفع صورة الهوية')}>رفع صورة الهوية</Button>
+                  <Button variant="outline" size="sm" onClick={() => setMoreInfoMessage('يرجى تأكيد المادة التي تدرسها')}>تأكيد المادة</Button>
+                  <Button variant="outline" size="sm" onClick={() => setMoreInfoMessage('يرجى تحديد المدرسة التي تعمل بها')}>تحديد المدرسة</Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowMoreInfoRequest(null)}>إلغاء</Button>
+              <Button 
+                onClick={() => handleRequestMoreInfo(showMoreInfoRequest)}
+                disabled={!moreInfoMessage.trim() || moreInfoMessage.trim().length < 10}
+              >
+                <Send className="h-4 w-4 ms-2" />
+                إرسال الطلب
               </Button>
             </DialogFooter>
           </DialogContent>
