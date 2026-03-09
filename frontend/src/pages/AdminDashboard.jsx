@@ -1431,58 +1431,273 @@ export const AdminDashboard = () => {
           <section data-testid="activity-section">
             <Card className="card-nassaq">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-cairo text-lg flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-brand-turquoise" />
-                    {isRTL ? 'نشاط المنصة اليومي' : 'Daily Platform Activity'}
-                    <Badge className="bg-red-500 text-white text-xs animate-pulse">
-                      {isRTL ? 'مباشر' : 'LIVE'}
-                    </Badge>
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="today">
-                      <SelectTrigger className="w-32 rounded-xl h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
-                        <SelectItem value="week">{isRTL ? 'الأسبوع' : 'This Week'}</SelectItem>
-                        <SelectItem value="month">{isRTL ? 'الشهر' : 'This Month'}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="flex flex-col gap-4">
+                  {/* العنوان وشريط التحكم */}
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="font-cairo text-lg flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-brand-turquoise" />
+                      {isRTL ? 'نشاط المنصة اليومي' : 'Daily Platform Activity'}
+                      <Badge className="bg-red-500 text-white text-xs animate-pulse">
+                        {isRTL ? 'مباشر' : 'LIVE'}
+                      </Badge>
+                    </CardTitle>
+                    
+                    {/* أدوات التحكم */}
+                    <div className="flex items-center gap-3">
+                      {/* الفترة الزمنية */}
+                      <Select value={activityPeriod} onValueChange={setActivityPeriod}>
+                        <SelectTrigger className="w-36 rounded-xl h-8 text-xs">
+                          <Clock className="h-3 w-3 me-1" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                          <SelectItem value="24h">{isRTL ? 'آخر 24 ساعة' : 'Last 24h'}</SelectItem>
+                          <SelectItem value="week">{isRTL ? 'الأسبوع الحالي' : 'This Week'}</SelectItem>
+                          <SelectItem value="month">{isRTL ? 'الشهر الحالي' : 'This Month'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* طريقة العرض */}
+                      <Select value={activityViewBy} onValueChange={setActivityViewBy}>
+                        <SelectTrigger className="w-32 rounded-xl h-8 text-xs">
+                          <BarChart3 className="h-3 w-3 me-1" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hour">{isRTL ? 'حسب الساعة' : 'By Hour'}</SelectItem>
+                          <SelectItem value="school">{isRTL ? 'حسب المدرسة' : 'By School'}</SelectItem>
+                          <SelectItem value="type">{isRTL ? 'حسب النوع' : 'By Type'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* فلاتر النشاط - Activity Filters */}
+                  <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-xl">
+                    <span className="text-xs font-medium text-muted-foreground">{isRTL ? 'إظهار:' : 'Show:'}</span>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={activityFilters.showLessons}
+                          onChange={(e) => setActivityFilters({...activityFilters, showLessons: e.target.checked})}
+                          className="rounded border-green-500 text-green-500 focus:ring-green-500"
+                        />
+                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                        <span className="text-xs">{isRTL ? 'الحصص' : 'Lessons'}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={activityFilters.showAttendance}
+                          onChange={(e) => setActivityFilters({...activityFilters, showAttendance: e.target.checked})}
+                          className="rounded border-blue-500 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span className="text-xs">{isRTL ? 'الحضور' : 'Attendance'}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={activityFilters.showGrades}
+                          onChange={(e) => setActivityFilters({...activityFilters, showGrades: e.target.checked})}
+                          className="rounded border-purple-500 text-purple-500 focus:ring-purple-500"
+                        />
+                        <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                        <span className="text-xs">{isRTL ? 'الدرجات' : 'Grades'}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={activityFilters.showUsers}
+                          onChange={(e) => setActivityFilters({...activityFilters, showUsers: e.target.checked})}
+                          className="rounded border-orange-500 text-orange-500 focus:ring-orange-500"
+                        />
+                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                        <span className="text-xs">{isRTL ? 'المستخدمين' : 'Users'}</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
+              
               <CardContent>
-                <div className="h-64">
+                {/* الرسم البياني التفاعلي */}
+                <div className="h-72 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sampleChartData}>
+                    <AreaChart data={activityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#38b2ac" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#38b2ac" stopOpacity={0}/>
+                        <linearGradient id="colorLessons" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
                         </linearGradient>
-                        <linearGradient id="colorTeachers" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#805ad5" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#805ad5" stopOpacity={0}/>
+                        <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorGrades" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: isDark ? '#1f2937' : '#fff',
                           border: 'none',
                           borderRadius: '12px',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                          direction: isRTL ? 'rtl' : 'ltr'
                         }}
+                        labelStyle={{ fontWeight: 'bold', marginBottom: '8px' }}
                       />
-                      <Area type="monotone" dataKey="students" stroke="#38b2ac" fillOpacity={1} fill="url(#colorStudents)" name={isRTL ? 'الطلاب' : 'Students'} />
-                      <Area type="monotone" dataKey="teachers" stroke="#805ad5" fillOpacity={1} fill="url(#colorTeachers)" name={isRTL ? 'المعلمين' : 'Teachers'} />
+                      {activityFilters.showLessons && (
+                        <Area 
+                          type="monotone" 
+                          dataKey="lessons" 
+                          stroke="#22c55e" 
+                          strokeWidth={2}
+                          fillOpacity={1} 
+                          fill="url(#colorLessons)" 
+                          name={isRTL ? 'الحصص المنفذة' : 'Lessons'} 
+                        />
+                      )}
+                      {activityFilters.showAttendance && (
+                        <Area 
+                          type="monotone" 
+                          dataKey="attendance" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2}
+                          fillOpacity={1} 
+                          fill="url(#colorAttendance)" 
+                          name={isRTL ? 'تسجيل الحضور' : 'Attendance'} 
+                        />
+                      )}
+                      {activityFilters.showGrades && (
+                        <Area 
+                          type="monotone" 
+                          dataKey="grades" 
+                          stroke="#8b5cf6" 
+                          strokeWidth={2}
+                          fillOpacity={1} 
+                          fill="url(#colorGrades)" 
+                          name={isRTL ? 'تسجيل الدرجات' : 'Grades'} 
+                        />
+                      )}
+                      {activityFilters.showUsers && (
+                        <Area 
+                          type="monotone" 
+                          dataKey="users" 
+                          stroke="#f97316" 
+                          strokeWidth={2}
+                          fillOpacity={1} 
+                          fill="url(#colorUsers)" 
+                          name={isRTL ? 'نشاط المستخدمين' : 'User Activity'} 
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+                
+                {/* ملخص المؤشرات - Quick Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-green-800">{isRTL ? 'الحصص المنفذة' : 'Lessons'}</span>
+                      <Badge className={activitySummary.lessons.status === 'high' ? 'bg-green-500' : activitySummary.lessons.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
+                        {activitySummary.lessons.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.lessons.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                      </Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-green-700">{activitySummary.lessons.count}</p>
+                    <p className={`text-xs flex items-center gap-1 ${activitySummary.lessons.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.lessons.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {activitySummary.lessons.change >= 0 ? '+' : ''}{activitySummary.lessons.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-blue-800">{isRTL ? 'تسجيلات الحضور' : 'Attendance'}</span>
+                      <Badge className={activitySummary.attendance.status === 'high' ? 'bg-green-500' : activitySummary.attendance.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
+                        {activitySummary.attendance.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.attendance.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                      </Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-700">{activitySummary.attendance.count}</p>
+                    <p className={`text-xs flex items-center gap-1 ${activitySummary.attendance.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.attendance.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {activitySummary.attendance.change >= 0 ? '+' : ''}{activitySummary.attendance.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-purple-800">{isRTL ? 'إدخالات الدرجات' : 'Grades'}</span>
+                      <Badge className={activitySummary.grades.status === 'high' ? 'bg-green-500' : activitySummary.grades.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
+                        {activitySummary.grades.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.grades.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                      </Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-700">{activitySummary.grades.count}</p>
+                    <p className={`text-xs flex items-center gap-1 ${activitySummary.grades.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.grades.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {activitySummary.grades.change >= 0 ? '+' : ''}{activitySummary.grades.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-orange-800">{isRTL ? 'المستخدمين النشطين' : 'Active Users'}</span>
+                      <Badge className={activitySummary.users.status === 'high' ? 'bg-green-500' : activitySummary.users.status === 'low' ? 'bg-red-500' : 'bg-gray-500'}>
+                        {activitySummary.users.status === 'high' ? (isRTL ? 'مرتفع' : 'High') : activitySummary.users.status === 'low' ? (isRTL ? 'منخفض' : 'Low') : (isRTL ? 'طبيعي' : 'Normal')}
+                      </Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-orange-700">{activitySummary.users.count}</p>
+                    <p className={`text-xs flex items-center gap-1 ${activitySummary.users.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {activitySummary.users.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {activitySummary.users.change >= 0 ? '+' : ''}{activitySummary.users.change}% {isRTL ? 'مقارنة بالأمس' : 'vs yesterday'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* تنبيهات النشاط - Activity Alerts */}
+                {activityAlerts.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-orange-500" />
+                      {isRTL ? 'تنبيهات النشاط' : 'Activity Alerts'}
+                    </h4>
+                    <div className="space-y-2">
+                      {activityAlerts.map((alert, index) => (
+                        <div 
+                          key={index}
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
+                            alert.type === 'critical' ? 'bg-red-50 border border-red-200' :
+                            alert.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
+                            'bg-blue-50 border border-blue-200'
+                          }`}
+                          onClick={() => toast.info(alert.message)}
+                        >
+                          <AlertTriangle className={`h-4 w-4 ${
+                            alert.type === 'critical' ? 'text-red-500' :
+                            alert.type === 'warning' ? 'text-yellow-500' :
+                            'text-blue-500'
+                          }`} />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{alert.title}</p>
+                            <p className="text-xs text-muted-foreground">{alert.message}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
