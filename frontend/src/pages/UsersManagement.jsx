@@ -1115,7 +1115,7 @@ export default function UsersManagement() {
                               <div className="flex flex-wrap lg:flex-col gap-2">
                                 <Button 
                                   className="bg-green-600 hover:bg-green-700 flex-1 lg:flex-none"
-                                  onClick={() => handleApproveRequest(request)}
+                                  onClick={() => setShowApproveConfirm(request)}
                                   data-testid={`approve-request-${request.id}`}
                                 >
                                   <CheckCircle2 className="h-4 w-4 ms-2" />
@@ -1133,7 +1133,7 @@ export default function UsersManagement() {
                                 <Button 
                                   variant="outline"
                                   className="flex-1 lg:flex-none"
-                                  onClick={() => handleRequestMoreInfo(request)}
+                                  onClick={() => setShowMoreInfoRequest(request)}
                                   data-testid={`info-request-${request.id}`}
                                 >
                                   <Info className="h-4 w-4 ms-2" />
