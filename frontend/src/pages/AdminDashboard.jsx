@@ -1511,10 +1511,10 @@ export const AdminDashboard = () => {
             {/* ============================================ */}
             {/* كروت المؤشرات المحسنة - Enhanced Analytics Cards */}
             {/* ============================================ */}
-            <div className={`grid gap-4 ${
-              viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' :
+            <div className={`grid gap-3 lg:gap-4 ${
+              viewMode === 'compact' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-6' :
               viewMode === 'expanded' ? 'grid-cols-1 md:grid-cols-2' :
-              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              'grid-cols-2 lg:grid-cols-3'
             }`} data-testid="analytics-cards-grid">
               {cardsOrder.map((cardKey) => renderAnalyticsCard(cardKey))}
             </div>
