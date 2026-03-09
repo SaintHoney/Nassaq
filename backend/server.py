@@ -443,6 +443,7 @@ async def create_platform_user(
     """
     # Validate allowed roles
     allowed_roles = [
+        'platform_admin',
         'platform_operations_manager',
         'platform_technical_admin', 
         'platform_support_specialist',
