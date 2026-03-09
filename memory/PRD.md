@@ -141,24 +141,24 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ### P0 - Critical (ALL COMPLETED ✅)
 - [x] Mobile-First Responsive Design
-- [x] Tenants Management Page (Card Layout)
-- [x] User Creation Wizard with RBAC
-- [x] Platform Admin role option
+- [x] Tenants Management Page (Card Layout) - ENHANCED with 2-column grid, toggles, localization
+- [x] User Creation Wizard with RBAC - Fixed API path /api/users/create
+- [x] Platform Admin role option - Added to allowed_roles in backend
 - [x] Role-specific permissions display
 - [x] Next button validation
 - [x] Sidebar logo rounded corners
 - [x] Sidebar collapsed user info
+- [x] User Card Action Buttons (View, Suspend, Edit, Delete, Notify) - Implemented in UsersManagement
+- [x] Interactive Tenant Stats Card - Click to filter schools by status
+- [x] School Suspend/AI Toggles - Per-school controls added
 
 ### P1 - High Priority (NEXT)
-- [ ] **User Card Action Buttons**:
-  - View User: Full profile page with activity logs
-  - Suspend User: With confirmation modal
-  - Edit User: Edit form
-  - Delete User: Soft delete (archive)
-  - Send Notification: Modal with notification options
+- [ ] Remove standalone Teacher Requests page (integrated as tab in UsersManagement)
+- [ ] Add page title icons (match sidebar icons)
 - [ ] Force Password Change on First Login UI
 - [ ] Teacher Dashboard enhancements
 - [ ] School Principal Dashboard
+- [ ] User Profile/Details page (for View action)
 
 ### P2 - Medium Priority
 - [ ] **Global Rules Management Page**: Central page for platform rules
