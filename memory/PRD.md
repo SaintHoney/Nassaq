@@ -666,10 +666,10 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ---
 
 ## 📌 Next Steps (P0 Priority)
-1. Build frontend pages for other user roles (School Principal, Teacher, Student, Parent)
-2. Apply RBAC middleware to existing endpoints in server.py
-3. Continue refactoring remaining logic from server.py to engines
-4. Build frontend UI for Scheduling, Attendance, and Assessment features
+1. Create users with roles: student, parent, school_principal to test dashboards
+2. Connect dashboards to real APIs (remove mock data)
+3. Build Teacher's Attendance Recording UI
+4. Build Teacher's Assessment/Grading UI
 
-## Last Updated: March 9, 2026
+## Last Updated: March 9, 2026 - Phase 15
 
