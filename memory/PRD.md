@@ -46,16 +46,19 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
   - Simplified activity chart for mobile
   - Mobile-optimized sidebar with toggle
 
-### ✅ Phase 4: Tenants Management Page (Completed & Verified - March 2026)
-- **صفحة إدارة المدارس (Card-Based Layout)**:
-  - **Card Layout**: 6-column grid with school cards (2xl:grid-cols-6)
-  - **Combined Statistics Card**: All school statuses (نشطة, إعداد, موقوفة, منتهية)
-  - **Stats Cards**: Teachers → Students → Schools (RTL order)
-  - **Add School Button**: Positioned on RIGHT side (correct for RTL)
+### ✅ Phase 4: Tenants Management Page (Completed & Enhanced - March 9, 2026)
+- **صفحة إدارة المدارس (Redesigned)**:
+  - **2-Column Grid Layout**: School cards displayed 2 per row
+  - **Fixed Card Size**: All cards have uniform 280px height
+  - **Interactive Stats Card**: Click on status (Active, Suspended, Setup, Expired) to filter
+  - **Stats Cards**: Teachers → Students → Total Schools (RTL order)
+  - **Suspend Toggle**: Per-school suspension control
+  - **AI Toggle**: Per-school AI features control
+  - **Full Localization**: Arabic/English support based on user language
   - Global search (name, code, phone, principal)
-  - Advanced filters (status, city, stage, type)
+  - Advanced filters (status, city, stage, type, AI status)
   - Grid/Table view toggle
-  - Bulk actions support
+  - Bulk actions support (enable AI, export, suspend)
 
 ### ✅ Phase 5: User Creation Wizard with RBAC (Completed & Fixed - March 2026)
 - **معالج إنشاء حساب مستخدم (All P0 Fixes Verified)**:
