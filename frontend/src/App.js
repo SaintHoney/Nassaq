@@ -38,6 +38,7 @@ import TenantsManagement from "./pages/TenantsManagement";
 import ForcePasswordChange from "./pages/ForcePasswordChange";
 import UsersManagement from "./pages/UsersManagement";
 import UserDetailsPage from "./pages/UserDetailsPage";
+import { PlatformAnalyticsPage } from "./pages/PlatformAnalyticsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) => {
