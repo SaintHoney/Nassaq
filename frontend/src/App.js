@@ -170,6 +170,14 @@ function AppRoutes() {
         path="/admin/users"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
+            <UsersManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users-old"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin']}>
             <PlatformUsersPage />
           </ProtectedRoute>
         }
