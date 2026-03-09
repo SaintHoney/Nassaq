@@ -2115,6 +2115,165 @@ export const AdminDashboard = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* ============================================ */}
+        {/* Mobile Filters Sheet */}
+        {/* ============================================ */}
+        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+          <SheetContent side={isRTL ? 'right' : 'left'} className="w-[85vw] sm:w-[400px] p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle className="font-cairo flex items-center gap-2">
+                <Filter className="h-5 w-5 text-brand-turquoise" />
+                {isRTL ? 'الفلاتر' : 'Filters'}
+              </SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-120px)]">
+              <div className="p-4 space-y-5">
+                {/* المنطقة - Region */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-brand-navy" />
+                    {isRTL ? 'المنطقة' : 'Region'}
+                  </label>
+                  <Select 
+                    value={filters.region || 'all_regions'} 
+                    onValueChange={(v) => setFilters({ ...filters, region: v === 'all_regions' ? '' : v, city: '' })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_regions">{isRTL ? 'كل المناطق' : 'All Regions'}</SelectItem>
+                      {REGIONS.map((region) => (
+                        <SelectItem key={region.value} value={region.value}>
+                          {isRTL ? region.label : region.label_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* المدينة - City */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-brand-turquoise" />
+                    {isRTL ? 'المدينة' : 'City'}
+                  </label>
+                  <Select 
+                    value={filters.city || 'all_cities'} 
+                    onValueChange={(v) => setFilters({ ...filters, city: v === 'all_cities' ? '' : v })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_cities">{isRTL ? 'كل المدن' : 'All Cities'}</SelectItem>
+                      {(filters.region 
+                        ? REGIONS.find(r => r.value === filters.region)?.cities || SAUDI_CITIES
+                        : SAUDI_CITIES
+                      ).map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* نوع المدرسة - School Type */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-brand-purple" />
+                    {isRTL ? 'نوع المدرسة' : 'School Type'}
+                  </label>
+                  <Select 
+                    value={filters.schoolType || 'all_types'} 
+                    onValueChange={(v) => setFilters({ ...filters, schoolType: v === 'all_types' ? '' : v })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_types">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
+                      {SCHOOL_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {isRTL ? type.label : type.label_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* الفترة الزمنية - Time Window */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-brand-purple" />
+                    {isRTL ? 'الفترة الزمنية' : 'Time Period'}
+                  </label>
+                  <Select value={filters.timeWindow} onValueChange={(v) => setFilters({ ...filters, timeWindow: v })}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="live">{isRTL ? 'الآن (Live)' : 'Live Now'}</SelectItem>
+                      <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                      <SelectItem value="week">{isRTL ? 'الأسبوع' : 'This Week'}</SelectItem>
+                      <SelectItem value="month">{isRTL ? 'الشهر' : 'This Month'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* حالة المدارس - Tenant Status */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-orange-500" />
+                    {isRTL ? 'حالة المدارس' : 'School Status'}
+                  </label>
+                  <Select value={filters.tenantStatus} onValueChange={(v) => setFilters({ ...filters, tenantStatus: v })}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
+                      <SelectItem value="active">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-500" />
+                          {isRTL ? 'نشطة' : 'Active'}
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="suspended">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500" />
+                          {isRTL ? 'موقوفة' : 'Suspended'}
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="setup">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                          {isRTL ? 'قيد الإعداد' : 'Setup'}
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </ScrollArea>
+            
+            {/* Action Buttons */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background flex gap-3">
+              <Button variant="outline" onClick={clearAllFilters} className="flex-1 rounded-xl">
+                {isRTL ? 'مسح الكل' : 'Clear All'}
+              </Button>
+              <Button 
+                onClick={() => {
+                  setMobileFiltersOpen(false);
+                  fetchStats(true);
+                }} 
+                className="flex-1 bg-brand-navy rounded-xl"
+              >
+                {isRTL ? 'تطبيق' : 'Apply'}
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </Sidebar>
   );
