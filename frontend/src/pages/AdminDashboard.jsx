@@ -1427,7 +1427,7 @@ export const AdminDashboard = () => {
           </section>
 
           {/* ============================================ */}
-          {/* 3. الإجراءات السريعة - Quick Actions */}
+          {/* 3. الإجراءات السريعة - Quick Actions (Operational Launch Pad) */}
           {/* ============================================ */}
           <section data-testid="quick-actions-section">
             <div className="flex items-center justify-between mb-4">
@@ -1435,22 +1435,30 @@ export const AdminDashboard = () => {
                 <Zap className="h-5 w-5 text-yellow-500" />
                 {isRTL ? 'الإجراءات السريعة' : 'Quick Actions'}
               </h2>
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? 'لوحة التشغيل الفورية' : 'Operational Launch Pad'}
+              </p>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {/* شريط أفقي رئيسي - Main Horizontal Bar */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {quickActions.map((action, index) => (
-                <Button
+                <Card
                   key={index}
-                  variant="outline"
-                  className="h-20 flex flex-col items-center justify-center gap-2 rounded-xl hover:border-brand-turquoise transition-all"
+                  className="card-nassaq hover:shadow-lg hover:border-brand-turquoise/50 transition-all cursor-pointer group"
                   onClick={action.action}
                   data-testid={`quick-action-${index}`}
                 >
-                  <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center`}>
-                    <action.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-xs font-medium">{action.label}</span>
-                </Button>
+                  <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+                    <div className={`w-14 h-14 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                      <action.icon className="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-cairo font-bold text-sm mb-1">{action.label}</p>
+                      <p className="text-xs text-muted-foreground">{action.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </section>
