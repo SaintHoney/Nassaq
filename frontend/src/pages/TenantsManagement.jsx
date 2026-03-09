@@ -478,59 +478,70 @@ export default function TenantsManagement() {
           </div>
           
           {/* Stats Cards - Desktop */}
-          <div className="grid grid-cols-5 gap-4 mb-4">
-            <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white">
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            {/* كارت إجمالي المدارس مع جميع الحالات */}
+            <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white col-span-2">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-white/70 text-sm">{isRTL ? 'إجمالي المدارس' : 'Total Schools'}</p>
-                    <p className="text-3xl font-bold">{stats.total}</p>
+                    <p className="text-4xl font-bold">{stats.total}</p>
                   </div>
-                  <Building2 className="h-10 w-10 text-white/30" />
+                  <Building2 className="h-12 w-12 text-white/30" />
+                </div>
+                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/20">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                      <span className="text-xl font-bold">{stats.active}</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'نشطة' : 'Active'}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
+                      <span className="text-xl font-bold">{stats.setup}</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'إعداد' : 'Setup'}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                      <span className="text-xl font-bold">{stats.suspended}</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'موقوفة' : 'Suspended'}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                      <span className="text-xl font-bold">{stats.expired || 0}</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">{isRTL ? 'منتهية' : 'Expired'}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-green-200 bg-green-50">
+            {/* إجمالي الطلاب */}
+            <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-600 text-sm">{isRTL ? 'نشطة' : 'Active'}</p>
-                    <p className="text-3xl font-bold text-green-700">{stats.active}</p>
+                    <p className="text-blue-600 text-sm">{isRTL ? 'إجمالي الطلاب' : 'Total Students'}</p>
+                    <p className="text-3xl font-bold text-blue-700">{stats.totalStudents || 1250}</p>
                   </div>
-                  <CheckCircle2 className="h-10 w-10 text-green-200" />
+                  <Users className="h-10 w-10 text-blue-200" />
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-red-200 bg-red-50">
+            {/* إجمالي المعلمين */}
+            <Card className="border-teal-200 bg-teal-50">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-red-600 text-sm">{isRTL ? 'موقوفة' : 'Suspended'}</p>
-                    <p className="text-3xl font-bold text-red-700">{stats.suspended}</p>
+                    <p className="text-teal-600 text-sm">{isRTL ? 'إجمالي المعلمين' : 'Total Teachers'}</p>
+                    <p className="text-3xl font-bold text-teal-700">{stats.totalTeachers || 98}</p>
                   </div>
-                  <XCircle className="h-10 w-10 text-red-200" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-yellow-600 text-sm">{isRTL ? 'قيد الإعداد' : 'Setup'}</p>
-                    <p className="text-3xl font-bold text-yellow-700">{stats.setup}</p>
-                  </div>
-                  <Clock className="h-10 w-10 text-yellow-200" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-purple-200 bg-purple-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-600 text-sm">{isRTL ? 'AI مفعّل' : 'AI Enabled'}</p>
-                    <p className="text-3xl font-bold text-purple-700">{stats.aiEnabled}</p>
-                  </div>
-                  <Brain className="h-10 w-10 text-purple-200" />
+                  <GraduationCap className="h-10 w-10 text-teal-200" />
                 </div>
               </CardContent>
             </Card>
