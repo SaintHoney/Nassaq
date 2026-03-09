@@ -528,19 +528,19 @@ export const AdminDashboard = () => {
               {isRTL ? 'الإجراءات السريعة' : 'Quick Actions'}
             </h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {quickActions.map((action, index) => (
                 <Card
                   key={index}
                   className="card-nassaq cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
-                  onClick={action.action}
+                  onClick={() => action.href ? navigate(action.href) : action.action?.()}
                   data-testid={`quick-action-${index}`}
                 >
                   <CardContent className="p-5 flex flex-col items-center text-center">
                     <div className={`w-14 h-14 rounded-2xl ${action.color} flex items-center justify-center mb-3`}>
                       <action.icon className="h-7 w-7 text-white" />
                     </div>
-                    <p className="font-cairo font-medium text-foreground">{action.title}</p>
+                    <p className="font-cairo font-medium text-foreground text-sm">{action.title}</p>
                   </CardContent>
                 </Card>
               ))}
