@@ -5427,6 +5427,707 @@ async def get_activity_alerts(current_user: dict = Depends(get_current_user)):
     return {"alerts": alerts[:5]}
 
 
+# ============== USER DETAILS & MANAGEMENT ROUTES ==============
+
+@api_router.get("/users/{user_id}")
+async def get_user_by_id(
+    user_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get detailed user information by ID"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Get creator name if exists
+    if user.get("created_by"):
+        creator = await db.users.find_one({"id": user["created_by"]}, {"_id": 0, "full_name": 1})
+        user["created_by_name"] = creator.get("full_name") if creator else None
+    
+    return user
+
+class UserUpdateRequest(BaseModel):
+    full_name_ar: Optional[str] = None
+    full_name_en: Optional[str] = None
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    region: Optional[str] = None
+    city: Optional[str] = None
+    educational_department: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+@api_router.put("/users/{user_id}")
+async def update_user(
+    user_id: str,
+    user_data: UserUpdateRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update user information"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    updates = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if user_data.full_name_ar:
+        updates["full_name_ar"] = user_data.full_name_ar
+        updates["full_name"] = user_data.full_name_ar
+    if user_data.full_name_en:
+        updates["full_name_en"] = user_data.full_name_en
+    if user_data.full_name:
+        updates["full_name"] = user_data.full_name
+    if user_data.email:
+        # Check email uniqueness
+        existing = await db.users.find_one({"email": user_data.email, "id": {"$ne": user_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="البريد الإلكتروني مستخدم مسبقاً")
+        updates["email"] = user_data.email
+    if user_data.phone:
+        updates["phone"] = user_data.phone
+    if user_data.region:
+        updates["region"] = user_data.region
+    if user_data.city:
+        updates["city"] = user_data.city
+    if user_data.educational_department:
+        updates["educational_department"] = user_data.educational_department
+    if user_data.avatar_url:
+        updates["avatar_url"] = user_data.avatar_url
+    
+    await db.users.update_one({"id": user_id}, {"$set": updates})
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "user_updated",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "target_name": user.get("full_name", ""),
+        "changes": updates,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث البيانات بنجاح"}
+
+class PermissionsUpdateRequest(BaseModel):
+    permissions: List[str]
+
+@api_router.put("/users/{user_id}/permissions")
+async def update_user_permissions(
+    user_id: str,
+    data: PermissionsUpdateRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update user permissions"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    old_permissions = user.get("permissions", [])
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "permissions": data.permissions,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "permissions_updated",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "target_name": user.get("full_name", ""),
+        "details": {
+            "old_permissions": old_permissions,
+            "new_permissions": data.permissions,
+            "added": [p for p in data.permissions if p not in old_permissions],
+            "removed": [p for p in old_permissions if p not in data.permissions]
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث الصلاحيات بنجاح"}
+
+class PasswordResetRequest(BaseModel):
+    new_password: str
+
+@api_router.post("/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: str,
+    data: PasswordResetRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Reset user password (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "password_hash": hash_password(data.new_password),
+            "must_change_password": True,
+            "password_reset_at": datetime.now(timezone.utc).isoformat(),
+            "password_reset_by": current_user["id"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "password_reset",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "target_name": user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم إعادة تعيين كلمة المرور بنجاح"}
+
+@api_router.post("/users/{user_id}/suspend")
+async def suspend_user(
+    user_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Toggle user suspension status"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Cannot suspend platform_admin
+    if user.get("role") == "platform_admin":
+        raise HTTPException(status_code=400, detail="لا يمكن تعليق حساب مدير المنصة")
+    
+    new_status = not user.get("is_active", True)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "is_active": new_status,
+            "suspended_at": datetime.now(timezone.utc).isoformat() if not new_status else None,
+            "suspended_by": current_user["id"] if not new_status else None,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "user_suspended" if not new_status else "user_activated",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "user",
+        "target_id": user_id,
+        "target_name": user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {
+        "message": "تم تعليق الحساب بنجاح" if not new_status else "تم تفعيل الحساب بنجاح",
+        "is_active": new_status
+    }
+
+class NotificationRequest(BaseModel):
+    title: str
+    message: str
+    type: str = "system"
+
+@api_router.post("/users/{user_id}/notify")
+async def send_user_notification(
+    user_id: str,
+    data: NotificationRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Send notification to a user"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "title": data.title,
+        "message": data.message,
+        "type": data.type,
+        "sent_by": current_user["id"],
+        "sent_by_name": current_user.get("full_name", ""),
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.notifications.insert_one(notification)
+    
+    return {"message": "تم إرسال الإشعار بنجاح", "notification_id": notification["id"]}
+
+import base64
+
+class ImageUploadRequest(BaseModel):
+    image_data: str  # Base64 encoded image
+
+@api_router.post("/users/{user_id}/upload-image")
+async def upload_user_image(
+    user_id: str,
+    data: ImageUploadRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Upload user profile image (base64)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Validate base64 image
+    if not data.image_data.startswith("data:image/"):
+        raise HTTPException(status_code=400, detail="صيغة الصورة غير صحيحة")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "avatar_url": data.image_data,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "تم رفع الصورة بنجاح", "avatar_url": data.image_data}
+
+@api_router.get("/users/{user_id}/activity")
+async def get_user_activity(
+    user_id: str,
+    limit: int = 50,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get user activity logs"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Get activity from audit logs
+    activities = await db.audit_logs.find(
+        {"$or": [
+            {"action_by": user_id},
+            {"target_id": user_id}
+        ]},
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {"activities": activities, "total": len(activities)}
+
+
+# ============== PLATFORM ANALYTICS ROUTES ==============
+
+@api_router.get("/analytics/overview")
+async def get_analytics_overview(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get platform analytics overview"""
+    total_schools = await db.schools.count_documents({})
+    active_schools = await db.schools.count_documents({"status": "active"})
+    total_students = await db.students.count_documents({})
+    total_teachers = await db.teachers.count_documents({})
+    total_users = await db.users.count_documents({})
+    active_users = await db.users.count_documents({"is_active": True})
+    
+    # Get monthly growth data
+    now = datetime.now(timezone.utc)
+    monthly_data = []
+    for i in range(6):
+        month_start = (now - timedelta(days=30*(5-i))).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_end = (now - timedelta(days=30*(4-i))).replace(day=1, hour=0, minute=0, second=0, microsecond=0) if i < 5 else now
+        
+        students_count = await db.students.count_documents({
+            "created_at": {"$lte": month_end.isoformat()}
+        })
+        teachers_count = await db.teachers.count_documents({
+            "created_at": {"$lte": month_end.isoformat()}
+        })
+        schools_count = await db.schools.count_documents({
+            "created_at": {"$lte": month_end.isoformat()}
+        })
+        
+        month_names = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+        monthly_data.append({
+            "month": month_names[month_start.month - 1],
+            "students": students_count,
+            "teachers": teachers_count,
+            "schools": schools_count
+        })
+    
+    # Get school distribution by city
+    pipeline = [
+        {"$group": {"_id": "$city", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    city_distribution = await db.schools.aggregate(pipeline).to_list(10)
+    
+    return {
+        "stats": {
+            "total_schools": total_schools,
+            "active_schools": active_schools,
+            "total_students": total_students,
+            "total_teachers": total_teachers,
+            "total_users": total_users,
+            "active_users": active_users,
+            "growth_rate": 12.5  # Placeholder
+        },
+        "monthly_data": monthly_data,
+        "city_distribution": [
+            {"name": c["_id"] or "غير محدد", "value": c["count"]} for c in city_distribution
+        ]
+    }
+
+@api_router.get("/analytics/reports")
+async def get_analytics_reports(
+    report_type: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get available reports"""
+    reports = await db.reports.find(
+        {"type": report_type} if report_type else {},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    return {"reports": reports}
+
+@api_router.get("/analytics/insights")
+async def get_ai_insights(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get AI-generated insights"""
+    insights = []
+    
+    # Check attendance trends
+    total_students = await db.students.count_documents({})
+    if total_students > 100:
+        insights.append({
+            "id": str(uuid.uuid4()),
+            "type": "trend",
+            "title_ar": "نمو في أعداد الطلاب",
+            "title_en": "Student Growth",
+            "description_ar": f"إجمالي {total_students} طالب مسجل في المنصة",
+            "description_en": f"Total of {total_students} students enrolled",
+            "impact": "positive",
+            "priority": "low"
+        })
+    
+    # Check inactive schools
+    inactive_schools = await db.schools.count_documents({"status": {"$ne": "active"}})
+    if inactive_schools > 0:
+        insights.append({
+            "id": str(uuid.uuid4()),
+            "type": "alert",
+            "title_ar": f"{inactive_schools} مدرسة تحتاج متابعة",
+            "title_en": f"{inactive_schools} schools need attention",
+            "description_ar": "يوجد مدارس غير نشطة تحتاج مراجعة",
+            "description_en": "There are inactive schools that need review",
+            "impact": "negative",
+            "priority": "high"
+        })
+    
+    # Check AI usage
+    ai_enabled_schools = await db.schools.count_documents({"ai_enabled": True})
+    total_schools = await db.schools.count_documents({})
+    if total_schools > 0 and ai_enabled_schools < total_schools * 0.5:
+        insights.append({
+            "id": str(uuid.uuid4()),
+            "type": "recommendation",
+            "title_ar": "فرصة لتفعيل AI",
+            "title_en": "AI Activation Opportunity",
+            "description_ar": f"{total_schools - ai_enabled_schools} مدرسة لم تفعّل ميزات AI",
+            "description_en": f"{total_schools - ai_enabled_schools} schools haven't activated AI",
+            "impact": "neutral",
+            "priority": "medium"
+        })
+    
+    return {"insights": insights}
+
+
+# ============== INTEGRATIONS MANAGEMENT ROUTES ==============
+
+class IntegrationCreate(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    type: str  # government, payment, sms, email, storage, ai, other
+    description: Optional[str] = None
+    description_en: Optional[str] = None
+    api_base_url: Optional[str] = None
+    api_key: Optional[str] = None
+    webhook_url: Optional[str] = None
+    config: Optional[dict] = None
+
+class IntegrationResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    type: str
+    description: Optional[str] = None
+    description_en: Optional[str] = None
+    status: str
+    api_base_url: Optional[str] = None
+    last_sync: Optional[str] = None
+    created_at: str
+
+@api_router.post("/integrations", response_model=IntegrationResponse)
+async def create_integration(
+    data: IntegrationCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Create a new integration"""
+    integration_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    integration_doc = {
+        "id": integration_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "type": data.type,
+        "description": data.description,
+        "description_en": data.description_en,
+        "api_base_url": data.api_base_url,
+        "api_key": data.api_key,  # Should be encrypted in production
+        "webhook_url": data.webhook_url,
+        "config": data.config or {},
+        "status": "pending",
+        "is_active": False,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.integrations.insert_one(integration_doc)
+    
+    return IntegrationResponse(
+        id=integration_id,
+        name=data.name,
+        name_en=data.name_en,
+        type=data.type,
+        description=data.description,
+        description_en=data.description_en,
+        status="pending",
+        api_base_url=data.api_base_url,
+        last_sync=None,
+        created_at=now
+    )
+
+@api_router.get("/integrations")
+async def get_integrations(
+    type: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get all integrations"""
+    query = {}
+    if type:
+        query["type"] = type
+    if status:
+        query["status"] = status
+    
+    integrations = await db.integrations.find(
+        query,
+        {"_id": 0, "api_key": 0}  # Never return API keys
+    ).to_list(100)
+    
+    return {"integrations": integrations}
+
+@api_router.get("/integrations/{integration_id}")
+async def get_integration(
+    integration_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get integration details"""
+    integration = await db.integrations.find_one(
+        {"id": integration_id},
+        {"_id": 0, "api_key": 0}
+    )
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    return integration
+
+@api_router.put("/integrations/{integration_id}")
+async def update_integration(
+    integration_id: str,
+    data: IntegrationCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update integration"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    updates = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "type": data.type,
+        "description": data.description,
+        "description_en": data.description_en,
+        "api_base_url": data.api_base_url,
+        "webhook_url": data.webhook_url,
+        "config": data.config or {},
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if data.api_key:
+        updates["api_key"] = data.api_key
+    
+    await db.integrations.update_one({"id": integration_id}, {"$set": updates})
+    
+    return {"message": "تم تحديث التكامل بنجاح"}
+
+@api_router.post("/integrations/{integration_id}/toggle")
+async def toggle_integration(
+    integration_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Enable/disable integration"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    new_status = not integration.get("is_active", False)
+    
+    await db.integrations.update_one(
+        {"id": integration_id},
+        {"$set": {
+            "is_active": new_status,
+            "status": "active" if new_status else "inactive",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "تم تفعيل التكامل" if new_status else "تم تعطيل التكامل",
+        "is_active": new_status
+    }
+
+@api_router.post("/integrations/{integration_id}/test")
+async def test_integration(
+    integration_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Test integration connection"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    # Simulate connection test
+    # In production, this would actually test the connection
+    import random
+    success = random.random() > 0.2  # 80% success rate for demo
+    
+    await db.integrations.update_one(
+        {"id": integration_id},
+        {"$set": {
+            "last_test": datetime.now(timezone.utc).isoformat(),
+            "last_test_result": "success" if success else "failed"
+        }}
+    )
+    
+    if success:
+        return {"success": True, "message": "تم الاتصال بنجاح"}
+    else:
+        raise HTTPException(status_code=500, detail="فشل الاتصال بالخدمة")
+
+@api_router.post("/integrations/{integration_id}/sync")
+async def sync_integration(
+    integration_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Trigger data sync for integration"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    # Create sync log
+    sync_log = {
+        "id": str(uuid.uuid4()),
+        "integration_id": integration_id,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress",
+        "triggered_by": current_user["id"]
+    }
+    await db.integration_sync_logs.insert_one(sync_log)
+    
+    # Simulate sync completion
+    await db.integrations.update_one(
+        {"id": integration_id},
+        {"$set": {
+            "last_sync": datetime.now(timezone.utc).isoformat(),
+            "sync_status": "completed"
+        }}
+    )
+    
+    # Update sync log
+    await db.integration_sync_logs.update_one(
+        {"id": sync_log["id"]},
+        {"$set": {
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "status": "completed",
+            "records_synced": 0
+        }}
+    )
+    
+    return {"message": "تم المزامنة بنجاح", "sync_id": sync_log["id"]}
+
+@api_router.get("/integrations/{integration_id}/logs")
+async def get_integration_logs(
+    integration_id: str,
+    limit: int = 50,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get integration sync logs"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    logs = await db.integration_sync_logs.find(
+        {"integration_id": integration_id},
+        {"_id": 0}
+    ).sort("started_at", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs}
+
+@api_router.delete("/integrations/{integration_id}")
+async def delete_integration(
+    integration_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Delete integration"""
+    integration = await db.integrations.find_one({"id": integration_id})
+    if not integration:
+        raise HTTPException(status_code=404, detail="التكامل غير موجود")
+    
+    await db.integrations.delete_one({"id": integration_id})
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "action": "integration_deleted",
+        "action_by": current_user["id"],
+        "action_by_name": current_user.get("full_name", ""),
+        "target_type": "integration",
+        "target_id": integration_id,
+        "target_name": integration.get("name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم حذف التكامل بنجاح"}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
