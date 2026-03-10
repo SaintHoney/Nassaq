@@ -635,10 +635,11 @@ class StudentManagementEngine:
     
     async def get_grades(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available grades for a school"""
-        grades = list(self.grades_collection.find(
+        cursor = self.grades_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
-        ))
+        )
+        grades = await cursor.to_list(length=100)
         
         # If no grades found, return default grades
         if not grades:
@@ -659,7 +660,8 @@ class StudentManagementEngine:
         if grade_id:
             query["grade_id"] = grade_id
         
-        sections = list(self.sections_collection.find(query, {"_id": 0}))
+        cursor = self.sections_collection.find(query, {"_id": 0})
+        sections = await cursor.to_list(length=100)
         
         # If no sections found, return default sections
         if not sections:
