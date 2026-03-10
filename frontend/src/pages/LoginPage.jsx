@@ -420,7 +420,7 @@ export const LoginPage = () => {
                   
                   {/* School Principal - مدرسة الحديثة */}
                   <div 
-                    className="col-span-2 p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
                       setEmail('principal5@nassaq.com');
                       setPassword('Principal@123');
@@ -430,12 +430,57 @@ export const LoginPage = () => {
                     <p className="text-xs font-medium text-brand-turquoise">
                       {isRTL ? 'مدير مدرسة الحديثة' : 'Al-Haditha Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono">principal5@nassaq.com / Principal@123</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal5@nassaq.com</p>
+                  </div>
+                  
+                  {/* Teacher */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-brand-purple/5 border border-brand-purple/20 cursor-pointer hover:bg-brand-purple/10 transition-colors"
+                    onClick={() => {
+                      setEmail('teacher1@nor.edu.sa');
+                      setPassword('Teacher@123');
+                    }}
+                    data-testid="test-teacher-credentials"
+                  >
+                    <p className="text-xs font-medium text-brand-purple">
+                      {isRTL ? 'معلم' : 'Teacher'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">teacher1@nor.edu.sa</p>
+                  </div>
+                  
+                  {/* Student */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('student1@nor.edu.sa');
+                      setPassword('Student@123');
+                    }}
+                    data-testid="test-student-credentials"
+                  >
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      {isRTL ? 'طالب' : 'Student'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">student1@nor.edu.sa</p>
+                  </div>
+                  
+                  {/* Parent */}
+                  <div 
+                    className="col-span-2 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('parent1@nor.edu.sa');
+                      setPassword('Parent@123');
+                    }}
+                    data-testid="test-parent-credentials"
+                  >
+                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      {isRTL ? 'ولي أمر' : 'Parent'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono">parent1@nor.edu.sa / Parent@123</p>
                   </div>
                 </div>
                 
                 <p className="text-[10px] text-muted-foreground font-tajawal text-center mt-3">
-                  {isRTL ? '💡 كلمة مرور مدراء المدارس: Principal@123' : '💡 All principals password: Principal@123'}
+                  {isRTL ? '💡 كلمات المرور: Principal@123 | Teacher@123 | Student@123 | Parent@123' : '💡 Passwords: Principal@123 | Teacher@123 | Student@123 | Parent@123'}
                 </p>
               </div>
             </CardContent>
