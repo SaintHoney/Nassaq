@@ -699,14 +699,6 @@ export const SchoolDashboardContent = () => {
         />
       </section>
 
-      {/* Section 3: Quick Actions */}
-      <section data-testid="quick-actions-section">
-        <QuickActionsCard 
-          onAction={handleQuickAction}
-          isRTL={isRTL}
-        />
-      </section>
-
       {/* Wizards */}
       <AddStudentWizard 
         open={showAddStudentWizard} 
