@@ -611,10 +611,22 @@ export const SchoolDashboardContent = () => {
         />
       </section>
 
-      {/* Add Student Wizard */}
+      {/* Wizards */}
       <AddStudentWizard 
         open={showAddStudentWizard} 
         onClose={() => setShowAddStudentWizard(false)} 
+      />
+      <AddTeacherWizard 
+        open={showAddTeacherWizard} 
+        onClose={() => setShowAddTeacherWizard(false)} 
+      />
+      <CreateClassWizard 
+        open={showCreateClassWizard} 
+        onClose={() => setShowCreateClassWizard(false)} 
+      />
+      <SendNotificationWizard 
+        open={showSendNotificationWizard} 
+        onClose={() => setShowSendNotificationWizard(false)} 
       />
     </div>
   );
