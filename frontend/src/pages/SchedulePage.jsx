@@ -180,6 +180,7 @@ export const SchedulePage = () => {
       
       setSessions(sessionsRes.data);
       setConflicts(conflictsRes.data.conflicts || []);
+      setConflictStats(conflictsRes.data.statistics || null);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
     }
