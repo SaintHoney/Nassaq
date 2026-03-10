@@ -665,11 +665,99 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ---
 
+---
+
+### Latest Changes (March 10, 2026 - Phase 16 - Teacher Self-Registration & Principal Dashboard):
+
+## ✅ واجهة تسجيل المعلم الفردي (Teacher Self-Registration)
+تم بناء واجهة تسجيل المعلم بالكامل مع معالج من 5 خطوات:
+
+1. **TeacherSelfRegistration.jsx** ✅
+   - الخطوة 1: البيانات الأساسية (الاسم، الهوية، الهاتف، البريد)
+   - الخطوة 2: المعلومات المهنية (المادة، المرحلة، الخبرة، المؤهل)
+   - الخطوة 3: رتبة المعلم (خبير، متقدم، ممارس، مساعد)
+   - الخطوة 4: بيانات المدرسة (الاسم، الدولة، المدينة، النوع)
+   - الخطوة 5: صفحة النجاح مع كود التتبع
+
+2. **الميزات المضافة**:
+   - تتبع الطلب عبر كود فريد (TR-XXXXXXXX)
+   - عد تنازلي 24 ساعة للمراجعة
+   - دعم الدعوات من معلمين آخرين
+   - تصميم متجاوب ومتناسق مع ألوان النظام
+   - دعم RTL/LTR كامل
+
+3. **روابط جديدة في Landing Page**:
+   - زر "انضم كمعلم" في Hero Section
+   - قسم "هل أنت معلم؟" مع زر التسجيل
+
+## ✅ لوحة تحكم مدير المدرسة الجديدة (School Principal Dashboard)
+تم إعادة تصميم لوحة تحكم مدير المدرسة بالكامل وفق المتطلبات التفصيلية:
+
+1. **SchoolDashboardContent.jsx** ✅ (مكون جديد)
+   - القسم 1: مؤشرات الأداء الرئيسية (6 كروت):
+     * عدد الطلاب (مع مقارنة بالأمس ومؤشر الحالة)
+     * عدد المعلمين
+     * عدد الفصول
+     * حصص اليوم
+     * المستخدمين النشطين
+     * حصص الانتظار
+   
+   - القسم 2: نسبة الحضور اليوم
+     * تفاصيل الطلاب (حاضر، غائب، مستأذن)
+     * تفاصيل المعلمين
+     * شريط تقدم مرئي
+   
+   - القسم 3: يحتاج تدخل الآن
+     * حصص بلا معلم
+     * معلمين غياب متكرر
+     * فصول حضور أقل من 80%
+   
+   - القسم 4: التنبيهات والإشعارات
+     * انخفاض الحضور
+     * معلم بدون جدول
+     * نشاط غير طبيعي
+   
+   - القسم 5: الإجراءات السريعة (6 أزرار)
+     * إضافة طالب
+     * إضافة معلم
+     * إنشاء فصل
+     * إنشاء جدول
+     * الحصص الجارية
+     * إرسال إشعار
+
+2. **توحيد SchoolDashboard و PrincipalDashboard** ✅
+   - كلا الصفحتين يستخدمان الآن نفس المكون
+   - تصميم موحد ومتسق
+
+## 📁 الملفات الجديدة/المحدثة:
+```
+/app/frontend/src/
+├── pages/
+│   ├── TeacherSelfRegistration.jsx   # NEW
+│   ├── PrincipalDashboard.jsx        # UPDATED (unified)
+│   └── SchoolDashboard.jsx           # UPDATED (unified)
+├── components/
+│   └── dashboard/
+│       └── SchoolDashboardContent.jsx # NEW
+└── App.js                             # UPDATED (new route)
+```
+
 ## 📌 Next Steps (P0 Priority)
-1. Create users with roles: student, parent, school_principal to test dashboards
+1. **بناء معالجات Quick Actions**:
+   - Wizard إضافة طالب (4 مراحل)
+   - Wizard إضافة معلم (5 مراحل)
+   - Wizard إنشاء فصل (4 مراحل)
 2. Connect dashboards to real APIs (remove mock data)
 3. Build Teacher's Attendance Recording UI
 4. Build Teacher's Assessment/Grading UI
 
-## Last Updated: March 9, 2026 - Phase 15
+## 📌 Upcoming Tasks (P1 Priority)
+- استكمال بناء صفحات مدير المدرسة:
+  - إدارة الطلاب
+  - إدارة المعلمين
+  - إدارة الفصول
+  - الجداول الدراسية
+- إعادة هيكلة server.py (نقل الـ logic لملفات routes منفصلة)
+
+## Last Updated: March 10, 2026 - Phase 16
 
