@@ -177,7 +177,7 @@ export const Sidebar = ({ children }) => {
       {
         icon: Bell,
         label: isRTL ? 'مركز التواصل والإشعارات' : 'Communication Center',
-        href: '/admin/communication',
+        href: '/principal/communication',
         roles: ['school_principal', 'school_sub_admin'],
       },
       // 8. Reports & Analytics
