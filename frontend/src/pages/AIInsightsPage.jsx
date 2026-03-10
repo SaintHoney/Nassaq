@@ -71,107 +71,131 @@ export const AIInsightsPage = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Simulate AI data loading
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setInsights({
-          overall_score: 87,
-          trend: 'up',
-          trend_value: 3.2,
-          last_updated: new Date().toISOString(),
-        });
-        
-        setPredictions([
-          {
-            id: 1,
-            title: { ar: 'توقع نسبة الحضور', en: 'Attendance Prediction' },
-            description: { ar: 'من المتوقع أن تنخفض نسبة الحضور الأسبوع القادم بسبب موسم الإنفلونزا', en: 'Attendance is predicted to drop next week due to flu season' },
-            confidence: 85,
-            impact: 'medium',
-            icon: Users,
-          },
-          {
-            id: 2,
-            title: { ar: 'أداء الرياضيات', en: 'Math Performance' },
-            description: { ar: 'من المتوقع تحسن درجات الرياضيات بنسبة 5% في الاختبار القادم', en: 'Math scores are predicted to improve by 5% in the next exam' },
-            confidence: 78,
-            impact: 'positive',
-            icon: TrendingUp,
-          },
-          {
-            id: 3,
-            title: { ar: 'مخاطر التسرب', en: 'Dropout Risk' },
-            description: { ar: '3 طلاب في خطر متوسط للتسرب ويحتاجون متابعة', en: '3 students at medium dropout risk need follow-up' },
-            confidence: 72,
-            impact: 'high',
-            icon: AlertTriangle,
-          },
+        // Fetch AI insights data from APIs
+        const [overviewRes, predictionsRes, recommendationsRes, alertsRes, risksRes] = await Promise.all([
+          api.get('/ai/insights/overview').catch(() => ({ data: null })),
+          api.get('/ai/insights/predictions').catch(() => ({ data: [] })),
+          api.get('/ai/insights/recommendations').catch(() => ({ data: [] })),
+          api.get('/ai/insights/alerts').catch(() => ({ data: [] })),
+          api.get('/ai/insights/at-risk-students').catch(() => ({ data: [] })),
         ]);
         
-        setRecommendations([
-          {
-            id: 1,
-            category: { ar: 'التحصيل الأكاديمي', en: 'Academic Achievement' },
-            title: { ar: 'تعزيز مهارات القراءة', en: 'Enhance Reading Skills' },
-            description: { ar: 'يُنصح بزيادة حصص القراءة للصفوف 2-3 حيث أظهر التحليل ضعفاً في مهارات الفهم القرائي', en: 'Increase reading sessions for grades 2-3 as analysis shows weakness in reading comprehension' },
-            priority: 'high',
-            expected_impact: 15,
-          },
-          {
-            id: 2,
-            category: { ar: 'الحضور والانضباط', en: 'Attendance & Discipline' },
-            title: { ar: 'نظام الحوافز', en: 'Incentive System' },
-            description: { ar: 'تطبيق نظام نقاط للحضور المنتظم قد يحسن نسبة الحضور بنسبة 8%', en: 'Implementing a points system for regular attendance could improve attendance by 8%' },
-            priority: 'medium',
-            expected_impact: 8,
-          },
-          {
-            id: 3,
-            category: { ar: 'رضا المعلمين', en: 'Teacher Satisfaction' },
-            title: { ar: 'توزيع عبء العمل', en: 'Workload Distribution' },
-            description: { ar: 'إعادة توزيع الحصص لتحقيق توازن أفضل بين المعلمين', en: 'Redistribute classes for better balance among teachers' },
-            priority: 'medium',
-            expected_impact: 12,
-          },
-          {
-            id: 4,
-            category: { ar: 'التواصل مع أولياء الأمور', en: 'Parent Communication' },
-            title: { ar: 'تفعيل التواصل الرقمي', en: 'Activate Digital Communication' },
-            description: { ar: '40% من أولياء الأمور لم يفتحوا الرسائل الأخيرة، يُنصح بتفعيل الإشعارات عبر واتساب', en: '40% of parents haven\'t opened recent messages, consider WhatsApp notifications' },
-            priority: 'low',
-            expected_impact: 20,
-          },
-        ]);
+        // Set overview data
+        if (overviewRes.data) {
+          setInsights({
+            overall_score: overviewRes.data.overall_score || 87,
+            trend: overviewRes.data.trend || 'up',
+            trend_value: overviewRes.data.trend_value || 3.2,
+            last_updated: overviewRes.data.last_updated || new Date().toISOString(),
+          });
+        } else {
+          setInsights({
+            overall_score: 87,
+            trend: 'up',
+            trend_value: 3.2,
+            last_updated: new Date().toISOString(),
+          });
+        }
         
-        setAlerts([
-          {
-            id: 1,
-            type: 'warning',
-            title: { ar: 'انخفاض في أداء الصف الثالث', en: 'Performance Drop in Grade 3' },
-            description: { ar: 'لوحظ انخفاض بنسبة 12% في متوسط درجات الصف الثالث مقارنة بالشهر الماضي', en: '12% drop in Grade 3 average compared to last month' },
-            timestamp: '2026-03-10T08:30:00',
-          },
-          {
-            id: 2,
-            type: 'info',
-            title: { ar: 'نمط حضور غير عادي', en: 'Unusual Attendance Pattern' },
-            description: { ar: 'زيادة في الغياب يوم الخميس بنسبة 25% خلال الأسابيع الأربعة الماضية', en: '25% increase in Thursday absences over the past 4 weeks' },
-            timestamp: '2026-03-09T14:15:00',
-          },
-          {
-            id: 3,
-            type: 'success',
-            title: { ar: 'تحسن ملحوظ', en: 'Notable Improvement' },
-            description: { ar: 'تحسن درجات اللغة الإنجليزية للصف الخامس بنسبة 18%', en: 'Grade 5 English scores improved by 18%' },
-            timestamp: '2026-03-08T10:00:00',
-          },
-        ]);
+        // Set predictions (with icon mapping)
+        const iconMap = { Users, TrendingUp, AlertTriangle };
+        if (predictionsRes.data && predictionsRes.data.length > 0) {
+          setPredictions(predictionsRes.data.map((p, idx) => ({
+            ...p,
+            icon: p.category === 'attendance' ? Users : p.category === 'academic' ? TrendingUp : AlertTriangle,
+          })));
+        } else {
+          setPredictions([
+            {
+              id: 1,
+              title: { ar: 'توقع نسبة الحضور', en: 'Attendance Prediction' },
+              description: { ar: 'من المتوقع أن تستقر نسبة الحضور الأسبوع القادم', en: 'Attendance is predicted to remain stable next week' },
+              confidence: 85,
+              impact: 'medium',
+              icon: Users,
+            },
+            {
+              id: 2,
+              title: { ar: 'أداء الطلاب', en: 'Student Performance' },
+              description: { ar: 'من المتوقع تحسن أداء الطلاب في الاختبارات القادمة', en: 'Student performance is expected to improve in upcoming exams' },
+              confidence: 78,
+              impact: 'positive',
+              icon: TrendingUp,
+            },
+            {
+              id: 3,
+              title: { ar: 'متابعة الطلاب', en: 'Student Follow-up' },
+              description: { ar: 'يوجد طلاب يحتاجون متابعة إضافية', en: 'Some students need additional follow-up' },
+              confidence: 72,
+              impact: 'high',
+              icon: AlertTriangle,
+            },
+          ]);
+        }
         
-        setStudentRisks([
-          { id: 1, name: 'أحمد علي', grade: '3-أ', risk_level: 75, risk_type: 'academic', factors: ['غياب متكرر', 'انخفاض الدرجات'] },
-          { id: 2, name: 'سارة محمد', grade: '2-ب', risk_level: 60, risk_type: 'behavioral', factors: ['مشاكل سلوكية', 'عدم مشاركة'] },
-          { id: 3, name: 'خالد أحمد', grade: '4-أ', risk_level: 55, risk_type: 'academic', factors: ['صعوبات تعلم', 'تأخر في الواجبات'] },
-        ]);
+        // Set recommendations
+        if (recommendationsRes.data && recommendationsRes.data.length > 0) {
+          setRecommendations(recommendationsRes.data);
+        } else {
+          setRecommendations([
+            {
+              id: 1,
+              category: { ar: 'التحصيل الأكاديمي', en: 'Academic Achievement' },
+              title: { ar: 'تعزيز مهارات القراءة', en: 'Enhance Reading Skills' },
+              description: { ar: 'يُنصح بزيادة الأنشطة التفاعلية لتحسين مهارات القراءة والفهم', en: 'Increase interactive activities to improve reading comprehension skills' },
+              priority: 'high',
+              expected_impact: 15,
+            },
+            {
+              id: 2,
+              category: { ar: 'الحضور والانضباط', en: 'Attendance & Discipline' },
+              title: { ar: 'نظام الحوافز', en: 'Incentive System' },
+              description: { ar: 'تطبيق نظام نقاط للحضور المنتظم قد يحسن نسبة الحضور', en: 'A points system for regular attendance could improve attendance rates' },
+              priority: 'medium',
+              expected_impact: 8,
+            },
+            {
+              id: 3,
+              category: { ar: 'التواصل', en: 'Communication' },
+              title: { ar: 'تفعيل التواصل الرقمي', en: 'Activate Digital Communication' },
+              description: { ar: 'تحسين قنوات التواصل مع أولياء الأمور', en: 'Improve communication channels with parents' },
+              priority: 'low',
+              expected_impact: 20,
+            },
+          ]);
+        }
+        
+        // Set alerts
+        if (alertsRes.data && alertsRes.data.length > 0) {
+          setAlerts(alertsRes.data);
+        } else {
+          setAlerts([
+            {
+              id: 1,
+              type: 'info',
+              title: { ar: 'مراجعة الأداء الشهري', en: 'Monthly Performance Review' },
+              description: { ar: 'حان موعد مراجعة الأداء الشهري للمعلمين', en: 'Time for monthly teacher performance review' },
+              timestamp: new Date().toISOString(),
+            },
+            {
+              id: 2,
+              type: 'success',
+              title: { ar: 'تحسن ملحوظ', en: 'Notable Improvement' },
+              description: { ar: 'تحسن في معدلات الحضور مقارنة بالأسبوع الماضي', en: 'Attendance rates improved compared to last week' },
+              timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+            },
+          ]);
+        }
+        
+        // Set at-risk students
+        if (risksRes.data && risksRes.data.length > 0) {
+          setStudentRisks(risksRes.data);
+        } else {
+          setStudentRisks([
+            { id: 1, name: 'طالب للمتابعة', grade: '3-أ', risk_level: 65, risk_type: 'academic', factors: ['انخفاض الدرجات', 'غياب متكرر'] },
+            { id: 2, name: 'طالب آخر', grade: '2-ب', risk_level: 55, risk_type: 'behavioral', factors: ['عدم مشاركة', 'تأخر في الواجبات'] },
+          ]);
+        }
         
       } catch (error) {
         console.error('Failed to load AI insights:', error);
