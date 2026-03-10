@@ -212,14 +212,14 @@ export default function UsersManagement() {
       // Calculate stats from API response or fetch from schools API
       const schoolCount = await api.get('/api/schools').then(r => r.data?.length || 6).catch(() => 6);
       const allUsers = fetchedUsers;
-      setStats({
+      setStats(prev => ({
+        ...prev,
         totalUsers: allUsers.length,
         totalSchools: schoolCount,
         teachersInSchools: allUsers.filter(u => u.role === 'teacher' && u.school_name).length,
         independentTeachers: allUsers.filter(u => u.role === 'independent_teacher').length,
         platformAdmins: allUsers.filter(u => u.role?.startsWith('platform_')).length,
-        pendingRequests: teacherRequests.filter(r => r.status === 'pending').length,
-      });
+      }));
       
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -237,7 +237,7 @@ export default function UsersManagement() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType, teacherRequests]);
+  }, [api, searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType, isRTL]);
   
   // Fetch teacher requests
   const fetchTeacherRequests = useCallback(async () => {
@@ -248,17 +248,39 @@ export default function UsersManagement() {
       // Handle new API response format
       const requests = response.data?.requests || response.data || [];
       setTeacherRequests(requests);
+      // Update pending requests count in stats
+      setStats(prev => ({
+        ...prev,
+        pendingRequests: requests.filter(r => r.status === 'pending').length,
+      }));
     } catch (error) {
       console.error('Error fetching teacher requests:', error);
       // Mock data for demo
-      setTeacherRequests(generateMockTeacherRequests());
+      const mockRequests = generateMockTeacherRequests();
+      setTeacherRequests(mockRequests);
+      setStats(prev => ({
+        ...prev,
+        pendingRequests: mockRequests.filter(r => r.status === 'pending').length,
+      }));
     }
   }, [api]);
   
+  // Initial fetch - only runs once
   useEffect(() => {
     fetchUsers();
     fetchTeacherRequests();
-  }, [fetchUsers, fetchTeacherRequests]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Refetch when filters change (but not on initial mount)
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    fetchUsers();
+  }, [searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType]);
   
   // Generate mock users for demo
   const generateMockUsers = () => [
