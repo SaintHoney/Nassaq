@@ -431,7 +431,7 @@ class StudentManagementEngine:
             username = student_doc["student_id"].lower().replace("-", "")
             
             # Check if user already exists
-            existing = self.users_collection.find_one({"username": username})
+            existing = await self.users_collection.find_one({"username": username})
             if existing:
                 username = f"{username}_{secrets.token_hex(2)}"
             
@@ -450,7 +450,7 @@ class StudentManagementEngine:
                 "created_by": created_by,
             }
             
-            self.users_collection.insert_one(user_doc)
+            await self.users_collection.insert_one(user_doc)
             
             return {
                 "username": username,
@@ -475,7 +475,7 @@ class StudentManagementEngine:
             # Username based on parent ID or phone
             username = parent_doc["parent_id"].lower().replace("-", "")
             
-            existing = self.users_collection.find_one({"username": username})
+            existing = await self.users_collection.find_one({"username": username})
             if existing:
                 username = f"{username}_{secrets.token_hex(2)}"
             
@@ -497,7 +497,7 @@ class StudentManagementEngine:
                 "created_by": created_by,
             }
             
-            self.users_collection.insert_one(user_doc)
+            await self.users_collection.insert_one(user_doc)
             
             return {
                 "username": username,
