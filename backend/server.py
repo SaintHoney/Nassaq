@@ -230,9 +230,25 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        # Try to find by _id (ObjectId) first, then by id (UUID)
+        from bson import ObjectId
+        user = None
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
+        except:
+            pass
+        
+        if not user:
+            user = await db.users.find_one({"id": user_id})
+        
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
+        
+        # Convert _id to string id for consistency
+        if "_id" in user:
+            user["id"] = str(user["_id"])
+            del user["_id"]
+        
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
