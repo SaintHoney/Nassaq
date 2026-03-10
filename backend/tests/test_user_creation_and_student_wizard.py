@@ -220,7 +220,7 @@ class TestStudentWizardAPI:
         
         student_data = {
             "full_name": f"طالب اختبار {unique_id}",
-            "email": f"test_student_{unique_id}@nassaq.local",
+            "email": f"test_student_{unique_id}@nassaq.com",
             "national_id": f"1234{unique_id}",
             "gender": "male",
             "date_of_birth": "2015-05-15",
@@ -230,7 +230,7 @@ class TestStudentWizardAPI:
             "parent": {
                 "full_name": f"ولي أمر اختبار {unique_id}",
                 "phone": f"050{unique_id[:7]}",
-                "email": f"test_parent_{unique_id}@nassaq.local",
+                "email": f"test_parent_{unique_id}@nassaq.com",
                 "relationship": "father",
                 "national_id": f"5678{unique_id}"
             },
