@@ -330,10 +330,16 @@ export const SchedulePage = () => {
       setSessions(sessionsRes.data);
       setConflicts(conflictsRes.data.conflicts || []);
       
-      // Build subject color map
-      const subjects = [...new Set(sessionsRes.data.map(s => s.subject_id))];
+      // Build subject color map and update subjects list
+      const uniqueSubjects = [...new Set(sessionsRes.data.map(s => s.subject_id))];
+      const subjectsList = uniqueSubjects.map(subjectId => {
+        const session = sessionsRes.data.find(s => s.subject_id === subjectId);
+        return { id: subjectId, name: session?.subject_name || 'Unknown' };
+      });
+      setSubjects(subjectsList);
+      
       const colorMap = {};
-      subjects.forEach((subjectId, index) => {
+      uniqueSubjects.forEach((subjectId, index) => {
         colorMap[subjectId] = SUBJECT_COLORS[index % SUBJECT_COLORS.length];
       });
       setSubjectColorMap(colorMap);
