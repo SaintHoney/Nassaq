@@ -41,11 +41,11 @@ class ClassManagementEngine:
         self.teachers_collection = db.teachers
         self.students_collection = db.students
     
-    def _generate_class_id(self, tenant_id: str, grade_id: str) -> str:
+    async def _generate_class_id(self, tenant_id: str, grade_id: str) -> str:
         """Generate unique class ID"""
         year = datetime.now().strftime("%y")
         prefix = f"CLS-{grade_id[:3].upper()}-{year}-"
-        count = self.classes_collection.count_documents({
+        count = await self.classes_collection.count_documents({
             "class_id": {"$regex": f"^{prefix}"},
             "tenant_id": tenant_id
         })
@@ -59,7 +59,7 @@ class ClassManagementEngine:
     ) -> Dict[str, Any]:
         """Create a new class/section"""
         try:
-            class_id = self._generate_class_id(tenant_id, request.grade_id)
+            class_id = await self._generate_class_id(tenant_id, request.grade_id)
             now = datetime.now(timezone.utc)
             
             class_doc = {
@@ -70,37 +70,28 @@ class ClassManagementEngine:
                 "grade_id": request.grade_id,
                 "class_type": request.class_type.value,
                 "capacity": request.capacity,
+                "current_students": len(request.student_ids or []),
                 "homeroom_teacher_id": request.homeroom_teacher_id,
                 "room_number": request.room_number,
                 "floor": request.floor,
                 "building": request.building,
                 "student_ids": request.student_ids or [],
-                "student_count": len(request.student_ids) if request.student_ids else 0,
                 "notes": request.notes,
                 "status": "active",
                 "is_deleted": False,
-                "created_at": now,
+                "created_at": now.isoformat(),
                 "created_by": created_by,
-                "updated_at": now,
+                "updated_at": now.isoformat(),
             }
             
-            self.classes_collection.insert_one(class_doc)
+            await self.classes_collection.insert_one(class_doc)
             
-            # Also add to sections collection for compatibility
-            section_doc = {
-                "id": class_id,
-                "name_ar": request.name_ar,
-                "name_en": request.name_en,
-                "grade_id": request.grade_id,
-                "tenant_id": tenant_id,
-                "capacity": request.capacity,
-                "is_active": True,
-            }
-            self.sections_collection.update_one(
-                {"id": class_id, "tenant_id": tenant_id},
-                {"$set": section_doc},
-                upsert=True
-            )
+            # Update students with class assignment
+            if request.student_ids:
+                await self.students_collection.update_many(
+                    {"student_id": {"$in": request.student_ids}},
+                    {"$set": {"class_id": class_id, "updated_at": now.isoformat()}}
+                )
             
             return {
                 "success": True,
@@ -110,28 +101,38 @@ class ClassManagementEngine:
             }
         except Exception as e:
             logger.error(f"Error creating class: {e}")
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "حدث خطأ أثناء إنشاء الفصل",
+                "message_en": "Error creating class"
+            }
     
     async def get_class(self, class_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get class by ID"""
-        return self.classes_collection.find_one({
+        cls = await self.classes_collection.find_one({
             "class_id": class_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
         }, {"_id": 0})
+        return cls
     
     async def list_classes(
         self,
         tenant_id: str,
         grade_id: Optional[str] = None,
+        status: Optional[str] = None,
         search: Optional[str] = None,
         skip: int = 0,
         limit: int = 50
     ) -> Dict[str, Any]:
         """List classes with filters"""
         query = {"tenant_id": tenant_id, "is_deleted": {"$ne": True}}
+        
         if grade_id:
             query["grade_id"] = grade_id
+        if status:
+            query["status"] = status
         if search:
             query["$or"] = [
                 {"name_ar": {"$regex": search, "$options": "i"}},
@@ -139,22 +140,18 @@ class ClassManagementEngine:
                 {"class_id": {"$regex": search, "$options": "i"}},
             ]
         
-        total = self.classes_collection.count_documents(query)
-        classes = list(
-            self.classes_collection.find(query, {"_id": 0})
-            .sort("created_at", -1)
-            .skip(skip)
-            .limit(limit)
-        )
+        total = await self.classes_collection.count_documents(query)
+        classes = await self.classes_collection.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
         return {"classes": classes, "total": total}
     
     async def get_grades(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available grades"""
-        grades = list(self.grades_collection.find(
+        grades = await self.grades_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
-        ))
+        ).to_list(100)
+        
         if not grades:
             grades = [
                 {"id": "grade_1", "name_ar": "الصف الأول", "name_en": "Grade 1"},
@@ -168,10 +165,10 @@ class ClassManagementEngine:
     
     async def get_teachers(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available teachers for homeroom assignment"""
-        teachers = list(self.teachers_collection.find(
+        teachers = await self.teachers_collection.find(
             {"tenant_id": tenant_id, "is_deleted": {"$ne": True}, "status": "active"},
             {"_id": 0, "teacher_id": 1, "full_name_ar": 1, "full_name_en": 1}
-        ))
+        ).to_list(200)
         return teachers
     
     async def get_students(self, tenant_id: str, grade_id: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -180,10 +177,10 @@ class ClassManagementEngine:
         if grade_id:
             query["grade_id"] = grade_id
         
-        students = list(self.students_collection.find(
+        students = await self.students_collection.find(
             query,
             {"_id": 0, "student_id": 1, "full_name_ar": 1, "full_name_en": 1, "grade_id": 1}
-        ))
+        ).to_list(500)
         return students
     
     async def get_class_types(self) -> List[Dict[str, str]]:
