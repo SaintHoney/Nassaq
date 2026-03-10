@@ -120,14 +120,17 @@ export const TeachersPage = () => {
   }, [user]);
 
   const handleCreateTeacher = async () => {
-    if (!newTeacher.full_name || !newTeacher.email || !newTeacher.school_id || !newTeacher.specialization) {
+    // Use user's school_id for school-level users
+    const schoolId = isSchoolLevel ? userSchoolId : newTeacher.school_id;
+    
+    if (!newTeacher.full_name || !newTeacher.email || !schoolId || !newTeacher.specialization) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
 
     setSubmitting(true);
     try {
-      const response = await api.post('/teachers', newTeacher);
+      const response = await api.post('/teachers', { ...newTeacher, school_id: schoolId });
       toast.success(isRTL ? 'تم إضافة المعلم بنجاح' : 'Teacher added successfully');
       setCreateDialogOpen(false);
       setNewTeacher({
