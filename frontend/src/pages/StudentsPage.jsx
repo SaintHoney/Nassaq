@@ -69,12 +69,16 @@ export const StudentsPage = () => {
   const [selectedClass, setSelectedClass] = useState('all');
   const [submitting, setSubmitting] = useState(false);
   
+  // Check if user is a school-level user (not platform admin)
+  const isSchoolLevel = user?.role && !user.role.startsWith('platform_');
+  const userSchoolId = user?.tenant_id;
+  
   const [newStudent, setNewStudent] = useState({
     full_name: '',
     full_name_en: '',
     email: '',
     phone: '',
-    school_id: '',
+    school_id: userSchoolId || '',
     class_id: '',
     student_number: '',
     date_of_birth: '',
@@ -85,14 +89,24 @@ export const StudentsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [studentsRes, schoolsRes, classesRes] = await Promise.all([
+      // For school-level users, only fetch students and classes (tenant-scoped by backend)
+      // For platform admins, also fetch schools for filtering
+      const [studentsRes, classesRes] = await Promise.all([
         api.get('/students'),
-        api.get('/schools'),
         api.get('/classes'),
       ]);
       setStudents(studentsRes.data);
-      setSchools(schoolsRes.data);
       setClasses(classesRes.data);
+      
+      // Only fetch schools list for platform admins
+      if (!isSchoolLevel) {
+        try {
+          const schoolsRes = await api.get('/schools');
+          setSchools(schoolsRes.data);
+        } catch {
+          setSchools([]);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error(isRTL ? 'فشل تحميل البيانات' : 'Failed to load data');
@@ -102,8 +116,14 @@ export const StudentsPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+      // Set default school_id for new student form
+      if (userSchoolId) {
+        setNewStudent(prev => ({ ...prev, school_id: userSchoolId }));
+      }
+    }
+  }, [user]);
 
   const handleCreateStudent = async () => {
     if (!newStudent.full_name || !newStudent.school_id || !newStudent.student_number) {
