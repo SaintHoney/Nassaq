@@ -237,17 +237,20 @@ export const StudentsPage = () => {
                 />
               </div>
               
-              <Select value={selectedSchool} onValueChange={(v) => { setSelectedSchool(v); setSelectedClass('all'); }}>
-                <SelectTrigger className="w-[180px] rounded-xl">
-                  <SelectValue placeholder={isRTL ? 'المدرسة' : 'School'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع المدارس' : 'All Schools'}</SelectItem>
-                  {schools.map(school => (
-                    <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Only show school filter for platform admins */}
+              {!isSchoolLevel && schools.length > 0 && (
+                <Select value={selectedSchool} onValueChange={(v) => { setSelectedSchool(v); setSelectedClass('all'); }}>
+                  <SelectTrigger className="w-[180px] rounded-xl">
+                    <SelectValue placeholder={isRTL ? 'المدرسة' : 'School'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{isRTL ? 'جميع المدارس' : 'All Schools'}</SelectItem>
+                    {schools.map(school => (
+                      <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="w-[180px] rounded-xl">
