@@ -2880,15 +2880,15 @@ class SchoolScheduleResponse(BaseModel):
     school_id: str
     name: str
     name_en: Optional[str] = None
-    academic_year: str
-    semester: int
-    effective_from: str
+    academic_year: Optional[str] = None
+    semester: Optional[int] = 1
+    effective_from: Optional[str] = None
     effective_to: Optional[str] = None
-    working_days: List[str]
-    status: str
-    total_sessions: int = 0
-    created_at: str
-    updated_at: str
+    working_days: Optional[List[str]] = None
+    status: Optional[str] = "active"
+    total_sessions: Optional[int] = 0
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 # Schedule Session Models
 class ScheduleSessionCreate(BaseModel):
