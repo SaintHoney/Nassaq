@@ -226,6 +226,15 @@ export const SchedulePage = () => {
   const [filterTeacher, setFilterTeacher] = useState('all');
   const [filterClass, setFilterClass] = useState('all');
   
+  // View period filter: 'weekly' (all days) or 'daily' (specific day)
+  const [viewPeriod, setViewPeriod] = useState('weekly');
+  const [selectedDay, setSelectedDay] = useState(() => {
+    // Default to current day
+    const today = new Date().getDay();
+    const dayMap = { 0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday', 4: 'thursday', 5: 'friday', 6: 'saturday' };
+    return dayMap[today] || 'sunday';
+  });
+  
   // Subjects list
   const [subjects, setSubjects] = useState([]);
   
