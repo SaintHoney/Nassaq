@@ -211,8 +211,8 @@ const TeacherRow = ({
         {/* Schedule Cells */}
         <div className="flex-1 overflow-x-auto">
           <div className="flex min-w-max">
-            {DAYS.map(day => (
-              <div key={day.key} className="w-[140px] border-e border-border/30 p-1">
+            {daysToShow.map(day => (
+              <div key={day.key} className={`${daysToShow.length === 1 ? 'w-[280px]' : 'w-[140px]'} border-e border-border/30 p-1`}>
                 <div className="grid grid-rows-7 gap-1">
                   {timeSlots.map((slot, slotIndex) => {
                     const slotNumber = slot.slot_number || slotIndex + 1;
