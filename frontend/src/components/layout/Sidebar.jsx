@@ -166,8 +166,14 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: BarChart3,
-        label: isRTL ? 'التقارير' : 'Reports',
-        href: '/admin/reports',
+        label: isRTL ? 'التقارير والتحليلات' : 'Reports & Analytics',
+        href: '/principal/reports',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      {
+        icon: Network,
+        label: isRTL ? 'رؤى الذكاء الاصطناعي' : 'AI Insights',
+        href: '/principal/ai-insights',
         roles: ['school_principal'],
       },
       {
@@ -178,9 +184,15 @@ export const Sidebar = ({ children }) => {
       },
       {
         icon: Settings,
-        label: isRTL ? 'الإعدادات' : 'Settings',
-        href: '/settings',
+        label: isRTL ? 'إعدادات المدرسة' : 'School Settings',
+        href: '/principal/settings',
         roles: ['school_principal'],
+      },
+      {
+        icon: UserCog,
+        label: isRTL ? 'إعدادات الحساب' : 'Account Settings',
+        href: '/account/settings',
+        roles: ['school_principal', 'school_sub_admin'],
       },
     ];
 
