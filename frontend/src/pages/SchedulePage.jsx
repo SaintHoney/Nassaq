@@ -432,28 +432,60 @@ export const SchedulePage = () => {
                 {conflicts.length > 0 && (
                   <Sheet open={conflictsSheetOpen} onOpenChange={setConflictsSheetOpen}>
                     <SheetTrigger asChild>
-                      <Button variant="destructive" size="sm" className="rounded-xl h-9" data-testid="conflicts-btn">
+                      <Button variant="destructive" size="sm" className="rounded-xl h-9 animate-pulse" data-testid="conflicts-btn">
                         <AlertTriangle className="h-4 w-4 me-1" />
-                        {conflicts.length}
+                        {conflicts.length} {isRTL ? 'تعارض' : 'conflicts'}
                       </Button>
                     </SheetTrigger>
-                    <SheetContent className="w-[400px]">
+                    <SheetContent className="w-[450px]">
                       <SheetHeader>
-                        <SheetTitle className="font-cairo flex items-center gap-2">
-                          <AlertTriangle className="h-5 w-5 text-red-500" />
-                          {isRTL ? 'التعارضات' : 'Conflicts'}
+                        <SheetTitle className="font-cairo flex items-center gap-2 text-red-600">
+                          <AlertTriangle className="h-5 w-5" />
+                          {isRTL ? 'التعارضات المكتشفة' : 'Detected Conflicts'} ({conflicts.length})
                         </SheetTitle>
+                        <SheetDescription>
+                          {isRTL ? 'يجب حل هذه التعارضات قبل نشر الجدول' : 'These conflicts must be resolved before publishing'}
+                        </SheetDescription>
                       </SheetHeader>
-                      <div className="mt-6 space-y-4">
+                      <div className="mt-6 space-y-4 max-h-[70vh] overflow-y-auto">
                         {conflicts.map((conflict, index) => (
                           <div key={index} className="p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20">
                             <div className="flex items-start gap-3">
-                              <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                              <div>
-                                <p className="font-medium text-sm">{conflict.message_ar || conflict.message}</p>
-                                <Badge variant="secondary" className="text-xs mt-2">
-                                  {DAYS.find(d => d.key === conflict.day)?.[isRTL ? 'ar' : 'en']}
-                                </Badge>
+                              <div className={`p-2 rounded-lg ${
+                                conflict.type === 'teacher_overlap' ? 'bg-orange-100 text-orange-600' :
+                                conflict.type === 'class_overlap' ? 'bg-purple-100 text-purple-600' :
+                                'bg-red-100 text-red-600'
+                              }`}>
+                                {conflict.type === 'teacher_overlap' ? (
+                                  <UserCheck className="h-4 w-4" />
+                                ) : conflict.type === 'class_overlap' ? (
+                                  <GraduationCap className="h-4 w-4" />
+                                ) : (
+                                  <XCircle className="h-4 w-4" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">
+                                  {conflict.type === 'teacher_overlap' 
+                                    ? (isRTL ? 'تعارض معلم' : 'Teacher Conflict')
+                                    : conflict.type === 'class_overlap'
+                                    ? (isRTL ? 'تعارض فصل' : 'Class Conflict')
+                                    : (isRTL ? 'تعارض' : 'Conflict')
+                                  }
+                                </p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {conflict.description_ar || conflict.message_ar || conflict.message || conflict.description_en}
+                                </p>
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {DAYS.find(d => d.key === conflict.day_of_week || d.key === conflict.day)?.[isRTL ? 'ar' : 'en'] || conflict.day_of_week || conflict.day}
+                                  </Badge>
+                                  {conflict.period && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {isRTL ? `الحصة ${conflict.period}` : `Period ${conflict.period}`}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
