@@ -16,6 +16,7 @@ from engines.assessment_engine import AssessmentEngine
 from engines.notification_engine import NotificationEngine
 from engines.audit_engine import AuditLogEngine
 from engines.teacher_registration_engine import TeacherRegistrationEngine
+from engines.student_management_engine import StudentManagementEngine
 
 __all__ = [
     # Core Identity & Access
@@ -39,4 +40,7 @@ __all__ = [
     
     # Registration
     "TeacherRegistrationEngine",
+    
+    # Student Management
+    "StudentManagementEngine",
 ]

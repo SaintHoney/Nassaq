@@ -8,6 +8,7 @@ from routes.attendance_routes import create_attendance_router
 from routes.assessment_routes import create_assessment_router
 from routes.audit_routes import create_audit_router
 from routes.teacher_registration_routes import create_teacher_registration_router
+from routes.student_management_routes import create_student_routes
 
 __all__ = [
     "create_scheduling_router",
@@ -15,4 +16,5 @@ __all__ = [
     "create_assessment_router",
     "create_audit_router",
     "create_teacher_registration_router",
+    "create_student_routes",
 ]
