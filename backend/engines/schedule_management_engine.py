@@ -55,10 +55,10 @@ class ScheduleManagementEngine:
         self.subjects_collection = db.subjects
         self.classes_collection = db.classes
     
-    def _generate_schedule_id(self, tenant_id: str) -> str:
+    async def _generate_schedule_id(self, tenant_id: str) -> str:
         """Generate unique schedule ID"""
         year = datetime.now().strftime("%y")
-        count = self.schedules_collection.count_documents({"tenant_id": tenant_id})
+        count = await self.schedules_collection.count_documents({"tenant_id": tenant_id})
         return f"SCH-{year}-{str(count + 1).zfill(4)}"
     
     async def create_schedule(
@@ -69,7 +69,7 @@ class ScheduleManagementEngine:
     ) -> Dict[str, Any]:
         """Create a new weekly schedule"""
         try:
-            schedule_id = self._generate_schedule_id(tenant_id)
+            schedule_id = await self._generate_schedule_id(tenant_id)
             now = datetime.now(timezone.utc)
             
             # Convert days to dict format
@@ -109,7 +109,7 @@ class ScheduleManagementEngine:
                 "updated_at": now.isoformat(),
             }
             
-            self.schedules_collection.insert_one(schedule_doc)
+            await self.schedules_collection.insert_one(schedule_doc)
             
             return {
                 "success": True,
@@ -123,7 +123,7 @@ class ScheduleManagementEngine:
     
     async def get_schedule(self, schedule_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get schedule by ID"""
-        return self.schedules_collection.find_one({
+        return await self.schedules_collection.find_one({
             "schedule_id": schedule_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
@@ -144,19 +144,14 @@ class ScheduleManagementEngine:
         if grade_id:
             query["grade_id"] = grade_id
         
-        total = self.schedules_collection.count_documents(query)
-        schedules = list(
-            self.schedules_collection.find(query, {"_id": 0})
-            .sort("created_at", -1)
-            .skip(skip)
-            .limit(limit)
-        )
+        total = await self.schedules_collection.count_documents(query)
+        schedules = await self.schedules_collection.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
         return {"schedules": schedules, "total": total}
     
     async def get_class_schedule(self, class_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get active schedule for a class"""
-        return self.schedules_collection.find_one({
+        return await self.schedules_collection.find_one({
             "class_id": class_id,
             "tenant_id": tenant_id,
             "status": "active",
@@ -171,24 +166,18 @@ class ScheduleManagementEngine:
         current_time = now.strftime("%H:%M")
         current_day = now.strftime("%A").lower()
         
-        # Map English day to our enum
         day_map = {
-            "sunday": "sunday",
-            "monday": "monday", 
-            "tuesday": "tuesday",
-            "wednesday": "wednesday",
-            "thursday": "thursday",
-            "friday": "friday",
-            "saturday": "saturday",
+            "sunday": "sunday", "monday": "monday", "tuesday": "tuesday",
+            "wednesday": "wednesday", "thursday": "thursday",
+            "friday": "friday", "saturday": "saturday",
         }
         today = day_map.get(current_day, "sunday")
         
-        # Get all active schedules for this tenant
-        schedules = list(self.schedules_collection.find({
+        schedules = await self.schedules_collection.find({
             "tenant_id": tenant_id,
             "status": "active",
             "is_deleted": {"$ne": True}
-        }))
+        }).to_list(200)
         
         current_sessions = []
         
@@ -199,18 +188,16 @@ class ScheduleManagementEngine:
                         start = period.get("start_time", "00:00")
                         end = period.get("end_time", "23:59")
                         
-                        # Check if current time is within this period
                         if start <= current_time <= end:
-                            # Get teacher and subject info
-                            teacher = self.teachers_collection.find_one(
+                            teacher = await self.teachers_collection.find_one(
                                 {"teacher_id": period.get("teacher_id")},
                                 {"full_name_ar": 1, "full_name_en": 1}
                             )
-                            subject = self.subjects_collection.find_one(
+                            subject = await self.subjects_collection.find_one(
                                 {"id": period.get("subject_id")},
                                 {"name_ar": 1, "name_en": 1}
                             )
-                            class_info = self.classes_collection.find_one(
+                            class_info = await self.classes_collection.find_one(
                                 {"class_id": period.get("class_id")},
                                 {"name_ar": 1, "name_en": 1, "grade_id": 1}
                             )
@@ -238,42 +225,31 @@ class ScheduleManagementEngine:
         current_day = now.strftime("%A").lower()
         
         day_map = {
-            "sunday": "sunday",
-            "monday": "monday",
-            "tuesday": "tuesday", 
-            "wednesday": "wednesday",
-            "thursday": "thursday",
-            "friday": "friday",
-            "saturday": "saturday",
+            "sunday": "sunday", "monday": "monday", "tuesday": "tuesday",
+            "wednesday": "wednesday", "thursday": "thursday",
+            "friday": "friday", "saturday": "saturday",
         }
         today = day_map.get(current_day, "sunday")
         
-        query = {
-            "tenant_id": tenant_id,
-            "status": "active",
-            "is_deleted": {"$ne": True}
-        }
+        query = {"tenant_id": tenant_id, "status": "active", "is_deleted": {"$ne": True}}
         if class_id:
             query["class_id"] = class_id
         
-        schedules = list(self.schedules_collection.find(query))
+        schedules = await self.schedules_collection.find(query).to_list(200)
         
         today_sessions = []
         for schedule in schedules:
             for day_data in schedule.get("days", []):
                 if day_data.get("day") == today:
                     for period in day_data.get("periods", []):
-                        teacher = self.teachers_collection.find_one(
-                            {"teacher_id": period.get("teacher_id")},
-                            {"full_name_ar": 1}
+                        teacher = await self.teachers_collection.find_one(
+                            {"teacher_id": period.get("teacher_id")}, {"full_name_ar": 1}
                         )
-                        subject = self.subjects_collection.find_one(
-                            {"id": period.get("subject_id")},
-                            {"name_ar": 1}
+                        subject = await self.subjects_collection.find_one(
+                            {"id": period.get("subject_id")}, {"name_ar": 1}
                         )
-                        class_info = self.classes_collection.find_one(
-                            {"class_id": period.get("class_id")},
-                            {"name_ar": 1}
+                        class_info = await self.classes_collection.find_one(
+                            {"class_id": period.get("class_id")}, {"name_ar": 1}
                         )
                         
                         today_sessions.append({
@@ -286,7 +262,6 @@ class ScheduleManagementEngine:
                             "end_time": period.get("end_time"),
                         })
         
-        # Sort by period number
         today_sessions.sort(key=lambda x: x.get("period_number", 0))
         return today_sessions
     
@@ -316,18 +291,18 @@ class ScheduleManagementEngine:
     
     async def get_teachers(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available teachers"""
-        teachers = list(self.teachers_collection.find(
+        teachers = await self.teachers_collection.find(
             {"tenant_id": tenant_id, "is_deleted": {"$ne": True}},
             {"_id": 0, "teacher_id": 1, "full_name_ar": 1, "subject_ids": 1}
-        ))
+        ).to_list(200)
         return teachers
     
     async def get_subjects(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available subjects"""
-        subjects = list(self.subjects_collection.find(
+        subjects = await self.subjects_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
-        ))
+        ).to_list(100)
         if not subjects:
             subjects = [
                 {"id": "math", "name_ar": "الرياضيات", "name_en": "Mathematics"},
@@ -343,8 +318,8 @@ class ScheduleManagementEngine:
     
     async def get_classes(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available classes"""
-        classes = list(self.classes_collection.find(
+        classes = await self.classes_collection.find(
             {"tenant_id": tenant_id, "is_deleted": {"$ne": True}},
             {"_id": 0, "class_id": 1, "name_ar": 1, "grade_id": 1}
-        ))
+        ).to_list(200)
         return classes
