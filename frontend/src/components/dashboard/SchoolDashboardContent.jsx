@@ -604,6 +604,12 @@ export const SchoolDashboardContent = () => {
           isRTL={isRTL}
         />
       </section>
+
+      {/* Add Student Wizard */}
+      <AddStudentWizard 
+        open={showAddStudentWizard} 
+        onClose={() => setShowAddStudentWizard(false)} 
+      />
     </div>
   );
 };
