@@ -587,7 +587,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-emerald-400/30 hover:bg-emerald-50 hover:border-emerald-400 dark:hover:bg-emerald-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('create_schedule')}
+            onClick={() => handleQuickAction('create-schedule')}
             data-testid="quick-action-create-schedule"
           >
             <CalendarDays className="h-3.5 w-3.5 me-1.5 text-emerald-500" />
@@ -597,7 +597,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-amber-400/30 hover:bg-amber-50 hover:border-amber-400 dark:hover:bg-amber-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('live_sessions')}
+            onClick={() => handleQuickAction('view-sessions')}
             data-testid="quick-action-live-sessions"
           >
             <PlayCircle className="h-3.5 w-3.5 me-1.5 text-amber-500" />
@@ -607,7 +607,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-rose-400/30 hover:bg-rose-50 hover:border-rose-400 dark:hover:bg-rose-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('send_notification')}
+            onClick={() => handleQuickAction('send-notification')}
             data-testid="quick-action-send-notification"
           >
             <Bell className="h-3.5 w-3.5 me-1.5 text-rose-500" />
