@@ -126,6 +126,9 @@ export const SchedulePage = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [generationStats, setGenerationStats] = useState(null);
   const [conflictStats, setConflictStats] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [applyingSuggestion, setApplyingSuggestion] = useState(null);
+  const [autoResolving, setAutoResolving] = useState(false);
   
   // New schedule form
   const [newSchedule, setNewSchedule] = useState({
