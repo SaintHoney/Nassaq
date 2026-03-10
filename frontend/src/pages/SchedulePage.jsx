@@ -32,6 +32,8 @@ import {
   RotateCcw,
   GripVertical,
   Move,
+  User,
+  Users,
 } from 'lucide-react';
 import {
   Dialog,
