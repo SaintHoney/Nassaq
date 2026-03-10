@@ -617,13 +617,9 @@ class StudentManagementEngine:
                 {"national_id": {"$regex": search, "$options": "i"}},
             ]
         
-        total = self.students_collection.count_documents(query)
-        students = list(
-            self.students_collection.find(query, {"_id": 0})
-            .sort("created_at", -1)
-            .skip(skip)
-            .limit(limit)
-        )
+        total = await self.students_collection.count_documents(query)
+        cursor = self.students_collection.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
+        students = await cursor.to_list(length=limit)
         
         return {
             "students": students,
