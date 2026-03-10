@@ -4777,31 +4777,39 @@ async def get_assessments(
     result = []
     for a in assessments:
         # Get class info
-        class_info = await db.classes.find_one({"id": a['class_id']}, {"_id": 0, "name": 1})
+        class_id = a.get('class_id')
+        class_info = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1}) if class_id else None
         # Get subject info
-        subject = await db.subjects.find_one({"id": a['subject_id']}, {"_id": 0, "name": 1})
-        # Get teacher info
-        teacher = await db.users.find_one({"id": a['teacher_id']}, {"_id": 0, "full_name": 1})
+        subject_id = a.get('subject_id')
+        subject = await db.subjects.find_one({"id": subject_id}, {"_id": 0, "name": 1}) if subject_id else None
+        # Get teacher info (teacher_id might not exist in demo data)
+        teacher_id = a.get('teacher_id')
+        teacher = await db.users.find_one({"id": teacher_id}, {"_id": 0, "full_name": 1}) if teacher_id else None
         # Count grades
         grades_count = await db.grades.count_documents({"assessment_id": a['id']})
         
         result.append(AssessmentResponse(
             id=a['id'],
-            class_id=a['class_id'],
-            class_name=class_info.get('name') if class_info else None,
-            subject_id=a['subject_id'],
-            subject_name=subject.get('name') if subject else None,
-            teacher_id=a['teacher_id'],
+            class_id=class_id,
+            class_name=a.get('class_name') or (class_info.get('name') if class_info else None),
+            subject_id=subject_id,
+            subject_name=a.get('subject_name') or (subject.get('name') if subject else None),
+            teacher_id=teacher_id,
             teacher_name=teacher.get('full_name') if teacher else None,
-            title=a['title'],
-            title_en=a.get('title_en'),
-            assessment_type=a['assessment_type'],
-            max_score=a['max_score'],
+            name=a.get('name'),
+            title=a.get('title') or a.get('name'),
+            title_en=a.get('title_en') or a.get('name_en'),
+            type=a.get('type'),
+            assessment_type=a.get('assessment_type') or a.get('type'),
+            max_score=a.get('max_score', 100),
             weight=a.get('weight', 1.0),
-            date=a['date'],
+            date=a.get('date'),
             description=a.get('description'),
-            is_published=a.get('is_published', False),
-            created_at=a['created_at'],
+            term_id=a.get('term_id'),
+            status=a.get('status', 'graded'),
+            is_published=a.get('is_published', True),
+            school_id=a.get('school_id'),
+            created_at=a.get('created_at'),
             grades_count=grades_count
         ))
     
