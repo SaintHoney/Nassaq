@@ -1029,8 +1029,8 @@ export const SchedulePage = () => {
                           <th className="p-3 text-start font-medium border-b border-e w-24">
                             {isRTL ? 'الوقت' : 'Time'}
                           </th>
-                          {DAYS.map(day => (
-                            <th key={day.key} className="p-3 text-center font-medium border-b min-w-[160px]">
+                          {displayedDays.map(day => (
+                            <th key={day.key} className={`p-3 text-center font-medium border-b ${viewPeriod === 'daily' ? 'min-w-[300px]' : 'min-w-[160px]'}`}>
                               {isRTL ? day.ar : day.en}
                             </th>
                           ))}
@@ -1050,7 +1050,7 @@ export const SchedulePage = () => {
                                 {isRTL ? slot.name : (slot.name_en || slot.name)}
                               </Badge>
                             </td>
-                            {DAYS.map(day => {
+                            {displayedDays.map(day => {
                               const cellSessions = getSessionsForCell(day.key, slot.id);
                               const cellConflicts = getCellConflicts(day.key, slot.id);
                               const hasConflict = cellConflicts.length > 0;
