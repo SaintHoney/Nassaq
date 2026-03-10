@@ -48,43 +48,70 @@ export default function TeacherDashboard() {
   const fetchTeacherData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch teacher's classes and students
-      const [classesRes, assignmentsRes] = await Promise.all([
-        api.get('/classes').catch(() => ({ data: [] })),
-        api.get('/teacher-assignments').catch(() => ({ data: [] }))
-      ]);
-
-      // Calculate teacher stats
-      const myAssignments = assignmentsRes.data || [];
-      const myClassIds = [...new Set(myAssignments.map(a => a.class_id))];
-      const mySubjectIds = [...new Set(myAssignments.map(a => a.subject_id))];
+      // Get teacher ID from user
+      const teacherId = user?.teacher_id || user?.id;
       
-      setStats({
-        myClasses: myClassIds.length || 5,
-        myStudents: myClassIds.length * 25 || 125, // Approximate
-        todayLessons: 4,
-        pendingAttendance: 2,
-        pendingAssessments: 3,
-        upcomingLessons: [
-          { time: '08:00', subject: 'الرياضيات', class: 'الصف الأول أ' },
-          { time: '09:00', subject: 'العلوم', class: 'الصف الثاني ب' },
-          { time: '10:30', subject: 'اللغة العربية', class: 'الصف الأول ب' },
-          { time: '11:30', subject: 'الرياضيات', class: 'الصف الثالث أ' },
-        ]
-      });
+      // Fetch teacher dashboard data from API
+      const dashboardRes = await api.get(`/teacher/dashboard/${teacherId}`).catch(() => null);
+      
+      if (dashboardRes?.data) {
+        const data = dashboardRes.data;
+        setStats({
+          myClasses: data.stats.my_classes || 0,
+          myStudents: data.stats.my_students || 0,
+          todayLessons: data.stats.today_lessons || 0,
+          pendingAttendance: data.stats.pending_attendance || 0,
+          pendingAssessments: 0,
+          upcomingLessons: data.today_schedule?.map(lesson => ({
+            time: lesson.time,
+            subject: lesson.subject,
+            class: lesson.class_name
+          })) || []
+        });
+        
+        setRecentActivities(data.recent_activities?.map(a => ({
+          type: a.type?.includes('attendance') ? 'attendance' : 
+                a.type?.includes('assessment') ? 'assessment' : 'notification',
+          message: a.message,
+          time: a.time ? new Date(a.time).toLocaleDateString('ar-SA') : 'مؤخراً'
+        })) || []);
+      } else {
+        // Fallback to mock data if API fails
+        const [classesRes, assignmentsRes] = await Promise.all([
+          api.get('/classes').catch(() => ({ data: [] })),
+          api.get('/teacher-assignments').catch(() => ({ data: [] }))
+        ]);
 
-      setRecentActivities([
-        { type: 'attendance', message: 'تم تسجيل حضور الصف الأول أ', time: 'منذ ساعة' },
-        { type: 'assessment', message: 'تم إضافة تقييم جديد للرياضيات', time: 'منذ 3 ساعات' },
-        { type: 'notification', message: 'اجتماع أولياء الأمور غداً', time: 'أمس' },
-      ]);
+        const myAssignments = assignmentsRes.data || [];
+        const myClassIds = [...new Set(myAssignments.map(a => a.class_id))];
+        
+        setStats({
+          myClasses: myClassIds.length || 5,
+          myStudents: myClassIds.length * 25 || 125,
+          todayLessons: 4,
+          pendingAttendance: 2,
+          pendingAssessments: 3,
+          upcomingLessons: [
+            { time: '08:00', subject: 'الرياضيات', class: 'الصف الأول أ' },
+            { time: '09:00', subject: 'العلوم', class: 'الصف الثاني ب' },
+            { time: '10:30', subject: 'اللغة العربية', class: 'الصف الأول ب' },
+            { time: '11:30', subject: 'الرياضيات', class: 'الصف الثالث أ' },
+          ]
+        });
+
+        setRecentActivities([
+          { type: 'attendance', message: 'تم تسجيل حضور الصف الأول أ', time: 'منذ ساعة' },
+          { type: 'assessment', message: 'تم إضافة تقييم جديد للرياضيات', time: 'منذ 3 ساعات' },
+          { type: 'notification', message: 'اجتماع أولياء الأمور غداً', time: 'أمس' },
+        ]);
+      }
 
     } catch (error) {
       console.error('Error fetching teacher data:', error);
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, user?.teacher_id, user?.id]);
 
   useEffect(() => {
     fetchTeacherData();
