@@ -8,6 +8,7 @@ import {
   GraduationCap, 
   BookOpen, 
   Calendar, 
+  CalendarDays,
   Clock,
   TrendingUp,
   TrendingDown,
@@ -29,6 +30,7 @@ import {
   CheckCircle2,
   Send,
   Loader2,
+  PlayCircle,
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
