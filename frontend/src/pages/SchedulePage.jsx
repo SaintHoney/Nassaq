@@ -1051,6 +1051,43 @@ export const SchedulePage = () => {
               </DragOverlay>
             </DndContext>
           )}
+          
+          {/* Teacher View Mode - Show TeacherScheduleGrid */}
+          {viewMode === 'teacher' && sessions.length > 0 && (
+            <TeacherScheduleGrid
+              teachers={teachers}
+              sessions={filteredSessions}
+              timeSlots={timeSlots}
+              classes={classes}
+              subjects={subjects}
+              conflicts={conflicts}
+              lockedSessions={[]}
+              isRTL={isRTL}
+              onSessionMove={async (moveData) => {
+                try {
+                  // Update session via API
+                  await api.put(`/schedule-sessions/${moveData.sessionId}/move`, {
+                    schedule_id: selectedSchedule,
+                    new_day: moveData.newDay,
+                    new_slot_number: moveData.newSlot,
+                    new_teacher_id: moveData.newTeacherId
+                  });
+                  
+                  // Refresh sessions
+                  const sessionsRes = await api.get(`/schedule-sessions?schedule_id=${selectedSchedule}`);
+                  setSessions(sessionsRes.data);
+                  
+                  toast.success(isRTL ? 'تم نقل الحصة بنجاح' : 'Session moved successfully');
+                } catch (error) {
+                  toast.error(isRTL ? 'فشل نقل الحصة' : 'Failed to move session');
+                }
+              }}
+              onSessionClick={(session) => {
+                setSelectedSession(session);
+                setSessionDetailOpen(true);
+              }}
+            />
+          )}
 
           {/* Session Detail Dialog */}
           <Dialog open={sessionDetailOpen} onOpenChange={setSessionDetailOpen}>
