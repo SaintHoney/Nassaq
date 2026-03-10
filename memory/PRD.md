@@ -275,6 +275,43 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - `POST /api/schools/` - Create school with principal
 - `GET /api/schools/` - List schools
 - `GET /api/schools/{id}` - Get school details
+- `PUT /api/schools/{id}` - Update school information
+
+### Academic Management (NEW - March 10, 2026)
+- `GET /api/academic-years` - List academic years for school
+- `POST /api/academic-years` - Create new academic year
+- `GET /api/academic-years/{id}` - Get academic year details
+- `PUT /api/academic-years/{id}` - Update academic year
+- `DELETE /api/academic-years/{id}` - Delete academic year
+- `GET /api/terms` - List terms/semesters for school
+- `POST /api/terms` - Create new term
+- `GET /api/terms/{id}` - Get term details
+- `PUT /api/terms/{id}` - Update term
+- `DELETE /api/terms/{id}` - Delete term
+- `GET /api/grade-levels` - List grade levels for school
+- `POST /api/grade-levels` - Create new grade level
+- `GET /api/grade-levels/{id}` - Get grade level details
+- `PUT /api/grade-levels/{id}` - Update grade level
+- `DELETE /api/grade-levels/{id}` - Delete grade level
+
+### User Profile (NEW - March 10, 2026)
+- `PUT /api/users/me` - Update current user profile
+- `GET /api/users/me/preferences` - Get user preferences
+- `PUT /api/users/me/preferences` - Update user preferences
+- `GET /api/users/me/notifications` - Get notification settings
+- `PUT /api/users/me/notifications` - Update notification settings
+
+### School Reports (NEW - March 10, 2026)
+- `GET /api/reports/school/overview` - Get school overview report
+- `GET /api/reports/school/attendance` - Get attendance report by class
+- `GET /api/reports/school/grades` - Get grades report by subject
+
+### AI Insights (NEW - March 10, 2026)
+- `GET /api/ai/insights/overview` - Get AI performance overview
+- `GET /api/ai/insights/predictions` - Get AI predictions
+- `GET /api/ai/insights/recommendations` - Get AI recommendations
+- `GET /api/ai/insights/alerts` - Get AI alerts
+- `GET /api/ai/insights/at-risk-students` - Get at-risk students list
 
 ---
 
