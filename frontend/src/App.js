@@ -38,6 +38,7 @@ import { SystemMonitoringPage } from "./pages/SystemMonitoringPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import SecurityCenterPage from "./pages/SecurityCenterPage";
 import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
+import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
 // TeacherRequestsPage removed - now integrated in UsersManagement
 import TenantsManagement from "./pages/TenantsManagement";
 
