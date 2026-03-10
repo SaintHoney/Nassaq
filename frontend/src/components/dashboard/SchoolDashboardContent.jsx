@@ -526,16 +526,8 @@ export const SchoolDashboardContent = () => {
 
   return (
     <div className="space-y-6" data-testid="school-dashboard-content">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-cairo text-2xl lg:text-3xl font-bold text-foreground">
-            {isRTL ? 'مركز القيادة' : 'Command Center'}
-          </h1>
-          <p className="text-muted-foreground font-tajawal">
-            {isRTL ? 'نظرة شاملة على حالة المدرسة' : 'Overview of school status'}
-          </p>
-        </div>
+      {/* Date Display Only - Title removed to avoid duplication with parent page header */}
+      <div className="flex items-center justify-end">
         <div className="text-end">
           <p className="text-sm text-muted-foreground font-tajawal">
             {new Date().toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { 
