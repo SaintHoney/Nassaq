@@ -71,17 +71,66 @@ export const Footer = () => {
                 ? 'منصة متكاملة لإدارة المدارس مدعومة بالذكاء الاصطناعي، تقدم حلولاً ذكية للعملية التعليمية.'
                 : 'AI-powered integrated school management platform, delivering smart solutions for education.'}
             </p>
-            <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="h-5 w-5" />
-                </a>
-              ))}
+            <div className="flex gap-3 flex-wrap">
+              {/* X (Twitter) */}
+              <a
+                href="https://x.com/nassaqapp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
+                aria-label="X (Twitter)"
+                data-testid="social-twitter"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+              
+              {/* Instagram */}
+              <a
+                href="https://www.instagram.com/nassaqapp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
+                aria-label="Instagram"
+                data-testid="social-instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              
+              {/* LinkedIn */}
+              <a
+                href="https://www.linkedin.com/company/nassaqapp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
+                aria-label="LinkedIn"
+                data-testid="social-linkedin"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              
+              {/* TikTok */}
+              <a
+                href="https://www.tiktok.com/@nassaqapp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
+                aria-label="TikTok"
+                data-testid="social-tiktok"
+              >
+                <TikTokIcon />
+              </a>
+              
+              {/* Snapchat */}
+              <a
+                href="https://www.snapchat.com/add/nassaqapp?share_id=2ADaRX5hyPY&locale=en-US"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brand-turquoise transition-colors"
+                aria-label="Snapchat"
+                data-testid="social-snapchat"
+              >
+                <SnapchatIcon />
+              </a>
             </div>
           </div>
 
