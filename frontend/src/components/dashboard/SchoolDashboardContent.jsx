@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AddStudentWizard } from '../wizards/AddStudentWizard';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
