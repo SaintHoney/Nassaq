@@ -249,13 +249,30 @@ export const TeachersPage = () => {
               )}
             </div>
 
+            {/* Add Teacher Buttons */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="rounded-xl"
+                onClick={() => setBulkImportOpen(true)}
+                data-testid="bulk-import-btn"
+              >
+                <Upload className="h-5 w-5 me-2" />
+                {isRTL ? 'استيراد جماعي' : 'Bulk Import'}
+              </Button>
+              
+              <Button 
+                className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl" 
+                onClick={() => setWizardOpen(true)}
+                data-testid="add-teacher-btn"
+              >
+                <UserPlus className="h-5 w-5 me-2" />
+                {isRTL ? 'إضافة معلم' : 'Add Teacher'}
+              </Button>
+            </div>
+
+            {/* Legacy Dialog - keep for backward compatibility */}
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl" data-testid="add-teacher-btn">
-                  <Plus className="h-5 w-5 me-2" />
-                  {isRTL ? 'إضافة معلم' : 'Add Teacher'}
-                </Button>
-              </DialogTrigger>
               <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle className="font-cairo">
