@@ -246,6 +246,7 @@ class ControlledSeeder:
             "code": school_config['code'],
             "city": school_config['city'],
             "city_en": school_config['city_en'],
+            "country": "المملكة العربية السعودية",
             "region": "المنطقة الوسطى" if school_config['city'] == "الرياض" else "المنطقة الغربية",
             "address": f"حي النخيل، {school_config['city']}",
             "phone": generate_phone(),
@@ -256,6 +257,9 @@ class ControlledSeeder:
             "ai_enabled": True,
             "student_count": 100,
             "teacher_count": 0,  # Will be updated
+            "student_capacity": 150,
+            "current_students": 100,
+            "current_teachers": 0,  # Will be updated
             "created_at": now,
             "updated_at": now
         }
