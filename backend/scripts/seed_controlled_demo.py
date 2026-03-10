@@ -30,7 +30,7 @@ from datetime import datetime, timezone, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
-import hashlib
+import bcrypt
 
 load_dotenv('/app/backend/.env')
 
