@@ -2906,23 +2906,26 @@ class ScheduleSessionCreate(BaseModel):
 class ScheduleSessionResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    school_id: str
-    schedule_id: str
-    assignment_id: str
+    school_id: Optional[str] = None
+    schedule_id: Optional[str] = None
+    assignment_id: Optional[str] = None
     teacher_id: Optional[str] = None
     teacher_name: Optional[str] = None
     class_id: Optional[str] = None
     class_name: Optional[str] = None
     subject_id: Optional[str] = None
     subject_name: Optional[str] = None
-    day_of_week: str
-    time_slot_id: str
+    day_of_week: Optional[str] = None
+    day: Optional[str] = None
+    time_slot_id: Optional[str] = None
     time_slot_name: Optional[str] = None
+    slot_number: Optional[int] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     room_id: Optional[str] = None
-    status: str
-    created_at: str
+    room: Optional[str] = None
+    status: Optional[str] = "active"
+    created_at: Optional[str] = None
 
 # ============== TIME SLOTS ROUTES ==============
 @api_router.post("/time-slots", response_model=TimeSlotResponse)
