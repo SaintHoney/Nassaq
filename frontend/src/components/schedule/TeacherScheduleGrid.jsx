@@ -364,10 +364,10 @@ export const TeacherScheduleGrid = ({
         {/* Day Headers */}
         <div className="flex-1 overflow-x-auto">
           <div className="flex min-w-max">
-            {DAYS.map(day => (
+            {daysToShow.map(day => (
               <div 
                 key={day.key} 
-                className="w-[140px] p-3 border-e border-b border-border text-center"
+                className={`${daysToShow.length === 1 ? 'w-[280px]' : 'w-[140px]'} p-3 border-e border-b border-border text-center`}
               >
                 <p className="font-bold text-sm">{isRTL ? day.ar : day.en}</p>
                 <p className="text-[10px] text-muted-foreground">{timeSlots.length} {isRTL ? 'حصص' : 'periods'}</p>
@@ -388,8 +388,8 @@ export const TeacherScheduleGrid = ({
         
         <div className="flex-1 overflow-x-auto">
           <div className="flex min-w-max">
-            {DAYS.map(day => (
-              <div key={day.key} className="w-[140px] border-e border-border">
+            {daysToShow.map(day => (
+              <div key={day.key} className={`${daysToShow.length === 1 ? 'w-[280px]' : 'w-[140px]'} border-e border-border`}>
                 <div className="grid grid-rows-7 gap-0">
                   {timeSlots.map((slot, idx) => (
                     <div 
