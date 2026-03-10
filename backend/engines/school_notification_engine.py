@@ -40,7 +40,7 @@ class SendNotificationRequest(BaseModel):
     message_ar: str = Field(..., min_length=1)
     message_en: Optional[str] = None
     recipient_type: RecipientType
-    recipient_filter: Optional[Dict[str, Any]] = None  # grade_id, class_id, user_ids
+    recipient_filter: Optional[Dict[str, Any]] = None
     notification_type: NotificationType = NotificationType.announcement
     priority: NotificationPriority = NotificationPriority.normal
     send_push: bool = True
@@ -109,12 +109,12 @@ class SchoolNotificationEngine:
                 "send_email": request.send_email,
                 "scheduled_at": request.scheduled_at,
                 "status": "sent" if not request.scheduled_at else "scheduled",
-                "sent_at": now if not request.scheduled_at else None,
+                "sent_at": now.isoformat() if not request.scheduled_at else None,
                 "sent_by": sent_by,
-                "created_at": now,
+                "created_at": now.isoformat(),
             }
             
-            self.notifications_collection.insert_one(notification_doc)
+            await self.notifications_collection.insert_one(notification_doc)
             
             # Create notification logs for each recipient
             if not request.scheduled_at:
@@ -142,42 +142,42 @@ class SchoolNotificationEngine:
         recipients = []
         
         if recipient_type == RecipientType.all_students:
-            students = list(self.students_collection.find(
+            students = await self.students_collection.find(
                 {"tenant_id": tenant_id, "is_deleted": {"$ne": True}},
                 {"student_id": 1, "full_name_ar": 1}
-            ))
+            ).to_list(1000)
             recipients = [{"id": s["student_id"], "type": "student", "name": s.get("full_name_ar")} for s in students]
             
         elif recipient_type == RecipientType.all_teachers:
-            teachers = list(self.teachers_collection.find(
+            teachers = await self.teachers_collection.find(
                 {"tenant_id": tenant_id, "is_deleted": {"$ne": True}},
                 {"teacher_id": 1, "full_name_ar": 1}
-            ))
+            ).to_list(500)
             recipients = [{"id": t["teacher_id"], "type": "teacher", "name": t.get("full_name_ar")} for t in teachers]
             
         elif recipient_type == RecipientType.all_parents:
-            parents = list(self.parents_collection.find(
+            parents = await self.parents_collection.find(
                 {"tenant_id": tenant_id, "is_deleted": {"$ne": True}},
                 {"parent_id": 1, "name_ar": 1}
-            ))
+            ).to_list(1000)
             recipients = [{"id": p["parent_id"], "type": "parent", "name": p.get("name_ar")} for p in parents]
             
         elif recipient_type == RecipientType.grade_students:
             grade_id = recipient_filter.get("grade_id") if recipient_filter else None
             if grade_id:
-                students = list(self.students_collection.find(
+                students = await self.students_collection.find(
                     {"tenant_id": tenant_id, "grade_id": grade_id, "is_deleted": {"$ne": True}},
                     {"student_id": 1, "full_name_ar": 1}
-                ))
+                ).to_list(500)
                 recipients = [{"id": s["student_id"], "type": "student", "name": s.get("full_name_ar")} for s in students]
                 
         elif recipient_type == RecipientType.class_students:
             class_id = recipient_filter.get("class_id") if recipient_filter else None
             if class_id:
-                students = list(self.students_collection.find(
+                students = await self.students_collection.find(
                     {"tenant_id": tenant_id, "section_id": class_id, "is_deleted": {"$ne": True}},
                     {"student_id": 1, "full_name_ar": 1}
-                ))
+                ).to_list(100)
                 recipients = [{"id": s["student_id"], "type": "student", "name": s.get("full_name_ar")} for s in students]
                 
         elif recipient_type == RecipientType.specific_users:
@@ -205,15 +205,15 @@ class SchoolNotificationEngine:
                 "recipient_name": recipient.get("name"),
                 "status": "delivered",
                 "read": False,
-                "sent_at": sent_at,
+                "sent_at": sent_at.isoformat(),
             })
         
         if logs:
-            self.notification_logs_collection.insert_many(logs)
+            await self.notification_logs_collection.insert_many(logs)
     
     async def get_notification(self, notification_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get notification by ID"""
-        return self.notifications_collection.find_one({
+        return await self.notifications_collection.find_one({
             "notification_id": notification_id,
             "tenant_id": tenant_id
         }, {"_id": 0})
@@ -230,13 +230,8 @@ class SchoolNotificationEngine:
         if notification_type:
             query["notification_type"] = notification_type
         
-        total = self.notifications_collection.count_documents(query)
-        notifications = list(
-            self.notifications_collection.find(query, {"_id": 0})
-            .sort("created_at", -1)
-            .skip(skip)
-            .limit(limit)
-        )
+        total = await self.notifications_collection.count_documents(query)
+        notifications = await self.notifications_collection.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
         return {"notifications": notifications, "total": total}
     
