@@ -427,6 +427,16 @@ function AppRoutes() {
         }
       />
 
+      {/* Teacher Attendance Management - For School Principal */}
+      <Route
+        path="/admin/teacher-attendance"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <TeacherAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* School Principal Settings & Reports */}
       <Route
         path="/principal/settings"
