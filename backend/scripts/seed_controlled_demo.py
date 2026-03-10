@@ -303,7 +303,10 @@ class ControlledSeeder:
         teacher_count = len(self.schools_data[school_id]["teachers"])
         await self.db.schools.update_one(
             {"id": school_id},
-            {"$set": {"teacher_count": teacher_count}}
+            {"$set": {
+                "teacher_count": teacher_count,
+                "current_teachers": teacher_count
+            }}
         )
         
         return school_id
