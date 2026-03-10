@@ -330,7 +330,7 @@ class StudentManagementEngine:
             }
             
             # Insert student
-            result = self.students_collection.insert_one(student_doc)
+            result = await self.students_collection.insert_one(student_doc)
             
             # Create user account for student (for login)
             user_result = await self._create_student_user_account(
@@ -341,7 +341,7 @@ class StudentManagementEngine:
             
             # Update parent's children list
             if parent_result.get("parent_id"):
-                self.parents_collection.update_one(
+                await self.parents_collection.update_one(
                     {"parent_id": parent_result["parent_id"]},
                     {"$addToSet": {"children": student_id}}
                 )
