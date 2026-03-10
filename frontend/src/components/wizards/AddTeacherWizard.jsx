@@ -466,6 +466,82 @@ const SuccessStep = ({ result, isRTL, onClose, onAddAnother }) => {
     toast.success(isRTL ? 'تم النسخ' : 'Copied!');
   };
 
+  // Generate welcome message
+  const generateWelcomeMessage = () => {
+    const schoolName = result.school_name || 'المدرسة';
+    const teacherName = result.teacher_name || result.basic_info?.full_name_ar || 'المعلم';
+    const teacherId = result.teacher_id || '';
+    const email = result.user_account?.email || '';
+    const password = result.user_account?.temp_password || '';
+    const platformUrl = window.location.origin;
+
+    if (isRTL) {
+      return `السلام عليكم ورحمة الله وبركاته
+
+الأستاذ الكريم: ${teacherName}
+
+يسعدنا انضمامكم إلى فريق العمل في ${schoolName}، ويسرنا إبلاغكم بأنه تم إنشاء حساب خاص بكم على منصة نَسَّق | NASSAQ، وهي المنصة الرقمية المعتمدة لإدارة العملية التعليمية داخل المدرسة.
+
+من خلال منصة نَسَّق يمكنكم:
+• متابعة الجداول الدراسية
+• تسجيل الحضور والغياب
+• إدخال الدرجات والتقييمات
+• متابعة أداء الطلاب
+• التواصل مع الإدارة وأولياء الأمور
+
+بيانات حساب المعلم في النظام:
+• اسم المعلم: ${teacherName}
+• كود المعلم في النظام: ${teacherId}
+• اسم المدرسة: ${schoolName}
+
+بيانات تسجيل الدخول:
+• رابط المنصة: ${platformUrl}
+• اسم المستخدم: ${email}
+• كلمة المرور المؤقتة: ${password}
+
+ننصحكم بعد تسجيل الدخول لأول مرة بتغيير كلمة المرور لضمان حماية حسابكم.
+
+نتطلع إلى تعاونكم المثمر في دعم العملية التعليمية والمساهمة في تحقيق بيئة تعليمية متميزة لطلابنا.
+
+مع خالص التحية والتقدير،
+إدارة ${schoolName}
+منصة نَسَّق | NASSAQ`;
+    } else {
+      return `Dear ${teacherName},
+
+Welcome to ${schoolName}! We are pleased to inform you that your account has been created on NASSAQ platform.
+
+Through NASSAQ you can:
+• View class schedules
+• Record attendance
+• Enter grades and assessments
+• Track student performance
+• Communicate with administration and parents
+
+Account Details:
+• Teacher Name: ${teacherName}
+• Teacher ID: ${teacherId}
+• School: ${schoolName}
+
+Login Credentials:
+• Platform URL: ${platformUrl}
+• Email: ${email}
+• Temporary Password: ${password}
+
+Please change your password after first login for security.
+
+Best regards,
+${schoolName} Administration
+NASSAQ Platform`;
+    }
+  };
+
+  const handleCopyWelcomeMessage = () => {
+    const message = generateWelcomeMessage();
+    navigator.clipboard.writeText(message);
+    toast.success(isRTL ? 'تم نسخ رسالة الترحيب' : 'Welcome message copied!');
+  };
+
   return (
     <div className="text-center space-y-6">
       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -506,6 +582,19 @@ const SuccessStep = ({ result, isRTL, onClose, onAddAnother }) => {
               </div>
             </div>
           )}
+
+          {/* Copy Welcome Message Button */}
+          <div className="mt-4 pt-4 border-t border-green-200">
+            <Button 
+              variant="outline" 
+              className="w-full rounded-xl border-green-300 text-green-700 hover:bg-green-50"
+              onClick={handleCopyWelcomeMessage}
+              data-testid="copy-welcome-message"
+            >
+              <Copy className="h-4 w-4 me-2" />
+              {isRTL ? 'نسخ رسالة الترحيب' : 'Copy Welcome Message'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
