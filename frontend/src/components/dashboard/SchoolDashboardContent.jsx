@@ -36,6 +36,8 @@ import { AddStudentWizard } from '../wizards/AddStudentWizard';
 import { AddTeacherWizard } from '../wizards/AddTeacherWizard';
 import { CreateClassWizard } from '../wizards/CreateClassWizard';
 import { SendNotificationWizard } from '../wizards/SendNotificationWizard';
+import { CreateScheduleWizard } from '../wizards/CreateScheduleWizard';
+import { LiveSessionsMonitor } from '../wizards/LiveSessionsMonitor';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
