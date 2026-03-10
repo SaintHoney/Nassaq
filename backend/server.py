@@ -3513,19 +3513,31 @@ async def generate_schedule_auto(
         "message_en": f"Created {sessions_created} sessions"
     }
 
-# ============== SCHEDULE CONFLICTS CHECK ==============
+# ============== SCHEDULE CONFLICTS CHECK (ADVANCED) ==============
 @api_router.get("/schedules/{schedule_id}/conflicts")
 async def check_schedule_conflicts(
     schedule_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """التحقق من تعارضات الجدول"""
+    """
+    التحقق المتقدم من تعارضات الجدول
+    يشمل: تعارض المعلم، تعارض الفصل، تعارض القاعة
+    """
     conflicts = []
+    statistics = {
+        "teacher_conflicts": 0,
+        "class_conflicts": 0,
+        "room_conflicts": 0,
+        "total_sessions": 0,
+        "sessions_with_conflicts": 0
+    }
     
     sessions = await db.schedule_sessions.find({
         "schedule_id": schedule_id,
         "status": {"$ne": SessionStatusEnum.CANCELLED.value}
-    }, {"_id": 0}).to_list(500)
+    }, {"_id": 0}).to_list(1000)
+    
+    statistics["total_sessions"] = len(sessions)
     
     # Group by day and time slot
     by_day_slot = {}
@@ -3534,6 +3546,8 @@ async def check_schedule_conflicts(
         if key not in by_day_slot:
             by_day_slot[key] = []
         by_day_slot[key].append(session)
+    
+    sessions_with_conflict = set()
     
     for (day, slot_id), slot_sessions in by_day_slot.items():
         if len(slot_sessions) < 2:
@@ -3547,44 +3561,102 @@ async def check_schedule_conflicts(
         
         teachers_seen = {}
         classes_seen = {}
+        rooms_seen = {}
+        
+        # Get time slot info
+        time_slot = await db.time_slots.find_one({"id": slot_id}, {"_id": 0, "start_time": 1, "end_time": 1, "slot_number": 1})
+        period_info = f"الحصة {time_slot.get('slot_number', '?')}" if time_slot else ""
         
         for session in slot_sessions:
             assignment = assignment_map.get(session.get("assignment_id"), {})
             teacher_id = assignment.get("teacher_id")
             class_id = assignment.get("class_id")
+            room_id = session.get("room_id")
+            session_id = session.get("id")
             
+            # Check teacher conflict
             if teacher_id:
                 if teacher_id in teachers_seen:
                     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "full_name": 1})
+                    teacher_name = teacher.get("full_name") if teacher else "غير معروف"
                     conflicts.append({
-                        "type": "teacher_double_booking",
-                        "day": day,
+                        "id": str(uuid.uuid4()),
+                        "type": "teacher_overlap",
+                        "day_of_week": day,
                         "time_slot_id": slot_id,
+                        "period": time_slot.get("slot_number") if time_slot else None,
                         "teacher_id": teacher_id,
-                        "teacher_name": teacher.get("full_name") if teacher else "Unknown",
-                        "message_ar": f"المعلم مجدول في أكثر من حصة",
-                        "severity": "error"
+                        "teacher_name": teacher_name,
+                        "conflicting_session_ids": [teachers_seen[teacher_id], session_id],
+                        "description_ar": f"المعلم {teacher_name} مجدول في أكثر من حصة في نفس الوقت ({period_info})",
+                        "description_en": f"Teacher {teacher_name} is double-booked at the same time",
+                        "severity": "error",
+                        "priority": 1
                     })
-                teachers_seen[teacher_id] = session.get("id")
+                    statistics["teacher_conflicts"] += 1
+                    sessions_with_conflict.add(session_id)
+                    sessions_with_conflict.add(teachers_seen[teacher_id])
+                teachers_seen[teacher_id] = session_id
             
+            # Check class conflict
             if class_id:
                 if class_id in classes_seen:
                     class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1})
+                    class_name = class_doc.get("name") if class_doc else "غير معروف"
                     conflicts.append({
-                        "type": "class_double_booking",
-                        "day": day,
+                        "id": str(uuid.uuid4()),
+                        "type": "class_overlap",
+                        "day_of_week": day,
                         "time_slot_id": slot_id,
+                        "period": time_slot.get("slot_number") if time_slot else None,
                         "class_id": class_id,
-                        "class_name": class_doc.get("name") if class_doc else "Unknown",
-                        "message_ar": f"الفصل مجدول في أكثر من حصة",
-                        "severity": "error"
+                        "class_name": class_name,
+                        "conflicting_session_ids": [classes_seen[class_id], session_id],
+                        "description_ar": f"الفصل {class_name} مجدول في أكثر من حصة في نفس الوقت ({period_info})",
+                        "description_en": f"Class {class_name} is double-booked at the same time",
+                        "severity": "error",
+                        "priority": 2
                     })
-                classes_seen[class_id] = session.get("id")
+                    statistics["class_conflicts"] += 1
+                    sessions_with_conflict.add(session_id)
+                    sessions_with_conflict.add(classes_seen[class_id])
+                classes_seen[class_id] = session_id
+            
+            # Check room/hall conflict (NEW)
+            if room_id:
+                if room_id in rooms_seen:
+                    room_doc = await db.classrooms.find_one({"id": room_id}, {"_id": 0, "name": 1, "name_ar": 1})
+                    room_name = room_doc.get("name_ar") or room_doc.get("name") if room_doc else "غير معروف"
+                    conflicts.append({
+                        "id": str(uuid.uuid4()),
+                        "type": "room_overlap",
+                        "day_of_week": day,
+                        "time_slot_id": slot_id,
+                        "period": time_slot.get("slot_number") if time_slot else None,
+                        "room_id": room_id,
+                        "room_name": room_name,
+                        "conflicting_session_ids": [rooms_seen[room_id], session_id],
+                        "description_ar": f"القاعة {room_name} مجدولة لأكثر من فصل في نفس الوقت ({period_info})",
+                        "description_en": f"Room {room_name} is double-booked at the same time",
+                        "severity": "warning",
+                        "priority": 3
+                    })
+                    statistics["room_conflicts"] += 1
+                    sessions_with_conflict.add(session_id)
+                    sessions_with_conflict.add(rooms_seen[room_id])
+                rooms_seen[room_id] = session_id
+    
+    statistics["sessions_with_conflicts"] = len(sessions_with_conflict)
+    
+    # Sort conflicts by priority
+    conflicts.sort(key=lambda x: (x.get("priority", 99), x.get("day_of_week", ""), x.get("period", 0)))
     
     return {
         "schedule_id": schedule_id,
         "total_conflicts": len(conflicts),
-        "conflicts": conflicts
+        "conflicts": conflicts,
+        "statistics": statistics,
+        "has_blocking_conflicts": statistics["teacher_conflicts"] > 0 or statistics["class_conflicts"] > 0
     }
 
 # ============== TEACHER RANK UPDATE ==============
