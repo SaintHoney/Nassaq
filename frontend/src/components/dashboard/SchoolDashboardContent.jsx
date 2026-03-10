@@ -399,6 +399,9 @@ export const SchoolDashboardContent = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  
+  // Wizard states
+  const [showAddStudentWizard, setShowAddStudentWizard] = useState(false);
 
   // Fetch dashboard data
   useEffect(() => {
