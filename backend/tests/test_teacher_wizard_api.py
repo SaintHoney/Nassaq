@@ -297,8 +297,9 @@ class TestPrincipalDashboard:
         assert response.status_code == 200, f"Notifications failed: {response.text}"
         
         data = response.json()
-        assert "count" in data, "No count in response"
-        print(f"✓ Unread notifications: {data['count']}")
+        # API returns unread_count key
+        assert "unread_count" in data, "No unread_count in response"
+        print(f"✓ Unread notifications: {data['unread_count']}")
 
 
 if __name__ == "__main__":
