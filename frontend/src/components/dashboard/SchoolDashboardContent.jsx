@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AddStudentWizard } from '../wizards/AddStudentWizard';
+import AddStudentWizard from '../wizards/AddStudentWizard';
 import { AddTeacherWizard } from '../wizards/AddTeacherWizard';
 import { CreateClassWizard } from '../wizards/CreateClassWizard';
 import { SendNotificationWizard } from '../wizards/SendNotificationWizard';
