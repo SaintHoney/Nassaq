@@ -419,6 +419,7 @@ export const TeacherScheduleGrid = ({
               teacher={teacher}
               sessions={getTeacherSessions(teacher.id)}
               timeSlots={timeSlots}
+              daysToShow={daysToShow}
               isRTL={isRTL}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
