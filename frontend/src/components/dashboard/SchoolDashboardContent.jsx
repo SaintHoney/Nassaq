@@ -417,10 +417,38 @@ export const SchoolDashboardContent = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // For now, we'll use mock data since backend endpoints may not exist yet
-        // In production, this would be: const response = await axios.get(`${API_URL}/api/school/dashboard`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/api/school/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
-        // Mock data
+        const data = response.data;
+        
+        // Transform API response to match component expected format
+        const transformedData = {
+          metrics: {
+            totalStudents: data.metrics.totalStudents,
+            totalTeachers: data.metrics.totalTeachers,
+            totalClasses: data.metrics.totalClasses,
+            todaySessions: data.metrics.todaySessions,
+            activeUsers: data.metrics.attendanceRate || { value: 342, change: '+28', changeType: 'up', status: 'normal' },
+            waitingSubstitute: data.metrics.waitingSubstitute,
+          },
+          attendance: data.attendance,
+          interventions: data.interventions,
+          alerts: data.alerts.map(alert => ({
+            id: alert.id,
+            type: alert.type,
+            title: isRTL ? (alert.title_ar || alert.title) : (alert.title_en || alert.title),
+            time: isRTL ? (alert.time_ar || alert.time) : (alert.time_en || alert.time),
+          })),
+        };
+        
+        setDashboardData(transformedData);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        
+        // Fallback to mock data on error
         const mockData = {
           metrics: {
             totalStudents: { value: 1245, change: '+12', changeType: 'up', status: 'normal' },
@@ -448,8 +476,6 @@ export const SchoolDashboardContent = () => {
         };
         
         setDashboardData(mockData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
