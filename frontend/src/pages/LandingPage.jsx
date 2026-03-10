@@ -43,6 +43,36 @@ export const LandingPage = () => {
   const [journeyPaused, setJourneyPaused] = useState(false);
   const [aiPaused, setAIPaused] = useState(false);
   const [ecosystemPaused, setEcosystemPaused] = useState(false);
+  
+  // Platform Stats from API
+  const [platformStats, setPlatformStats] = useState({
+    schools: 100,
+    students: 30000,
+    teachers: 2500,
+    parents: 60000,
+  });
+
+  // Fetch platform stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+        const response = await fetch(`${API_URL}/api/public/stats`);
+        if (response.ok) {
+          const data = await response.json();
+          setPlatformStats({
+            schools: data.schools || 100,
+            students: data.students || 30000,
+            teachers: data.teachers || 2500,
+            parents: data.parents || 60000,
+          });
+        }
+      } catch (error) {
+        console.log('Using default stats');
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Auto-rotate Journey Steps every 2 seconds (pause on hover)
   useEffect(() => {
