@@ -663,7 +663,7 @@ export const SchedulePage = () => {
                                 className="p-0.5 border-e border-border/20 min-w-[50px] max-w-[60px] align-top"
                               >
                                 {cellSessions.length > 0 ? (
-                                  <div className="space-y-1">
+                                  <div className="space-y-0.5">
                                     {cellSessions.map(session => (
                                       <div
                                         key={session.id}
@@ -671,16 +671,16 @@ export const SchedulePage = () => {
                                           setSelectedSession(session);
                                           setSessionDetailOpen(true);
                                         }}
-                                        className={`p-1.5 rounded-lg border cursor-pointer transition-all hover:shadow-md ${getSubjectColor(session.subject_name)}`}
+                                        className={`p-1 rounded border cursor-pointer transition-all hover:shadow-sm text-[9px] ${getSubjectColor(session.subject_name)}`}
                                         data-testid={`session-${session.id}`}
                                       >
-                                        <p className="text-[10px] font-medium truncate">{session.subject_name?.split(' ')[0]}</p>
-                                        <p className="text-[9px] opacity-70 truncate">{session.class_name}</p>
+                                        <p className="font-medium truncate leading-tight">{session.subject_name?.split(' ')[0]}</p>
+                                        <p className="opacity-70 truncate leading-tight">{session.class_name}</p>
                                       </div>
                                     ))}
                                   </div>
                                 ) : (
-                                  <div className="h-12 border border-dashed border-muted-foreground/20 rounded-lg" />
+                                  <div className="h-10 border border-dashed border-muted-foreground/20 rounded" />
                                 )}
                               </td>
                             );
