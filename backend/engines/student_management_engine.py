@@ -383,7 +383,7 @@ class StudentManagementEngine:
             }
         
         # Create new parent
-        parent_id = self._generate_parent_id(tenant_id)
+        parent_id = await self._generate_parent_id(tenant_id)
         now = datetime.now(timezone.utc)
         
         parent_doc = {
@@ -406,7 +406,7 @@ class StudentManagementEngine:
             "updated_at": now,
         }
         
-        self.parents_collection.insert_one(parent_doc)
+        await self.parents_collection.insert_one(parent_doc)
         
         # Create user account for parent
         await self._create_parent_user_account(parent_doc, tenant_id, created_by)
