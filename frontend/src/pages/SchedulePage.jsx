@@ -121,8 +121,11 @@ export const SchedulePage = () => {
   const [conflictsSheetOpen, setConflictsSheetOpen] = useState(false);
   const [sessionDetailOpen, setSessionDetailOpen] = useState(false);
   const [teacherDetailOpen, setTeacherDetailOpen] = useState(false);
+  const [generationResultOpen, setGenerationResultOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [generationStats, setGenerationStats] = useState(null);
+  const [conflictStats, setConflictStats] = useState(null);
   
   // New schedule form
   const [newSchedule, setNewSchedule] = useState({
