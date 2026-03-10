@@ -660,7 +660,7 @@ export const SchedulePage = () => {
                             return (
                               <td 
                                 key={`${teacher.id}-${day.key}-${slot.id}`} 
-                                className="p-0.5 border-e border-border/20 min-w-[50px] max-w-[60px] align-top"
+                                className="p-0.5 border-e border-border/20 min-w-[40px] max-w-[50px] align-top"
                               >
                                 {cellSessions.length > 0 ? (
                                   <div className="space-y-0.5">
