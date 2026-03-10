@@ -3775,6 +3775,418 @@ async def check_schedule_conflicts(
         "has_blocking_conflicts": statistics["teacher_conflicts"] > 0 or statistics["class_conflicts"] > 0
     }
 
+
+# ============== CONFLICT AUTO-RESOLUTION SUGGESTIONS ==============
+@api_router.get("/schedules/{schedule_id}/conflicts/suggestions")
+async def get_conflict_resolution_suggestions(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على اقتراحات حل التعارضات تلقائياً
+    
+    يقوم بتحليل كل تعارض واقتراح حلول ممكنة مثل:
+    - نقل الحصة لفترة زمنية أخرى في نفس اليوم
+    - نقل الحصة ليوم آخر
+    - تبديل معلم آخر (إذا متاح)
+    """
+    
+    # Get schedule info
+    schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    school_id = schedule.get("school_id")
+    working_days = schedule.get("working_days") or ["sunday", "monday", "tuesday", "wednesday", "thursday"]
+    
+    # Get all sessions
+    sessions = await db.schedule_sessions.find({
+        "schedule_id": schedule_id,
+        "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+    }, {"_id": 0}).to_list(1000)
+    
+    # Get time slots
+    time_slots = await db.time_slots.find(
+        {"school_id": school_id, "is_active": True, "is_break": False},
+        {"_id": 0}
+    ).sort("slot_number", 1).to_list(20)
+    
+    slot_map = {s.get("id"): s for s in time_slots}
+    
+    # Build occupancy maps
+    teacher_occupancy = {}  # {teacher_id: {day: {slot_id: session_id}}}
+    class_occupancy = {}    # {class_id: {day: {slot_id: session_id}}}
+    
+    for session in sessions:
+        teacher_id = session.get("teacher_id")
+        class_id = session.get("class_id")
+        day = session.get("day_of_week")
+        slot_id = session.get("time_slot_id")
+        session_id = session.get("id")
+        
+        if teacher_id:
+            if teacher_id not in teacher_occupancy:
+                teacher_occupancy[teacher_id] = {d: {} for d in working_days}
+            if day in teacher_occupancy[teacher_id]:
+                teacher_occupancy[teacher_id][day][slot_id] = session_id
+        
+        if class_id:
+            if class_id not in class_occupancy:
+                class_occupancy[class_id] = {d: {} for d in working_days}
+            if day in class_occupancy[class_id]:
+                class_occupancy[class_id][day][slot_id] = session_id
+    
+    # Detect conflicts and generate suggestions
+    suggestions = []
+    
+    # Group sessions by day and slot for conflict detection
+    by_day_slot = {}
+    for session in sessions:
+        key = (session.get("day_of_week"), session.get("time_slot_id"))
+        if key not in by_day_slot:
+            by_day_slot[key] = []
+        by_day_slot[key].append(session)
+    
+    DAYS_AR = {
+        "sunday": "الأحد", "monday": "الاثنين", "tuesday": "الثلاثاء",
+        "wednesday": "الأربعاء", "thursday": "الخميس"
+    }
+    
+    for (day, slot_id), slot_sessions in by_day_slot.items():
+        if len(slot_sessions) < 2:
+            continue
+        
+        teachers_seen = {}
+        classes_seen = {}
+        
+        slot_info = slot_map.get(slot_id, {})
+        period_num = slot_info.get("slot_number", "?")
+        
+        for session in slot_sessions:
+            teacher_id = session.get("teacher_id")
+            class_id = session.get("class_id")
+            session_id = session.get("id")
+            
+            # Teacher conflict
+            if teacher_id and teacher_id in teachers_seen:
+                # Find alternative slots for this session
+                teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "full_name": 1})
+                teacher_name = teacher.get("full_name") if teacher else "غير معروف"
+                
+                alternative_slots = []
+                
+                # Check same day, different slot
+                for alt_slot in time_slots:
+                    alt_slot_id = alt_slot.get("id")
+                    if alt_slot_id == slot_id:
+                        continue
+                    
+                    # Check if teacher and class are both free
+                    teacher_free = teacher_occupancy.get(teacher_id, {}).get(day, {}).get(alt_slot_id) is None
+                    class_free = class_occupancy.get(class_id, {}).get(day, {}).get(alt_slot_id) is None if class_id else True
+                    
+                    if teacher_free and class_free:
+                        alternative_slots.append({
+                            "type": "same_day_different_slot",
+                            "day": day,
+                            "day_ar": DAYS_AR.get(day, day),
+                            "from_slot_id": slot_id,
+                            "from_period": period_num,
+                            "to_slot_id": alt_slot_id,
+                            "to_period": alt_slot.get("slot_number"),
+                            "to_time": alt_slot.get("start_time"),
+                            "confidence": 95
+                        })
+                
+                # Check different day, same slot
+                for alt_day in working_days:
+                    if alt_day == day:
+                        continue
+                    
+                    teacher_free = teacher_occupancy.get(teacher_id, {}).get(alt_day, {}).get(slot_id) is None
+                    class_free = class_occupancy.get(class_id, {}).get(alt_day, {}).get(slot_id) is None if class_id else True
+                    
+                    if teacher_free and class_free:
+                        alternative_slots.append({
+                            "type": "different_day_same_slot",
+                            "day": alt_day,
+                            "day_ar": DAYS_AR.get(alt_day, alt_day),
+                            "from_slot_id": slot_id,
+                            "from_period": period_num,
+                            "to_slot_id": slot_id,
+                            "to_period": period_num,
+                            "to_time": slot_info.get("start_time"),
+                            "confidence": 85
+                        })
+                
+                if alternative_slots:
+                    # Sort by confidence
+                    alternative_slots.sort(key=lambda x: -x.get("confidence", 0))
+                    best_suggestion = alternative_slots[0]
+                    
+                    suggestions.append({
+                        "id": str(uuid.uuid4()),
+                        "conflict_type": "teacher_overlap",
+                        "session_id": session_id,
+                        "teacher_id": teacher_id,
+                        "teacher_name": teacher_name,
+                        "current_day": day,
+                        "current_day_ar": DAYS_AR.get(day, day),
+                        "current_period": period_num,
+                        "suggested_action": "move_session",
+                        "suggestion_ar": f"نقل حصة المعلم {teacher_name} من {DAYS_AR.get(day, day)} الحصة {period_num} إلى {best_suggestion['day_ar']} الحصة {best_suggestion['to_period']}",
+                        "suggestion_en": f"Move {teacher_name}'s session from {day} period {period_num} to {best_suggestion['day']} period {best_suggestion['to_period']}",
+                        "target_day": best_suggestion["day"],
+                        "target_slot_id": best_suggestion["to_slot_id"],
+                        "target_period": best_suggestion["to_period"],
+                        "confidence": best_suggestion["confidence"],
+                        "alternatives_count": len(alternative_slots),
+                        "all_alternatives": alternative_slots[:5]  # Top 5
+                    })
+            
+            if teacher_id:
+                teachers_seen[teacher_id] = session_id
+            
+            # Class conflict
+            if class_id and class_id in classes_seen:
+                class_doc = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1})
+                class_name = class_doc.get("name") if class_doc else "غير معروف"
+                
+                alternative_slots = []
+                
+                # Check same day, different slot
+                for alt_slot in time_slots:
+                    alt_slot_id = alt_slot.get("id")
+                    if alt_slot_id == slot_id:
+                        continue
+                    
+                    teacher_free = teacher_occupancy.get(teacher_id, {}).get(day, {}).get(alt_slot_id) is None if teacher_id else True
+                    class_free = class_occupancy.get(class_id, {}).get(day, {}).get(alt_slot_id) is None
+                    
+                    if teacher_free and class_free:
+                        alternative_slots.append({
+                            "type": "same_day_different_slot",
+                            "day": day,
+                            "day_ar": DAYS_AR.get(day, day),
+                            "from_slot_id": slot_id,
+                            "from_period": period_num,
+                            "to_slot_id": alt_slot_id,
+                            "to_period": alt_slot.get("slot_number"),
+                            "to_time": alt_slot.get("start_time"),
+                            "confidence": 95
+                        })
+                
+                if alternative_slots:
+                    alternative_slots.sort(key=lambda x: -x.get("confidence", 0))
+                    best_suggestion = alternative_slots[0]
+                    
+                    suggestions.append({
+                        "id": str(uuid.uuid4()),
+                        "conflict_type": "class_overlap",
+                        "session_id": session_id,
+                        "class_id": class_id,
+                        "class_name": class_name,
+                        "current_day": day,
+                        "current_day_ar": DAYS_AR.get(day, day),
+                        "current_period": period_num,
+                        "suggested_action": "move_session",
+                        "suggestion_ar": f"نقل حصة الفصل {class_name} من {DAYS_AR.get(day, day)} الحصة {period_num} إلى الحصة {best_suggestion['to_period']}",
+                        "suggestion_en": f"Move {class_name}'s session from {day} period {period_num} to period {best_suggestion['to_period']}",
+                        "target_day": best_suggestion["day"],
+                        "target_slot_id": best_suggestion["to_slot_id"],
+                        "target_period": best_suggestion["to_period"],
+                        "confidence": best_suggestion["confidence"],
+                        "alternatives_count": len(alternative_slots),
+                        "all_alternatives": alternative_slots[:5]
+                    })
+            
+            if class_id:
+                classes_seen[class_id] = session_id
+    
+    return {
+        "schedule_id": schedule_id,
+        "total_suggestions": len(suggestions),
+        "suggestions": suggestions,
+        "can_auto_resolve": len(suggestions) > 0 and all(s.get("confidence", 0) >= 80 for s in suggestions)
+    }
+
+
+@api_router.post("/schedules/{schedule_id}/conflicts/apply-suggestion")
+async def apply_conflict_suggestion(
+    schedule_id: str,
+    session_id: str,
+    target_day: str,
+    target_slot_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    تطبيق اقتراح حل التعارض
+    
+    ينقل الحصة من موقعها الحالي إلى الموقع المقترح
+    """
+    
+    # Validate schedule
+    schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    # Get session
+    session = await db.schedule_sessions.find_one({"id": session_id, "schedule_id": schedule_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    school_id = schedule.get("school_id")
+    working_days = schedule.get("working_days") or ["sunday", "monday", "tuesday", "wednesday", "thursday"]
+    
+    # Validate target day
+    if target_day not in working_days:
+        raise HTTPException(status_code=400, detail="اليوم المحدد غير صالح")
+    
+    # Validate target slot exists
+    target_slot = await db.time_slots.find_one({"id": target_slot_id, "school_id": school_id}, {"_id": 0})
+    if not target_slot:
+        raise HTTPException(status_code=400, detail="الفترة الزمنية غير موجودة")
+    
+    old_day = session.get("day_of_week")
+    old_slot_id = session.get("time_slot_id")
+    teacher_id = session.get("teacher_id")
+    class_id = session.get("class_id")
+    
+    # Check if target slot is free for teacher
+    if teacher_id:
+        teacher_conflict = await db.schedule_sessions.find_one({
+            "schedule_id": schedule_id,
+            "teacher_id": teacher_id,
+            "day_of_week": target_day,
+            "time_slot_id": target_slot_id,
+            "id": {"$ne": session_id},
+            "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+        })
+        if teacher_conflict:
+            raise HTTPException(status_code=400, detail="المعلم مشغول في هذا الوقت")
+    
+    # Check if target slot is free for class
+    if class_id:
+        class_conflict = await db.schedule_sessions.find_one({
+            "schedule_id": schedule_id,
+            "class_id": class_id,
+            "day_of_week": target_day,
+            "time_slot_id": target_slot_id,
+            "id": {"$ne": session_id},
+            "status": {"$ne": SessionStatusEnum.CANCELLED.value}
+        })
+        if class_conflict:
+            raise HTTPException(status_code=400, detail="الفصل مشغول في هذا الوقت")
+    
+    # Apply the move
+    now = datetime.now(timezone.utc).isoformat()
+    await db.schedule_sessions.update_one(
+        {"id": session_id},
+        {"$set": {
+            "day_of_week": target_day,
+            "time_slot_id": target_slot_id,
+            "updated_at": now,
+            "moved_by": current_user.get("id"),
+            "moved_at": now,
+            "move_history": {
+                "from_day": old_day,
+                "from_slot_id": old_slot_id,
+                "to_day": target_day,
+                "to_slot_id": target_slot_id,
+                "moved_at": now
+            }
+        }}
+    )
+    
+    # Get updated slot info for response
+    old_slot = await db.time_slots.find_one({"id": old_slot_id}, {"_id": 0, "slot_number": 1})
+    
+    DAYS_AR = {
+        "sunday": "الأحد", "monday": "الاثنين", "tuesday": "الثلاثاء",
+        "wednesday": "الأربعاء", "thursday": "الخميس"
+    }
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "message_ar": f"تم نقل الحصة من {DAYS_AR.get(old_day, old_day)} الحصة {old_slot.get('slot_number') if old_slot else '?'} إلى {DAYS_AR.get(target_day, target_day)} الحصة {target_slot.get('slot_number')}",
+        "message_en": f"Session moved from {old_day} period {old_slot.get('slot_number') if old_slot else '?'} to {target_day} period {target_slot.get('slot_number')}",
+        "from": {
+            "day": old_day,
+            "slot_id": old_slot_id,
+            "period": old_slot.get("slot_number") if old_slot else None
+        },
+        "to": {
+            "day": target_day,
+            "slot_id": target_slot_id,
+            "period": target_slot.get("slot_number")
+        }
+    }
+
+
+@api_router.post("/schedules/{schedule_id}/conflicts/auto-resolve")
+async def auto_resolve_all_conflicts(
+    schedule_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    حل جميع التعارضات تلقائياً
+    
+    يطبق جميع الاقتراحات ذات الثقة العالية (>= 80%)
+    """
+    
+    # Get all suggestions
+    suggestions_response = await get_conflict_resolution_suggestions(schedule_id, current_user)
+    suggestions = suggestions_response.get("suggestions", [])
+    
+    if not suggestions:
+        return {
+            "success": True,
+            "message_ar": "لا توجد تعارضات لحلها",
+            "message_en": "No conflicts to resolve",
+            "resolved_count": 0,
+            "failed_count": 0
+        }
+    
+    resolved = []
+    failed = []
+    
+    for suggestion in suggestions:
+        if suggestion.get("confidence", 0) < 80:
+            failed.append({
+                "session_id": suggestion.get("session_id"),
+                "reason": "ثقة الاقتراح أقل من 80%"
+            })
+            continue
+        
+        try:
+            result = await apply_conflict_suggestion(
+                schedule_id=schedule_id,
+                session_id=suggestion.get("session_id"),
+                target_day=suggestion.get("target_day"),
+                target_slot_id=suggestion.get("target_slot_id"),
+                current_user=current_user
+            )
+            resolved.append({
+                "session_id": suggestion.get("session_id"),
+                "message": result.get("message_ar")
+            })
+        except HTTPException as e:
+            failed.append({
+                "session_id": suggestion.get("session_id"),
+                "reason": e.detail
+            })
+    
+    return {
+        "success": len(failed) == 0,
+        "message_ar": f"تم حل {len(resolved)} تعارض من أصل {len(suggestions)}",
+        "message_en": f"Resolved {len(resolved)} of {len(suggestions)} conflicts",
+        "resolved_count": len(resolved),
+        "failed_count": len(failed),
+        "resolved": resolved,
+        "failed": failed
+    }
+
 # ============== TEACHER RANK UPDATE ==============
 @api_router.put("/teachers/{teacher_id}/rank")
 async def update_teacher_rank(
