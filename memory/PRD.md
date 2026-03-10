@@ -322,13 +322,16 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - [x] AI Smart School Insights Page - Predictions, recommendations, risks
 - [x] Account Settings Page - Profile, security, notifications, preferences
 
-### P2 - Medium Priority (NEXT)
+### P2 - Medium Priority
 - [ ] Connect PlatformAnalyticsPage to real database data
 - [ ] Connect SystemMonitoringPage to real system metrics
 - [ ] Connect RulesManagementPage to backend
+- [ ] Connect SchoolSettingsPage to backend APIs
+- [ ] Connect SchoolReportsPage to real data
+- [ ] Connect AIInsightsPage to AI service
 - [ ] Teacher Dashboard enhancements
-- [ ] School Principal Dashboard
-- [ ] Parent Dashboard
+- [ ] Parent Dashboard enhancements
+- [ ] Student Dashboard enhancements
 - [ ] Student Dashboard
 - [ ] AI Hakim Assistant backend integration
 - [ ] Notification Engine (SMS/Email)
