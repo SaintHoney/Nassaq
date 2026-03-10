@@ -1953,7 +1953,8 @@ class StudentResponse(BaseModel):
     school_id: str
     class_id: Optional[str] = None
     class_name: Optional[str] = None
-    student_number: str
+    student_number: Optional[str] = None
+    student_id: Optional[str] = None  # Alternative field from student wizard
     date_of_birth: Optional[str] = None
     gender: Optional[str] = None
     parent_phone: Optional[str] = None
