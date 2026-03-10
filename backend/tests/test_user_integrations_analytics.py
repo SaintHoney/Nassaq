@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://principal-hub-3.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nassaq-school-7.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "info@nassaqapp.com"
