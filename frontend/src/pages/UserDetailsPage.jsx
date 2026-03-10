@@ -214,7 +214,7 @@ export default function UserDetailsPage() {
   const api = axios.create({
     baseURL: API_URL,
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      'Authorization': `Bearer ${localStorage.getItem('nassaq_token')}`,
       'Content-Type': 'application/json',
     },
   });

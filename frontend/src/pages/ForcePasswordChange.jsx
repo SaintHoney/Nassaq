@@ -82,7 +82,7 @@ export default function ForcePasswordChange() {
     setIsSubmitting(true);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('nassaq_token');
       
       await axios.post(
         `${API_URL}/api/auth/change-password`,

@@ -148,7 +148,7 @@ export default function UsersManagement() {
     // Add request interceptor to attach token dynamically
     instance.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('nassaq_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
