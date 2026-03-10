@@ -1124,6 +1124,7 @@ export const SchedulePage = () => {
               conflicts={conflicts}
               lockedSessions={[]}
               isRTL={isRTL}
+              displayedDays={displayedDays}
               onSessionMove={async (moveData) => {
                 try {
                   // Update session via API
