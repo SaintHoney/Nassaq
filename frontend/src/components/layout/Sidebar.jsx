@@ -120,7 +120,7 @@ export const Sidebar = ({ children }) => {
       // 1. Dashboard Overview
       {
         icon: LayoutDashboard,
-        label: isRTL ? 'الرئيسية' : 'Dashboard',
+        label: isRTL ? 'مركز القيادة' : 'Command Center',
         href: '/principal',
         roles: ['school_principal', 'school_sub_admin'],
       },
