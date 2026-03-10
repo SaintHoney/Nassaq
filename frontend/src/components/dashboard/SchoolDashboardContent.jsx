@@ -33,6 +33,9 @@ import {
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AddStudentWizard } from '../wizards/AddStudentWizard';
+import { AddTeacherWizard } from '../wizards/AddTeacherWizard';
+import { CreateClassWizard } from '../wizards/CreateClassWizard';
+import { SendNotificationWizard } from '../wizards/SendNotificationWizard';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
