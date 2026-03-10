@@ -137,20 +137,23 @@ export const ClassesPage = () => {
   }, [newClass.grade_level, newClass.section]);
 
   const handleCreateClass = async () => {
-    if (!newClass.name || !newClass.school_id || !newClass.grade_level) {
+    // Use user's school_id for school-level users
+    const schoolId = isSchoolLevel ? userSchoolId : newClass.school_id;
+    
+    if (!newClass.name || !schoolId || !newClass.grade_level) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
 
     setSubmitting(true);
     try {
-      const response = await api.post('/classes', newClass);
+      const response = await api.post('/classes', { ...newClass, school_id: schoolId });
       toast.success(isRTL ? 'تم إضافة الفصل بنجاح' : 'Class added successfully');
       setCreateDialogOpen(false);
       setNewClass({
         name: '',
         name_en: '',
-        school_id: '',
+        school_id: userSchoolId || '',
         grade_level: '',
         section: '',
         capacity: 30,
