@@ -115,79 +115,86 @@ export const Sidebar = ({ children }) => {
     ];
 
     // School Principal & Sub Admin Menu Items
+    // Reorganized according to the required structure
     const schoolItems = [
+      // 1. Dashboard Overview
       {
         icon: LayoutDashboard,
-        label: isRTL ? 'نظرة عامة' : 'Overview',
-        href: '/school',
+        label: isRTL ? 'الرئيسية' : 'Dashboard',
+        href: '/principal',
         roles: ['school_principal', 'school_sub_admin'],
       },
-      {
-        icon: UserCheck,
-        label: isRTL ? 'المعلمون' : 'Teachers',
-        href: '/admin/teachers',
-        roles: ['school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: GraduationCap,
-        label: isRTL ? 'الطلاب' : 'Students',
-        href: '/admin/students',
-        roles: ['school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: BookOpen,
-        label: isRTL ? 'الفصول' : 'Classes',
-        href: '/admin/classes',
-        roles: ['school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: MessageSquare,
-        label: isRTL ? 'المواد الدراسية' : 'Subjects',
-        href: '/admin/subjects',
-        roles: ['school_principal', 'school_sub_admin'],
-      },
+      // 2. Schedule Management
       {
         icon: Calendar,
-        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
+        label: isRTL ? 'الجدول الدراسي' : 'Schedule',
         href: '/admin/schedule',
         roles: ['school_principal', 'school_sub_admin'],
       },
+      // 3. Users & Classes Management
+      {
+        icon: Users,
+        label: isRTL ? 'إدارة المستخدمين والفصول' : 'Users & Classes',
+        href: '/admin/users-management',
+        roles: ['school_principal', 'school_sub_admin'],
+        subItems: [
+          {
+            label: isRTL ? 'المعلمون' : 'Teachers',
+            href: '/admin/teachers',
+          },
+          {
+            label: isRTL ? 'الطلاب' : 'Students',
+            href: '/admin/students',
+          },
+          {
+            label: isRTL ? 'الفصول' : 'Classes',
+            href: '/admin/classes',
+          },
+        ],
+      },
+      // 4. Attendance Management
       {
         icon: CalendarCheck,
-        label: isRTL ? 'الحضور والغياب' : 'Attendance',
+        label: isRTL ? 'إدارة الحضور والانصراف' : 'Attendance',
         href: '/admin/attendance',
-        roles: ['school_principal', 'school_sub_admin', 'teacher'],
+        roles: ['school_principal', 'school_sub_admin'],
       },
+      // 5. Assessments & Grades Management
       {
         icon: ClipboardList,
-        label: isRTL ? 'التقييمات والدرجات' : 'Assessments',
+        label: isRTL ? 'إدارة الاختبارات والتقييمات' : 'Exams & Assessments',
         href: '/admin/assessments',
-        roles: ['school_principal', 'school_sub_admin', 'teacher'],
+        roles: ['school_principal', 'school_sub_admin'],
       },
+      // 6. School Settings
+      {
+        icon: Settings,
+        label: isRTL ? 'إعدادات مدير المدرسة' : 'School Settings',
+        href: '/principal/settings',
+        roles: ['school_principal'],
+      },
+      // 7. Communication & Notifications
+      {
+        icon: Bell,
+        label: isRTL ? 'مركز التواصل والإشعارات' : 'Communication Center',
+        href: '/admin/communication',
+        roles: ['school_principal', 'school_sub_admin'],
+      },
+      // 8. Reports & Analytics
       {
         icon: BarChart3,
         label: isRTL ? 'التقارير والتحليلات' : 'Reports & Analytics',
         href: '/principal/reports',
         roles: ['school_principal', 'school_sub_admin'],
       },
+      // 9. AI Insights
       {
         icon: Network,
         label: isRTL ? 'رؤى الذكاء الاصطناعي' : 'AI Insights',
         href: '/principal/ai-insights',
         roles: ['school_principal'],
       },
-      {
-        icon: Bell,
-        label: isRTL ? 'الإشعارات' : 'Notifications',
-        href: '/notifications',
-        roles: ['school_principal', 'school_sub_admin'],
-      },
-      {
-        icon: Settings,
-        label: isRTL ? 'إعدادات المدرسة' : 'School Settings',
-        href: '/principal/settings',
-        roles: ['school_principal'],
-      },
+      // 10. Account Settings
       {
         icon: UserCog,
         label: isRTL ? 'إعدادات الحساب' : 'Account Settings',
