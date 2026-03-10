@@ -196,25 +196,33 @@ async def main():
         
         await db.time_slots.delete_many({"school_id": DEMO_SCHOOL_ID})
         time_slots = [
-            {"slot": 1, "start": "07:30", "end": "08:15", "is_break": False},
-            {"slot": 2, "start": "08:20", "end": "09:05", "is_break": False},
-            {"slot": 3, "start": "09:10", "end": "09:55", "is_break": False},
-            {"slot": 4, "start": "10:00", "end": "10:30", "is_break": True, "label": "فسحة"},
-            {"slot": 5, "start": "10:35", "end": "11:20", "is_break": False},
-            {"slot": 6, "start": "11:25", "end": "12:10", "is_break": False},
-            {"slot": 7, "start": "12:15", "end": "13:00", "is_break": False},
+            {"slot": 1, "start": "07:30", "end": "08:15", "is_break": False, "name": "الحصة الأولى", "name_en": "Period 1"},
+            {"slot": 2, "start": "08:20", "end": "09:05", "is_break": False, "name": "الحصة الثانية", "name_en": "Period 2"},
+            {"slot": 3, "start": "09:10", "end": "09:55", "is_break": False, "name": "الحصة الثالثة", "name_en": "Period 3"},
+            {"slot": 4, "start": "10:00", "end": "10:30", "is_break": True, "name": "الفسحة", "name_en": "Break"},
+            {"slot": 5, "start": "10:35", "end": "11:20", "is_break": False, "name": "الحصة الرابعة", "name_en": "Period 4"},
+            {"slot": 6, "start": "11:25", "end": "12:10", "is_break": False, "name": "الحصة الخامسة", "name_en": "Period 5"},
+            {"slot": 7, "start": "12:15", "end": "13:00", "is_break": False, "name": "الحصة السادسة", "name_en": "Period 6"},
         ]
         time_slot_ids = []
         for ts in time_slots:
             tsid = str(uuid.uuid4())
+            # Calculate duration
+            start_parts = ts["start"].split(":")
+            end_parts = ts["end"].split(":")
+            duration = (int(end_parts[0]) * 60 + int(end_parts[1])) - (int(start_parts[0]) * 60 + int(start_parts[1]))
+            
             time_slot_ids.append({"id": tsid, "slot": ts["slot"], "is_break": ts["is_break"]})
             await db.time_slots.insert_one({
                 "id": tsid,
+                "name": ts["name"],
+                "name_en": ts["name_en"],
                 "slot_number": ts["slot"],
                 "start_time": ts["start"],
                 "end_time": ts["end"],
+                "duration_minutes": duration,
                 "is_break": ts["is_break"],
-                "break_label": ts.get("label"),
+                "is_active": True,
                 "school_id": DEMO_SCHOOL_ID,
                 "created_at": now
             })
