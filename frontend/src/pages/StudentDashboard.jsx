@@ -47,47 +47,81 @@ export default function StudentDashboard() {
   const fetchStudentData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch student's attendance summary
-      const [attendanceRes, notificationsRes] = await Promise.all([
-        api.get(`/attendance/summary/student/${user?.id}`).catch(() => ({ data: {} })),
-        api.get('/notifications?limit=5').catch(() => ({ data: [] }))
-      ]);
-
-      const attendanceSummary = attendanceRes.data || {};
+      // Get student ID from user
+      const studentId = user?.student_id || user?.id;
       
-      setStats({
-        attendanceRate: attendanceSummary.attendance_rate || 95,
-        averageGrade: 88, // Will be fetched from assessments
-        completedAssignments: 12,
-        pendingAssignments: 3,
-        todayLessons: [
-          { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد', room: 'غرفة 101' },
-          { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة', room: 'غرفة 102' },
-          { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد', room: 'المختبر' },
-          { time: '10:30', subject: 'اللغة الإنجليزية', teacher: 'أ. سارة', room: 'غرفة 103' },
-          { time: '11:30', subject: 'التربية الإسلامية', teacher: 'أ. أحمد', room: 'غرفة 104' },
-        ]
-      });
+      // Fetch student dashboard data from API
+      const dashboardRes = await api.get(`/student/dashboard/${studentId}`).catch(() => null);
+      
+      if (dashboardRes?.data) {
+        const data = dashboardRes.data;
+        setStats({
+          attendanceRate: data.stats.attendance_rate || 0,
+          averageGrade: data.stats.average_grade || 0,
+          completedAssignments: 12,
+          pendingAssignments: 3,
+          todayLessons: data.today_schedule?.map(lesson => ({
+            time: lesson.time,
+            subject: lesson.subject,
+            teacher: lesson.teacher,
+            room: lesson.room || ''
+          })) || []
+        });
+        
+        setGrades(data.recent_grades?.map(g => ({
+          subject: g.subject,
+          grade: g.grade,
+          trend: 'up'
+        })) || []);
+        
+        setNotifications(data.notifications?.map(n => ({
+          title: n.title || n.message,
+          time: n.time ? new Date(n.time).toLocaleDateString('ar-SA') : 'مؤخراً',
+          type: n.type || 'info'
+        })) || []);
+      } else {
+        // Fallback to mock data
+        const [attendanceRes, notificationsRes] = await Promise.all([
+          api.get(`/attendance/summary/student/${user?.id}`).catch(() => ({ data: {} })),
+          api.get('/notifications?limit=5').catch(() => ({ data: [] }))
+        ]);
 
-      setGrades([
-        { subject: 'الرياضيات', grade: 92, trend: 'up' },
-        { subject: 'اللغة العربية', grade: 88, trend: 'up' },
-        { subject: 'العلوم', grade: 85, trend: 'same' },
-        { subject: 'اللغة الإنجليزية', grade: 90, trend: 'up' },
-      ]);
+        const attendanceSummary = attendanceRes.data || {};
+        
+        setStats({
+          attendanceRate: attendanceSummary.attendance_rate || 95,
+          averageGrade: 88,
+          completedAssignments: 12,
+          pendingAssignments: 3,
+          todayLessons: [
+            { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد', room: 'غرفة 101' },
+            { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة', room: 'غرفة 102' },
+            { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد', room: 'المختبر' },
+            { time: '10:30', subject: 'اللغة الإنجليزية', teacher: 'أ. سارة', room: 'غرفة 103' },
+            { time: '11:30', subject: 'التربية الإسلامية', teacher: 'أ. أحمد', room: 'غرفة 104' },
+          ]
+        });
 
-      setNotifications(notificationsRes.data?.slice?.(0, 5) || [
-        { title: 'اختبار الرياضيات غداً', time: 'منذ ساعة', type: 'exam' },
-        { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
-        { title: 'اجتماع أولياء الأمور', time: 'أمس', type: 'meeting' },
-      ]);
+        setGrades([
+          { subject: 'الرياضيات', grade: 92, trend: 'up' },
+          { subject: 'اللغة العربية', grade: 88, trend: 'up' },
+          { subject: 'العلوم', grade: 85, trend: 'same' },
+          { subject: 'اللغة الإنجليزية', grade: 90, trend: 'up' },
+        ]);
+
+        setNotifications(notificationsRes.data?.slice?.(0, 5) || [
+          { title: 'اختبار الرياضيات غداً', time: 'منذ ساعة', type: 'exam' },
+          { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
+          { title: 'اجتماع أولياء الأمور', time: 'أمس', type: 'meeting' },
+        ]);
+      }
 
     } catch (error) {
       console.error('Error fetching student data:', error);
     } finally {
       setLoading(false);
     }
-  }, [api, user?.id]);
+  }, [api, user?.id, user?.student_id]);
 
   useEffect(() => {
     fetchStudentData();
