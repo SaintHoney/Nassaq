@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { TeacherSelfRegistration } from "./pages/TeacherSelfRegistration";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { SchoolDashboard } from "./pages/SchoolDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
