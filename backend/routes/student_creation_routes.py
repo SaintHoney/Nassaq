@@ -3,7 +3,7 @@ Student Creation Routes - Advanced Student + Parent Wizard
 منظومة إنشاء الطلاب المتقدمة
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timezone
