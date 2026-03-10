@@ -188,15 +188,15 @@ export const SchedulePage = () => {
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user]);
+  }, [user, fetchData]);
 
   useEffect(() => {
     if (schoolId) fetchData();
-  }, [schoolId]);
+  }, [schoolId, fetchData]);
 
   useEffect(() => {
     fetchSessions();
-  }, [selectedSchedule]);
+  }, [selectedSchedule, fetchSessions]);
 
   const handleCreateSchedule = async () => {
     if (!newSchedule.name) {
