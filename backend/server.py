@@ -1,3 +1,16 @@
+"""
+NASSAQ - نَسَّق
+نظام إدارة المدارس الذكي المتعدد المستأجرين
+Smart Multi-Tenant School Management System
+
+Architecture:
+- /models - Pydantic models and enums
+- /services - Business logic and utilities  
+- /routes - API route handlers
+- /engines - Core business engines
+- /middleware - RBAC and tenant isolation
+"""
+
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
@@ -14,6 +27,7 @@ import jwt
 import bcrypt
 from enum import Enum
 
+# ============== INITIALIZATION ==============
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -28,12 +42,23 @@ JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 ACCESS_TOKEN_EXPIRE = int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES', 30))
 
 # Create the main app
-app = FastAPI(title="NASSAQ - نَسَّق", description="نظام إدارة المدارس الذكي")
+app = FastAPI(
+    title="NASSAQ - نَسَّق",
+    description="نظام إدارة المدارس الذكي المتعدد المستأجرين",
+    version="2.0.0"
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
 security = HTTPBearer()
+
+# ============== LOGGING ==============
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # ============== ENUMS ==============
 class UserRole(str, Enum):
