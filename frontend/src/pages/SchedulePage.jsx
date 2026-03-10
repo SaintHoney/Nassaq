@@ -1050,10 +1050,8 @@ export const SchedulePage = () => {
                 )}
               </DragOverlay>
             </DndContext>
-          )}
-          
-          {/* Teacher View Mode - Show TeacherScheduleGrid */}
-          {viewMode === 'teacher' && sessions.length > 0 && (
+          ) : (
+            /* Teacher View Mode - Show TeacherScheduleGrid */
             <TeacherScheduleGrid
               teachers={teachers}
               sessions={filteredSessions}
