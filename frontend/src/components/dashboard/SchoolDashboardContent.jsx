@@ -632,6 +632,14 @@ export const SchoolDashboardContent = () => {
         open={showSendNotificationWizard} 
         onClose={() => setShowSendNotificationWizard(false)} 
       />
+      <CreateScheduleWizard 
+        open={showCreateScheduleWizard} 
+        onClose={() => setShowCreateScheduleWizard(false)} 
+      />
+      <LiveSessionsMonitor 
+        open={showLiveSessionsMonitor} 
+        onClose={() => setShowLiveSessionsMonitor(false)} 
+      />
     </div>
   );
 };
