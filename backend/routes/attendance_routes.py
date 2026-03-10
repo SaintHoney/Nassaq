@@ -440,6 +440,130 @@ def create_attendance_router(db, get_current_user, require_roles, UserRole):
             "total": len(alerts)
         }
     
+    # ============== TEACHER ATTENDANCE ==============
+    
+    @router.get("/teacher-attendance")
+    async def get_teacher_attendance(
+        date: str = Query(None),
+        current_user: dict = Depends(require_roles([
+            UserRole.PLATFORM_ADMIN,
+            UserRole.SCHOOL_PRINCIPAL,
+            UserRole.SCHOOL_SUB_ADMIN
+        ]))
+    ):
+        """Get teacher attendance records for a specific date"""
+        import uuid
+        from datetime import datetime, timezone
+        
+        tenant_id = current_user.get("tenant_id") or current_user.get("primary_tenant_id")
+        
+        if not tenant_id:
+            raise HTTPException(status_code=400, detail="يجب تحديد المدرسة")
+        
+        query = {"school_id": tenant_id}
+        if date:
+            query["date"] = date
+        
+        records = await db.teacher_attendance.find(query, {"_id": 0}).to_list(1000)
+        return records
+    
+    @router.post("/teacher-attendance/bulk")
+    async def record_teacher_attendance_bulk(
+        data: dict,
+        current_user: dict = Depends(require_roles([
+            UserRole.PLATFORM_ADMIN,
+            UserRole.SCHOOL_PRINCIPAL,
+            UserRole.SCHOOL_SUB_ADMIN
+        ]))
+    ):
+        """Record attendance for multiple teachers"""
+        import uuid
+        from datetime import datetime, timezone
+        
+        tenant_id = current_user.get("tenant_id") or current_user.get("primary_tenant_id")
+        
+        if not tenant_id:
+            raise HTTPException(status_code=400, detail="يجب تحديد المدرسة")
+        
+        records = data.get("records", [])
+        if not records:
+            raise HTTPException(status_code=400, detail="لا يوجد سجلات للحفظ")
+        
+        saved = []
+        for record in records:
+            # Check if record exists for this teacher on this date
+            existing = await db.teacher_attendance.find_one({
+                "school_id": tenant_id,
+                "teacher_id": record["teacher_id"],
+                "date": record["date"]
+            })
+            
+            attendance_data = {
+                "id": existing.get("id") if existing else str(uuid.uuid4()),
+                "school_id": tenant_id,
+                "teacher_id": record["teacher_id"],
+                "date": record["date"],
+                "status": record["status"],
+                "check_in_time": record.get("check_in_time"),
+                "notes": record.get("notes"),
+                "recorded_by": current_user.get("id"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if existing:
+                await db.teacher_attendance.update_one(
+                    {"id": existing["id"]},
+                    {"$set": attendance_data}
+                )
+            else:
+                attendance_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                await db.teacher_attendance.insert_one(attendance_data)
+            
+            saved.append(attendance_data)
+        
+        return {"message": "تم حفظ الحضور بنجاح", "count": len(saved)}
+    
+    @router.get("/teacher-attendance/report/summary")
+    async def get_teacher_attendance_summary(
+        current_user: dict = Depends(require_roles([
+            UserRole.PLATFORM_ADMIN,
+            UserRole.SCHOOL_PRINCIPAL,
+            UserRole.SCHOOL_SUB_ADMIN
+        ]))
+    ):
+        """Get teacher attendance summary report"""
+        tenant_id = current_user.get("tenant_id") or current_user.get("primary_tenant_id")
+        
+        if not tenant_id:
+            raise HTTPException(status_code=400, detail="يجب تحديد المدرسة")
+        
+        # Get all records for this school
+        records = await db.teacher_attendance.find(
+            {"school_id": tenant_id}, 
+            {"_id": 0}
+        ).to_list(10000)
+        
+        # Calculate summary
+        present = len([r for r in records if r.get("status") == "present"])
+        absent = len([r for r in records if r.get("status") == "absent"])
+        late = len([r for r in records if r.get("status") == "late"])
+        excused = len([r for r in records if r.get("status") == "excused"])
+        total = present + absent + late + excused
+        
+        attendance_rate = round((present + late) / total * 100, 1) if total > 0 else 0
+        
+        return {
+            "overall": {
+                "attendance_rate": attendance_rate,
+                "total_records": total,
+                "present": present,
+                "absent": absent,
+                "late": late,
+                "excused": excused
+            },
+            "daily": []
+        }
+    
     return router
 
 
