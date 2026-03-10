@@ -526,17 +526,91 @@ export const SchoolDashboardContent = () => {
 
   return (
     <div className="space-y-6" data-testid="school-dashboard-content">
-      {/* Date Display Only - Title removed to avoid duplication with parent page header */}
-      <div className="flex items-center justify-end">
-        <div className="text-end">
-          <p className="text-sm text-muted-foreground font-tajawal">
-            {new Date().toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
+      {/* Header: Date & Quick Actions in one row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 rounded-2xl border border-border/50">
+        {/* Date Display */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
+            <Calendar className="h-6 w-6 text-brand-navy" />
+          </div>
+          <div>
+            <p className="text-lg font-bold font-cairo text-foreground">
+              {new Date().toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { 
+                weekday: 'long'
+              })}
+            </p>
+            <p className="text-sm text-muted-foreground font-tajawal">
+              {new Date().toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
+        </div>
+        
+        {/* Quick Actions - Compact inline buttons */}
+        <div className="flex flex-wrap items-center gap-2" data-testid="quick-actions-inline">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-brand-turquoise/30 hover:bg-brand-turquoise/10 hover:border-brand-turquoise text-xs h-8 px-3"
+            onClick={() => handleQuickAction('add_student')}
+            data-testid="quick-action-add-student"
+          >
+            <UserPlus className="h-3.5 w-3.5 me-1.5 text-brand-turquoise" />
+            {isRTL ? 'طالب' : 'Student'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-brand-navy/30 hover:bg-brand-navy/10 hover:border-brand-navy text-xs h-8 px-3"
+            onClick={() => handleQuickAction('add_teacher')}
+            data-testid="quick-action-add-teacher"
+          >
+            <GraduationCap className="h-3.5 w-3.5 me-1.5 text-brand-navy" />
+            {isRTL ? 'معلم' : 'Teacher'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-purple-400/30 hover:bg-purple-50 hover:border-purple-400 dark:hover:bg-purple-900/20 text-xs h-8 px-3"
+            onClick={() => handleQuickAction('create_class')}
+            data-testid="quick-action-create-class"
+          >
+            <School className="h-3.5 w-3.5 me-1.5 text-purple-500" />
+            {isRTL ? 'فصل' : 'Class'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-emerald-400/30 hover:bg-emerald-50 hover:border-emerald-400 dark:hover:bg-emerald-900/20 text-xs h-8 px-3"
+            onClick={() => handleQuickAction('create_schedule')}
+            data-testid="quick-action-create-schedule"
+          >
+            <CalendarDays className="h-3.5 w-3.5 me-1.5 text-emerald-500" />
+            {isRTL ? 'جدول' : 'Schedule'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-amber-400/30 hover:bg-amber-50 hover:border-amber-400 dark:hover:bg-amber-900/20 text-xs h-8 px-3"
+            onClick={() => handleQuickAction('live_sessions')}
+            data-testid="quick-action-live-sessions"
+          >
+            <PlayCircle className="h-3.5 w-3.5 me-1.5 text-amber-500" />
+            {isRTL ? 'الحصص' : 'Sessions'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-rose-400/30 hover:bg-rose-50 hover:border-rose-400 dark:hover:bg-rose-900/20 text-xs h-8 px-3"
+            onClick={() => handleQuickAction('send_notification')}
+            data-testid="quick-action-send-notification"
+          >
+            <Bell className="h-3.5 w-3.5 me-1.5 text-rose-500" />
+            {isRTL ? 'إشعار' : 'Notify'}
+          </Button>
         </div>
       </div>
 
