@@ -877,6 +877,94 @@ export const SchedulePage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Generation Results Dialog */}
+        <Dialog open={generationResultOpen} onOpenChange={setGenerationResultOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                {generationStats?.success ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                )}
+                {isRTL ? 'نتائج التوليد الذكي' : 'Smart Generation Results'}
+              </DialogTitle>
+              <DialogDescription>
+                {generationStats?.message || generationStats?.message_en}
+              </DialogDescription>
+            </DialogHeader>
+            {generationStats && (
+              <div className="space-y-4 py-4">
+                {/* Main Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-center">
+                    <p className="text-2xl font-bold text-green-600">{generationStats.sessions_created}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'حصة تم إنشاؤها' : 'Sessions Created'}</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-center">
+                    <p className="text-2xl font-bold text-blue-600">{generationStats.success_rate}%</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'نسبة النجاح' : 'Success Rate'}</p>
+                  </div>
+                </div>
+
+                {/* Additional Stats */}
+                {generationStats.statistics && (
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-xl">
+                    <p className="text-sm font-medium mb-2">{isRTL ? 'إحصائيات التوليد' : 'Generation Statistics'}</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'المعلمون المجدولون:' : 'Teachers Scheduled:'}</span>
+                        <span className="font-medium">{generationStats.statistics.teachers_scheduled}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'التعارضات المتجنبة:' : 'Conflicts Avoided:'}</span>
+                        <span className="font-medium text-green-600">{generationStats.statistics.conflicts_avoided}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'محاولات الوضع:' : 'Placement Attempts:'}</span>
+                        <span className="font-medium">{generationStats.statistics.placement_attempts}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'وقت التوليد:' : 'Generation Time:'}</span>
+                        <span className="font-medium">{generationStats.generation_time_seconds}s</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Unplaced Warning */}
+                {generationStats.unplaced_sessions > 0 && (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200">
+                    <div className="flex items-center gap-2 text-amber-700">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        {isRTL 
+                          ? `${generationStats.unplaced_sessions} حصة لم يتم جدولتها`
+                          : `${generationStats.unplaced_sessions} sessions could not be placed`
+                        }
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isRTL 
+                        ? 'قد تحتاج لمراجعة الإسنادات أو إضافة فترات زمنية'
+                        : 'You may need to review assignments or add more time slots'
+                      }
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGenerationResultOpen(false)} className="rounded-xl">
+                {isRTL ? 'إغلاق' : 'Close'}
+              </Button>
+              <Button onClick={() => { setGenerationResultOpen(false); setConflictsSheetOpen(true); }} className="bg-brand-navy rounded-xl">
+                {isRTL ? 'عرض التعارضات' : 'View Conflicts'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <HakimAssistant />
     </Sidebar>
