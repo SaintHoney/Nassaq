@@ -269,6 +269,7 @@ export const TeacherScheduleGrid = ({
   conflicts = [],
   lockedSessions = [],
   isRTL = true,
+  displayedDays = null, // Optional: specific days to display
   onSessionMove,
   onSessionClick,
   onSessionEdit,
@@ -276,6 +277,9 @@ export const TeacherScheduleGrid = ({
   const [draggedSession, setDraggedSession] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [expandedTeachers, setExpandedTeachers] = useState({});
+  
+  // Use provided displayedDays or default to all DAYS
+  const daysToShow = displayedDays || DAYS;
 
   // Handle drag start
   const handleDragStart = useCallback((e, session) => {
