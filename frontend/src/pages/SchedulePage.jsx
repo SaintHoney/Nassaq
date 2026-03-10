@@ -29,6 +29,8 @@ import {
   Award,
   Briefcase,
   Filter,
+  Lightbulb,
+  Wand2,
 } from 'lucide-react';
 import {
   Dialog,
