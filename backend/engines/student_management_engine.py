@@ -282,7 +282,7 @@ class StudentManagementEngine:
                 return {"success": False, "error": validation["message"], "error_en": validation["message_en"]}
             
             # Generate student ID
-            student_id = self._generate_student_id(tenant_id)
+            student_id = await self._generate_student_id(tenant_id)
             
             # Generate QR code with student ID
             qr_code = self._generate_qr_code(student_id)
