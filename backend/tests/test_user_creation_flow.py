@@ -6,7 +6,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://academic-system-17.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://edu-system-9.preview.emergentagent.com')
 
 class TestUserCreationAPI:
     """Test user creation endpoints"""
