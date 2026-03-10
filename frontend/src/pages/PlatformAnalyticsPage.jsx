@@ -89,6 +89,7 @@ import {
   Zap,
   School,
   MapPin,
+  Link as LinkIcon,
 } from 'lucide-react';
 import axios from 'axios';
 
