@@ -224,6 +224,9 @@ export const SchedulePage = () => {
   const [filterTeacher, setFilterTeacher] = useState('all');
   const [filterClass, setFilterClass] = useState('all');
   
+  // View mode: 'class' (default) or 'teacher'
+  const [viewMode, setViewMode] = useState('teacher');
+  
   // Dialogs
   const [createScheduleOpen, setCreateScheduleOpen] = useState(false);
   const [sessionDetailOpen, setSessionDetailOpen] = useState(false);
