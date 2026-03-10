@@ -575,9 +575,9 @@ export const SchedulePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="card-nassaq overflow-hidden" data-testid="schedule-grid">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse min-w-max">
+            <Card className="card-nassaq overflow-hidden w-full" data-testid="schedule-grid">
+              <div className="overflow-x-auto max-w-full">
+                <table className="w-full border-collapse">
                   {/* Header */}
                   <thead className="sticky top-0 z-10 bg-background">
                     {/* Days Row */}
