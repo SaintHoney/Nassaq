@@ -587,6 +587,11 @@ export const SchedulePage = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  // Get displayed days based on view period filter
+  const displayedDays = viewPeriod === 'daily' 
+    ? DAYS.filter(day => day.key === selectedDay)
+    : DAYS;
+
   const currentSchedule = schedules.find(s => s.id === selectedSchedule);
 
   return (
