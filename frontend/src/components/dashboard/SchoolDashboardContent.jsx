@@ -410,6 +410,8 @@ export const SchoolDashboardContent = () => {
   const [showAddTeacherWizard, setShowAddTeacherWizard] = useState(false);
   const [showCreateClassWizard, setShowCreateClassWizard] = useState(false);
   const [showSendNotificationWizard, setShowSendNotificationWizard] = useState(false);
+  const [showCreateScheduleWizard, setShowCreateScheduleWizard] = useState(false);
+  const [showLiveSessionsMonitor, setShowLiveSessionsMonitor] = useState(false);
 
   // Fetch dashboard data
   useEffect(() => {
