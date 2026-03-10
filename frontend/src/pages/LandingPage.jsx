@@ -335,11 +335,11 @@ export const LandingPage = () => {
             {isRTL ? 'من البيانات إلى القرار' : 'From Data to Decisions'}
           </p>
           
-          {/* Updated Description - Shorter */}
+          {/* Updated Description - Education Operations Intelligence */}
           <p className="text-lg text-white/70 font-tajawal mb-8 max-w-2xl mx-auto leading-relaxed">
             {isRTL 
-              ? 'منصة متكاملة لإدارة المدارس وفق معايير تعليمية حديثة، مدعومة بالذكاء الاصطناعي'
-              : 'A comprehensive school management platform with modern educational standards, powered by AI'
+              ? 'منصة ذكاء العمليات التعليمية - تحوّل البيانات إلى قرارات تعليمية فعّالة'
+              : 'Education Operations Intelligence Platform - From Data to Decision'
             }
           </p>
           
