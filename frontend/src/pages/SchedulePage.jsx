@@ -556,7 +556,7 @@ export const SchedulePage = () => {
         </div>
 
         {/* Schedule Grid Content */}
-        <div className="p-6">
+        <div className="p-4 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-brand-turquoise" />
