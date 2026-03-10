@@ -226,6 +226,9 @@ export const SchedulePage = () => {
   const [filterTeacher, setFilterTeacher] = useState('all');
   const [filterClass, setFilterClass] = useState('all');
   
+  // Subjects list
+  const [subjects, setSubjects] = useState([]);
+  
   // View mode: 'class' (default) or 'teacher'
   const [viewMode, setViewMode] = useState('teacher');
   
