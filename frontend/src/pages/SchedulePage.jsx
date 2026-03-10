@@ -302,7 +302,7 @@ export const SchedulePage = () => {
 
   return (
     <Sidebar>
-      <div className="min-h-screen bg-background" data-testid="schedule-page">
+      <div className="min-h-screen bg-background overflow-x-hidden" data-testid="schedule-page">
         {/* Sticky Header with Controls */}
         <div className="sticky top-0 z-40 bg-background border-b border-border/50 shadow-sm">
           {/* Page Title */}
