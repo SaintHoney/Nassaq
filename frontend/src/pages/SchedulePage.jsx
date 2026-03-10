@@ -268,6 +268,49 @@ export const SchedulePage = () => {
     }
   };
 
+  // Apply single suggestion
+  const handleApplySuggestion = async (suggestion) => {
+    setApplyingSuggestion(suggestion.id);
+    try {
+      const response = await api.post(`/schedules/${selectedSchedule}/conflicts/apply-suggestion`, null, {
+        params: {
+          session_id: suggestion.session_id,
+          target_day: suggestion.target_day,
+          target_slot_id: suggestion.target_slot_id
+        }
+      });
+      
+      toast.success(response.data.message_ar || response.data.message_en);
+      fetchSessions();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل تطبيق الاقتراح' : 'Failed to apply suggestion'));
+    } finally {
+      setApplyingSuggestion(null);
+    }
+  };
+
+  // Auto-resolve all conflicts
+  const handleAutoResolveAll = async () => {
+    if (!selectedSchedule) return;
+    
+    setAutoResolving(true);
+    try {
+      const response = await api.post(`/schedules/${selectedSchedule}/conflicts/auto-resolve`);
+      
+      if (response.data.success) {
+        toast.success(response.data.message_ar || response.data.message_en);
+      } else {
+        toast.warning(response.data.message_ar || response.data.message_en);
+      }
+      
+      fetchSessions();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل حل التعارضات' : 'Failed to resolve conflicts'));
+    } finally {
+      setAutoResolving(false);
+    }
+  };
+
   const handlePublishSchedule = async () => {
     if (!selectedSchedule) return;
     
