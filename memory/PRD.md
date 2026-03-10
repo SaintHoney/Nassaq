@@ -1200,8 +1200,11 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ### ✅ إصلاح زر إنشاء حساب مستخدم جديد (March 10, 2026):
 - [x] إصلاح مشكلة URL مكرر `/api/api/users/create` في CreateUserWizard.jsx
+- [x] إصلاح import AddStudentWizard في SchoolDashboardContent.jsx
+- [x] إصلاح action IDs في Quick Actions (underscore → hyphen)
+- [x] إضافة default values في UserResponse model
 
-### ✅ معالج إضافة طالب المتقدم (March 10, 2026) - IN PROGRESS:
+### ✅ معالج إضافة طالب المتقدم (March 10, 2026) - COMPLETED:
 - [x] **Backend APIs:**
   - `POST /api/student-wizard/create` - إنشاء طالب + ولي أمر
   - `POST /api/student-wizard/check-parent` - اكتشاف ولي أمر موجود
@@ -1211,7 +1214,12 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
   - توليد QR Code
   - اكتشاف وربط الأشقاء تلقائياً
   - إنشاء أو ربط ولي الأمر
-- [ ] **Frontend Wizard** - يحتاج إنشاء
+- [x] **Frontend Wizard (AddStudentWizard.jsx):**
+  - Step 1: بيانات الطالب
+  - Step 2: بيانات ولي الأمر (مع كشف الأشقاء)
+  - Step 3: البيانات الصحية
+  - Step 4: مراجعة البيانات
+  - Step 5: نجاح + رسالة ترحيب + QR
 
 ### P2 - تحسين أداء النظام:
 - [ ] تقليل زمن تحميل الصفحات
