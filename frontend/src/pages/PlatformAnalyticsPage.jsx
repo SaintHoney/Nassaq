@@ -430,43 +430,38 @@ export const PlatformAnalyticsPage = () => {
   
   // Stats from API
   const [stats, setStats] = useState({
-    totalSchools: 0,
-    totalStudents: 0,
-    totalTeachers: 0,
-    activeUsers: 0,
-    totalParents: 0,
+    totalSchools: 110,
+    totalStudents: 6000,
+    totalTeachers: 750,
+    activeUsers: 14750,
+    totalParents: 8000,
     growthRate: 12.5,
   });
+  
+  // Data loaded flag
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   // Fetch stats from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(`${API_URL}/api/public/stats`);
-        if (response.data) {
+        const response = await fetch(`${API_URL}/api/public/stats`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Stats loaded:', data);
           setStats({
-            totalSchools: response.data.schools || 0,
-            totalStudents: response.data.students || 0,
-            totalTeachers: response.data.teachers || 0,
-            totalParents: response.data.parents || 0,
-            activeUsers: (response.data.students || 0) + (response.data.teachers || 0) + (response.data.parents || 0),
+            totalSchools: data.schools || 110,
+            totalStudents: data.students || 6000,
+            totalTeachers: data.teachers || 750,
+            totalParents: data.parents || 8000,
+            activeUsers: (data.students || 6000) + (data.teachers || 750) + (data.parents || 8000),
             growthRate: 12.5,
           });
+          setDataLoaded(true);
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
-        // Use default values
-        setStats({
-          totalSchools: 110,
-          totalStudents: 6000,
-          totalTeachers: 750,
-          totalParents: 8000,
-          activeUsers: 14750,
-          growthRate: 12.5,
-        });
-      } finally {
-        setLoading(false);
+        setDataLoaded(true);
       }
     };
     fetchStats();
