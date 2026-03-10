@@ -254,13 +254,25 @@ export const SchedulePage = () => {
 
   const fetchSchools = async () => {
     try {
-      const res = await api.get('/schools');
-      setSchools(res.data);
-      if (res.data.length > 0 && !selectedSchool) {
-        setSelectedSchool(res.data[0].id);
+      // For School Principal, use user's own school
+      if (user?.tenant_id) {
+        const res = await api.get(`/schools/${user.tenant_id}`);
+        setSchools([res.data]);
+        setSelectedSchool(user.tenant_id);
+      } else {
+        // For Platform Admin, fetch all schools
+        const res = await api.get('/schools');
+        setSchools(res.data);
+        if (res.data.length > 0 && !selectedSchool) {
+          setSelectedSchool(res.data[0].id);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch schools:', error);
+      // Fallback: use user's tenant_id
+      if (user?.tenant_id) {
+        setSelectedSchool(user.tenant_id);
+      }
     }
   };
 
