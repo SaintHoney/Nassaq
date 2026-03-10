@@ -338,7 +338,7 @@ export const LoginPage = () => {
                     className="col-span-2 p-3 rounded-xl bg-gradient-to-r from-brand-navy/10 to-brand-gold/10 border-2 border-brand-navy/30 cursor-pointer hover:border-brand-navy/50 transition-all hover:shadow-md"
                     onClick={() => {
                       setEmail('admin@nassaq.com');
-                      setPassword('NassaqAdmin2026');
+                      setPassword('Admin@123');
                     }}
                     data-testid="test-admin-credentials"
                   >
@@ -351,88 +351,92 @@ export const LoginPage = () => {
                           <p className="text-sm font-bold text-brand-navy dark:text-brand-gold">
                             {isRTL ? 'مدير المنصة' : 'Platform Admin'}
                           </p>
-                          <p className="text-[10px] text-muted-foreground font-mono">admin@nassaq.com</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">admin@nassaq.com / Admin@123</p>
                         </div>
                       </div>
                       <span className="text-[10px] text-brand-turquoise font-medium">{isRTL ? 'صلاحيات كاملة' : 'Full Access'}</span>
                     </div>
                   </div>
                   
-                  {/* School Principal */}
+                  {/* School Principal - مدرسة النور */}
                   <div 
                     className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
-                      setEmail('principal@nassaq.com');
+                      setEmail('principal1@nassaq.com');
                       setPassword('Principal@123');
                     }}
                     data-testid="test-principal-credentials"
                   >
                     <p className="text-xs font-medium text-brand-turquoise">
-                      {isRTL ? 'مدير المدرسة' : 'Principal'}
+                      {isRTL ? 'مدير مدرسة النور' : 'Al-Noor Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal@nassaq.com</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal1@nassaq.com</p>
                   </div>
                   
-                  {/* Teacher */}
+                  {/* School Principal - مدرسة العلي */}
                   <div 
-                    className="p-2.5 rounded-xl bg-brand-purple/5 border border-brand-purple/20 cursor-pointer hover:bg-brand-purple/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
-                      setEmail('teacher@nassaq.com');
-                      setPassword('Teacher@123');
+                      setEmail('principal2@nassaq.com');
+                      setPassword('Principal@123');
                     }}
-                    data-testid="test-teacher-credentials"
+                    data-testid="test-principal2-credentials"
                   >
-                    <p className="text-xs font-medium text-brand-purple">
-                      {isRTL ? 'معلم' : 'Teacher'}
+                    <p className="text-xs font-medium text-brand-turquoise">
+                      {isRTL ? 'مدير مدرسة العلي' : 'Al-Ali Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">teacher@nassaq.com</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal2@nassaq.com</p>
                   </div>
                   
-                  {/* Student */}
+                  {/* School Principal - مدرسة المنارة */}
                   <div 
-                    className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
-                      setEmail('student@nassaq.com');
-                      setPassword('Student@123');
+                      setEmail('principal3@nassaq.com');
+                      setPassword('Principal@123');
                     }}
-                    data-testid="test-student-credentials"
+                    data-testid="test-principal3-credentials"
                   >
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                      {isRTL ? 'طالب' : 'Student'}
+                    <p className="text-xs font-medium text-brand-turquoise">
+                      {isRTL ? 'مدير مدرسة المنارة' : 'Al-Manara Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">student@nassaq.com</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal3@nassaq.com</p>
                   </div>
                   
-                  {/* Parent */}
+                  {/* School Principal - مدرسة الاحساء */}
                   <div 
-                    className="p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
-                      setEmail('parent@nassaq.com');
-                      setPassword('Parent@123');
+                      setEmail('principal4@nassaq.com');
+                      setPassword('Principal@123');
                     }}
-                    data-testid="test-parent-credentials"
+                    data-testid="test-principal4-credentials"
                   >
-                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                      {isRTL ? 'ولي أمر' : 'Parent'}
+                    <p className="text-xs font-medium text-brand-turquoise">
+                      {isRTL ? 'مدير مدرسة الاحساء' : 'Al-Ahsa Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">parent@nassaq.com</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal4@nassaq.com</p>
                   </div>
                   
-                  {/* Independent Teacher - Full Width */}
+                  {/* School Principal - مدرسة الحديثة */}
                   <div 
-                    className="col-span-2 p-2.5 rounded-xl bg-rose-500/5 border border-rose-500/20 cursor-pointer hover:bg-rose-500/10 transition-colors"
+                    className="col-span-2 p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
-                      setEmail('independent.teacher@nassaq.com');
-                      setPassword('Teacher@123');
+                      setEmail('principal5@nassaq.com');
+                      setPassword('Principal@123');
                     }}
-                    data-testid="test-independent-teacher-credentials"
+                    data-testid="test-principal5-credentials"
                   >
-                    <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
-                      {isRTL ? 'معلم مستقل' : 'Independent Teacher'}
+                    <p className="text-xs font-medium text-brand-turquoise">
+                      {isRTL ? 'مدير مدرسة الحديثة' : 'Al-Haditha Principal'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-mono">independent.teacher@nassaq.com</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">principal5@nassaq.com / Principal@123</p>
                   </div>
                 </div>
+                
+                <p className="text-[10px] text-muted-foreground font-tajawal text-center mt-3">
+                  {isRTL ? '💡 كلمة مرور مدراء المدارس: Principal@123' : '💡 All principals password: Principal@123'}
+                </p>
               </div>
             </CardContent>
           </Card>
