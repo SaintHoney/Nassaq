@@ -532,7 +532,7 @@ class StudentManagementEngine:
         
         if draft_id:
             # Update existing draft
-            result = self.drafts_collection.update_one(
+            result = await self.drafts_collection.update_one(
                 {"_id": ObjectId(draft_id), "tenant_id": tenant_id},
                 {"$set": draft_doc}
             )
@@ -541,12 +541,12 @@ class StudentManagementEngine:
             # Create new draft
             draft_doc["created_at"] = now
             draft_doc["created_by"] = created_by
-            result = self.drafts_collection.insert_one(draft_doc)
+            result = await self.drafts_collection.insert_one(draft_doc)
             return {"draft_id": str(result.inserted_id), "created": True}
     
     async def get_draft(self, draft_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get a specific draft"""
-        draft = self.drafts_collection.find_one({
+        draft = await self.drafts_collection.find_one({
             "_id": ObjectId(draft_id),
             "tenant_id": tenant_id
         })
@@ -562,7 +562,8 @@ class StudentManagementEngine:
         if created_by:
             query["created_by"] = created_by
         
-        drafts = list(self.drafts_collection.find(query).sort("updated_at", -1).limit(50))
+        cursor = self.drafts_collection.find(query).sort("updated_at", -1).limit(50)
+        drafts = await cursor.to_list(length=50)
         
         for draft in drafts:
             draft["_id"] = str(draft["_id"])
@@ -571,7 +572,7 @@ class StudentManagementEngine:
     
     async def delete_draft(self, draft_id: str, tenant_id: str) -> bool:
         """Delete a draft"""
-        result = self.drafts_collection.delete_one({
+        result = await self.drafts_collection.delete_one({
             "_id": ObjectId(draft_id),
             "tenant_id": tenant_id
         })
@@ -581,7 +582,7 @@ class StudentManagementEngine:
     
     async def get_student(self, student_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get student by ID"""
-        student = self.students_collection.find_one({
+        student = await self.students_collection.find_one({
             "student_id": student_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
