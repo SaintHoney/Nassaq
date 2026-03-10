@@ -656,7 +656,8 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
       }
     } catch (error) {
       console.error('Error creating user:', error);
-      toast.error(isRTL ? 'حدث خطأ أثناء إنشاء الحساب' : 'Error creating account');
+      const errorMessage = error.response?.data?.detail || error.message || (isRTL ? 'حدث خطأ أثناء إنشاء الحساب' : 'Error creating account');
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
