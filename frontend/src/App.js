@@ -39,6 +39,12 @@ import SecurityCenterPage from "./pages/SecurityCenterPage";
 import { CommunicationNotificationsPage } from "./pages/CommunicationNotificationsPage";
 // TeacherRequestsPage removed - now integrated in UsersManagement
 import TenantsManagement from "./pages/TenantsManagement";
+
+// School Principal Pages
+import { SchoolSettingsPage } from "./pages/SchoolSettingsPage";
+import { SchoolReportsPage } from "./pages/SchoolReportsPage";
+import { AIInsightsPage } from "./pages/AIInsightsPage";
+import { AccountSettingsPage } from "./pages/AccountSettingsPage";
 import ForcePasswordChange from "./pages/ForcePasswordChange";
 import UsersManagement from "./pages/UsersManagement";
 import UserDetailsPage from "./pages/UserDetailsPage";
