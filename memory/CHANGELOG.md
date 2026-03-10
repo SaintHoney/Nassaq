@@ -1,125 +1,107 @@
 # NASSAQ Changelog
 
-## March 10, 2026 - Session 2 Updates
-
-### ✅ البيانات التجريبية المحكمة (Controlled Demo Data)
-
-تم إنشاء seeder جديد ومنظم: `/app/backend/scripts/seed_controlled_demo.py`
-
-#### الملخص:
-| البيان | العدد |
-|--------|-------|
-| المدارس | 5 |
-| الطلاب | 500 (100 لكل مدرسة) |
-| المعلمون | 78 |
-| الفصول | 60 (12 لكل مدرسة) |
-| المواد | 50 (10 لكل مدرسة) |
-| الحصص الدراسية | 1,800 (360 لكل مدرسة) |
-| سجلات الحضور | 15,000 |
-| سجلات السلوك | 1,793 |
-| الاختبارات | 1,502 |
-| الدرجات | 12,523 |
-
-#### المدارس:
-1. **مدرسة النور** (الرياض) - `school-nor-001`
-2. **مدرسة العلي** (جدة) - `school-ali-001`
-3. **مدرسة المنارة** (الدمام) - `school-mnr-001`
-4. **مدرسة الاحساء** (الأحساء) - `school-ahs-001`
-5. **مدرسة الحديثة** (مكة المكرمة) - `school-hdt-001`
-
-#### المواد الدراسية (سعودية قياسية):
-1. اللغة العربية
-2. الرياضيات
-3. العلوم
-4. اللغة الإنجليزية
-5. الدراسات الإسلامية
-6. الدراسات الاجتماعية
-7. الحاسب الآلي
-8. المهارات الرقمية
-9. التربية الفنية
-10. التربية البدنية
-
----
+## March 10, 2026 - Session 3 Updates
 
 ### ✅ تحديث صفحة تسجيل الدخول
 
-تم تحديث بيانات الدخول التجريبية في صفحة تسجيل الدخول:
-- **مدير المنصة:** `admin@nassaq.com / Admin@123`
-- **مدراء المدارس الخمسة:** `principal1-5@nassaq.com / Principal@123`
+تم إضافة جميع الحسابات التجريبية:
+
+| الدور | البريد الإلكتروني | كلمة المرور |
+|-------|------------------|-------------|
+| 👑 مدير المنصة | admin@nassaq.com | Admin@123 |
+| 👨‍💼 مدير مدرسة النور | principal1@nassaq.com | Principal@123 |
+| 👨‍💼 مدير مدرسة العلي | principal2@nassaq.com | Principal@123 |
+| 👨‍💼 مدير مدرسة المنارة | principal3@nassaq.com | Principal@123 |
+| 👨‍💼 مدير مدرسة الاحساء | principal4@nassaq.com | Principal@123 |
+| 👨‍💼 مدير مدرسة الحديثة | principal5@nassaq.com | Principal@123 |
+| 👨‍🏫 معلم | teacher1@nor.edu.sa | Teacher@123 |
+| 👨‍🎓 طالب | student1@nor.edu.sa | Student@123 |
+| 👨‍👩‍👧 ولي أمر | parent1@nor.edu.sa | Parent@123 |
 
 ---
 
-### ✅ تطبيق Multi-Tenant Isolation على جميع الصفحات
+### ✅ إنشاء صفحة إدارة حضور المعلمين
 
-#### الصفحات المحدّثة:
-1. **TeachersPage.jsx** - إخفاء dropdown المدارس لمدير المدرسة ✅
-2. **StudentsPage.jsx** - إخفاء dropdown المدارس لمدير المدرسة ✅
-3. **ClassesPage.jsx** - إخفاء dropdown المدارس لمدير المدرسة ✅
-4. **SchedulePage.jsx** - تحسين عرض عدد الحصص ✅
+تم إنشاء صفحة جديدة `/admin/teacher-attendance` مخصصة لمدير المدرسة:
 
-#### التغييرات الرئيسية:
-- كل صفحة تتحقق من `user.role` لمعرفة إذا كان المستخدم school-level أو platform-level
-- School-level users لا يستدعون `/api/schools` endpoint
-- يتم استخدام `user.tenant_id` تلقائياً للعمليات
-- dropdown المدارس يظهر فقط لـ Platform Admin
+**الوظائف:**
+- تسجيل حضور المعلمين (حاضر، غائب، متأخر، بعذر)
+- إضافة ملاحظات لكل معلم
+- إحصائيات الحضور (إجمالي، حاضر، غائب، متأخر)
+- شريط تقدم نسبة الحضور
+- زر "الكل حاضر" لتسجيل جماعي
+- تقارير حضور المعلمين
 
----
+**تغيير الاسم:**
+- **القديم:** إدارة الحضور والانصراف
+- **الجديد:** إدارة الحضور (Attendance Management)
 
-### ✅ إصلاح صفحة الجدول المدرسي
-
-- إضافة `time_slot_id` في بيانات الحصص
-- تصحيح عرض عدد الحصص (من `currentSchedule.total_sessions` إلى `filteredSessions.length`)
-- الجدول يعرض الآن 360 حصة بشكل صحيح
+**ملاحظة معمارية:**
+- صفحة حضور المعلمين → مدير المدرسة
+- تحضير الطلاب → المعلمين داخل الحصة (Teacher Interface)
 
 ---
 
-## حسابات الدخول
+### ✅ تحسين صفحة الجدول المدرسي (Teacher Grid View)
 
-### 👑 مدير المنصة (Platform Admin):
-- **البريد:** `admin@nassaq.com`
-- **كلمة المرور:** `Admin@123`
+تم إضافة عرض جديد للجدول: **Teacher Schedule Grid**
 
-### 👨‍💼 مدراء المدارس:
-| المدرسة | البريد | كلمة المرور |
-|---------|--------|-------------|
-| مدرسة النور | principal1@nassaq.com | Principal@123 |
-| مدرسة العلي | principal2@nassaq.com | Principal@123 |
-| مدرسة المنارة | principal3@nassaq.com | Principal@123 |
-| مدرسة الاحساء | principal4@nassaq.com | Principal@123 |
-| مدرسة الحديثة | principal5@nassaq.com | Principal@123 |
+**العرض الجديد (Teacher View):**
+- الصفوف = المعلمين
+- الأعمدة = أيام الأسبوع (الأحد → الخميس)
+- كل يوم = 7 حصص
+- شريط نصاب المعلم (مثال: 24/30)
+- ألوان مميزة لكل مادة
+
+**ميزات كروت الحصص:**
+- اسم المادة
+- اسم الفصل
+- دعم السحب والإفلات (Drag & Drop)
+- كشف التعارضات
+- أيقونة القفل للحصص المثبتة
+
+**أزرار التبديل:**
+- **"المعلمين"** - عرض الجدول من منظور المعلمين
+- **"الفصول"** - العرض التقليدي (الأيام × الحصص)
 
 ---
 
-## Verification Results
+### ✅ Backend APIs الجديدة
 
-### Tenant Isolation ✅:
-- مدير مدرسة النور يرى 100 طالب فقط ✅
-- مدير مدرسة النور يرى 15 معلم فقط ✅
-- مدير مدرسة النور يرى 12 فصل فقط ✅
-- مدير مدرسة النور يرى 360 حصة فقط ✅
-- مدير المنصة يرى جميع المدارس الخمس ✅
+تم إضافة APIs لحضور المعلمين:
+
+```
+GET  /api/attendance/teacher-attendance?date=YYYY-MM-DD
+POST /api/attendance/teacher-attendance/bulk
+GET  /api/attendance/teacher-attendance/report/summary
+```
+
+---
+
+## ملفات تم إنشاؤها/تعديلها
+
+### ملفات جديدة:
+- `/app/frontend/src/pages/TeacherAttendancePage.jsx` - صفحة حضور المعلمين
+- `/app/frontend/src/components/schedule/TeacherScheduleGrid.jsx` - مكون شبكة جدول المعلمين
+
+### ملفات معدّلة:
+- `/app/frontend/src/pages/LoginPage.jsx` - إضافة حسابات تجريبية
+- `/app/frontend/src/pages/SchedulePage.jsx` - إضافة Teacher Grid View
+- `/app/frontend/src/components/layout/Sidebar.jsx` - تغيير اسم "إدارة الحضور"
+- `/app/frontend/src/App.js` - إضافة route جديد
+- `/app/backend/routes/attendance_routes.py` - إضافة APIs حضور المعلمين
+
+---
+
+## Test Results
 
 ### Pages Working:
-- ✅ Login Page - بيانات تجريبية محدّثة
-- ✅ Dashboard - إحصائيات صحيحة
-- ✅ Schedule Page - 360 حصة، سحب وإفلات
-- ✅ Teachers Page - 15 معلم، لا dropdown مدارس
-- ✅ Students Page - 100 طالب، لا dropdown مدارس
-- ✅ Classes Page - 12 فصل، لا dropdown مدارس
-
----
-
-## Files Modified/Created
-
-### New Files:
-- `/app/backend/scripts/seed_controlled_demo.py` - Seeder محكم ومنظم
-
-### Modified Files:
-- `/app/frontend/src/pages/LoginPage.jsx` - تحديث بيانات الدخول
-- `/app/frontend/src/pages/TeachersPage.jsx` - Tenant Isolation
-- `/app/frontend/src/pages/StudentsPage.jsx` - Tenant Isolation
-- `/app/frontend/src/pages/ClassesPage.jsx` - Tenant Isolation
-- `/app/frontend/src/pages/SchedulePage.jsx` - تحسين عرض الحصص
+- ✅ Login Page - جميع الحسابات التجريبية
+- ✅ Schedule Page - عرض المعلمين + عرض الفصول
+- ✅ Teacher Attendance Page - تسجيل حضور المعلمين
+- ✅ Teachers Page - Tenant Isolation
+- ✅ Students Page - Tenant Isolation
+- ✅ Classes Page - Tenant Isolation
 
 ---
 
