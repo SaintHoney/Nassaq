@@ -927,7 +927,7 @@ export const SchedulePage = () => {
                 </Link>
               </CardContent>
             </Card>
-          ) : (
+          ) : viewMode === 'class' ? (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
