@@ -173,8 +173,9 @@ export default function UsersManagement() {
       
       let fetchedUsers = response.data.users || [];
       
-      // Add mock data for demo if no real users
+      // Show warning if API returned empty but use mock for demo
       if (fetchedUsers.length === 0) {
+        console.warn('API returned no users, using demo data');
         fetchedUsers = generateMockUsers();
       }
       
@@ -208,11 +209,12 @@ export default function UsersManagement() {
       
       setUsers(filtered);
       
-      // Calculate stats
+      // Calculate stats from API response or fetch from schools API
+      const schoolCount = await api.get('/api/schools').then(r => r.data?.length || 6).catch(() => 6);
       const allUsers = fetchedUsers;
       setStats({
         totalUsers: allUsers.length,
-        totalSchools: 6, // From mock/API
+        totalSchools: schoolCount,
         teachersInSchools: allUsers.filter(u => u.role === 'teacher' && u.school_name).length,
         independentTeachers: allUsers.filter(u => u.role === 'independent_teacher').length,
         platformAdmins: allUsers.filter(u => u.role?.startsWith('platform_')).length,
@@ -221,6 +223,7 @@ export default function UsersManagement() {
       
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast.error(isRTL ? 'فشل في تحميل المستخدمين' : 'Failed to load users');
       const mockUsers = generateMockUsers();
       setUsers(mockUsers);
       setStats({
@@ -234,7 +237,7 @@ export default function UsersManagement() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType]);
+  }, [searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType, teacherRequests]);
   
   // Fetch teacher requests
   const fetchTeacherRequests = useCallback(async () => {
