@@ -671,16 +671,16 @@ export const SchedulePage = () => {
                                           setSelectedSession(session);
                                           setSessionDetailOpen(true);
                                         }}
-                                        className={`p-1 rounded border cursor-pointer transition-all hover:shadow-sm text-[9px] ${getSubjectColor(session.subject_name)}`}
+                                        className={`p-0.5 rounded border cursor-pointer transition-all hover:shadow-sm text-[8px] ${getSubjectColor(session.subject_name)}`}
                                         data-testid={`session-${session.id}`}
                                       >
-                                        <p className="font-medium truncate leading-tight">{session.subject_name?.split(' ')[0]}</p>
-                                        <p className="opacity-70 truncate leading-tight">{session.class_name}</p>
+                                        <p className="font-medium truncate leading-tight">{session.subject_name?.split(' ')[0]?.slice(0,4)}</p>
+                                        <p className="opacity-70 truncate leading-tight">{session.class_name?.slice(0,5)}</p>
                                       </div>
                                     ))}
                                   </div>
                                 ) : (
-                                  <div className="h-10 border border-dashed border-muted-foreground/20 rounded" />
+                                  <div className="h-8 border border-dashed border-muted-foreground/20 rounded" />
                                 )}
                               </td>
                             );
