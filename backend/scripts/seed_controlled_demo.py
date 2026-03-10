@@ -621,10 +621,14 @@ class ControlledSeeder:
                         "teacher_id": teacher["id"],
                         "teacher_name": teacher["full_name"],
                         "day_of_week": day,
+                        "day": day,  # For backward compatibility
+                        "time_slot_id": time_slot["id"],  # Add time_slot_id
+                        "time_slot_name": time_slot["name"],
                         "slot_number": time_slot["slot_number"],
                         "start_time": time_slot["start_time"],
                         "end_time": time_slot["end_time"],
                         "room": f"غرفة {random.randint(101, 120)}",
+                        "status": "active",
                         "created_at": get_now()
                     }
                     await self.db.schedule_sessions.insert_one(session)
