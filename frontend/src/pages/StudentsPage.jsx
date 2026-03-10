@@ -126,14 +126,17 @@ export const StudentsPage = () => {
   }, [user]);
 
   const handleCreateStudent = async () => {
-    if (!newStudent.full_name || !newStudent.school_id || !newStudent.student_number) {
+    // Use user's school_id for school-level users
+    const schoolId = isSchoolLevel ? userSchoolId : newStudent.school_id;
+    
+    if (!newStudent.full_name || !schoolId || !newStudent.student_number) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
 
     setSubmitting(true);
     try {
-      const response = await api.post('/students', newStudent);
+      const response = await api.post('/students', { ...newStudent, school_id: schoolId });
       toast.success(isRTL ? 'تم إضافة الطالب بنجاح' : 'Student added successfully');
       setCreateDialogOpen(false);
       setNewStudent({
@@ -141,7 +144,7 @@ export const StudentsPage = () => {
         full_name_en: '',
         email: '',
         phone: '',
-        school_id: '',
+        school_id: userSchoolId || '',
         class_id: '',
         student_number: '',
         date_of_birth: '',
