@@ -224,15 +224,25 @@ export const SchedulePage = () => {
     
     setGenerating(true);
     try {
-      const response = await api.post(`/schedules/${selectedSchedule}/generate?respect_workload=true`);
+      const response = await api.post(`/schedules/${selectedSchedule}/generate?respect_workload=true&balance_daily=true&avoid_consecutive=true`);
+      
+      // Store generation stats
+      setGenerationStats(response.data);
+      setGenerateDialogOpen(false);
+      setGenerationResultOpen(true);
       
       if (response.data.success) {
-        toast.success(isRTL ? `تم إنشاء ${response.data.sessions_created} حصة بنجاح` : `Successfully created ${response.data.sessions_created} sessions`);
+        toast.success(isRTL 
+          ? `تم إنشاء ${response.data.sessions_created} من ${response.data.sessions_requested} حصة (${response.data.success_rate}%)` 
+          : `Created ${response.data.sessions_created} of ${response.data.sessions_requested} sessions (${response.data.success_rate}%)`
+        );
       } else {
-        toast.warning(isRTL ? `تم إنشاء ${response.data.sessions_created} حصة مع ${response.data.unplaced_sessions} حصة غير مجدولة` : `Created ${response.data.sessions_created} sessions with ${response.data.unplaced_sessions} unplaced`);
+        toast.warning(isRTL 
+          ? `تم إنشاء ${response.data.sessions_created} حصة مع ${response.data.unplaced_sessions} حصة غير مجدولة` 
+          : `Created ${response.data.sessions_created} sessions with ${response.data.unplaced_sessions} unplaced`
+        );
       }
       
-      setGenerateDialogOpen(false);
       fetchSessions();
     } catch (error) {
       toast.error(error.response?.data?.detail || (isRTL ? 'فشل توليد الجدول' : 'Failed to generate schedule'));
