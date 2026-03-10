@@ -68,6 +68,10 @@ export const ClassesPage = () => {
   const [selectedSchool, setSelectedSchool] = useState('all');
   const [submitting, setSubmitting] = useState(false);
   
+  // Check if user is a school-level user (not platform admin)
+  const isSchoolLevel = user?.role && !user.role.startsWith('platform_');
+  const userSchoolId = user?.tenant_id;
+  
   const gradeLevels = [
     'الأول الابتدائي', 'الثاني الابتدائي', 'الثالث الابتدائي', 'الرابع الابتدائي', 'الخامس الابتدائي', 'السادس الابتدائي',
     'الأول المتوسط', 'الثاني المتوسط', 'الثالث المتوسط',
@@ -79,7 +83,7 @@ export const ClassesPage = () => {
   const [newClass, setNewClass] = useState({
     name: '',
     name_en: '',
-    school_id: '',
+    school_id: userSchoolId || '',
     grade_level: '',
     section: '',
     capacity: 30,
@@ -88,14 +92,24 @@ export const ClassesPage = () => {
 
   const fetchData = async () => {
     try {
-      const [classesRes, schoolsRes, teachersRes] = await Promise.all([
+      // For school-level users, only fetch classes and teachers (tenant-scoped by backend)
+      // For platform admins, also fetch schools for filtering
+      const [classesRes, teachersRes] = await Promise.all([
         api.get('/classes'),
-        api.get('/schools'),
         api.get('/teachers'),
       ]);
       setClasses(classesRes.data);
-      setSchools(schoolsRes.data);
       setTeachers(teachersRes.data);
+      
+      // Only fetch schools list for platform admins
+      if (!isSchoolLevel) {
+        try {
+          const schoolsRes = await api.get('/schools');
+          setSchools(schoolsRes.data);
+        } catch {
+          setSchools([]);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error(isRTL ? 'فشل تحميل البيانات' : 'Failed to load data');
@@ -105,8 +119,14 @@ export const ClassesPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+      // Set default school_id for new class form
+      if (userSchoolId) {
+        setNewClass(prev => ({ ...prev, school_id: userSchoolId }));
+      }
+    }
+  }, [user]);
 
   // Auto-generate class name
   useEffect(() => {
