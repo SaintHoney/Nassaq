@@ -8395,6 +8395,9 @@ from routes.assessment_routes import create_assessment_router
 from routes.audit_routes import create_audit_router
 from routes.teacher_registration_routes import create_teacher_registration_router
 from routes.student_management_routes import create_student_routes
+from routes.teacher_management_routes import create_teacher_management_routes
+from routes.class_management_routes import create_class_management_routes
+from routes.notification_routes import create_notification_routes
 
 # Create and include the new routers
 scheduling_router = create_scheduling_router(db, get_current_user, require_roles, UserRole)
@@ -8403,6 +8406,9 @@ assessment_router = create_assessment_router(db, get_current_user, require_roles
 audit_router = create_audit_router(db, get_current_user, require_roles, UserRole)
 teacher_registration_router = create_teacher_registration_router(db, get_current_user, require_roles, UserRole)
 student_routes = create_student_routes(db, get_current_user)
+teacher_management_routes = create_teacher_management_routes(db, get_current_user)
+class_management_routes = create_class_management_routes(db, get_current_user)
+notification_routes = create_notification_routes(db, get_current_user)
 
 # Add to API router
 api_router.include_router(scheduling_router)
@@ -8411,6 +8417,9 @@ api_router.include_router(assessment_router)
 api_router.include_router(audit_router)
 api_router.include_router(teacher_registration_router)
 api_router.include_router(student_routes)
+api_router.include_router(teacher_management_routes)
+api_router.include_router(class_management_routes)
+api_router.include_router(notification_routes)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
