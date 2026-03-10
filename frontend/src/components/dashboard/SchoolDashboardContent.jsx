@@ -461,10 +461,10 @@ export const SchoolDashboardContent = () => {
         setShowAddStudentWizard(true);
         break;
       case 'add-teacher':
-        navigate('/school/teachers/add');
+        setShowAddTeacherWizard(true);
         break;
       case 'create-class':
-        navigate('/school/classes/add');
+        setShowCreateClassWizard(true);
         break;
       case 'create-schedule':
         navigate('/school/schedule/create');
@@ -473,7 +473,7 @@ export const SchoolDashboardContent = () => {
         navigate('/school/sessions');
         break;
       case 'send-notification':
-        navigate('/school/notifications/send');
+        setShowSendNotificationWizard(true);
         break;
       default:
         console.log('Action:', actionId);
