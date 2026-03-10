@@ -92,12 +92,18 @@ class TeacherManagementEngine:
     
     # ==================== ID Generation ====================
     
-    def _generate_teacher_id(self, tenant_id: str) -> str:
+    async def _generate_teacher_id(self, tenant_id: str) -> str:
         """Generate unique teacher ID: TCH-SCH-YY-XXXX"""
         try:
-            school = self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
+            school = None
+            try:
+                school = await self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
+            except:
+                pass
             if not school:
-                school = self.schools_collection.find_one({"tenant_id": tenant_id})
+                school = await self.schools_collection.find_one({"tenant_id": tenant_id})
+            if not school:
+                school = await self.schools_collection.find_one({"id": tenant_id})
             
             school_code = "SCH"
             if school:
@@ -107,7 +113,7 @@ class TeacherManagementEngine:
             year = datetime.now().strftime("%y")
             prefix = f"TCH-{school_code}-{year}-"
             
-            count = self.teachers_collection.count_documents({
+            count = await self.teachers_collection.count_documents({
                 "teacher_id": {"$regex": f"^{prefix}"}
             })
             
@@ -142,7 +148,7 @@ class TeacherManagementEngine:
     
     async def validate_national_id(self, national_id: str, tenant_id: str) -> Dict[str, Any]:
         """Check if national ID already exists"""
-        existing = self.teachers_collection.find_one({
+        existing = await self.teachers_collection.find_one({
             "national_id": national_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
@@ -159,7 +165,7 @@ class TeacherManagementEngine:
     
     async def validate_email(self, email: str, tenant_id: str) -> Dict[str, Any]:
         """Check if email already exists"""
-        existing = self.users_collection.find_one({
+        existing = await self.users_collection.find_one({
             "email": email,
             "is_deleted": {"$ne": True}
         })
@@ -193,7 +199,7 @@ class TeacherManagementEngine:
                 return {"success": False, "error": email_validation["message"], "error_en": email_validation["message_en"]}
             
             # Generate teacher ID and QR code
-            teacher_id = self._generate_teacher_id(tenant_id)
+            teacher_id = await self._generate_teacher_id(tenant_id)
             qr_code = self._generate_qr_code(teacher_id)
             
             now = datetime.now(timezone.utc)
@@ -241,13 +247,13 @@ class TeacherManagementEngine:
                 "hire_date": now.isoformat(),
                 
                 # Audit
-                "created_at": now,
+                "created_at": now.isoformat(),
                 "created_by": created_by,
-                "updated_at": now,
+                "updated_at": now.isoformat(),
             }
             
             # Insert teacher
-            self.teachers_collection.insert_one(teacher_doc)
+            await self.teachers_collection.insert_one(teacher_doc)
             
             # Create user account
             user_result = await self._create_teacher_user_account(teacher_doc, tenant_id, created_by)
@@ -285,7 +291,7 @@ class TeacherManagementEngine:
             username = teacher_doc["email"].split("@")[0]
             
             # Check if username exists
-            existing = self.users_collection.find_one({"username": username})
+            existing = await self.users_collection.find_one({"username": username})
             if existing:
                 username = f"{username}_{secrets.token_hex(2)}"
             
@@ -304,11 +310,11 @@ class TeacherManagementEngine:
                 "phone": teacher_doc["phone"],
                 "must_change_password": True,
                 "is_active": True,
-                "created_at": now,
+                "created_at": now.isoformat(),
                 "created_by": created_by,
             }
             
-            self.users_collection.insert_one(user_doc)
+            await self.users_collection.insert_one(user_doc)
             
             return {
                 "username": username,
@@ -324,7 +330,7 @@ class TeacherManagementEngine:
     
     async def get_teacher(self, teacher_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """Get teacher by ID"""
-        teacher = self.teachers_collection.find_one({
+        teacher = await self.teachers_collection.find_one({
             "teacher_id": teacher_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
@@ -361,13 +367,8 @@ class TeacherManagementEngine:
                 {"email": {"$regex": search, "$options": "i"}},
             ]
         
-        total = self.teachers_collection.count_documents(query)
-        teachers = list(
-            self.teachers_collection.find(query, {"_id": 0})
-            .sort("created_at", -1)
-            .skip(skip)
-            .limit(limit)
-        )
+        total = await self.teachers_collection.count_documents(query)
+        teachers = await self.teachers_collection.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
         return {
             "teachers": teachers,
