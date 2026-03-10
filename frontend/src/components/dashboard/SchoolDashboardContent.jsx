@@ -557,7 +557,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-brand-turquoise/30 hover:bg-brand-turquoise/10 hover:border-brand-turquoise text-xs h-8 px-3"
-            onClick={() => handleQuickAction('add_student')}
+            onClick={() => handleQuickAction('add-student')}
             data-testid="quick-action-add-student"
           >
             <UserPlus className="h-3.5 w-3.5 me-1.5 text-brand-turquoise" />
@@ -567,7 +567,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-brand-navy/30 hover:bg-brand-navy/10 hover:border-brand-navy text-xs h-8 px-3"
-            onClick={() => handleQuickAction('add_teacher')}
+            onClick={() => handleQuickAction('add-teacher')}
             data-testid="quick-action-add-teacher"
           >
             <GraduationCap className="h-3.5 w-3.5 me-1.5 text-brand-navy" />
@@ -577,7 +577,7 @@ export const SchoolDashboardContent = () => {
             size="sm"
             variant="outline"
             className="rounded-xl border-purple-400/30 hover:bg-purple-50 hover:border-purple-400 dark:hover:bg-purple-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('create_class')}
+            onClick={() => handleQuickAction('create-class')}
             data-testid="quick-action-create-class"
           >
             <School className="h-3.5 w-3.5 me-1.5 text-purple-500" />
