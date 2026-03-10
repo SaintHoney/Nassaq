@@ -624,7 +624,7 @@ export const SchedulePage = () => {
                     {displayTeachers.map((teacher, teacherIdx) => (
                       <tr key={teacher.id} className={`border-b hover:bg-muted/10 ${teacherIdx % 2 === 0 ? '' : 'bg-muted/5'}`}>
                         {/* Teacher Cell - Sticky & Clickable */}
-                        <td className="sticky start-0 z-10 bg-background p-1 border-e w-36">
+                        <td className="sticky start-0 z-10 bg-background p-1 border-e min-w-[120px] max-w-[140px]">
                           <div 
                             className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded-lg p-1 transition-colors"
                             onClick={() => {
