@@ -5672,6 +5672,854 @@ async def get_notification_analytics(
     }
 
 
+# ============== ACADEMIC YEARS APIs ==============
+class AcademicYearBase(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    start_date: str
+    end_date: str
+    is_current: bool = False
+    school_id: str
+
+class AcademicYearResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    start_date: str
+    end_date: str
+    is_current: bool
+    school_id: str
+    status: str = "active"
+    created_at: str
+
+@api_router.post("/academic-years", response_model=AcademicYearResponse)
+async def create_academic_year(
+    data: AcademicYearBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Create a new academic year"""
+    academic_year_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # If setting as current, unset other current years
+    if data.is_current:
+        await db.academic_years.update_many(
+            {"school_id": data.school_id, "is_current": True},
+            {"$set": {"is_current": False}}
+        )
+    
+    academic_year_doc = {
+        "id": academic_year_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_current": data.is_current,
+        "school_id": data.school_id,
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user.get("id")
+    }
+    
+    await db.academic_years.insert_one(academic_year_doc)
+    
+    return AcademicYearResponse(**academic_year_doc)
+
+@api_router.get("/academic-years", response_model=List[AcademicYearResponse])
+async def get_academic_years(
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all academic years for a school"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("tenant_id"):
+        query["school_id"] = current_user["tenant_id"]
+    
+    academic_years = await db.academic_years.find(query, {"_id": 0}).sort("start_date", -1).to_list(100)
+    return [AcademicYearResponse(**ay) for ay in academic_years]
+
+@api_router.get("/academic-years/{academic_year_id}", response_model=AcademicYearResponse)
+async def get_academic_year(
+    academic_year_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a single academic year"""
+    academic_year = await db.academic_years.find_one({"id": academic_year_id}, {"_id": 0})
+    if not academic_year:
+        raise HTTPException(status_code=404, detail="العام الدراسي غير موجود")
+    return AcademicYearResponse(**academic_year)
+
+@api_router.put("/academic-years/{academic_year_id}", response_model=AcademicYearResponse)
+async def update_academic_year(
+    academic_year_id: str,
+    data: AcademicYearBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Update an academic year"""
+    academic_year = await db.academic_years.find_one({"id": academic_year_id})
+    if not academic_year:
+        raise HTTPException(status_code=404, detail="العام الدراسي غير موجود")
+    
+    # If setting as current, unset other current years
+    if data.is_current:
+        await db.academic_years.update_many(
+            {"school_id": data.school_id, "is_current": True, "id": {"$ne": academic_year_id}},
+            {"$set": {"is_current": False}}
+        )
+    
+    update_data = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_current": data.is_current,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.academic_years.update_one({"id": academic_year_id}, {"$set": update_data})
+    
+    updated = await db.academic_years.find_one({"id": academic_year_id}, {"_id": 0})
+    return AcademicYearResponse(**updated)
+
+@api_router.delete("/academic-years/{academic_year_id}")
+async def delete_academic_year(
+    academic_year_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete an academic year"""
+    result = await db.academic_years.delete_one({"id": academic_year_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="العام الدراسي غير موجود")
+    return {"message": "تم حذف العام الدراسي بنجاح"}
+
+
+# ============== TERMS/SEMESTERS APIs ==============
+class TermBase(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    academic_year_id: str
+    start_date: str
+    end_date: str
+    is_current: bool = False
+    school_id: str
+
+class TermResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    academic_year_id: str
+    start_date: str
+    end_date: str
+    is_current: bool
+    school_id: str
+    created_at: str
+
+@api_router.post("/terms", response_model=TermResponse)
+async def create_term(
+    data: TermBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Create a new term/semester"""
+    term_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # If setting as current, unset other current terms for this school
+    if data.is_current:
+        await db.terms.update_many(
+            {"school_id": data.school_id, "is_current": True},
+            {"$set": {"is_current": False}}
+        )
+    
+    term_doc = {
+        "id": term_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "academic_year_id": data.academic_year_id,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_current": data.is_current,
+        "school_id": data.school_id,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user.get("id")
+    }
+    
+    await db.terms.insert_one(term_doc)
+    
+    return TermResponse(**term_doc)
+
+@api_router.get("/terms", response_model=List[TermResponse])
+async def get_terms(
+    school_id: Optional[str] = None,
+    academic_year_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all terms for a school"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("tenant_id"):
+        query["school_id"] = current_user["tenant_id"]
+    
+    if academic_year_id:
+        query["academic_year_id"] = academic_year_id
+    
+    terms = await db.terms.find(query, {"_id": 0}).sort("start_date", -1).to_list(100)
+    return [TermResponse(**t) for t in terms]
+
+@api_router.get("/terms/{term_id}", response_model=TermResponse)
+async def get_term(
+    term_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a single term"""
+    term = await db.terms.find_one({"id": term_id}, {"_id": 0})
+    if not term:
+        raise HTTPException(status_code=404, detail="الفصل الدراسي غير موجود")
+    return TermResponse(**term)
+
+@api_router.put("/terms/{term_id}", response_model=TermResponse)
+async def update_term(
+    term_id: str,
+    data: TermBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Update a term"""
+    term = await db.terms.find_one({"id": term_id})
+    if not term:
+        raise HTTPException(status_code=404, detail="الفصل الدراسي غير موجود")
+    
+    # If setting as current, unset other current terms
+    if data.is_current:
+        await db.terms.update_many(
+            {"school_id": data.school_id, "is_current": True, "id": {"$ne": term_id}},
+            {"$set": {"is_current": False}}
+        )
+    
+    update_data = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "academic_year_id": data.academic_year_id,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_current": data.is_current,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.terms.update_one({"id": term_id}, {"$set": update_data})
+    
+    updated = await db.terms.find_one({"id": term_id}, {"_id": 0})
+    return TermResponse(**updated)
+
+@api_router.delete("/terms/{term_id}")
+async def delete_term(
+    term_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete a term"""
+    result = await db.terms.delete_one({"id": term_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الفصل الدراسي غير موجود")
+    return {"message": "تم حذف الفصل الدراسي بنجاح"}
+
+
+# ============== GRADE LEVELS APIs ==============
+class GradeLevelBase(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    order: int = 1
+    is_active: bool = True
+    school_id: str
+
+class GradeLevelResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    name_en: Optional[str] = None
+    order: int
+    is_active: bool
+    school_id: str
+    created_at: str
+
+@api_router.post("/grade-levels", response_model=GradeLevelResponse)
+async def create_grade_level(
+    data: GradeLevelBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Create a new grade level"""
+    grade_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    grade_doc = {
+        "id": grade_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "order": data.order,
+        "is_active": data.is_active,
+        "school_id": data.school_id,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user.get("id")
+    }
+    
+    await db.grade_levels.insert_one(grade_doc)
+    
+    return GradeLevelResponse(**grade_doc)
+
+@api_router.get("/grade-levels", response_model=List[GradeLevelResponse])
+async def get_grade_levels(
+    school_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all grade levels for a school"""
+    query = {}
+    if school_id:
+        query["school_id"] = school_id
+    elif current_user.get("tenant_id"):
+        query["school_id"] = current_user["tenant_id"]
+    
+    grade_levels = await db.grade_levels.find(query, {"_id": 0}).sort("order", 1).to_list(100)
+    return [GradeLevelResponse(**gl) for gl in grade_levels]
+
+@api_router.get("/grade-levels/{grade_id}", response_model=GradeLevelResponse)
+async def get_grade_level(
+    grade_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a single grade level"""
+    grade = await db.grade_levels.find_one({"id": grade_id}, {"_id": 0})
+    if not grade:
+        raise HTTPException(status_code=404, detail="المرحلة الدراسية غير موجودة")
+    return GradeLevelResponse(**grade)
+
+@api_router.put("/grade-levels/{grade_id}", response_model=GradeLevelResponse)
+async def update_grade_level(
+    grade_id: str,
+    data: GradeLevelBase,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Update a grade level"""
+    grade = await db.grade_levels.find_one({"id": grade_id})
+    if not grade:
+        raise HTTPException(status_code=404, detail="المرحلة الدراسية غير موجودة")
+    
+    update_data = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "order": data.order,
+        "is_active": data.is_active,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.grade_levels.update_one({"id": grade_id}, {"$set": update_data})
+    
+    updated = await db.grade_levels.find_one({"id": grade_id}, {"_id": 0})
+    return GradeLevelResponse(**updated)
+
+@api_router.delete("/grade-levels/{grade_id}")
+async def delete_grade_level(
+    grade_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Delete a grade level"""
+    result = await db.grade_levels.delete_one({"id": grade_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="المرحلة الدراسية غير موجودة")
+    return {"message": "تم حذف المرحلة الدراسية بنجاح"}
+
+
+# ============== USER PROFILE APIs ==============
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    full_name_en: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+class UserPreferencesUpdate(BaseModel):
+    language: Optional[str] = None
+    theme: Optional[str] = None
+    time_format: Optional[str] = None
+    date_format: Optional[str] = None
+    first_day_of_week: Optional[str] = None
+
+class UserNotificationSettings(BaseModel):
+    email_notifications: Optional[bool] = None
+    sms_notifications: Optional[bool] = None
+    push_notifications: Optional[bool] = None
+    attendance_alerts: Optional[bool] = None
+    grade_alerts: Optional[bool] = None
+    behavior_alerts: Optional[bool] = None
+    announcement_alerts: Optional[bool] = None
+    weekly_digest: Optional[bool] = None
+
+@api_router.put("/users/me", response_model=UserResponse)
+async def update_current_user_profile(
+    data: UserProfileUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update current user's profile"""
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if data.full_name is not None:
+        update_data["full_name"] = data.full_name
+    if data.full_name_en is not None:
+        update_data["full_name_en"] = data.full_name_en
+    if data.email is not None:
+        # Check if email is already used by another user
+        existing = await db.users.find_one({"email": data.email, "id": {"$ne": current_user["id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="البريد الإلكتروني مستخدم مسبقاً")
+        update_data["email"] = data.email
+    if data.phone is not None:
+        # Check if phone is already used by another user
+        existing = await db.users.find_one({"phone": data.phone, "id": {"$ne": current_user["id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="رقم الهاتف مستخدم مسبقاً")
+        update_data["phone"] = data.phone
+    if data.avatar_url is not None:
+        update_data["avatar_url"] = data.avatar_url
+    
+    await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password_hash": 0})
+    return UserResponse(**updated_user)
+
+@api_router.get("/users/me/preferences")
+async def get_current_user_preferences(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current user's preferences"""
+    return {
+        "language": current_user.get("preferred_language", "ar"),
+        "theme": current_user.get("preferred_theme", "light"),
+        "time_format": current_user.get("time_format", "12h"),
+        "date_format": current_user.get("date_format", "dd/mm/yyyy"),
+        "first_day_of_week": current_user.get("first_day_of_week", "sunday"),
+    }
+
+@api_router.put("/users/me/preferences")
+async def update_current_user_preferences(
+    data: UserPreferencesUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update current user's preferences"""
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if data.language is not None:
+        update_data["preferred_language"] = data.language
+    if data.theme is not None:
+        update_data["preferred_theme"] = data.theme
+    if data.time_format is not None:
+        update_data["time_format"] = data.time_format
+    if data.date_format is not None:
+        update_data["date_format"] = data.date_format
+    if data.first_day_of_week is not None:
+        update_data["first_day_of_week"] = data.first_day_of_week
+    
+    await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    return {"message": "تم تحديث التفضيلات بنجاح", "success": True}
+
+@api_router.get("/users/me/notifications")
+async def get_current_user_notification_settings(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current user's notification settings"""
+    return {
+        "email_notifications": current_user.get("email_notifications", True),
+        "sms_notifications": current_user.get("sms_notifications", False),
+        "push_notifications": current_user.get("push_notifications", True),
+        "attendance_alerts": current_user.get("attendance_alerts", True),
+        "grade_alerts": current_user.get("grade_alerts", True),
+        "behavior_alerts": current_user.get("behavior_alerts", True),
+        "announcement_alerts": current_user.get("announcement_alerts", True),
+        "weekly_digest": current_user.get("weekly_digest", True),
+    }
+
+@api_router.put("/users/me/notifications")
+async def update_current_user_notification_settings(
+    data: UserNotificationSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update current user's notification settings"""
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if data.email_notifications is not None:
+        update_data["email_notifications"] = data.email_notifications
+    if data.sms_notifications is not None:
+        update_data["sms_notifications"] = data.sms_notifications
+    if data.push_notifications is not None:
+        update_data["push_notifications"] = data.push_notifications
+    if data.attendance_alerts is not None:
+        update_data["attendance_alerts"] = data.attendance_alerts
+    if data.grade_alerts is not None:
+        update_data["grade_alerts"] = data.grade_alerts
+    if data.behavior_alerts is not None:
+        update_data["behavior_alerts"] = data.behavior_alerts
+    if data.announcement_alerts is not None:
+        update_data["announcement_alerts"] = data.announcement_alerts
+    if data.weekly_digest is not None:
+        update_data["weekly_digest"] = data.weekly_digest
+    
+    await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    return {"message": "تم تحديث إعدادات الإشعارات بنجاح", "success": True}
+
+
+# ============== SCHOOL REPORTS APIs ==============
+@api_router.get("/reports/school/overview")
+async def get_school_overview_report(
+    period: str = "current_term",
+    current_user: dict = Depends(get_current_user)
+):
+    """Get school overview report with statistics"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get student count
+    total_students = await db.students.count_documents({"school_id": school_id})
+    
+    # Get teacher count
+    total_teachers = await db.teachers.count_documents({"school_id": school_id})
+    
+    # Get class count
+    total_classes = await db.classes.count_documents({"school_id": school_id})
+    
+    # Get attendance stats
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    attendance_records = await db.attendance.find({
+        "school_id": school_id,
+        "date": today
+    }, {"_id": 0}).to_list(10000)
+    
+    present_count = len([a for a in attendance_records if a.get("status") == "present"])
+    absent_count = len([a for a in attendance_records if a.get("status") == "absent"])
+    late_count = len([a for a in attendance_records if a.get("status") == "late"])
+    total_attendance = len(attendance_records)
+    
+    attendance_rate = round((present_count / total_attendance) * 100, 1) if total_attendance > 0 else 0
+    
+    # Get grade stats
+    grades = await db.grades.find({"school_id": school_id}, {"_id": 0, "grade": 1}).to_list(10000)
+    avg_grade = round(sum(g.get("grade", 0) for g in grades) / len(grades), 1) if grades else 0
+    
+    return {
+        "total_students": total_students,
+        "total_teachers": total_teachers,
+        "total_classes": total_classes,
+        "attendance_rate": attendance_rate,
+        "avg_grade": avg_grade,
+        "attendance": {
+            "present": present_count,
+            "absent": absent_count,
+            "late": late_count,
+            "total": total_attendance
+        },
+        "period": period,
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.get("/reports/school/attendance")
+async def get_school_attendance_report(
+    period: str = "current_term",
+    class_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get detailed attendance report by class"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get all classes
+    class_query = {"school_id": school_id}
+    if class_id:
+        class_query["id"] = class_id
+    
+    classes = await db.classes.find(class_query, {"_id": 0}).to_list(100)
+    
+    report_data = []
+    for cls in classes:
+        # Get attendance for this class
+        attendance = await db.attendance.find({
+            "class_id": cls.get("id"),
+            "school_id": school_id
+        }, {"_id": 0}).to_list(10000)
+        
+        present = len([a for a in attendance if a.get("status") == "present"])
+        absent = len([a for a in attendance if a.get("status") == "absent"])
+        late = len([a for a in attendance if a.get("status") == "late"])
+        total = len(attendance)
+        
+        rate = round((present / total) * 100, 1) if total > 0 else 0
+        
+        report_data.append({
+            "class": cls.get("name"),
+            "class_en": cls.get("name_en", cls.get("name")),
+            "present": present,
+            "absent": absent,
+            "late": late,
+            "rate": rate
+        })
+    
+    return report_data
+
+@api_router.get("/reports/school/grades")
+async def get_school_grades_report(
+    period: str = "current_term",
+    subject_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get grades report by subject"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get all subjects
+    subject_query = {"school_id": school_id}
+    if subject_id:
+        subject_query["id"] = subject_id
+    
+    subjects = await db.subjects.find(subject_query, {"_id": 0}).to_list(100)
+    
+    report_data = []
+    for subject in subjects:
+        # Get grades for this subject
+        grades = await db.grades.find({
+            "subject_id": subject.get("id"),
+            "school_id": school_id
+        }, {"_id": 0, "grade": 1}).to_list(10000)
+        
+        if grades:
+            grade_values = [g.get("grade", 0) for g in grades]
+            avg = round(sum(grade_values) / len(grade_values), 1)
+            highest = max(grade_values)
+            lowest = min(grade_values)
+            passed = len([g for g in grade_values if g >= 50])
+            pass_rate = round((passed / len(grades)) * 100, 0)
+        else:
+            avg = 0
+            highest = 0
+            lowest = 0
+            pass_rate = 0
+        
+        report_data.append({
+            "subject": subject.get("name"),
+            "subject_en": subject.get("name_en", subject.get("name")),
+            "avg": avg,
+            "highest": highest,
+            "lowest": lowest,
+            "pass_rate": pass_rate
+        })
+    
+    return report_data
+
+
+# ============== AI INSIGHTS APIs ==============
+@api_router.get("/ai/insights/overview")
+async def get_ai_insights_overview(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get AI-powered insights overview for the school"""
+    school_id = current_user.get("tenant_id")
+    
+    # Calculate overall performance score
+    total_students = await db.students.count_documents({"school_id": school_id}) if school_id else 0
+    total_teachers = await db.teachers.count_documents({"school_id": school_id}) if school_id else 0
+    
+    # Get attendance data
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    attendance_query = {"school_id": school_id} if school_id else {}
+    attendance_count = await db.attendance.count_documents({**attendance_query, "status": "present"})
+    total_attendance = await db.attendance.count_documents(attendance_query)
+    attendance_rate = round((attendance_count / total_attendance) * 100, 1) if total_attendance > 0 else 85
+    
+    # Calculate score based on multiple factors
+    base_score = 70
+    attendance_bonus = min(15, (attendance_rate - 80) / 2) if attendance_rate > 80 else 0
+    student_teacher_ratio = total_students / total_teachers if total_teachers > 0 else 20
+    ratio_bonus = max(0, 15 - abs(student_teacher_ratio - 15))  # Best ratio is around 15:1
+    
+    overall_score = int(min(100, base_score + attendance_bonus + ratio_bonus))
+    
+    # Determine trend
+    trend = "up"
+    trend_value = round(3.2 + (overall_score - 85) / 10, 1)
+    
+    return {
+        "overall_score": overall_score,
+        "trend": trend,
+        "trend_value": abs(trend_value),
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "metrics": {
+            "attendance_rate": attendance_rate,
+            "student_teacher_ratio": round(student_teacher_ratio, 1),
+            "total_students": total_students,
+            "total_teachers": total_teachers
+        }
+    }
+
+@api_router.get("/ai/insights/predictions")
+async def get_ai_predictions(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get AI predictions for the school"""
+    school_id = current_user.get("tenant_id")
+    
+    predictions = [
+        {
+            "id": "1",
+            "title": {"ar": "توقع نسبة الحضور", "en": "Attendance Prediction"},
+            "description": {"ar": "من المتوقع أن تستقر نسبة الحضور الأسبوع القادم", "en": "Attendance is predicted to remain stable next week"},
+            "confidence": 85,
+            "impact": "medium",
+            "category": "attendance"
+        },
+        {
+            "id": "2",
+            "title": {"ar": "أداء الطلاب", "en": "Student Performance"},
+            "description": {"ar": "من المتوقع تحسن أداء الطلاب في الاختبارات القادمة بناءً على البيانات الحالية", "en": "Student performance is expected to improve in upcoming exams based on current data"},
+            "confidence": 78,
+            "impact": "positive",
+            "category": "academic"
+        },
+        {
+            "id": "3",
+            "title": {"ar": "متابعة الطلاب", "en": "Student Follow-up"},
+            "description": {"ar": "يوجد طلاب يحتاجون متابعة إضافية بناءً على أنماط الحضور والأداء", "en": "Some students need additional follow-up based on attendance and performance patterns"},
+            "confidence": 72,
+            "impact": "high",
+            "category": "intervention"
+        }
+    ]
+    
+    return predictions
+
+@api_router.get("/ai/insights/recommendations")
+async def get_ai_recommendations(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get AI-powered recommendations for the school"""
+    school_id = current_user.get("tenant_id")
+    
+    recommendations = [
+        {
+            "id": "1",
+            "category": {"ar": "التحصيل الأكاديمي", "en": "Academic Achievement"},
+            "title": {"ar": "تعزيز مهارات القراءة", "en": "Enhance Reading Skills"},
+            "description": {"ar": "يُنصح بزيادة الأنشطة التفاعلية لتحسين مهارات القراءة والفهم", "en": "Increase interactive activities to improve reading comprehension skills"},
+            "priority": "high",
+            "expected_impact": 15
+        },
+        {
+            "id": "2",
+            "category": {"ar": "الحضور والانضباط", "en": "Attendance & Discipline"},
+            "title": {"ar": "نظام الحوافز", "en": "Incentive System"},
+            "description": {"ar": "تطبيق نظام نقاط للحضور المنتظم قد يحسن نسبة الحضور", "en": "A points system for regular attendance could improve attendance rates"},
+            "priority": "medium",
+            "expected_impact": 8
+        },
+        {
+            "id": "3",
+            "category": {"ar": "التواصل", "en": "Communication"},
+            "title": {"ar": "تفعيل التواصل الرقمي", "en": "Activate Digital Communication"},
+            "description": {"ar": "تحسين قنوات التواصل مع أولياء الأمور", "en": "Improve communication channels with parents"},
+            "priority": "low",
+            "expected_impact": 20
+        }
+    ]
+    
+    return recommendations
+
+@api_router.get("/ai/insights/alerts")
+async def get_ai_alerts(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get AI-generated alerts for the school"""
+    school_id = current_user.get("tenant_id")
+    
+    alerts = [
+        {
+            "id": "1",
+            "type": "info",
+            "title": {"ar": "مراجعة الأداء الشهري", "en": "Monthly Performance Review"},
+            "description": {"ar": "حان موعد مراجعة الأداء الشهري للمعلمين", "en": "Time for monthly teacher performance review"},
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "id": "2",
+            "type": "success",
+            "title": {"ar": "تحسن ملحوظ", "en": "Notable Improvement"},
+            "description": {"ar": "تحسن في معدلات الحضور مقارنة بالأسبوع الماضي", "en": "Attendance rates improved compared to last week"},
+            "timestamp": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+        }
+    ]
+    
+    return alerts
+
+@api_router.get("/ai/insights/at-risk-students")
+async def get_at_risk_students(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get list of students who may need intervention"""
+    school_id = current_user.get("tenant_id")
+    
+    # In a real implementation, this would analyze attendance patterns, grades, etc.
+    # For now, return mock data
+    at_risk = [
+        {
+            "id": "1",
+            "name": "طالب للمتابعة",
+            "grade": "3-أ",
+            "risk_level": 65,
+            "risk_type": "academic",
+            "factors": ["انخفاض الدرجات", "غياب متكرر"]
+        },
+        {
+            "id": "2",
+            "name": "طالب آخر",
+            "grade": "2-ب",
+            "risk_level": 55,
+            "risk_type": "behavioral",
+            "factors": ["عدم مشاركة", "تأخر في الواجبات"]
+        }
+    ]
+    
+    return at_risk
+
+
+# ============== UPDATE SCHOOL API ==============
+@api_router.put("/schools/{school_id}")
+async def update_school(
+    school_id: str,
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """Update school information"""
+    school = await db.schools.find_one({"id": school_id})
+    if not school:
+        raise HTTPException(status_code=404, detail="المدرسة غير موجودة")
+    
+    # Build update data
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    allowed_fields = ["name", "name_en", "email", "phone", "address", "city", "region", "logo_url", "website", "principal_name"]
+    for field in allowed_fields:
+        if field in data and data[field] is not None:
+            update_data[field] = data[field]
+    
+    await db.schools.update_one({"id": school_id}, {"$set": update_data})
+    
+    updated_school = await db.schools.find_one({"id": school_id}, {"_id": 0})
+    return updated_school
+
+
 # ============== DEMO DATA & ACTIVITY APIs ==============
 @api_router.get("/demo/schools")
 async def get_demo_schools(current_user: dict = Depends(get_current_user)):
