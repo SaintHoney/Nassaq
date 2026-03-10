@@ -582,7 +582,7 @@ export const SchedulePage = () => {
                   <thead className="sticky top-0 z-10 bg-background">
                     {/* Days Row */}
                     <tr className="border-b">
-                      <th className="sticky start-0 z-20 bg-muted/50 p-2 text-start font-medium border-e w-36">
+                      <th className="sticky start-0 z-20 bg-muted/50 p-2 text-start font-medium border-e min-w-[120px] max-w-[140px]">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-brand-navy" />
                           {isRTL ? 'المعلم' : 'Teacher'}
