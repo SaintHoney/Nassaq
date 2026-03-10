@@ -53,16 +53,16 @@ def create_audit_router(db, get_current_user, require_roles, UserRole):
         """Normalize audit log to handle legacy data format"""
         # Handle legacy field names
         if "action_by" in log and "performed_by" not in log:
-            log["performed_by"] = log.get("action_by") or log.get("actor_id", "unknown")
+            log["performed_by"] = log.get("action_by") or log.get("actor_id") or "unknown"
         elif "actor_id" in log and "performed_by" not in log:
-            log["performed_by"] = log.get("actor_id", "unknown")
+            log["performed_by"] = log.get("actor_id") or "unknown"
         
-        # Ensure performed_by exists
-        if "performed_by" not in log:
+        # Ensure performed_by exists and is not None
+        if "performed_by" not in log or log["performed_by"] is None:
             log["performed_by"] = "unknown"
         
         # Add default severity if missing
-        if "severity" not in log:
+        if "severity" not in log or log["severity"] is None:
             log["severity"] = "low"
         
         # Ensure details is a dict
