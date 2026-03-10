@@ -3240,62 +3240,101 @@ async def get_schedule_sessions(
     current_user: dict = Depends(get_current_user)
 ):
     """الحصول على حصص الجدول"""
-    query = {"schedule_id": schedule_id, "status": {"$ne": SessionStatusEnum.CANCELLED.value}}
+    query = {"schedule_id": schedule_id}
     
     if day_of_week:
-        query["day_of_week"] = day_of_week
+        # Support both 'day' and 'day_of_week' field names
+        query["$or"] = [{"day_of_week": day_of_week}, {"day": day_of_week}]
     
-    sessions = await db.schedule_sessions.find(query, {"_id": 0}).to_list(500)
+    sessions = await db.schedule_sessions.find(query, {"_id": 0}).to_list(1000)
     
-    # Get all related data
-    assignment_ids = list(set(s.get("assignment_id") for s in sessions))
-    time_slot_ids = list(set(s.get("time_slot_id") for s in sessions))
-    
-    assignments = await db.teacher_assignments.find({"id": {"$in": assignment_ids}}, {"_id": 0}).to_list(100)
-    time_slots = await db.time_slots.find({"id": {"$in": time_slot_ids}}, {"_id": 0}).to_list(20)
-    
-    assignment_map = {a.get("id"): a for a in assignments}
-    slot_map = {s.get("id"): s for s in time_slots}
-    
-    # Get teacher/class/subject names
-    teacher_ids = list(set(a.get("teacher_id") for a in assignments if a))
-    class_ids = list(set(a.get("class_id") for a in assignments if a))
-    subject_ids = list(set(a.get("subject_id") for a in assignments if a))
-    
-    teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
-    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
-    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
-    
-    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
-    class_map = {c.get("id"): c.get("name") for c in classes}
-    subject_map = {s.get("id"): s.get("name") for s in subjects}
-    
-    # Filter by teacher/class if specified
-    result = []
-    for s in sessions:
-        assignment = assignment_map.get(s.get("assignment_id"), {})
+    # Check if sessions use the new format (with assignment_id) or old format (direct fields)
+    if sessions and sessions[0].get("assignment_id"):
+        # New format - get related data from assignments
+        assignment_ids = list(set(s.get("assignment_id") for s in sessions if s.get("assignment_id")))
+        time_slot_ids = list(set(s.get("time_slot_id") for s in sessions if s.get("time_slot_id")))
         
-        if teacher_id and assignment.get("teacher_id") != teacher_id:
-            continue
-        if class_id and assignment.get("class_id") != class_id:
-            continue
+        assignments = await db.teacher_assignments.find({"id": {"$in": assignment_ids}}, {"_id": 0}).to_list(100)
+        time_slots = await db.time_slots.find({"id": {"$in": time_slot_ids}}, {"_id": 0}).to_list(20)
         
-        slot = slot_map.get(s.get("time_slot_id"), {})
+        assignment_map = {a.get("id"): a for a in assignments}
+        slot_map = {s.get("id"): s for s in time_slots}
         
-        result.append(ScheduleSessionResponse(
-            **s,
-            teacher_id=assignment.get("teacher_id"),
-            teacher_name=teacher_map.get(assignment.get("teacher_id")),
-            class_id=assignment.get("class_id"),
-            class_name=class_map.get(assignment.get("class_id")),
-            subject_id=assignment.get("subject_id"),
-            subject_name=subject_map.get(assignment.get("subject_id")),
-            time_slot_name=slot.get("name"),
-            start_time=slot.get("start_time"),
-            end_time=slot.get("end_time")
-        ))
-    
-    return result
+        teacher_ids = list(set(a.get("teacher_id") for a in assignments if a))
+        class_ids_list = list(set(a.get("class_id") for a in assignments if a))
+        subject_ids = list(set(a.get("subject_id") for a in assignments if a))
+        
+        teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
+        classes = await db.classes.find({"id": {"$in": class_ids_list}}, {"_id": 0}).to_list(100)
+        subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+        
+        teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
+        class_map = {c.get("id"): c.get("name") for c in classes}
+        subject_map = {s.get("id"): s.get("name") for s in subjects}
+        
+        result = []
+        for s in sessions:
+            assignment = assignment_map.get(s.get("assignment_id"), {})
+            
+            if teacher_id and assignment.get("teacher_id") != teacher_id:
+                continue
+            if class_id and assignment.get("class_id") != class_id:
+                continue
+            
+            slot = slot_map.get(s.get("time_slot_id"), {})
+            
+            result.append(ScheduleSessionResponse(
+                **s,
+                teacher_id=assignment.get("teacher_id"),
+                teacher_name=teacher_map.get(assignment.get("teacher_id")),
+                class_id=assignment.get("class_id"),
+                class_name=class_map.get(assignment.get("class_id")),
+                subject_id=assignment.get("subject_id"),
+                subject_name=subject_map.get(assignment.get("subject_id")),
+                time_slot_name=slot.get("name"),
+                start_time=slot.get("start_time"),
+                end_time=slot.get("end_time")
+            ))
+        return result
+    else:
+        # Old format (demo data) - data is directly in session
+        result = []
+        for s in sessions:
+            # Filter by teacher_id or class_id if specified
+            if teacher_id and s.get("teacher_id") != teacher_id:
+                continue
+            if class_id and s.get("class_id") != class_id:
+                continue
+            
+            # Get time slot info if available
+            time_slot = None
+            if s.get("time_slot_id"):
+                time_slot = await db.time_slots.find_one({"id": s.get("time_slot_id")}, {"_id": 0})
+            
+            result.append(ScheduleSessionResponse(
+                id=s.get("id"),
+                school_id=s.get("school_id"),
+                schedule_id=s.get("schedule_id"),
+                assignment_id=s.get("assignment_id"),
+                teacher_id=s.get("teacher_id"),
+                teacher_name=s.get("teacher_name"),
+                class_id=s.get("class_id"),
+                class_name=s.get("class_name"),
+                subject_id=s.get("subject_id"),
+                subject_name=s.get("subject_name"),
+                day_of_week=s.get("day_of_week") or s.get("day"),
+                day=s.get("day") or s.get("day_of_week"),
+                time_slot_id=s.get("time_slot_id"),
+                slot_number=s.get("slot_number"),
+                time_slot_name=time_slot.get("name") if time_slot else None,
+                start_time=time_slot.get("start_time") if time_slot else s.get("start_time"),
+                end_time=time_slot.get("end_time") if time_slot else s.get("end_time"),
+                room_id=s.get("room_id"),
+                room=s.get("room"),
+                status=s.get("status", "active"),
+                created_at=s.get("created_at")
+            ))
+        return result
 
 @api_router.delete("/schedule-sessions/{session_id}")
 async def delete_schedule_session(
