@@ -451,7 +451,7 @@ export const SchedulePage = () => {
                         {conflicts.length} {isRTL ? 'تعارض' : 'conflicts'}
                       </Button>
                     </SheetTrigger>
-                    <SheetContent className="w-[450px]">
+                    <SheetContent className="w-[500px]">
                       <SheetHeader>
                         <SheetTitle className="font-cairo flex items-center gap-2 text-red-600">
                           <AlertTriangle className="h-5 w-5" />
@@ -461,19 +461,46 @@ export const SchedulePage = () => {
                           {isRTL ? 'يجب حل هذه التعارضات قبل نشر الجدول' : 'These conflicts must be resolved before publishing'}
                         </SheetDescription>
                       </SheetHeader>
-                      <div className="mt-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                      
+                      {/* Conflict Statistics */}
+                      {conflictStats && (
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                          <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-center">
+                            <p className="text-lg font-bold text-orange-600">{conflictStats.teacher_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض معلم' : 'Teacher'}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
+                            <p className="text-lg font-bold text-purple-600">{conflictStats.class_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض فصل' : 'Class'}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
+                            <p className="text-lg font-bold text-blue-600">{conflictStats.room_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض قاعة' : 'Room'}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
                         {conflicts.map((conflict, index) => (
-                          <div key={index} className="p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20">
+                          <div key={conflict.id || index} className={`p-3 rounded-xl border ${
+                            conflict.type === 'teacher_overlap' ? 'border-orange-200 bg-orange-50 dark:bg-orange-900/20' :
+                            conflict.type === 'class_overlap' ? 'border-purple-200 bg-purple-50 dark:bg-purple-900/20' :
+                            conflict.type === 'room_overlap' ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/20' :
+                            'border-red-200 bg-red-50 dark:bg-red-900/20'
+                          }`}>
                             <div className="flex items-start gap-3">
                               <div className={`p-2 rounded-lg ${
                                 conflict.type === 'teacher_overlap' ? 'bg-orange-100 text-orange-600' :
                                 conflict.type === 'class_overlap' ? 'bg-purple-100 text-purple-600' :
+                                conflict.type === 'room_overlap' ? 'bg-blue-100 text-blue-600' :
                                 'bg-red-100 text-red-600'
                               }`}>
                                 {conflict.type === 'teacher_overlap' ? (
                                   <UserCheck className="h-4 w-4" />
                                 ) : conflict.type === 'class_overlap' ? (
                                   <GraduationCap className="h-4 w-4" />
+                                ) : conflict.type === 'room_overlap' ? (
+                                  <Calendar className="h-4 w-4" />
                                 ) : (
                                   <XCircle className="h-4 w-4" />
                                 )}
@@ -481,13 +508,15 @@ export const SchedulePage = () => {
                               <div className="flex-1">
                                 <p className="font-medium text-sm">
                                   {conflict.type === 'teacher_overlap' 
-                                    ? (isRTL ? 'تعارض معلم' : 'Teacher Conflict')
+                                    ? (isRTL ? `تعارض معلم: ${conflict.teacher_name || ''}` : `Teacher: ${conflict.teacher_name || ''}`)
                                     : conflict.type === 'class_overlap'
-                                    ? (isRTL ? 'تعارض فصل' : 'Class Conflict')
+                                    ? (isRTL ? `تعارض فصل: ${conflict.class_name || ''}` : `Class: ${conflict.class_name || ''}`)
+                                    : conflict.type === 'room_overlap'
+                                    ? (isRTL ? `تعارض قاعة: ${conflict.room_name || ''}` : `Room: ${conflict.room_name || ''}`)
                                     : (isRTL ? 'تعارض' : 'Conflict')
                                   }
                                 </p>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                   {conflict.description_ar || conflict.message_ar || conflict.message || conflict.description_en}
                                 </p>
                                 <div className="flex gap-2 mt-2">
