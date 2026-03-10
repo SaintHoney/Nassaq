@@ -1198,6 +1198,21 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
   - الدرجات، السلوك، الجدول
   - API للتواصل مع المعلم: `/api/parent/contact-teacher`
 
+### ✅ إصلاح زر إنشاء حساب مستخدم جديد (March 10, 2026):
+- [x] إصلاح مشكلة URL مكرر `/api/api/users/create` في CreateUserWizard.jsx
+
+### ✅ معالج إضافة طالب المتقدم (March 10, 2026) - IN PROGRESS:
+- [x] **Backend APIs:**
+  - `POST /api/student-wizard/create` - إنشاء طالب + ولي أمر
+  - `POST /api/student-wizard/check-parent` - اكتشاف ولي أمر موجود
+  - `POST /api/student-wizard/bulk-import` - استيراد جماعي
+- [x] **الميزات:**
+  - توليد Student ID تلقائي (NSS-SCH-CIT-YY-XXXX)
+  - توليد QR Code
+  - اكتشاف وربط الأشقاء تلقائياً
+  - إنشاء أو ربط ولي الأمر
+- [ ] **Frontend Wizard** - يحتاج إنشاء
+
 ### P2 - تحسين أداء النظام:
 - [ ] تقليل زمن تحميل الصفحات
 - [ ] تحسين استعلامات قاعدة البيانات
