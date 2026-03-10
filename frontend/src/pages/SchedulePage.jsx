@@ -176,14 +176,16 @@ export const SchedulePage = () => {
     }
     
     try {
-      const [sessionsRes, conflictsRes] = await Promise.all([
+      const [sessionsRes, conflictsRes, suggestionsRes] = await Promise.all([
         api.get(`/schedule-sessions?schedule_id=${selectedSchedule}`),
         api.get(`/schedules/${selectedSchedule}/conflicts`),
+        api.get(`/schedules/${selectedSchedule}/conflicts/suggestions`),
       ]);
       
       setSessions(sessionsRes.data);
       setConflicts(conflictsRes.data.conflicts || []);
       setConflictStats(conflictsRes.data.statistics || null);
+      setSuggestions(suggestionsRes.data.suggestions || []);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
     }
