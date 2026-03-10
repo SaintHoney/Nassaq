@@ -334,8 +334,10 @@ export const SchedulePage = () => {
   };
 
   useEffect(() => {
-    fetchSchools();
-  }, []);
+    if (user) {
+      fetchSchools();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (selectedSchool) {
