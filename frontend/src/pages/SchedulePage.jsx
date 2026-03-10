@@ -756,7 +756,7 @@ export const SchedulePage = () => {
                   )}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
-                  {currentSchedule.total_sessions} {isRTL ? 'حصة' : 'sessions'}
+                  {filteredSessions.length} {isRTL ? 'حصة' : 'sessions'}
                 </span>
                 
                 {conflicts.length > 0 && (
