@@ -9585,6 +9585,10 @@ class_management_routes = create_class_management_routes(db, get_current_user)
 notification_routes = create_notification_routes(db, get_current_user)
 schedule_management_routes = create_schedule_management_routes(db, get_current_user)
 
+# Import and create teacher attendance router
+from routes.teacher_attendance_routes import create_teacher_attendance_routes
+teacher_attendance_router = create_teacher_attendance_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
