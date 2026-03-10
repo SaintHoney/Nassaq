@@ -4611,21 +4611,26 @@ class AssessmentUpdate(BaseModel):
 class AssessmentResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    class_id: str
+    class_id: Optional[str] = None
     class_name: Optional[str] = None
-    subject_id: str
+    subject_id: Optional[str] = None
     subject_name: Optional[str] = None
-    teacher_id: str
+    teacher_id: Optional[str] = None
     teacher_name: Optional[str] = None
-    title: str
+    name: Optional[str] = None
+    title: Optional[str] = None
     title_en: Optional[str] = None
-    assessment_type: str
-    max_score: float
-    weight: float
-    date: str
+    type: Optional[str] = None
+    assessment_type: Optional[str] = None
+    max_score: Optional[float] = 100
+    weight: Optional[float] = 100
+    date: Optional[str] = None
     description: Optional[str] = None
-    is_published: bool
-    created_at: str
+    term_id: Optional[str] = None
+    status: Optional[str] = "graded"
+    is_published: Optional[bool] = True
+    school_id: Optional[str] = None
+    created_at: Optional[str] = None
     grades_count: Optional[int] = 0
 
 class GradeCreate(BaseModel):
