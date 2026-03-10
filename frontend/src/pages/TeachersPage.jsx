@@ -68,12 +68,16 @@ export const TeachersPage = () => {
   const [selectedSchool, setSelectedSchool] = useState('all');
   const [submitting, setSubmitting] = useState(false);
   
+  // Check if user is a school-level user (not platform admin)
+  const isSchoolLevel = user?.role && !user.role.startsWith('platform_');
+  const userSchoolId = user?.tenant_id;
+  
   const [newTeacher, setNewTeacher] = useState({
     full_name: '',
     full_name_en: '',
     email: '',
     phone: '',
-    school_id: '',
+    school_id: userSchoolId || '',
     specialization: '',
     years_of_experience: 0,
     qualification: '',
@@ -82,12 +86,21 @@ export const TeachersPage = () => {
 
   const fetchData = async () => {
     try {
-      const [teachersRes, schoolsRes] = await Promise.all([
-        api.get('/teachers'),
-        api.get('/schools'),
-      ]);
+      // For school-level users, only fetch teachers (tenant-scoped by backend)
+      // For platform admins, also fetch schools for filtering
+      const teachersRes = await api.get('/teachers');
       setTeachers(teachersRes.data);
-      setSchools(schoolsRes.data);
+      
+      // Only fetch schools list for platform admins
+      if (!isSchoolLevel) {
+        try {
+          const schoolsRes = await api.get('/schools');
+          setSchools(schoolsRes.data);
+        } catch {
+          // Platform admin might have permission, but handle gracefully
+          setSchools([]);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error(isRTL ? 'فشل تحميل البيانات' : 'Failed to load data');
@@ -97,8 +110,14 @@ export const TeachersPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+      // Set default school_id for new teacher form
+      if (userSchoolId) {
+        setNewTeacher(prev => ({ ...prev, school_id: userSchoolId }));
+      }
+    }
+  }, [user]);
 
   const handleCreateTeacher = async () => {
     if (!newTeacher.full_name || !newTeacher.email || !newTeacher.school_id || !newTeacher.specialization) {
