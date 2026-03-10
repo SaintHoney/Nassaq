@@ -23,6 +23,7 @@ import { SchedulePage } from "./pages/SchedulePage";
 import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 import { AttendancePage } from "./pages/AttendancePage";
+import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 import { AssessmentPage } from "./pages/AssessmentPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 
