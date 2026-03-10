@@ -340,6 +340,16 @@ function AppRoutes() {
         }
       />
       
+      {/* Principal Communication Center - مركز التواصل لمدير المدرسة */}
+      <Route
+        path="/principal/communication"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <CommunicationCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      
       {/* Attendance Route */}
       <Route
         path="/admin/attendance"
