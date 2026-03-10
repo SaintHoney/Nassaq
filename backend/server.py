@@ -9595,7 +9595,7 @@ communication_router = create_communication_routes(db, get_current_user, require
 
 # Import and create bulk teacher import router
 from routes.bulk_teacher_routes import create_bulk_teacher_routes
-bulk_teacher_router = create_bulk_teacher_routes(db, get_current_user, require_roles, UserRole, hash_password, generate_temp_password)
+bulk_teacher_router = create_bulk_teacher_routes(db, get_current_user, require_roles, UserRole, hash_password, generate_secure_password)
 
 # Add to API router
 api_router.include_router(scheduling_router)
