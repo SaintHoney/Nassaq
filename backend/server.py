@@ -1978,13 +1978,13 @@ class SubjectResponse(BaseModel):
     id: str
     name: str
     name_en: Optional[str] = None
-    school_id: str
-    code: str
+    school_id: Optional[str] = None
+    code: Optional[str] = None
     description: Optional[str] = None
-    weekly_hours: int
-    grade_levels: List[str]
-    is_active: bool
-    created_at: str
+    weekly_hours: Optional[int] = 4
+    grade_levels: Optional[List[str]] = []
+    is_active: Optional[bool] = True
+    created_at: Optional[str] = None
 
 # ============== TEACHERS ROUTES ==============
 @api_router.post("/teachers", response_model=TeacherResponse)
