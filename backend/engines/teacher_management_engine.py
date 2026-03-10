@@ -380,10 +380,10 @@ class TeacherManagementEngine:
     
     async def get_subjects(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available subjects"""
-        subjects = list(self.subjects_collection.find(
+        subjects = await self.subjects_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
-        ))
+        ).to_list(100)
         
         if not subjects:
             subjects = [
@@ -401,10 +401,10 @@ class TeacherManagementEngine:
     
     async def get_grades(self, tenant_id: str) -> List[Dict[str, Any]]:
         """Get available grades"""
-        grades = list(self.grades_collection.find(
+        grades = await self.grades_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
-        ))
+        ).to_list(100)
         
         if not grades:
             grades = [
