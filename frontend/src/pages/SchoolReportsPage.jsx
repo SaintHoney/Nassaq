@@ -82,42 +82,64 @@ export const SchoolReportsPage = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Fetch real data if available
-        const [classesRes] = await Promise.all([
+        // Fetch data from APIs
+        const [classesRes, overviewRes, attendanceRes, gradesRes] = await Promise.all([
           api.get(`/classes?school_id=${user?.tenant_id}`).catch(() => ({ data: [] })),
+          api.get(`/reports/school/overview?period=${selectedPeriod}`).catch(() => ({ data: null })),
+          api.get(`/reports/school/attendance?period=${selectedPeriod}`).catch(() => ({ data: [] })),
+          api.get(`/reports/school/grades?period=${selectedPeriod}`).catch(() => ({ data: [] })),
         ]);
+        
         setClasses(classesRes.data || []);
         
-        // Set mock statistics
-        setStats({
-          total_students: 450,
-          total_teachers: 35,
-          total_classes: 18,
-          attendance_rate: 94.5,
-          avg_grade: 78.3,
-        });
+        // Set statistics from API or fallback to mock
+        if (overviewRes.data) {
+          setStats({
+            total_students: overviewRes.data.total_students || 450,
+            total_teachers: overviewRes.data.total_teachers || 35,
+            total_classes: overviewRes.data.total_classes || 18,
+            attendance_rate: overviewRes.data.attendance_rate || 94.5,
+            avg_grade: overviewRes.data.avg_grade || 78.3,
+          });
+        } else {
+          setStats({
+            total_students: 450,
+            total_teachers: 35,
+            total_classes: 18,
+            attendance_rate: 94.5,
+            avg_grade: 78.3,
+          });
+        }
         
-        // Mock attendance data
-        setAttendanceData([
-          { class: 'الصف الأول - أ', class_en: 'Grade 1-A', present: 28, absent: 2, late: 1, rate: 93.3 },
-          { class: 'الصف الأول - ب', class_en: 'Grade 1-B', present: 29, absent: 1, late: 0, rate: 96.7 },
-          { class: 'الصف الثاني - أ', class_en: 'Grade 2-A', present: 27, absent: 3, late: 2, rate: 90.0 },
-          { class: 'الصف الثاني - ب', class_en: 'Grade 2-B', present: 30, absent: 0, late: 1, rate: 100.0 },
-          { class: 'الصف الثالث - أ', class_en: 'Grade 3-A', present: 26, absent: 4, late: 1, rate: 86.7 },
-          { class: 'الصف الثالث - ب', class_en: 'Grade 3-B', present: 28, absent: 2, late: 0, rate: 93.3 },
-        ]);
+        // Set attendance data from API or fallback to mock
+        if (attendanceRes.data && attendanceRes.data.length > 0) {
+          setAttendanceData(attendanceRes.data);
+        } else {
+          setAttendanceData([
+            { class: 'الصف الأول - أ', class_en: 'Grade 1-A', present: 28, absent: 2, late: 1, rate: 93.3 },
+            { class: 'الصف الأول - ب', class_en: 'Grade 1-B', present: 29, absent: 1, late: 0, rate: 96.7 },
+            { class: 'الصف الثاني - أ', class_en: 'Grade 2-A', present: 27, absent: 3, late: 2, rate: 90.0 },
+            { class: 'الصف الثاني - ب', class_en: 'Grade 2-B', present: 30, absent: 0, late: 1, rate: 100.0 },
+            { class: 'الصف الثالث - أ', class_en: 'Grade 3-A', present: 26, absent: 4, late: 1, rate: 86.7 },
+            { class: 'الصف الثالث - ب', class_en: 'Grade 3-B', present: 28, absent: 2, late: 0, rate: 93.3 },
+          ]);
+        }
         
-        // Mock grade data
-        setGradeData([
-          { subject: 'الرياضيات', subject_en: 'Mathematics', avg: 82.5, highest: 98, lowest: 45, pass_rate: 92 },
-          { subject: 'اللغة العربية', subject_en: 'Arabic', avg: 85.3, highest: 100, lowest: 55, pass_rate: 95 },
-          { subject: 'اللغة الإنجليزية', subject_en: 'English', avg: 78.2, highest: 95, lowest: 40, pass_rate: 88 },
-          { subject: 'العلوم', subject_en: 'Science', avg: 80.1, highest: 97, lowest: 48, pass_rate: 90 },
-          { subject: 'الدراسات الاجتماعية', subject_en: 'Social Studies', avg: 76.8, highest: 92, lowest: 42, pass_rate: 85 },
-          { subject: 'التربية الإسلامية', subject_en: 'Islamic Studies', avg: 88.5, highest: 100, lowest: 60, pass_rate: 98 },
-        ]);
+        // Set grade data from API or fallback to mock
+        if (gradesRes.data && gradesRes.data.length > 0) {
+          setGradeData(gradesRes.data);
+        } else {
+          setGradeData([
+            { subject: 'الرياضيات', subject_en: 'Mathematics', avg: 82.5, highest: 98, lowest: 45, pass_rate: 92 },
+            { subject: 'اللغة العربية', subject_en: 'Arabic', avg: 85.3, highest: 100, lowest: 55, pass_rate: 95 },
+            { subject: 'اللغة الإنجليزية', subject_en: 'English', avg: 78.2, highest: 95, lowest: 40, pass_rate: 88 },
+            { subject: 'العلوم', subject_en: 'Science', avg: 80.1, highest: 97, lowest: 48, pass_rate: 90 },
+            { subject: 'الدراسات الاجتماعية', subject_en: 'Social Studies', avg: 76.8, highest: 92, lowest: 42, pass_rate: 85 },
+            { subject: 'التربية الإسلامية', subject_en: 'Islamic Studies', avg: 88.5, highest: 100, lowest: 60, pass_rate: 98 },
+          ]);
+        }
         
-        // Mock behavior data
+        // Behavior data (mock for now)
         setBehaviorData([
           { type: 'positive', type_ar: 'إيجابي', count: 245, change: 15 },
           { type: 'negative', type_ar: 'سلبي', count: 32, change: -8 },
