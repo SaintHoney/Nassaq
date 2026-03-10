@@ -452,7 +452,7 @@ export const SchoolDashboardContent = () => {
   const handleQuickAction = (actionId) => {
     switch (actionId) {
       case 'add-student':
-        navigate('/school/students/add');
+        setShowAddStudentWizard(true);
         break;
       case 'add-teacher':
         navigate('/school/teachers/add');
