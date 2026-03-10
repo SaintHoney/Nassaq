@@ -297,7 +297,7 @@ async def register(user_data: UserCreate):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    user = await db.users.find_one({"email": credentials.email})
     if not user:
         raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
     
@@ -307,10 +307,11 @@ async def login(credentials: UserLogin):
     if not user.get("is_active", True):
         raise HTTPException(status_code=401, detail="الحساب معطل")
     
-    token = create_access_token({"sub": user["id"], "role": user["role"]})
+    user_id = str(user["_id"])
+    token = create_access_token({"sub": user_id, "role": user["role"]})
     
     user_response = UserResponse(
-        id=user["id"],
+        id=user_id,
         email=user["email"],
         full_name=user["full_name"],
         full_name_en=user.get("full_name_en"),
@@ -321,7 +322,7 @@ async def login(credentials: UserLogin):
         is_active=user.get("is_active", True),
         preferred_language=user.get("preferred_language", "ar"),
         preferred_theme=user.get("preferred_theme", "light"),
-        created_at=user["created_at"]
+        created_at=user.get("created_at", "")
     )
     
     return TokenResponse(access_token=token, user=user_response)
