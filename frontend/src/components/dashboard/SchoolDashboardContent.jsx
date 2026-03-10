@@ -471,10 +471,10 @@ export const SchoolDashboardContent = () => {
         setShowCreateClassWizard(true);
         break;
       case 'create-schedule':
-        navigate('/school/schedule/create');
+        setShowCreateScheduleWizard(true);
         break;
       case 'view-sessions':
-        navigate('/school/sessions');
+        setShowLiveSessionsMonitor(true);
         break;
       case 'send-notification':
         setShowSendNotificationWizard(true);
