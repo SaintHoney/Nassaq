@@ -405,6 +405,9 @@ export const SchoolDashboardContent = () => {
   
   // Wizard states
   const [showAddStudentWizard, setShowAddStudentWizard] = useState(false);
+  const [showAddTeacherWizard, setShowAddTeacherWizard] = useState(false);
+  const [showCreateClassWizard, setShowCreateClassWizard] = useState(false);
+  const [showSendNotificationWizard, setShowSendNotificationWizard] = useState(false);
 
   // Fetch dashboard data
   useEffect(() => {
