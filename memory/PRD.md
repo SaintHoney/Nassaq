@@ -761,3 +761,32 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ## Last Updated: March 10, 2026 - Phase 16
 
+
+## ✅ Latest Changes (March 10, 2026 - Phase 17):
+
+### معالج إضافة طالب (Add Student Wizard) - COMPLETED ✅
+
+1. **Backend Engine** (`/app/backend/engines/student_management_engine.py`):
+   - إنشاء رقم طالب فريد: `NSS-SCH-CIT-YY-XXXX`
+   - إنشاء رقم ولي أمر فريد: `NSS-SCH-CIT-YY-PXXXX`
+   - إنشاء QR Code للطالب
+   - ربط تلقائي بولي الأمر الموجود (عبر رقم الجوال)
+   - إنشاء حسابات مستخدمين للطالب وولي الأمر
+
+2. **Backend Routes** (`/app/backend/routes/student_management_routes.py`):
+   - `GET /api/students/options/grades` - الصفوف المتاحة
+   - `GET /api/students/options/sections` - الشعب المتاحة
+   - `GET /api/students/options/nationalities` - قائمة الجنسيات (20)
+   - `GET /api/students/options/blood-types` - فصائل الدم (8)
+   - `GET /api/students/options/parent-relations` - صلات القرابة (4)
+   - `POST /api/students/create` - إنشاء طالب جديد
+
+3. **Frontend Wizard** (`/app/frontend/src/components/wizards/AddStudentWizard.jsx`):
+   - الخطوة 1: البيانات الأساسية
+   - الخطوة 2: بيانات ولي الأمر
+   - الخطوة 3: المعلومات الصحية
+   - الخطوة 4: مراجعة وتأكيد
+
+### Test Results (iteration_33.json):
+- ✅ Backend: 100% (10/10 tests passed)
+- ✅ Frontend: 100% (all 4 wizard steps working)
