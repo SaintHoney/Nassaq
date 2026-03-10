@@ -330,9 +330,34 @@ export const LoginPage = () => {
               {/* Test Accounts Section */}
               <div className="mt-6 pt-6 border-t border-border/50">
                 <p className="text-xs text-muted-foreground font-tajawal text-center mb-3">
-                  {isRTL ? '🔐 حسابات تجريبية للاختبار:' : '🔐 Test Accounts for Testing:'}
+                  {isRTL ? '🔐 حسابات تجريبية للاختبار:' : '🔐 Demo Accounts for Testing:'}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
+                  {/* Platform Admin - Full Width First */}
+                  <div 
+                    className="col-span-2 p-3 rounded-xl bg-gradient-to-r from-brand-navy/10 to-brand-gold/10 border-2 border-brand-navy/30 cursor-pointer hover:border-brand-navy/50 transition-all hover:shadow-md"
+                    onClick={() => {
+                      setEmail('admin@nassaq.com');
+                      setPassword('NassaqAdmin2026');
+                    }}
+                    data-testid="test-admin-credentials"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-brand-navy flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">👑</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-brand-navy dark:text-brand-gold">
+                            {isRTL ? 'مدير المنصة' : 'Platform Admin'}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-mono">admin@nassaq.com</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-brand-turquoise font-medium">{isRTL ? 'صلاحيات كاملة' : 'Full Access'}</span>
+                    </div>
+                  </div>
+                  
                   {/* School Principal */}
                   <div 
                     className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
