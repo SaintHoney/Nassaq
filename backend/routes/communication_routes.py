@@ -1,0 +1,240 @@
+"""
+NASSAQ - Communication Routes
+Communication and messaging endpoints
+"""
+from fastapi import APIRouter, HTTPException, Depends
+from typing import Optional, List
+from datetime import datetime, timezone
+from pydantic import BaseModel
+import uuid
+
+
+class MessageCreate(BaseModel):
+    title: str
+    content: str
+    audience: str  # all, teachers, students, parents, custom
+    audience_ids: Optional[List[str]] = []
+    scheduled_at: Optional[str] = None
+    channels: List[str] = ["in_app"]  # in_app, email, sms
+
+
+class MessageResponse(BaseModel):
+    id: str
+    title: str
+    content: str
+    audience: str
+    status: str  # draft, scheduled, sent
+    sent_count: int
+    created_at: str
+    scheduled_at: Optional[str] = None
+    sent_at: Optional[str] = None
+
+
+def create_communication_routes(db, get_current_user, require_roles, UserRole):
+    """Create communication router"""
+    router = APIRouter(prefix="/communication", tags=["Communication"])
+    
+    @router.get("/stats")
+    async def get_communication_stats(
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Get communication statistics"""
+        school_id = current_user.get("tenant_id")
+        
+        query = {}
+        if school_id:
+            query["school_id"] = school_id
+        
+        # Count messages
+        total_sent = await db.messages.count_documents({**query, "status": "sent"})
+        total_scheduled = await db.messages.count_documents({**query, "status": "scheduled"})
+        total_drafts = await db.messages.count_documents({**query, "status": "draft"})
+        
+        # Count templates
+        total_templates = await db.message_templates.count_documents(query)
+        
+        return {
+            "sent": total_sent,
+            "scheduled": total_scheduled,
+            "drafts": total_drafts,
+            "templates": total_templates
+        }
+    
+    @router.post("")
+    async def send_message(
+        message: MessageCreate,
+        current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
+    ):
+        """Send or schedule a message"""
+        school_id = current_user.get("tenant_id")
+        
+        now = datetime.now(timezone.utc).isoformat()
+        message_id = str(uuid.uuid4())
+        
+        # Determine status
+        status = "sent"
+        if message.scheduled_at:
+            status = "scheduled"
+        
+        # Count recipients
+        recipient_count = 0
+        if message.audience == "all":
+            recipient_count = await db.users.count_documents({"tenant_id": school_id}) if school_id else await db.users.count_documents({})
+        elif message.audience == "teachers":
+            recipient_count = await db.teachers.count_documents({"school_id": school_id}) if school_id else await db.teachers.count_documents({})
+        elif message.audience == "students":
+            recipient_count = await db.students.count_documents({"school_id": school_id}) if school_id else await db.students.count_documents({})
+        elif message.audience == "parents":
+            recipient_count = await db.users.count_documents({"role": "parent", "tenant_id": school_id}) if school_id else await db.users.count_documents({"role": "parent"})
+        elif message.audience == "custom":
+            recipient_count = len(message.audience_ids)
+        
+        message_doc = {
+            "id": message_id,
+            "title": message.title,
+            "content": message.content,
+            "audience": message.audience,
+            "audience_ids": message.audience_ids,
+            "channels": message.channels,
+            "status": status,
+            "sent_count": recipient_count if status == "sent" else 0,
+            "recipient_count": recipient_count,
+            "school_id": school_id,
+            "created_by": current_user["id"],
+            "created_at": now,
+            "scheduled_at": message.scheduled_at,
+            "sent_at": now if status == "sent" else None
+        }
+        
+        await db.messages.insert_one(message_doc)
+        
+        # Create notifications for recipients if sent immediately
+        if status == "sent":
+            # Create in-app notifications
+            notification_doc = {
+                "id": str(uuid.uuid4()),
+                "message_id": message_id,
+                "title": message.title,
+                "content": message.content,
+                "type": "announcement",
+                "school_id": school_id,
+                "audience": message.audience,
+                "created_at": now,
+                "read_by": []
+            }
+            await db.notifications.insert_one(notification_doc)
+        
+        return {
+            "message": "تم إرسال الرسالة بنجاح" if status == "sent" else "تمت جدولة الرسالة بنجاح",
+            "id": message_id,
+            "status": status,
+            "recipient_count": recipient_count
+        }
+    
+    @router.get("")
+    async def get_messages(
+        status: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 20,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Get list of messages"""
+        school_id = current_user.get("tenant_id")
+        
+        query = {}
+        if school_id:
+            query["school_id"] = school_id
+        if status:
+            query["status"] = status
+        
+        messages = await db.messages.find(
+            query,
+            {"_id": 0}
+        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        
+        total = await db.messages.count_documents(query)
+        
+        return {
+            "messages": messages,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
+    
+    @router.get("/templates")
+    async def get_message_templates(
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Get message templates"""
+        school_id = current_user.get("tenant_id")
+        
+        # Default templates if none exist
+        default_templates = [
+            {
+                "id": "1",
+                "name": "إشعار عام",
+                "name_en": "General Announcement",
+                "content_template": "تحية طيبة،\n\n{message}\n\nمع تحياتنا،\nإدارة المدرسة",
+                "icon": "bell"
+            },
+            {
+                "id": "2",
+                "name": "تذكير بموعد",
+                "name_en": "Event Reminder",
+                "content_template": "تذكير: {event_name}\nالتاريخ: {date}\nالوقت: {time}\n\nيرجى الحضور في الموعد المحدد.",
+                "icon": "clock"
+            },
+            {
+                "id": "3",
+                "name": "تحديث النظام",
+                "name_en": "System Update",
+                "content_template": "عزيزي المستخدم،\n\nنود إعلامكم بتحديث جديد في النظام:\n{update_details}\n\nشكراً لتعاونكم.",
+                "icon": "refresh"
+            },
+            {
+                "id": "4",
+                "name": "طلب معلومات",
+                "name_en": "Information Request",
+                "content_template": "السلام عليكم،\n\nنرجو منكم تزويدنا بالمعلومات التالية:\n{required_info}\n\nوذلك في موعد أقصاه {deadline}.",
+                "icon": "mail"
+            }
+        ]
+        
+        query = {}
+        if school_id:
+            query["school_id"] = school_id
+        
+        templates = await db.message_templates.find(query, {"_id": 0}).to_list(100)
+        
+        if not templates:
+            return default_templates
+        
+        return templates
+    
+    @router.get("/audience")
+    async def get_audience_stats(
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Get audience statistics for messaging"""
+        school_id = current_user.get("tenant_id")
+        
+        if school_id:
+            teachers = await db.teachers.count_documents({"school_id": school_id, "is_active": True})
+            students = await db.students.count_documents({"school_id": school_id, "is_active": True})
+            parents = await db.users.count_documents({"role": "parent", "tenant_id": school_id, "is_active": True})
+            total = teachers + students + parents
+        else:
+            # Platform-wide for admins
+            total = await db.users.count_documents({"is_active": True})
+            teachers = await db.teachers.count_documents({"is_active": True})
+            students = await db.students.count_documents({"is_active": True})
+            parents = await db.users.count_documents({"role": "parent", "is_active": True})
+        
+        return [
+            {"id": "all", "name": "الجميع", "name_en": "Everyone", "count": total, "icon": "users"},
+            {"id": "teachers", "name": "المعلمين", "name_en": "Teachers", "count": teachers, "icon": "user-check"},
+            {"id": "students", "name": "الطلاب", "name_en": "Students", "count": students, "icon": "graduation-cap"},
+            {"id": "parents", "name": "أولياء الأمور", "name_en": "Parents", "count": parents, "icon": "users"}
+        ]
+    
+    return router
