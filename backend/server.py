@@ -10230,6 +10230,430 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# ============== TEACHER DASHBOARD APIs ==============
+@api_router.get("/teacher/dashboard/{teacher_id}")
+async def get_teacher_dashboard(
+    teacher_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على بيانات لوحة تحكم المعلم
+    - الفصول المسندة
+    - عدد الطلاب
+    - الحصص اليومية
+    - الإحصائيات
+    """
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    
+    school_id = teacher.get("school_id")
+    
+    # Get teacher assignments
+    assignments = await db.teacher_assignments.find({
+        "teacher_id": teacher_id,
+        "is_active": True
+    }, {"_id": 0}).to_list(100)
+    
+    class_ids = list(set(a.get("class_id") for a in assignments if a.get("class_id")))
+    subject_ids = list(set(a.get("subject_id") for a in assignments if a.get("subject_id")))
+    
+    # Get classes and students count
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0, "id": 1, "name": 1, "student_count": 1}).to_list(50)
+    total_students = sum(c.get("student_count", 0) for c in classes)
+    
+    # Get subjects
+    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1}).to_list(50)
+    
+    # Get today's schedule
+    today_day = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][datetime.now().weekday()]
+    # Map Python weekday to our system
+    day_map = {0: "monday", 1: "tuesday", 2: "wednesday", 3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"}
+    today_day = day_map.get(datetime.now().weekday(), "sunday")
+    
+    # Get current schedule
+    schedule = await db.schedules.find_one({
+        "school_id": school_id,
+        "status": {"$in": [ScheduleStatusEnum.DRAFT.value, ScheduleStatusEnum.PUBLISHED.value]}
+    }, {"_id": 0, "id": 1})
+    
+    today_lessons = []
+    if schedule:
+        sessions = await db.schedule_sessions.find({
+            "schedule_id": schedule.get("id"),
+            "teacher_id": teacher_id,
+            "day_of_week": today_day,
+            "status": SessionStatusEnum.SCHEDULED.value
+        }, {"_id": 0}).to_list(20)
+        
+        # Get time slots
+        slot_ids = [s.get("time_slot_id") for s in sessions]
+        slots = await db.time_slots.find({"id": {"$in": slot_ids}}, {"_id": 0}).to_list(20)
+        slot_map = {s.get("id"): s for s in slots}
+        
+        for session in sessions:
+            slot = slot_map.get(session.get("time_slot_id"), {})
+            assignment = next((a for a in assignments if a.get("id") == session.get("assignment_id")), {})
+            class_info = next((c for c in classes if c.get("id") == assignment.get("class_id")), {})
+            subject_info = next((s for s in subjects if s.get("id") == assignment.get("subject_id")), {})
+            
+            today_lessons.append({
+                "time": slot.get("start_time", ""),
+                "period": slot.get("slot_number", 0),
+                "subject": subject_info.get("name_ar") or subject_info.get("name_en") or "غير محدد",
+                "class_name": class_info.get("name", "غير محدد"),
+                "class_id": class_info.get("id")
+            })
+        
+        today_lessons.sort(key=lambda x: x.get("period", 0))
+    
+    # Get pending attendance (classes where attendance not recorded today)
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    recorded_attendance = await db.attendance.find({
+        "teacher_id": teacher_id,
+        "date": today_str
+    }, {"_id": 0, "class_id": 1}).to_list(50)
+    recorded_class_ids = [a.get("class_id") for a in recorded_attendance]
+    pending_attendance = len([c for c in class_ids if c not in recorded_class_ids])
+    
+    # Recent activities
+    recent_activities = await db.audit_log.find({
+        "user_id": current_user.get("id"),
+        "school_id": school_id
+    }, {"_id": 0}).sort("timestamp", -1).limit(5).to_list(5)
+    
+    return {
+        "teacher": {
+            "id": teacher.get("id"),
+            "name": teacher.get("full_name"),
+            "rank": teacher.get("rank"),
+            "school_id": school_id
+        },
+        "stats": {
+            "my_classes": len(class_ids),
+            "my_students": total_students,
+            "today_lessons": len(today_lessons),
+            "pending_attendance": pending_attendance,
+            "subjects_count": len(subject_ids),
+            "weekly_sessions": sum(a.get("weekly_sessions", 0) for a in assignments)
+        },
+        "today_schedule": today_lessons,
+        "classes": [{"id": c.get("id"), "name": c.get("name"), "students": c.get("student_count", 0)} for c in classes],
+        "subjects": [{"id": s.get("id"), "name": s.get("name_ar") or s.get("name_en")} for s in subjects],
+        "recent_activities": [
+            {"type": a.get("action"), "message": a.get("details", {}).get("description", a.get("action")), "time": a.get("timestamp")}
+            for a in recent_activities
+        ]
+    }
+
+
+# ============== STUDENT DASHBOARD APIs ==============
+@api_router.get("/student/dashboard/{student_id}")
+async def get_student_dashboard(
+    student_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على بيانات لوحة تحكم الطالب
+    - الجدول اليومي
+    - الدرجات
+    - نسبة الحضور
+    - الإشعارات
+    """
+    student = await db.students.find_one({"id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    
+    school_id = student.get("school_id")
+    class_id = student.get("class_id")
+    
+    # Get class info
+    class_info = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1, "grade_id": 1})
+    
+    # Get today's schedule for the class
+    day_map = {0: "monday", 1: "tuesday", 2: "wednesday", 3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"}
+    today_day = day_map.get(datetime.now().weekday(), "sunday")
+    
+    schedule = await db.schedules.find_one({
+        "school_id": school_id,
+        "status": {"$in": [ScheduleStatusEnum.DRAFT.value, ScheduleStatusEnum.PUBLISHED.value]}
+    }, {"_id": 0, "id": 1})
+    
+    today_lessons = []
+    if schedule:
+        sessions = await db.schedule_sessions.find({
+            "schedule_id": schedule.get("id"),
+            "class_id": class_id,
+            "day_of_week": today_day,
+            "status": SessionStatusEnum.SCHEDULED.value
+        }, {"_id": 0}).to_list(20)
+        
+        # Get details
+        slot_ids = list(set(s.get("time_slot_id") for s in sessions))
+        teacher_ids = list(set(s.get("teacher_id") for s in sessions if s.get("teacher_id")))
+        subject_ids = list(set(s.get("subject_id") for s in sessions if s.get("subject_id")))
+        
+        slots = await db.time_slots.find({"id": {"$in": slot_ids}}, {"_id": 0}).to_list(20)
+        teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0, "id": 1, "full_name": 1}).to_list(20)
+        subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(20)
+        
+        slot_map = {s.get("id"): s for s in slots}
+        teacher_map = {t.get("id"): t for t in teachers}
+        subject_map = {s.get("id"): s for s in subjects}
+        
+        for session in sessions:
+            slot = slot_map.get(session.get("time_slot_id"), {})
+            teacher = teacher_map.get(session.get("teacher_id"), {})
+            subject = subject_map.get(session.get("subject_id"), {})
+            
+            today_lessons.append({
+                "time": slot.get("start_time", ""),
+                "period": slot.get("slot_number", 0),
+                "subject": subject.get("name_ar") or subject.get("name_en") or "غير محدد",
+                "teacher": teacher.get("full_name", "غير محدد"),
+                "room": session.get("room_name", "")
+            })
+        
+        today_lessons.sort(key=lambda x: x.get("period", 0))
+    
+    # Get attendance summary
+    attendance_records = await db.attendance.find({
+        "student_id": student_id,
+        "school_id": school_id
+    }, {"_id": 0, "status": 1}).to_list(200)
+    
+    total_days = len(attendance_records)
+    present_days = len([a for a in attendance_records if a.get("status") == "present"])
+    attendance_rate = round((present_days / total_days * 100) if total_days > 0 else 100, 1)
+    
+    # Get recent grades (mock for now - will be from assessments)
+    recent_grades = [
+        {"subject": "الرياضيات", "grade": 92, "date": datetime.now().strftime("%Y-%m-%d")},
+        {"subject": "اللغة العربية", "grade": 88, "date": datetime.now().strftime("%Y-%m-%d")},
+        {"subject": "العلوم", "grade": 85, "date": datetime.now().strftime("%Y-%m-%d")},
+        {"subject": "اللغة الإنجليزية", "grade": 90, "date": datetime.now().strftime("%Y-%m-%d")},
+    ]
+    
+    average_grade = sum(g.get("grade", 0) for g in recent_grades) / len(recent_grades) if recent_grades else 0
+    
+    # Get notifications
+    notifications = await db.notifications.find({
+        "$or": [
+            {"target_id": student_id},
+            {"target_type": "all", "school_id": school_id}
+        ]
+    }, {"_id": 0}).sort("created_at", -1).limit(5).to_list(5)
+    
+    return {
+        "student": {
+            "id": student.get("id"),
+            "name": student.get("full_name"),
+            "class_name": class_info.get("name") if class_info else "غير محدد",
+            "school_id": school_id
+        },
+        "stats": {
+            "attendance_rate": attendance_rate,
+            "average_grade": round(average_grade, 1),
+            "present_days": present_days,
+            "absent_days": total_days - present_days,
+            "total_lessons_today": len(today_lessons)
+        },
+        "today_schedule": today_lessons,
+        "recent_grades": recent_grades,
+        "notifications": [
+            {"title": n.get("title"), "message": n.get("message"), "time": n.get("created_at"), "type": n.get("type", "info")}
+            for n in notifications
+        ]
+    }
+
+
+# ============== PARENT DASHBOARD APIs ==============
+@api_router.get("/parent/dashboard/{parent_id}")
+async def get_parent_dashboard(
+    parent_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على بيانات لوحة تحكم ولي الأمر
+    - قائمة الأبناء
+    - ملخص كل ابن (حضور، درجات، سلوك)
+    """
+    parent = await db.parents.find_one({"id": parent_id}, {"_id": 0})
+    if not parent:
+        raise HTTPException(status_code=404, detail="ولي الأمر غير موجود")
+    
+    school_id = parent.get("school_id")
+    
+    # Get children
+    student_ids = parent.get("student_ids", [])
+    children_data = []
+    
+    for student_id in student_ids:
+        student = await db.students.find_one({"id": student_id}, {"_id": 0})
+        if not student:
+            continue
+        
+        class_info = await db.classes.find_one({"id": student.get("class_id")}, {"_id": 0, "name": 1})
+        
+        # Get attendance summary
+        attendance_records = await db.attendance.find({
+            "student_id": student_id
+        }, {"_id": 0, "status": 1}).to_list(200)
+        
+        total_days = len(attendance_records)
+        present_days = len([a for a in attendance_records if a.get("status") == "present"])
+        absent_days = len([a for a in attendance_records if a.get("status") == "absent"])
+        late_days = len([a for a in attendance_records if a.get("status") == "late"])
+        attendance_rate = round((present_days / total_days * 100) if total_days > 0 else 100, 1)
+        
+        # Mock grades
+        recent_grades = [
+            {"subject": "الرياضيات", "grade": 92, "date": datetime.now().strftime("%Y-%m-%d")},
+            {"subject": "اللغة العربية", "grade": 88, "date": datetime.now().strftime("%Y-%m-%d")},
+        ]
+        average_grade = sum(g.get("grade", 0) for g in recent_grades) / len(recent_grades) if recent_grades else 0
+        
+        # Mock behaviour notes
+        behaviour_notes = [
+            {"type": "positive", "note": "مشاركة فعالة في الصف", "date": datetime.now().strftime("%Y-%m-%d")},
+        ]
+        
+        # Get today's schedule
+        day_map = {0: "monday", 1: "tuesday", 2: "wednesday", 3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"}
+        today_day = day_map.get(datetime.now().weekday(), "sunday")
+        
+        schedule = await db.schedules.find_one({
+            "school_id": school_id,
+            "status": {"$in": [ScheduleStatusEnum.DRAFT.value, ScheduleStatusEnum.PUBLISHED.value]}
+        }, {"_id": 0, "id": 1})
+        
+        today_schedule = []
+        if schedule:
+            sessions = await db.schedule_sessions.find({
+                "schedule_id": schedule.get("id"),
+                "class_id": student.get("class_id"),
+                "day_of_week": today_day
+            }, {"_id": 0}).to_list(10)
+            
+            for session in sessions:
+                slot = await db.time_slots.find_one({"id": session.get("time_slot_id")}, {"_id": 0})
+                teacher = await db.teachers.find_one({"id": session.get("teacher_id")}, {"_id": 0, "full_name": 1})
+                subject = await db.subjects.find_one({"id": session.get("subject_id")}, {"_id": 0})
+                
+                today_schedule.append({
+                    "time": slot.get("start_time", "") if slot else "",
+                    "subject": subject.get("name_ar") if subject else "غير محدد",
+                    "teacher": teacher.get("full_name") if teacher else "غير محدد"
+                })
+        
+        children_data.append({
+            "id": student.get("id"),
+            "name": student.get("full_name"),
+            "class_name": class_info.get("name") if class_info else "غير محدد",
+            "avatar": student.get("avatar_url"),
+            "stats": {
+                "attendance_rate": attendance_rate,
+                "average_grade": round(average_grade, 1),
+                "absences": absent_days,
+                "lates": late_days
+            },
+            "recent_grades": recent_grades,
+            "behaviour_notes": behaviour_notes,
+            "today_schedule": today_schedule[:5]
+        })
+    
+    # Get notifications for parent
+    notifications = await db.notifications.find({
+        "$or": [
+            {"target_id": parent_id},
+            {"target_id": {"$in": student_ids}},
+            {"target_type": "all", "school_id": school_id}
+        ]
+    }, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
+    
+    return {
+        "parent": {
+            "id": parent.get("id"),
+            "name": parent.get("full_name"),
+            "phone": parent.get("phone"),
+            "email": parent.get("email")
+        },
+        "children_count": len(children_data),
+        "children": children_data,
+        "notifications": [
+            {"title": n.get("title"), "message": n.get("message"), "time": n.get("created_at"), "type": n.get("type", "info")}
+            for n in notifications
+        ]
+    }
+
+
+# ============== CONTACT TEACHER API ==============
+@api_router.post("/parent/contact-teacher")
+async def parent_contact_teacher(
+    teacher_id: str,
+    student_id: str,
+    subject: str,
+    message: str,
+    current_user: dict = Depends(require_roles([UserRole.PARENT]))
+):
+    """
+    إرسال رسالة من ولي الأمر للمعلم
+    """
+    parent_id = current_user.get("id")
+    
+    # Verify parent has this student
+    parent = await db.parents.find_one({"id": parent_id}, {"_id": 0})
+    if not parent or student_id not in parent.get("student_ids", []):
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالتواصل بشأن هذا الطالب")
+    
+    # Get teacher
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "full_name": 1, "user_id": 1})
+    if not teacher:
+        raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    
+    # Create message
+    msg_id = str(uuid.uuid4())
+    msg_doc = {
+        "id": msg_id,
+        "type": "parent_teacher_message",
+        "from_id": parent_id,
+        "from_type": "parent",
+        "from_name": parent.get("full_name"),
+        "to_id": teacher_id,
+        "to_type": "teacher",
+        "to_name": teacher.get("full_name"),
+        "student_id": student_id,
+        "subject": subject,
+        "message": message,
+        "status": "sent",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    
+    await db.messages.insert_one(msg_doc)
+    
+    # Create notification for teacher
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "type": "parent_message",
+        "title": f"رسالة من ولي أمر: {parent.get('full_name')}",
+        "message": subject[:100],
+        "target_id": teacher.get("user_id"),
+        "target_type": "user",
+        "school_id": parent.get("school_id"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    })
+    
+    return {
+        "success": True,
+        "message_id": msg_id,
+        "message_ar": "تم إرسال الرسالة بنجاح",
+        "message_en": "Message sent successfully"
+    }
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
