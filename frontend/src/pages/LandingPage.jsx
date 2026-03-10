@@ -682,6 +682,85 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* ========== PLATFORM IMPACT / STATS SECTION ========== */}
+      <section className="py-20 lg:py-28 bg-gradient-to-b from-background to-brand-navy/5" data-testid="stats-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="font-cairo text-4xl md:text-5xl font-bold text-foreground mb-6">
+              {isRTL ? 'تأثير منصة نَسَّق' : 'NASSAQ Platform Impact'}
+            </h2>
+            <p className="text-muted-foreground font-tajawal text-lg max-w-2xl mx-auto">
+              {isRTL 
+                ? 'أرقام حقيقية تعكس ثقة المدارس والمعلمين في منصتنا'
+                : 'Real numbers reflecting the trust of schools and teachers in our platform'
+              }
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Schools */}
+            <Card className="p-6 text-center bg-gradient-to-br from-brand-turquoise/10 to-brand-turquoise/5 border-brand-turquoise/20 rounded-2xl hover:shadow-xl transition-shadow">
+              <Building2 className="h-12 w-12 mx-auto text-brand-turquoise mb-4" />
+              <p className="text-4xl md:text-5xl font-bold text-brand-turquoise font-cairo">
+                {platformStats.schools.toLocaleString()}+
+              </p>
+              <p className="text-muted-foreground font-tajawal mt-2">
+                {isRTL ? 'مدرسة مسجلة' : 'Registered Schools'}
+              </p>
+            </Card>
+            
+            {/* Students */}
+            <Card className="p-6 text-center bg-gradient-to-br from-brand-purple/10 to-brand-purple/5 border-brand-purple/20 rounded-2xl hover:shadow-xl transition-shadow">
+              <GraduationCap className="h-12 w-12 mx-auto text-brand-purple mb-4" />
+              <p className="text-4xl md:text-5xl font-bold text-brand-purple font-cairo">
+                {platformStats.students.toLocaleString()}+
+              </p>
+              <p className="text-muted-foreground font-tajawal mt-2">
+                {isRTL ? 'طالب وطالبة' : 'Students'}
+              </p>
+            </Card>
+            
+            {/* Teachers */}
+            <Card className="p-6 text-center bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 rounded-2xl hover:shadow-xl transition-shadow">
+              <UserCheck className="h-12 w-12 mx-auto text-emerald-500 mb-4" />
+              <p className="text-4xl md:text-5xl font-bold text-emerald-500 font-cairo">
+                {platformStats.teachers.toLocaleString()}+
+              </p>
+              <p className="text-muted-foreground font-tajawal mt-2">
+                {isRTL ? 'معلم ومعلمة' : 'Teachers'}
+              </p>
+            </Card>
+            
+            {/* Parents */}
+            <Card className="p-6 text-center bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20 rounded-2xl hover:shadow-xl transition-shadow">
+              <Users className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+              <p className="text-4xl md:text-5xl font-bold text-amber-500 font-cairo">
+                {platformStats.parents.toLocaleString()}+
+              </p>
+              <p className="text-muted-foreground font-tajawal mt-2">
+                {isRTL ? 'ولي أمر' : 'Parents'}
+              </p>
+            </Card>
+          </div>
+          
+          {/* Hakim Quote */}
+          <div className="mt-12 max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 bg-brand-navy/5 dark:bg-brand-navy/20 rounded-2xl p-6">
+              <img src={HAKIM_CHARACTER} alt={isRTL ? 'حكيم' : 'Hakim'} className="w-16 h-16 rounded-full object-cover border-2 border-brand-turquoise shadow-lg flex-shrink-0" />
+              <div>
+                <p className="text-foreground font-tajawal text-lg">
+                  <span className="text-brand-turquoise font-bold font-cairo">{isRTL ? 'حكيم: ' : 'Hakim: '}</span>
+                  {isRTL 
+                    ? 'كل هذه الأرقام تعني شيئًا واحدًا: مدارس أكثر تنظيمًا، طلاب أكثر نجاحًا، ومعلمون أكثر تمكينًا.'
+                    : 'All these numbers mean one thing: more organized schools, more successful students, and more empowered teachers.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ========== CALL TO ACTION SECTION ========== */}
       <section
         className="py-20 lg:py-28 relative overflow-hidden"
