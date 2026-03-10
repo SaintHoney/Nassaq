@@ -511,6 +511,24 @@ export const TeachersPage = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Add Teacher Wizard */}
+        <AddTeacherWizard 
+          open={wizardOpen} 
+          onClose={() => {
+            setWizardOpen(false);
+            fetchTeachers();
+          }} 
+        />
+        
+        {/* Bulk Import Wizard */}
+        <BulkTeacherImport 
+          open={bulkImportOpen} 
+          onClose={() => {
+            setBulkImportOpen(false);
+            fetchTeachers();
+          }} 
+        />
       </div>
       <HakimAssistant />
     </Sidebar>
