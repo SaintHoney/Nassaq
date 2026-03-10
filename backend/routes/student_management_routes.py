@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/students", tags=["Students"])
+router = APIRouter(prefix="/students", tags=["Students"])
 
 # ==================== Pydantic Models ====================
 
