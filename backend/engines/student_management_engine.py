@@ -109,7 +109,7 @@ class StudentManagementEngine:
     
     # ==================== ID Generation ====================
     
-    def _generate_student_id(self, tenant_id: str) -> str:
+    async def _generate_student_id(self, tenant_id: str) -> str:
         """
         Generate unique student ID in format: NSS-SCH-CIT-YY-XXXX
         NSS = Platform prefix
@@ -120,9 +120,9 @@ class StudentManagementEngine:
         """
         try:
             # Get school info
-            school = self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
+            school = await self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
             if not school:
-                school = self.schools_collection.find_one({"tenant_id": tenant_id})
+                school = await self.schools_collection.find_one({"tenant_id": tenant_id})
             
             school_code = "SCH"
             city_code = "CTY"
@@ -143,7 +143,7 @@ class StudentManagementEngine:
             prefix = f"NSS-{school_code}-{city_code}-{year}-"
             
             # Count existing students with this prefix
-            count = self.students_collection.count_documents({
+            count = await self.students_collection.count_documents({
                 "student_id": {"$regex": f"^{re.escape(prefix)}"}
             })
             
@@ -158,16 +158,16 @@ class StudentManagementEngine:
             random_suffix = ''.join(secrets.choice(string.digits) for _ in range(4))
             return f"NSS-STD-{timestamp}-{random_suffix}"
     
-    def _generate_parent_id(self, tenant_id: str) -> str:
+    async def _generate_parent_id(self, tenant_id: str) -> str:
         """
         Generate unique parent ID in format: NSS-SCH-CIT-YY-PXXXX
         Similar to student ID but with P prefix for parent
         """
         try:
             # Get school info
-            school = self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
+            school = await self.schools_collection.find_one({"_id": ObjectId(tenant_id)})
             if not school:
-                school = self.schools_collection.find_one({"tenant_id": tenant_id})
+                school = await self.schools_collection.find_one({"tenant_id": tenant_id})
             
             school_code = "SCH"
             city_code = "CTY"
@@ -181,7 +181,7 @@ class StudentManagementEngine:
             year = datetime.now().strftime("%y")
             prefix = f"NSS-{school_code}-{city_code}-{year}-P"
             
-            count = self.parents_collection.count_documents({
+            count = await self.parents_collection.count_documents({
                 "parent_id": {"$regex": f"^{re.escape(prefix)}"}
             })
             
