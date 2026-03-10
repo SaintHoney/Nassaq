@@ -1,66 +1,103 @@
 # NASSAQ Changelog
 
-## March 10, 2026 - Session Update
+## March 10, 2026 - Session 2 Updates
 
-### ✅ Fixed: Schedule Page (SchedulePage.jsx)
-**Root Cause:** The `time_slots` collection in MongoDB was missing required fields:
-- `name` (Arabic name)
-- `name_en` (English name)
-- `duration_minutes`
-- `is_active`
+### ✅ البيانات التجريبية المحكمة (Controlled Demo Data)
 
-**Fix Applied:**
-1. Updated database records directly to add missing fields
-2. Updated `seed_demo_school_complete.py` to include all required fields for future seeding
-3. Schedule page now loads correctly with 360 sessions displayed in a weekly grid
+تم إنشاء seeder جديد ومنظم: `/app/backend/scripts/seed_controlled_demo.py`
 
-### ✅ Fixed: Teachers Page (TeachersPage.jsx) - Tenant Isolation
-**Root Cause:** The page was trying to fetch `/api/schools` which School Principals don't have permission to access.
+#### الملخص:
+| البيان | العدد |
+|--------|-------|
+| المدارس | 5 |
+| الطلاب | 500 (100 لكل مدرسة) |
+| المعلمون | 77 |
+| الفصول | 60 (12 لكل مدرسة) |
+| المواد | 50 (10 لكل مدرسة) |
+| سجلات الحضور | 15,000 |
+| سجلات السلوك | 1,739 |
+| الاختبارات | 1,500 |
+| الدرجات | 12,502 |
 
-**Fix Applied:**
-1. Modified `fetchData()` to only fetch schools for Platform Admins
-2. Hidden school dropdown filter for School-Level users
-3. Auto-populate `school_id` from user's `tenant_id` when creating new teachers
-4. Backend already enforces tenant isolation (lines 2059-2060 in server.py)
+#### المدارس:
+1. **مدرسة النور** (الرياض) - `school-nor-001`
+2. **مدرسة العلي** (جدة) - `school-ali-001`
+3. **مدرسة المنارة** (الدمام) - `school-mnr-001`
+4. **مدرسة الاحساء** (الأحساء) - `school-ahs-001`
+5. **مدرسة الحديثة** (مكة المكرمة) - `school-hdt-001`
 
-### Architecture Notes - Multi-Tenant Isolation
-Based on user's detailed specifications:
+#### المواد الدراسية (سعودية قياسية):
+1. اللغة العربية
+2. الرياضيات
+3. العلوم
+4. اللغة الإنجليزية
+5. الدراسات الإسلامية
+6. الدراسات الاجتماعية
+7. الحاسب الآلي
+8. المهارات الرقمية
+9. التربية الفنية
+10. التربية البدنية
 
-**Platform Level Users:**
-- Platform Admin
-- Platform Super Admin
-- Can see all schools and tenants
+---
 
-**School Level Users (Tenant-Scoped):**
-- School Principal
-- Teachers
-- Students
-- Parents
-- Can ONLY see their own school's data
-- Should NEVER see a list of other schools
+### ✅ تطبيق Multi-Tenant Isolation
 
-**Enforcement Points:**
-1. Backend APIs already filter by `tenant_id` for non-platform-admin users
-2. Frontend pages must NOT call platform-level APIs when logged as school-level user
-3. All data queries include `school_id` filter based on user's `tenant_id`
+- كل مدرسة تعمل كـ Tenant مستقل
+- مدير المدرسة يرى بيانات مدرسته فقط
+- مدير المنصة يرى جميع المدارس
+- جميع الـ APIs تطبق عزل البيانات بناءً على `tenant_id`
+
+### ✅ إصلاحات سابقة (من Session 1):
+1. **صفحة الجدول الدراسي** - إضافة الحقول المفقودة في `time_slots`
+2. **صفحة المعلمين** - إخفاء dropdown المدارس لمدير المدرسة
+
+---
+
+## حسابات الدخول
+
+### 👑 مدير المنصة (Platform Admin):
+- **البريد:** `admin@nassaq.com`
+- **كلمة المرور:** `Admin@123`
+
+### 👨‍💼 مدراء المدارس:
+| المدرسة | البريد | كلمة المرور |
+|---------|--------|-------------|
+| مدرسة النور | principal1@nassaq.com | Principal@123 |
+| مدرسة العلي | principal2@nassaq.com | Principal@123 |
+| مدرسة المنارة | principal3@nassaq.com | Principal@123 |
+| مدرسة الاحساء | principal4@nassaq.com | Principal@123 |
+| مدرسة الحديثة | principal5@nassaq.com | Principal@123 |
 
 ---
 
 ## Test Results
 
-### APIs Verified Working:
-- ✅ `GET /api/time-slots?school_id=demo-school-001` - Returns 7 time slots
-- ✅ `GET /api/schedules?school_id=demo-school-001` - Returns 1 schedule
-- ✅ `GET /api/schedule-sessions?schedule_id=...` - Returns 360 sessions
-- ✅ `GET /api/teachers` - Returns 25 teachers (tenant-scoped)
+### Tenant Isolation Verification:
+- ✅ مدير مدرسة النور يرى 100 طالب فقط (من مدرسته)
+- ✅ مدير مدرسة النور يرى 15 معلم فقط (من مدرسته)
+- ✅ مدير المنصة يرى جميع المدارس الخمس
+- ✅ APIs تطبق عزل البيانات بشكل صحيح
 
-### Demo Data Status:
-- School: `demo-school-001` (مدرسة نَسَّق التجريبية)
-- Teachers: 25
-- Students: 300
-- Classes: 12 (6 grades × 2 sections)
-- Time Slots: 7 (6 periods + 1 break)
-- Schedule Sessions: 360
+### APIs Working:
+- ✅ `/api/auth/login` - تسجيل الدخول
+- ✅ `/api/schools` - قائمة المدارس (Platform Admin)
+- ✅ `/api/teachers` - قائمة المعلمين (Tenant-scoped)
+- ✅ `/api/students` - قائمة الطلاب (Tenant-scoped)
+- ✅ `/api/time-slots` - الفترات الزمنية
+- ✅ `/api/schedules` - الجداول
+- ✅ `/api/schedule-sessions` - الحصص
 
-### Test Credentials:
-- **Principal:** `principal@nassaq.com` / `Principal@123`
+---
+
+## Files Modified/Created
+
+### New Files:
+- `/app/backend/scripts/seed_controlled_demo.py` - Seeder محكم ومنظم
+
+### Modified Files:
+- `/app/frontend/src/pages/TeachersPage.jsx` - Tenant Isolation
+- `/app/backend/scripts/seed_demo_school_complete.py` - تصحيح time_slots
+
+---
+
+## Last Updated: March 10, 2026
