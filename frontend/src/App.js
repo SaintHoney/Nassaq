@@ -360,6 +360,14 @@ function AppRoutes() {
 
       {/* School Management Routes - Only for School Principal and Sub Admin (NOT Platform Admin) */}
       <Route
+        path="/admin/users-management"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <TeachersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/teachers"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
