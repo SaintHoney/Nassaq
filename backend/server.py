@@ -1951,14 +1951,18 @@ class ClassResponse(BaseModel):
     name: str
     name_en: Optional[str] = None
     school_id: str
-    grade_level: str
+    grade_level: Optional[str] = None
+    grade_level_id: Optional[str] = None
     section: Optional[str] = None
-    capacity: int
-    current_students: int
+    capacity: Optional[int] = 30
+    current_students: Optional[int] = 0
     homeroom_teacher_id: Optional[str] = None
+    homeroom_teacher: Optional[str] = None
     homeroom_teacher_name: Optional[str] = None
-    is_active: bool
-    created_at: str
+    academic_year_id: Optional[str] = None
+    status: Optional[str] = "active"
+    is_active: Optional[bool] = True
+    created_at: Optional[str] = None
 
 class SubjectCreate(BaseModel):
     name: str
