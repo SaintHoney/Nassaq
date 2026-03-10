@@ -115,8 +115,8 @@ BEHAVIOR_TYPES = [
 
 
 def hash_password(password: str) -> str:
-    """Simple password hashing for demo purposes"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Bcrypt password hashing - same as server.py"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def generate_id():
