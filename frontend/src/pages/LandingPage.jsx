@@ -373,12 +373,50 @@ export const LandingPage = () => {
             </Card>
           </div>
           
-          <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-10 text-lg font-cairo shadow-lg" data-testid="hero-cta-btn">
-            <Link to="/login" className="flex items-center gap-2">
-              {isRTL ? 'الدخول إلى المنصة' : 'Enter the Platform'}
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button asChild size="lg" className="bg-brand-turquoise hover:bg-brand-turquoise-light text-white rounded-2xl h-14 px-10 text-lg font-cairo shadow-lg" data-testid="hero-cta-btn">
+              <Link to="/login" className="flex items-center gap-2">
+                {isRTL ? 'الدخول إلى المنصة' : 'Enter the Platform'}
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="border-brand-turquoise/50 text-white hover:bg-brand-turquoise/10 rounded-2xl h-14 px-8 text-lg font-cairo backdrop-blur-sm" data-testid="teacher-register-cta">
+              <Link to="/teacher-register" className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5" />
+                {isRTL ? 'انضم كمعلم' : 'Join as Teacher'}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ========== SECTION: دعوة خاصة للمعلمين ========== */}
+      <section className="py-12 bg-gradient-to-r from-brand-navy to-brand-purple/50" data-testid="teacher-invite-section">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-brand-turquoise/20 border border-brand-turquoise/30 flex items-center justify-center">
+                <GraduationCap className="h-7 w-7 text-brand-turquoise" />
+              </div>
+              <div>
+                <h3 className="font-cairo text-xl font-bold text-white mb-1">
+                  {isRTL ? 'هل أنت معلم؟' : 'Are you a teacher?'}
+                </h3>
+                <p className="text-white/70 font-tajawal text-sm">
+                  {isRTL 
+                    ? 'انضم لمنصة نَسَّق حتى لو لم تكن مدرستك مسجلة بعد'
+                    : 'Join NASSAQ platform even if your school is not registered yet'
+                  }
+                </p>
+              </div>
+            </div>
+            <Button asChild className="bg-white text-brand-navy hover:bg-white/90 rounded-xl font-cairo px-6" data-testid="teacher-register-banner-btn">
+              <Link to="/teacher-register" className="flex items-center gap-2">
+                {isRTL ? 'سجّل الآن' : 'Register Now'}
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
