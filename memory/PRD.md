@@ -790,3 +790,37 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ### Test Results (iteration_33.json):
 - ✅ Backend: 100% (10/10 tests passed)
 - ✅ Frontend: 100% (all 4 wizard steps working)
+
+## ✅ Quick Actions Wizards - COMPLETED (March 10, 2026 - Phase 18)
+
+### 1. معالج إضافة معلم (Add Teacher Wizard) ✅
+- **Backend**: `/app/backend/engines/teacher_management_engine.py`
+- **Routes**: `/app/backend/routes/teacher_management_routes.py`
+- **Frontend**: `/app/frontend/src/components/wizards/AddTeacherWizard.jsx`
+- 5 خطوات: البيانات الأساسية ← المؤهلات ← المواد ← الجدول ← المراجعة
+
+### 2. معالج إنشاء فصل (Create Class Wizard) ✅
+- **Backend**: `/app/backend/engines/class_management_engine.py`
+- **Routes**: `/app/backend/routes/class_management_routes.py`
+- **Frontend**: `/app/frontend/src/components/wizards/CreateClassWizard.jsx`
+- 4 خطوات: بيانات الفصل ← تعيين المعلم ← الطلاب ← المراجعة
+
+### 3. معالج إرسال إشعار (Send Notification Wizard) ✅
+- **Backend**: `/app/backend/engines/school_notification_engine.py`
+- **Routes**: `/app/backend/routes/notification_routes.py`
+- **Frontend**: `/app/frontend/src/components/wizards/SendNotificationWizard.jsx`
+- أنواع المستلمين: جميع الطلاب، جميع المعلمين، أولياء الأمور، صف معين، فصل معين
+
+### APIs Created:
+- `/api/teachers/options/*` - خيارات المعلمين (المواد، الصفوف، الدرجات، الرتب)
+- `/api/teachers/create` - إنشاء معلم
+- `/api/teachers/` - قائمة المعلمين
+- `/api/classes/options/*` - خيارات الفصول
+- `/api/classes/create` - إنشاء فصل
+- `/api/classes/` - قائمة الفصول
+- `/api/notifications/options/*` - خيارات الإشعارات
+- `/api/notifications/send` - إرسال إشعار
+
+### Remaining Quick Actions (TODO):
+- ⏳ إنشاء جدول (Create Schedule) - يحتاج تطوير
+- ⏳ عرض الحصص الجارية (Live Sessions Monitor) - يحتاج تطوير
