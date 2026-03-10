@@ -3389,11 +3389,24 @@ async def delete_schedule_session(
 async def generate_schedule_auto(
     schedule_id: str,
     respect_workload: bool = True,
-    max_iterations: int = 1000,
+    balance_daily: bool = True,
+    avoid_consecutive: bool = True,
+    max_daily_per_teacher: int = 6,
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
 ):
-    """توليد الجدول تلقائياً"""
+    """
+    توليد الجدول تلقائياً بالذكاء الاصطناعي
+    
+    الميزات:
+    - توزيع متوازن للحصص على أيام الأسبوع
+    - مراعاة نصاب المعلم اليومي
+    - تجنب التعارضات (معلم/فصل/قاعة)
+    - تجنب الحصص المتتالية للمعلم بقدر الإمكان
+    """
     import random
+    from collections import defaultdict
+    
+    start_time = datetime.now(timezone.utc)
     
     schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
     if not schedule:
@@ -3422,52 +3435,112 @@ async def generate_schedule_auto(
     if not assignments:
         raise HTTPException(status_code=400, detail="لم يتم العثور على إسنادات للمعلمين")
     
+    # Get teacher info for workload calculation
+    teacher_ids = list(set(a.get("teacher_id") for a in assignments if a.get("teacher_id")))
+    teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0, "id": 1, "rank": 1, "full_name": 1}).to_list(500)
+    teacher_map = {t.get("id"): t for t in teachers}
+    
+    # Workload limits by rank
+    workload_limits = {
+        TeacherRankEnum.EXPERT.value: {"daily_max": 4, "weekly_max": 18},
+        TeacherRankEnum.ADVANCED.value: {"daily_max": 5, "weekly_max": 20},
+        TeacherRankEnum.PRACTITIONER.value: {"daily_max": 6, "weekly_max": 24},
+        TeacherRankEnum.ASSISTANT.value: {"daily_max": 7, "weekly_max": 26},
+    }
+    
     # Clear existing sessions
     await db.schedule_sessions.delete_many({"schedule_id": schedule_id})
     
-    # Build sessions to place
+    # Build sessions to place with smart grouping
     sessions_to_place = []
-    for assignment in assignments:
-        for i in range(assignment.get("weekly_sessions", 4)):
-            sessions_to_place.append({
-                "assignment_id": assignment.get("id"),
-                "teacher_id": assignment.get("teacher_id"),
-                "class_id": assignment.get("class_id"),
-                "placed": False
-            })
+    assignment_sessions = defaultdict(list)
     
-    random.shuffle(sessions_to_place)
+    for assignment in assignments:
+        weekly_sessions = assignment.get("weekly_sessions", 4)
+        teacher_id = assignment.get("teacher_id")
+        class_id = assignment.get("class_id")
+        subject_id = assignment.get("subject_id")
+        
+        for i in range(weekly_sessions):
+            session_data = {
+                "assignment_id": assignment.get("id"),
+                "teacher_id": teacher_id,
+                "class_id": class_id,
+                "subject_id": subject_id,
+                "placed": False,
+                "preferred_day_index": i % len(working_days)  # Distribute across days
+            }
+            sessions_to_place.append(session_data)
+            assignment_sessions[assignment.get("id")].append(session_data)
+    
+    # Sort sessions: prioritize those with more constraints
+    sessions_to_place.sort(key=lambda s: (
+        -len([a for a in assignments if a.get("teacher_id") == s["teacher_id"]]),  # Teachers with more assignments first
+        s["preferred_day_index"]
+    ))
     
     # Track placements
-    teacher_schedule = {d: {} for d in working_days}
-    class_schedule = {d: {} for d in working_days}
+    teacher_schedule = {d: {} for d in working_days}  # day -> {slot_id: teacher_id}
+    class_schedule = {d: {} for d in working_days}    # day -> {slot_id: class_id}
+    teacher_daily_count = {d: defaultdict(int) for d in working_days}  # day -> {teacher_id: count}
+    teacher_last_slot = {d: {} for d in working_days}  # day -> {teacher_id: last_slot_number}
+    
     sessions_created = 0
-    conflicts = []
+    placement_attempts = 0
+    conflicts_avoided = 0
+    
+    generation_log = []
     
     for session_req in sessions_to_place:
         teacher_id = session_req["teacher_id"]
         class_id = session_req["class_id"]
         
-        placed = False
-        days = list(working_days)
-        random.shuffle(days)
+        # Get teacher workload limits
+        teacher_info = teacher_map.get(teacher_id, {})
+        teacher_rank = teacher_info.get("rank", TeacherRankEnum.PRACTITIONER.value)
+        limits = workload_limits.get(teacher_rank, workload_limits[TeacherRankEnum.PRACTITIONER.value])
+        daily_max = min(max_daily_per_teacher, limits["daily_max"]) if respect_workload else max_daily_per_teacher
         
-        for day in days:
+        placed = False
+        
+        # Try preferred day first, then others
+        preferred_day = working_days[session_req["preferred_day_index"]]
+        days_to_try = [preferred_day] + [d for d in working_days if d != preferred_day]
+        
+        if balance_daily:
+            # Sort days by current teacher load (prefer days with fewer sessions)
+            days_to_try.sort(key=lambda d: teacher_daily_count[d].get(teacher_id, 0))
+        
+        for day in days_to_try:
             if placed:
                 break
             
-            for slot in time_slots:
+            # Check daily limit
+            if teacher_daily_count[day].get(teacher_id, 0) >= daily_max:
+                continue
+            
+            slots_to_try = list(time_slots)
+            
+            if avoid_consecutive:
+                # Prefer non-consecutive slots
+                last_slot = teacher_last_slot[day].get(teacher_id)
+                if last_slot is not None:
+                    slots_to_try.sort(key=lambda s: abs(s.get("slot_number", 0) - last_slot) > 1, reverse=True)
+            
+            for slot in slots_to_try:
+                placement_attempts += 1
                 slot_id = slot.get("id")
+                slot_number = slot.get("slot_number", 0)
                 
                 # Check teacher availability
                 if teacher_schedule[day].get(slot_id) is not None:
-                    if teacher_schedule[day][slot_id] == teacher_id:
-                        continue  # Teacher already busy
+                    conflicts_avoided += 1
+                    continue
                 
                 # Check class availability
                 if class_schedule[day].get(slot_id) is not None:
-                    if class_schedule[day][slot_id] == class_id:
-                        continue  # Class already busy
+                    conflicts_avoided += 1
+                    continue
                 
                 # Place session
                 session_id = str(uuid.uuid4())
@@ -3476,6 +3549,9 @@ async def generate_schedule_auto(
                     "school_id": school_id,
                     "schedule_id": schedule_id,
                     "assignment_id": session_req["assignment_id"],
+                    "teacher_id": teacher_id,
+                    "class_id": class_id,
+                    "subject_id": session_req.get("subject_id"),
                     "day_of_week": day,
                     "time_slot_id": slot_id,
                     "room_id": None,
@@ -3485,12 +3561,36 @@ async def generate_schedule_auto(
                 }
                 await db.schedule_sessions.insert_one(session_doc)
                 
+                # Update tracking
                 teacher_schedule[day][slot_id] = teacher_id
                 class_schedule[day][slot_id] = class_id
+                teacher_daily_count[day][teacher_id] += 1
+                teacher_last_slot[day][teacher_id] = slot_number
+                
                 sessions_created += 1
                 session_req["placed"] = True
                 placed = True
                 break
+    
+    end_time = datetime.now(timezone.utc)
+    generation_duration = (end_time - start_time).total_seconds()
+    
+    # Calculate statistics
+    unplaced = sum(1 for s in sessions_to_place if not s["placed"])
+    total_requested = len(sessions_to_place)
+    success_rate = (sessions_created / total_requested * 100) if total_requested > 0 else 0
+    
+    # Teacher distribution statistics
+    teacher_stats = {}
+    for teacher_id in teacher_ids:
+        total_sessions = sum(teacher_daily_count[d].get(teacher_id, 0) for d in working_days)
+        daily_distribution = {d: teacher_daily_count[d].get(teacher_id, 0) for d in working_days}
+        teacher_info = teacher_map.get(teacher_id, {})
+        teacher_stats[teacher_id] = {
+            "name": teacher_info.get("full_name", "غير معروف"),
+            "total_sessions": total_sessions,
+            "daily_distribution": daily_distribution
+        }
     
     # Update schedule
     await db.schedules.update_one(
@@ -3498,19 +3598,35 @@ async def generate_schedule_auto(
         {"$set": {
             "total_sessions": sessions_created,
             "status": ScheduleStatusEnum.DRAFT.value,
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "generation_stats": {
+                "generated_at": end_time.isoformat(),
+                "duration_seconds": generation_duration,
+                "success_rate": success_rate,
+                "placement_attempts": placement_attempts,
+                "conflicts_avoided": conflicts_avoided
+            },
+            "updated_at": end_time.isoformat()
         }}
     )
-    
-    unplaced = sum(1 for s in sessions_to_place if not s["placed"])
     
     return {
         "success": unplaced == 0,
         "schedule_id": schedule_id,
         "sessions_created": sessions_created,
+        "sessions_requested": total_requested,
         "unplaced_sessions": unplaced,
-        "message": f"تم إنشاء {sessions_created} حصة",
-        "message_en": f"Created {sessions_created} sessions"
+        "success_rate": round(success_rate, 1),
+        "generation_time_seconds": round(generation_duration, 2),
+        "statistics": {
+            "placement_attempts": placement_attempts,
+            "conflicts_avoided": conflicts_avoided,
+            "teachers_scheduled": len(teacher_ids),
+            "days_used": len(working_days),
+            "slots_per_day": len(time_slots)
+        },
+        "teacher_distribution": teacher_stats,
+        "message": f"تم إنشاء {sessions_created} من {total_requested} حصة ({success_rate:.0f}%)",
+        "message_en": f"Created {sessions_created} of {total_requested} sessions ({success_rate:.0f}%)"
     }
 
 # ============== SCHEDULE CONFLICTS CHECK (ADVANCED) ==============
