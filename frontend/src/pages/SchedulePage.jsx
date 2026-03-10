@@ -757,6 +757,46 @@ export const SchedulePage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  {/* View Period Filter - Weekly/Daily */}
+                  <div className="flex rounded-xl border border-border overflow-hidden">
+                    <Button
+                      variant={viewPeriod === 'weekly' ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`rounded-none ${viewPeriod === 'weekly' ? 'bg-brand-turquoise' : ''}`}
+                      onClick={() => setViewPeriod('weekly')}
+                      data-testid="view-weekly-btn"
+                    >
+                      <Calendar className="h-4 w-4 me-1" />
+                      {isRTL ? 'أسبوعي' : 'Weekly'}
+                    </Button>
+                    <Button
+                      variant={viewPeriod === 'daily' ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`rounded-none ${viewPeriod === 'daily' ? 'bg-brand-turquoise' : ''}`}
+                      onClick={() => setViewPeriod('daily')}
+                      data-testid="view-daily-btn"
+                    >
+                      <Sun className="h-4 w-4 me-1" />
+                      {isRTL ? 'يومي' : 'Daily'}
+                    </Button>
+                  </div>
+                  
+                  {/* Day Selector - Only visible when viewPeriod is 'daily' */}
+                  {viewPeriod === 'daily' && (
+                    <Select value={selectedDay} onValueChange={setSelectedDay}>
+                      <SelectTrigger className="w-[140px] rounded-xl" data-testid="day-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAYS.map(day => (
+                          <SelectItem key={day.key} value={day.key}>
+                            {isRTL ? day.ar : day.en}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
             </CardContent>
