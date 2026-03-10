@@ -357,28 +357,28 @@ export const LandingPage = () => {
               {/* Schools */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-schools">
                 <Building2 className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
-                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+200</p>
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+{platformStats.schools.toLocaleString()}</p>
                 <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'مدرسة' : 'Schools'}</p>
               </div>
               
               {/* Students */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-students">
                 <GraduationCap className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
-                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+50,000</p>
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+{platformStats.students.toLocaleString()}</p>
                 <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'طالب' : 'Students'}</p>
               </div>
               
               {/* Parents */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-parents">
                 <Users className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
-                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+100,000</p>
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+{platformStats.parents.toLocaleString()}</p>
                 <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'ولي أمر' : 'Parents'}</p>
               </div>
               
               {/* Teachers */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 transition-all hover:bg-white/15 hover:scale-105" data-testid="traction-teachers">
                 <UserCheck className="h-8 w-8 text-brand-turquoise mx-auto mb-2" />
-                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+3,000</p>
+                <p className="text-3xl md:text-4xl font-cairo font-bold text-white">+{platformStats.teachers.toLocaleString()}</p>
                 <p className="text-white/70 font-tajawal text-sm">{isRTL ? 'معلم ومعلمة' : 'Teachers'}</p>
               </div>
             </div>
