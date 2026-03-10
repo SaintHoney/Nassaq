@@ -9600,6 +9600,7 @@ api_router.include_router(teacher_management_routes)
 api_router.include_router(class_management_routes)
 api_router.include_router(notification_routes)
 api_router.include_router(schedule_management_routes)
+api_router.include_router(teacher_attendance_router)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
