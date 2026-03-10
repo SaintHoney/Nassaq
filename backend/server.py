@@ -1889,18 +1889,20 @@ class TeacherCreate(BaseModel):
 class TeacherResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    user_id: str
+    user_id: Optional[str] = None
     full_name: str
     full_name_en: Optional[str] = None
-    email: str
+    email: Optional[str] = None
     phone: Optional[str] = None
     school_id: str
-    specialization: str
-    years_of_experience: int
+    specialization: Optional[str] = None
+    subject_id: Optional[str] = None
+    years_of_experience: Optional[int] = 0
     qualification: Optional[str] = None
     gender: Optional[str] = None
-    is_active: bool
-    created_at: str
+    status: Optional[str] = "active"
+    is_active: Optional[bool] = True
+    created_at: Optional[str] = None
 
 class StudentCreate(BaseModel):
     full_name: str
