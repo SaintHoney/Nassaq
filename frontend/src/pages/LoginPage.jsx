@@ -332,65 +332,80 @@ export const LoginPage = () => {
                 <p className="text-xs text-muted-foreground font-tajawal text-center mb-3">
                   {isRTL ? '🔐 حسابات تجريبية للاختبار:' : '🔐 Test Accounts for Testing:'}
                 </p>
-                <div className="space-y-2">
-                  {/* Platform Admin */}
-                  <div 
-                    className="p-3 rounded-xl bg-brand-navy/5 border border-brand-navy/20 cursor-pointer hover:bg-brand-navy/10 transition-colors"
-                    onClick={() => {
-                      setEmail('info@nassaqapp.com');
-                      setPassword('NassaqAdmin2026!##$$HBJ');
-                    }}
-                    data-testid="test-admin-credentials"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-brand-navy dark:text-brand-gold">
-                          {isRTL ? 'مدير المنصة' : 'Platform Admin'}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">info@nassaqapp.com</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
-                    </div>
-                  </div>
-                  
+                <div className="grid grid-cols-2 gap-2">
                   {/* School Principal */}
                   <div 
-                    className="p-3 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
                     onClick={() => {
                       setEmail('principal@nassaq.com');
-                      setPassword('NassaqPrincipal2026');
+                      setPassword('Principal@123');
                     }}
                     data-testid="test-principal-credentials"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-brand-turquoise">
-                          {isRTL ? 'مدير المدرسة' : 'School Principal'}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">principal@nassaq.com</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
-                    </div>
+                    <p className="text-xs font-medium text-brand-turquoise">
+                      {isRTL ? 'مدير المدرسة' : 'Principal'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal@nassaq.com</p>
                   </div>
                   
                   {/* Teacher */}
                   <div 
-                    className="p-3 rounded-xl bg-brand-purple/5 border border-brand-purple/20 cursor-pointer hover:bg-brand-purple/10 transition-colors"
+                    className="p-2.5 rounded-xl bg-brand-purple/5 border border-brand-purple/20 cursor-pointer hover:bg-brand-purple/10 transition-colors"
                     onClick={() => {
                       setEmail('teacher@nassaq.com');
-                      setPassword('NassaqTeacher2026');
+                      setPassword('Teacher@123');
                     }}
                     data-testid="test-teacher-credentials"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-brand-purple">
-                          {isRTL ? 'معلم' : 'Teacher'}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">teacher@nassaq.com</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{isRTL ? 'انقر للتعبئة' : 'Click to fill'}</span>
-                    </div>
+                    <p className="text-xs font-medium text-brand-purple">
+                      {isRTL ? 'معلم' : 'Teacher'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">teacher@nassaq.com</p>
+                  </div>
+                  
+                  {/* Student */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('student@nassaq.com');
+                      setPassword('Student@123');
+                    }}
+                    data-testid="test-student-credentials"
+                  >
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      {isRTL ? 'طالب' : 'Student'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">student@nassaq.com</p>
+                  </div>
+                  
+                  {/* Parent */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('parent@nassaq.com');
+                      setPassword('Parent@123');
+                    }}
+                    data-testid="test-parent-credentials"
+                  >
+                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      {isRTL ? 'ولي أمر' : 'Parent'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">parent@nassaq.com</p>
+                  </div>
+                  
+                  {/* Independent Teacher - Full Width */}
+                  <div 
+                    className="col-span-2 p-2.5 rounded-xl bg-rose-500/5 border border-rose-500/20 cursor-pointer hover:bg-rose-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('independent.teacher@nassaq.com');
+                      setPassword('Teacher@123');
+                    }}
+                    data-testid="test-independent-teacher-credentials"
+                  >
+                    <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                      {isRTL ? 'معلم مستقل' : 'Independent Teacher'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono">independent.teacher@nassaq.com</p>
                   </div>
                 </div>
               </div>
