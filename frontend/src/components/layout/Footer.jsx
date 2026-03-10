@@ -35,29 +35,27 @@ export const Footer = () => {
     fetchContactInfo();
   }, []);
 
-  // Build social links from contact info
-  const buildSocialLinks = () => {
-    if (!contactInfo?.social_media) return [];
-    
-    const social = contactInfo.social_media;
-    const links = [];
-    
-    if (social.twitter) links.push({ icon: Twitter, href: social.twitter.startsWith('http') ? social.twitter : `https://twitter.com/${social.twitter.replace('@', '')}`, label: 'Twitter' });
-    if (social.linkedin) links.push({ icon: Linkedin, href: social.linkedin.startsWith('http') ? social.linkedin : `https://linkedin.com/company/${social.linkedin}`, label: 'LinkedIn' });
-    if (social.facebook) links.push({ icon: Facebook, href: social.facebook.startsWith('http') ? social.facebook : `https://facebook.com/${social.facebook}`, label: 'Facebook' });
-    if (social.instagram) links.push({ icon: Instagram, href: social.instagram.startsWith('http') ? social.instagram : `https://instagram.com/${social.instagram.replace('@', '')}`, label: 'Instagram' });
-    if (social.youtube) links.push({ icon: Youtube, href: social.youtube.startsWith('http') ? social.youtube : `https://youtube.com/${social.youtube}`, label: 'YouTube' });
-    
-    // Fallback if no social links configured
-    if (links.length === 0) {
-      links.push({ icon: Twitter, href: '#', label: 'Twitter' });
-      links.push({ icon: Linkedin, href: '#', label: 'LinkedIn' });
-    }
-    
-    return links;
-  };
+  // Social media links - hardcoded as per requirement
+  const socialLinks = [
+    { icon: Twitter, href: 'https://x.com/nassaqapp', label: 'X (Twitter)' },
+    { icon: Instagram, href: 'https://www.instagram.com/nassaqapp/', label: 'Instagram' },
+    { icon: Linkedin, href: 'https://www.linkedin.com/company/nassaqapp', label: 'LinkedIn' },
+    // TikTok and Snapchat using custom SVG icons or generic icons
+  ];
 
-  const socialLinks = buildSocialLinks();
+  // Custom TikTok icon component
+  const TikTokIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+    </svg>
+  );
+
+  // Custom Snapchat icon component
+  const SnapchatIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301a.603.603 0 0 1 .298-.053c.2 0 .4.059.549.153.26.16.398.42.413.673.008.18-.042.36-.152.51-.18.24-.48.39-.93.51-.15.04-.31.08-.46.11-.12.03-.21.05-.287.075-.18.06-.36.18-.39.36-.01.06 0 .12.03.18.21.36.51.84.899 1.32.73.89 1.53 1.59 2.38 2.1.3.18.57.27.81.33.15.03.24.06.27.06a.633.633 0 0 1 .55.63c-.09.42-.45.66-1.2.78-.45.06-.9.15-1.38.27-.21.06-.33.09-.45.15-.15.09-.27.21-.3.36 0 .03 0 .06-.01.09a1.5 1.5 0 0 0 .12.51c.04.06.04.12.04.18a.61.61 0 0 1-.27.51c-.24.15-.54.24-.87.33l-.21.06c-.3.09-.57.21-.87.33-.09.03-.15.06-.21.09-.45.21-.87.51-.87 1.05 0 .09 0 .21.03.33.03.09.06.15.06.21.03.21-.03.45-.21.6-.27.21-.6.33-.96.33-.21 0-.42-.03-.63-.09-.45-.12-.93-.33-1.35-.51-.15-.06-.27-.12-.39-.15-.45-.18-.87-.27-1.32-.27-.6 0-1.2.15-1.8.45-.27.12-.54.27-.84.45-.33.18-.63.33-.93.45-.39.15-.78.24-1.14.24-.15 0-.27 0-.39-.03a.88.88 0 0 1-.27-.09.603.603 0 0 1-.3-.51c0-.06.02-.12.05-.18.04-.09.07-.18.1-.27.04-.18.06-.36.06-.51 0-.06 0-.09-.01-.12-.03-.15-.15-.27-.3-.36-.12-.06-.24-.09-.45-.15-.48-.12-.93-.21-1.38-.27-.75-.12-1.11-.36-1.2-.78a.633.633 0 0 1 .55-.63c.03 0 .12-.03.27-.06.24-.06.51-.15.81-.33.85-.51 1.65-1.21 2.38-2.1.39-.48.69-.96.899-1.32.03-.06.04-.12.03-.18-.03-.18-.21-.3-.39-.36-.077-.025-.167-.045-.287-.075-.15-.03-.31-.07-.46-.11-.45-.12-.75-.27-.93-.51a.633.633 0 0 1-.152-.51c.015-.253.153-.513.413-.673a.752.752 0 0 1 .549-.153c.101 0 .2.018.298.053.374.181.733.285 1.033.301.198 0 .326-.045.401-.09-.008-.165-.018-.33-.03-.51l-.003-.06c-.104-1.628-.23-3.654.299-4.847 1.583-3.545 4.94-3.821 5.93-3.821z"/>
+    </svg>
+  );
 
   return (
     <footer data-testid="footer" className="bg-brand-navy text-white">
