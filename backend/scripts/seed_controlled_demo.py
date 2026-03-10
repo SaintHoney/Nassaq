@@ -196,7 +196,7 @@ class ControlledSeeder:
         admin = {
             "id": admin_id,
             "email": "admin@nassaq.com",
-            "password": hash_password("Admin@123"),
+            "password_hash": hash_password("Admin@123"),
             "full_name": "مدير المنصة",
             "full_name_en": "Platform Admin",
             "role": "platform_admin",
@@ -312,7 +312,7 @@ class ControlledSeeder:
         principal = {
             "id": principal_id,
             "email": email,
-            "password": hash_password("Principal@123"),
+            "password_hash": hash_password("Principal@123"),
             "full_name": f"مدير {school_config['name']}",
             "full_name_en": f"Principal of {school_config['name_en']}",
             "role": "principal",
@@ -411,7 +411,7 @@ class ControlledSeeder:
                 user = {
                     "id": generate_id(),
                     "email": teacher["email"],
-                    "password": hash_password("Teacher@123"),
+                    "password_hash": hash_password("Teacher@123"),
                     "full_name": full_name,
                     "role": "teacher",
                     "is_active": True,
@@ -547,7 +547,7 @@ class ControlledSeeder:
                 student_user = {
                     "id": generate_id(),
                     "email": f"student{student_count + 1}@{school_config['code'].lower()}.edu.sa",
-                    "password": hash_password("Student@123"),
+                    "password_hash": hash_password("Student@123"),
                     "full_name": student["full_name"],
                     "role": "student",
                     "is_active": True,
