@@ -228,7 +228,7 @@ class StudentManagementEngine:
     async def validate_national_id(self, national_id: str, tenant_id: str) -> Dict[str, Any]:
         """Check if national ID already exists in the system"""
         # Check students
-        existing_student = self.students_collection.find_one({
+        existing_student = await self.students_collection.find_one({
             "national_id": national_id,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
@@ -247,7 +247,7 @@ class StudentManagementEngine:
     
     async def validate_parent_phone(self, phone: str, tenant_id: str) -> Dict[str, Any]:
         """Check if parent phone exists and return parent info if found"""
-        existing_parent = self.parents_collection.find_one({
+        existing_parent = await self.parents_collection.find_one({
             "phone": phone,
             "tenant_id": tenant_id,
             "is_deleted": {"$ne": True}
