@@ -315,7 +315,7 @@ class ControlledSeeder:
             "password_hash": hash_password("Principal@123"),
             "full_name": f"مدير {school_config['name']}",
             "full_name_en": f"Principal of {school_config['name_en']}",
-            "role": "principal",
+            "role": "school_principal",  # Correct role name
             "is_active": True,
             "is_suspended": False,
             "tenant_id": school_id,
