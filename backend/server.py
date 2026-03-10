@@ -9589,6 +9589,10 @@ schedule_management_routes = create_schedule_management_routes(db, get_current_u
 from routes.teacher_attendance_routes import create_teacher_attendance_routes
 teacher_attendance_router = create_teacher_attendance_routes(db, get_current_user, require_roles, UserRole)
 
+# Import and create communication router
+from routes.communication_routes import create_communication_routes
+communication_router = create_communication_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
