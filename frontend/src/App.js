@@ -144,6 +144,10 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route
+        path="/teacher-register"
+        element={<TeacherSelfRegistration />}
+      />
 
       {/* Force Password Change Route */}
       <Route
