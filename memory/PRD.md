@@ -1119,22 +1119,46 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 
 ## 📋 Next Priority Tasks
 
-### P0 - إعادة هيكلة server.py:
-- [ ] **تفكيك server.py** إلى بنية نمطية:
-  - `/routes` - مسارات API
-  - `/models` - نماذج البيانات (Pydantic)
-  - `/services` - منطق الأعمال
+### ✅ P0 - إعادة هيكلة server.py (مكتمل - March 10, 2026):
+- [x] **تفكيك server.py** إلى بنية نمطية:
+  - `/models` - نماذج البيانات (enums.py, user.py, school.py, dashboard.py, academic.py, registration.py, common.py)
+  - `/services` - منطق الأعمال (auth_service.py, database_service.py, audit_service.py)
+  - `/routes` - مسارات API جديدة (auth_routes.py, user_routes.py, school_routes.py, dashboard_routes.py, public_routes.py, teacher_attendance_routes.py, communication_routes.py)
 
-### P0 - إصلاح صفحة إدارة المستخدمين:
-- [ ] **فحص وإصلاح مشاكل إنشاء المستخدم** في Platform Admin
-- [ ] **التأكد من عمل جميع خطوات الـ wizard**
+### ✅ P0 - إضافة APIs جديدة (مكتمل - March 10, 2026):
+- [x] **Teacher Attendance API** - حضور المعلمين:
+  - `GET /api/teacher-attendance?date=YYYY-MM-DD`
+  - `POST /api/teacher-attendance/bulk`
+  - `GET /api/teacher-attendance/report/summary`
+  - `GET /api/teacher-attendance/teacher/{teacher_id}`
+- [x] **Communication API** - مركز التواصل:
+  - `GET /api/communication/stats`
+  - `GET /api/communication/audience`
+  - `GET /api/communication/templates`
+  - `POST /api/communication` (إرسال رسائل)
+  - `GET /api/communication?limit=N` (قائمة الرسائل)
+
+### ✅ صفحات مدير المدرسة المكتملة:
+1. مركز القيادة ✅
+2. الجدول الدراسي ✅
+3. إدارة المعلمين ✅
+4. إدارة الطلاب ✅
+5. إدارة الفصول ✅
+6. إدارة حضور المعلمين ✅ (جديد)
+7. مركز التواصل والإشعارات ✅ (جديد - /principal/communication)
+8. التقارير والتحليلات ✅
+9. رؤى الذكاء الاصطناعي ✅
+10. إعدادات الحساب ✅
+11. إعدادات المدرسة ✅
 
 ### P1 - محرك الجدولة الذكي:
 - [ ] **كشف التعارضات التلقائي** (معلم/فصل/قاعة)
 - [ ] **التوليد الذكي للجدول** باستخدام AI
 
-### P1 - واجهة المعلم:
-- [ ] **تحضير الطلاب داخل الحصة** - واجهة للمعلم لتسجيل حضور الطلاب
+### P1 - لوحات تحكم الأدوار الأخرى:
+- [ ] **لوحة تحكم المعلم** - ربط بـ API حقيقي + حصصي + طلابي
+- [ ] **لوحة تحكم الطالب** - جدولي، درجاتي، حضوري، واجباتي
+- [ ] **لوحة تحكم ولي الأمر** - متابعة الابن، درجات الابن، التواصل مع المعلمين
 
 ### P2 - تحسين أداء النظام:
 - [ ] تقليل زمن تحميل الصفحات
@@ -1148,7 +1172,7 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - [ ] رسائل الترحيب لولي الأمر
 
 ### Future Tasks:
-- [ ] لوحات تحكم الأدوار الأخرى (معلم، طالب، ولي أمر)
-- [ ] مساعد الذكاء الاصطناعي "حكيم"
+- [ ] مساعد الذكاء الاصطناعي "حكيم" (API جاهز، UI تحتاج تطوير)
 - [ ] تصدير التقارير PDF
 - [ ] استيراد جماعي للطلاب (Bulk AI Import)
+- [ ] اختبار التكامل الشامل E2E
