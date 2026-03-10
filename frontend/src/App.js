@@ -418,6 +418,42 @@ function AppRoutes() {
         }
       />
 
+      {/* School Principal Settings & Reports */}
+      <Route
+        path="/principal/settings"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SchoolSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/principal/reports"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SchoolReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/principal/ai-insights"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <AIInsightsPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Account Settings - All authenticated users */}
+      <Route
+        path="/account/settings"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher', 'student', 'parent']}>
+            <AccountSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
