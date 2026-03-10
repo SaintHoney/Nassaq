@@ -152,11 +152,11 @@ export const Sidebar = ({ children }) => {
           },
         ],
       },
-      // 4. Attendance Management
+      // 4. Attendance Management (Teachers Only)
       {
         icon: CalendarCheck,
-        label: isRTL ? 'إدارة الحضور والانصراف' : 'Attendance',
-        href: '/admin/attendance',
+        label: isRTL ? 'إدارة الحضور' : 'Attendance Management',
+        href: '/admin/teacher-attendance',
         roles: ['school_principal', 'school_sub_admin'],
       },
       // 5. Assessments & Grades Management
