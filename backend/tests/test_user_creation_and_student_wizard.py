@@ -120,7 +120,7 @@ class TestUserCreationAPI:
             "password": "TestPass@123",
             "full_name": f"Test User {unique_id}",
             "role": "platform_support_specialist",
-            "phone": "0501234567",
+            "phone": f"059{unique_id[:7]}",
             "region": "riyadh",
             "city": "riyadh",
             "permissions": ["view_tickets", "respond_tickets", "view_users"]
