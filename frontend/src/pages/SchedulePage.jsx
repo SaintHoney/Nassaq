@@ -610,9 +610,9 @@ export const SchedulePage = () => {
                       </th>
                       {displayedDays.map(day => (
                         timeSlots.map((slot, idx) => (
-                          <th key={`${day.key}-${slot.id}`} className="p-2 text-center border-e border-border/20 min-w-[70px]">
-                            <div className="text-xs font-medium">{idx + 1}</div>
-                            <div className="text-[10px] text-muted-foreground">{slot.start_time?.slice(0,5)}</div>
+                          <th key={`${day.key}-${slot.id}`} className="p-1 text-center border-e border-border/20 min-w-[50px] max-w-[60px]">
+                            <div className="text-[10px] font-medium">{idx + 1}</div>
+                            <div className="text-[9px] text-muted-foreground">{slot.start_time?.slice(0,5)}</div>
                           </th>
                         ))
                       ))}
