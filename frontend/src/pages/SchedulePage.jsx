@@ -74,6 +74,7 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
+import { TeacherScheduleGrid } from '../components/schedule/TeacherScheduleGrid';
 // Drag and Drop imports
 import {
   DndContext,
