@@ -43,78 +43,128 @@ export default function ParentDashboard() {
   const fetchParentData = useCallback(async () => {
     setLoading(true);
     try {
-      // Mock children data - in real app, fetch from API
-      const mockChildren = [
-        {
-          id: '1',
-          name: 'أحمد محمد',
-          grade: 'الصف الثالث المتوسط',
-          section: 'شعبة أ',
-          avatar: null,
+      // Get parent ID from user
+      const parentId = user?.parent_id || user?.id;
+      
+      // Fetch parent dashboard data from API
+      const dashboardRes = await api.get(`/parent/dashboard/${parentId}`).catch(() => null);
+      
+      if (dashboardRes?.data) {
+        const data = dashboardRes.data;
+        
+        // Transform children data
+        const transformedChildren = data.children?.map(child => ({
+          id: child.id,
+          name: child.name,
+          grade: child.class_name,
+          section: '',
+          avatar: child.avatar,
           stats: {
-            attendanceRate: 95,
-            averageGrade: 88,
-            absences: 3,
-            lates: 2
+            attendanceRate: child.stats.attendance_rate || 0,
+            averageGrade: child.stats.average_grade || 0,
+            absences: child.stats.absences || 0,
+            lates: child.stats.lates || 0
           },
-          recentGrades: [
-            { subject: 'الرياضيات', grade: 92, date: '2024-03-08' },
-            { subject: 'اللغة العربية', grade: 88, date: '2024-03-07' },
-            { subject: 'العلوم', grade: 85, date: '2024-03-06' },
-          ],
-          behaviourNotes: [
-            { type: 'positive', note: 'مشاركة فعالة في الصف', date: '2024-03-08' },
-            { type: 'positive', note: 'تفوق في اختبار الرياضيات', date: '2024-03-05' },
-          ],
-          schedule: [
-            { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد' },
-            { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة' },
-            { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد' },
-          ]
-        },
-        {
-          id: '2',
-          name: 'سارة محمد',
-          grade: 'الصف الأول الابتدائي',
-          section: 'شعبة ب',
-          avatar: null,
-          stats: {
-            attendanceRate: 98,
-            averageGrade: 92,
-            absences: 1,
-            lates: 0
-          },
-          recentGrades: [
-            { subject: 'الرياضيات', grade: 95, date: '2024-03-08' },
-            { subject: 'اللغة العربية', grade: 90, date: '2024-03-07' },
-          ],
-          behaviourNotes: [
-            { type: 'positive', note: 'طالبة مثالية', date: '2024-03-08' },
-          ],
-          schedule: [
-            { time: '07:30', subject: 'اللغة العربية', teacher: 'أ. نورة' },
-            { time: '08:30', subject: 'الرياضيات', teacher: 'أ. هدى' },
-          ]
+          recentGrades: child.recent_grades?.map(g => ({
+            subject: g.subject,
+            grade: g.grade,
+            date: g.date
+          })) || [],
+          behaviourNotes: child.behaviour_notes?.map(n => ({
+            type: n.type,
+            note: n.note,
+            date: n.date
+          })) || [],
+          schedule: child.today_schedule?.map(s => ({
+            time: s.time,
+            subject: s.subject,
+            teacher: s.teacher
+          })) || []
+        })) || [];
+        
+        setChildren(transformedChildren);
+        if (transformedChildren.length > 0) {
+          setChildData(transformedChildren[selectedChild] || transformedChildren[0]);
         }
-      ];
+        
+        setNotifications(data.notifications?.map(n => ({
+          title: n.title || n.message,
+          time: n.time ? new Date(n.time).toLocaleDateString('ar-SA') : 'مؤخراً',
+          type: n.type || 'info'
+        })) || []);
+      } else {
+        // Fallback to mock data
+        const mockChildren = [
+          {
+            id: '1',
+            name: 'أحمد محمد',
+            grade: 'الصف الثالث المتوسط',
+            section: 'شعبة أ',
+            avatar: null,
+            stats: {
+              attendanceRate: 95,
+              averageGrade: 88,
+              absences: 3,
+              lates: 2
+            },
+            recentGrades: [
+              { subject: 'الرياضيات', grade: 92, date: '2024-03-08' },
+              { subject: 'اللغة العربية', grade: 88, date: '2024-03-07' },
+              { subject: 'العلوم', grade: 85, date: '2024-03-06' },
+            ],
+            behaviourNotes: [
+              { type: 'positive', note: 'مشاركة فعالة في الصف', date: '2024-03-08' },
+              { type: 'positive', note: 'تفوق في اختبار الرياضيات', date: '2024-03-05' },
+            ],
+            schedule: [
+              { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد' },
+              { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة' },
+              { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد' },
+            ]
+          },
+          {
+            id: '2',
+            name: 'سارة محمد',
+            grade: 'الصف الأول الابتدائي',
+            section: 'شعبة ب',
+            avatar: null,
+            stats: {
+              attendanceRate: 98,
+              averageGrade: 92,
+              absences: 1,
+              lates: 0
+            },
+            recentGrades: [
+              { subject: 'الرياضيات', grade: 95, date: '2024-03-08' },
+              { subject: 'اللغة العربية', grade: 90, date: '2024-03-07' },
+            ],
+            behaviourNotes: [
+              { type: 'positive', note: 'طالبة مثالية', date: '2024-03-08' },
+            ],
+            schedule: [
+              { time: '07:30', subject: 'اللغة العربية', teacher: 'أ. نورة' },
+              { time: '08:30', subject: 'الرياضيات', teacher: 'أ. هدى' },
+            ]
+          }
+        ];
 
-      setChildren(mockChildren);
-      setChildData(mockChildren[selectedChild]);
+        setChildren(mockChildren);
+        setChildData(mockChildren[selectedChild]);
 
-      // Fetch notifications
-      const notifRes = await api.get('/notifications?limit=5').catch(() => ({ data: [] }));
-      setNotifications(notifRes.data?.slice?.(0, 5) || [
-        { title: 'اختبار الرياضيات غداً - أحمد', time: 'منذ ساعة', type: 'exam' },
-        { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
-        { title: 'اجتماع أولياء الأمور الأسبوع القادم', time: 'أمس', type: 'meeting' },
-      ]);
+        const notifRes = await api.get('/notifications?limit=5').catch(() => ({ data: [] }));
+        setNotifications(notifRes.data?.slice?.(0, 5) || [
+          { title: 'اختبار الرياضيات غداً - أحمد', time: 'منذ ساعة', type: 'exam' },
+          { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
+          { title: 'اجتماع أولياء الأمور الأسبوع القادم', time: 'أمس', type: 'meeting' },
+        ]);
+      }
 
     } catch (error) {
       console.error('Error fetching parent data:', error);
     } finally {
       setLoading(false);
     }
-  }, [api, selectedChild]);
+  }, [api, selectedChild, user?.id, user?.parent_id]);
 
   useEffect(() => {
     fetchParentData();
