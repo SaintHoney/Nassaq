@@ -812,6 +812,30 @@ export const SchedulePage = () => {
               </div>
 
               <div className="flex gap-3">
+                {/* View Mode Toggle */}
+                <div className="flex rounded-xl border border-border overflow-hidden">
+                  <Button
+                    variant={viewMode === 'teacher' ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`rounded-none ${viewMode === 'teacher' ? 'bg-brand-navy' : ''}`}
+                    onClick={() => setViewMode('teacher')}
+                    data-testid="view-teacher-btn"
+                  >
+                    <User className="h-4 w-4 me-1" />
+                    {isRTL ? 'المعلمين' : 'Teachers'}
+                  </Button>
+                  <Button
+                    variant={viewMode === 'class' ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`rounded-none ${viewMode === 'class' ? 'bg-brand-navy' : ''}`}
+                    onClick={() => setViewMode('class')}
+                    data-testid="view-class-btn"
+                  >
+                    <GraduationCap className="h-4 w-4 me-1" />
+                    {isRTL ? 'الفصول' : 'Classes'}
+                  </Button>
+                </div>
+                
                 {/* Generate Schedule Button */}
                 <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
                   <Button 
