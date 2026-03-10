@@ -8415,6 +8415,7 @@ from routes.student_management_routes import create_student_routes
 from routes.teacher_management_routes import create_teacher_management_routes
 from routes.class_management_routes import create_class_management_routes
 from routes.notification_routes import create_notification_routes
+from routes.schedule_management_routes import create_schedule_management_routes
 
 # Create and include the new routers
 scheduling_router = create_scheduling_router(db, get_current_user, require_roles, UserRole)
@@ -8426,6 +8427,7 @@ student_routes = create_student_routes(db, get_current_user)
 teacher_management_routes = create_teacher_management_routes(db, get_current_user)
 class_management_routes = create_class_management_routes(db, get_current_user)
 notification_routes = create_notification_routes(db, get_current_user)
+schedule_management_routes = create_schedule_management_routes(db, get_current_user)
 
 # Add to API router
 api_router.include_router(scheduling_router)
@@ -8437,6 +8439,7 @@ api_router.include_router(student_routes)
 api_router.include_router(teacher_management_routes)
 api_router.include_router(class_management_routes)
 api_router.include_router(notification_routes)
+api_router.include_router(schedule_management_routes)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
