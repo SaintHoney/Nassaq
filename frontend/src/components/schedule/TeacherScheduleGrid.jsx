@@ -146,7 +146,8 @@ const BreakCell = ({ isRTL }) => {
 const TeacherRow = ({ 
   teacher, 
   sessions, 
-  timeSlots, 
+  timeSlots,
+  daysToShow, // Add this prop
   isRTL, 
   onDragStart, 
   onDragEnd, 
