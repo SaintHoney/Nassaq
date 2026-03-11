@@ -233,15 +233,15 @@ export default function UsersManagement() {
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error(isRTL ? 'فشل في تحميل المستخدمين' : 'Failed to load users');
-      const mockUsers = generateMockUsers();
-      setUsers(mockUsers);
+      // Don't use mock data - show empty state instead
+      setUsers([]);
       setStats({
-        totalUsers: mockUsers.length,
-        totalSchools: 6,
-        teachersInSchools: 3,
-        independentTeachers: 2,
-        platformAdmins: 5,
-        pendingRequests: 3,
+        totalUsers: 0,
+        totalSchools: 0,
+        teachersInSchools: 0,
+        independentTeachers: 0,
+        platformAdmins: 0,
+        pendingRequests: 0,
       });
     } finally {
       setLoading(false);
