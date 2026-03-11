@@ -292,11 +292,11 @@ export default function TeacherHomePage() {
                         {/* Status Badge - Top Right */}
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            {isCurrentLesson ? (
+                            {isFirstLesson && timeStatus?.status !== 'ended' ? (
                               <Badge className="bg-white/20 text-white border-0 animate-pulse">
                                 الحصة الحالية
                               </Badge>
-                            ) : timeStatus?.status === 'soon' || (!timeStatus && index > 0) ? (
+                            ) : !isFirstLesson && timeStatus?.status !== 'ended' ? (
                               <Badge className="bg-white/20 text-white border-0">
                                 الحصة القادمة
                               </Badge>
