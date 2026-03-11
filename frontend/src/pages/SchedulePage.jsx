@@ -201,6 +201,7 @@ export const SchedulePage = () => {
   const [conflicts, setConflicts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [seedingSlots, setSeedingSlots] = useState(false);
   
   // Filters
   const [selectedSchedule, setSelectedSchedule] = useState('');
