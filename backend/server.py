@@ -632,23 +632,20 @@ async def create_platform_user(
     
     await db.users.insert_one(new_user)
     
-    # Log this action in audit
-    audit_log = {
-        "id": str(uuid.uuid4()),
-        "action": "user_created",
-        "action_by": current_user["id"],
-        "action_by_name": current_user.get("full_name", ""),
-        "target_type": "user",
-        "target_id": user_id,
-        "target_name": user_data.full_name,
-        "details": {
+    # Log this action using the new Audit Engine
+    await audit_engine.log_data_change(
+        action=AuditAction.USER_CREATED.value,
+        performed_by=current_user["id"],
+        entity_type="user",
+        entity_id=user_id,
+        tenant_id=current_user.get("tenant_id"),
+        new_values={
             "role": user_data.role,
             "email": user_data.email,
+            "full_name": user_data.full_name,
             "permissions_count": len(user_data.permissions)
-        },
-        "timestamp": now
-    }
-    await db.audit_logs.insert_one(audit_log)
+        }
+    )
     
     return PlatformUserResponse(
         id=user_id,
