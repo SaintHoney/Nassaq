@@ -230,32 +230,24 @@ export default function UserDetailsPage() {
         setUserPermissions(response.data.permissions || []);
       } catch (error) {
         console.error('Error fetching user:', error);
-        // Use mock data if API fails
-        const mockUser = {
+        // Show error instead of using mock data
+        toast.error('فشل في تحميل بيانات المستخدم');
+        // Use the userId to construct a basic user object with loading indicator
+        setUser({
           id: userId,
-          full_name_ar: 'أحمد محمد العتيبي',
-          full_name_en: 'Ahmed Mohammed Al-Otaibi',
-          full_name: 'أحمد محمد العتيبي',
-          email: 'ahmed.otaibi@nassaq.com',
-          phone: '0501234567',
-          role: 'platform_operations_manager',
-          region: 'الرياض',
-          city: 'الرياض',
-          educational_department: 'إدارة التعليم بالرياض',
-          school_name: null,
+          full_name: 'جاري التحميل...',
+          full_name_ar: 'جاري التحميل...',
+          full_name_en: 'Loading...',
+          email: 'loading@nassaq.com',
+          phone: '',
+          role: 'platform_admin',
           is_active: true,
-          ai_enabled: true,
-          must_change_password: false,
-          permissions: ['view_dashboard', 'manage_schools', 'manage_users', 'view_reports', 'manage_settings'],
-          last_login: '2026-03-09T10:30:00Z',
-          created_at: '2026-01-15T08:00:00Z',
-          created_by: 'f2553c53-b779-40df-a228-760264e19ff1',
-          created_by_name: 'الأستاذ محمد أحمد زلط',
-          avatar_url: null,
-        };
-        setUser(mockUser);
-        setEditForm(mockUser);
-        setUserPermissions(mockUser.permissions);
+          ai_enabled: false,
+          permissions: [],
+          last_login: null,
+          created_at: new Date().toISOString(),
+          _loadError: true, // Flag to indicate data didn't load
+        });
       } finally {
         setLoading(false);
       }
