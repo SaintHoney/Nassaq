@@ -2001,7 +2001,7 @@ export default function SchoolSettingsPage() {
   };
 
   const handleSavePeriodsPerDay = async (periods) => {
-    await api.put(`/api/school/settings/periods-per-day?periods=${periods}`);
+    await api.put(`/school/settings/periods-per-day?periods=${periods}`);
     setSettings(prev => ({ ...prev, periodsPerDay: periods }));
   };
 
@@ -2039,7 +2039,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteSubject = async (subject) => {
     try {
-      await api.delete(`/api/school/settings/subjects/${subject.id}`);
+      await api.delete(`/school/settings/subjects/${subject.id}`);
       setSubjects(prev => prev.filter(s => s.id !== subject.id));
       toast.success(isRTL ? 'تم حذف المادة' : 'Subject deleted');
     } catch (error) {
@@ -2065,7 +2065,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteHoliday = async (holidayId) => {
     try {
-      await api.delete(`/api/school/settings/holidays/${holidayId}`);
+      await api.delete(`/school/settings/holidays/${holidayId}`);
       setSettings(prev => ({
         ...prev,
         officialHolidays: prev.officialHolidays.filter(h => h.id !== holidayId)
@@ -2106,7 +2106,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteActivityDay = async (activityId) => {
     try {
-      await api.delete(`/api/school/settings/activity-days/${activityId}`);
+      await api.delete(`/school/settings/activity-days/${activityId}`);
       setSettings(prev => ({
         ...prev,
         activityDays: prev.activityDays.filter(a => a.id !== activityId)
@@ -2134,7 +2134,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteStage = async (stageId) => {
     try {
-      await api.delete(`/api/school/settings/stages/${stageId}`);
+      await api.delete(`/school/settings/stages/${stageId}`);
       setSettings(prev => ({
         ...prev,
         educationalStages: prev.educationalStages.filter(s => s.id !== stageId)
@@ -2158,7 +2158,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteGrade = async (gradeId) => {
     try {
-      await api.delete(`/api/school/settings/grades/${gradeId}`);
+      await api.delete(`/school/settings/grades/${gradeId}`);
       setGrades(prev => prev.filter(g => g.id !== gradeId));
       toast.success(isRTL ? 'تم حذف الصف' : 'Grade deleted');
     } catch (error) {
@@ -2182,7 +2182,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteSection = async (sectionId) => {
     try {
-      await api.delete(`/api/school/settings/sections/${sectionId}`);
+      await api.delete(`/school/settings/sections/${sectionId}`);
       setSettings(prev => ({
         ...prev,
         sections: prev.sections.filter(s => s.id !== sectionId)
@@ -2209,7 +2209,7 @@ export default function SchoolSettingsPage() {
 
   const handleDeleteTerm = async (termId) => {
     try {
-      await api.delete(`/api/school/settings/academic-terms/${termId}`);
+      await api.delete(`/school/settings/academic-terms/${termId}`);
       setSettings(prev => ({
         ...prev,
         academicTerms: prev.academicTerms.filter(t => t.id !== termId)
