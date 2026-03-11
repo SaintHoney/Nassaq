@@ -999,7 +999,14 @@ export default function TenantsManagement() {
       
       {/* Schools Grid - 2 columns on desktop */}
       <main className="container mx-auto px-4 lg:px-6 py-4 lg:py-6">
-        {filteredSchools.length === 0 ? (
+        {loading ? (
+          <Card className="p-12 text-center">
+            <RefreshCw className="h-16 w-16 mx-auto text-brand-turquoise animate-spin mb-4" />
+            <h3 className="font-bold text-lg mb-2">
+              {isRTL ? 'جاري تحميل المدارس...' : 'Loading schools...'}
+            </h3>
+          </Card>
+        ) : filteredSchools.length === 0 ? (
           <Card className="p-12 text-center">
             <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
             <h3 className="font-bold text-lg mb-2">{t.noResults}</h3>
