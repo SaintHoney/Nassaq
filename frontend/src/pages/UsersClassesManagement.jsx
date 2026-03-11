@@ -698,15 +698,13 @@ export default function UsersClassesManagement() {
           isRTL={isRTL}
         />
         
-        {showClassWizard && (
-          <CreateClassWizard 
-            open={showClassWizard}
-            onOpenChange={setShowClassWizard}
-            onSuccess={handleClassCreated}
-            api={api}
-            isRTL={isRTL}
-          />
-        )}
+        <CreateClassWizard 
+          open={showClassWizard}
+          onOpenChange={setShowClassWizard}
+          onSuccess={handleClassCreated}
+          api={api}
+          isRTL={isRTL}
+        />
       </div>
       <HakimAssistant />
     </Sidebar>
