@@ -251,15 +251,19 @@ export const SchedulePage = () => {
 
   // Seed default time slots
   const seedDefaultTimeSlots = async () => {
-    if (!schoolId) return;
+    if (!schoolId) {
+      toast.error(isRTL ? 'لم يتم تحديد المدرسة' : 'School not identified');
+      return;
+    }
     
     setSeedingSlots(true);
     try {
-      const response = await api.post(`/api/seed/time-slots/${schoolId}`);
+      const response = await api.post(`/seed/time-slots/${schoolId}`);
       toast.success(response.data.message || (isRTL ? 'تم إنشاء الفترات الزمنية' : 'Time slots created'));
       fetchData();
     } catch (error) {
-      toast.error(isRTL ? 'فشل إنشاء الفترات الزمنية' : 'Failed to create time slots');
+      console.error('Seed error:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل إنشاء الفترات الزمنية' : 'Failed to create time slots'));
     } finally {
       setSeedingSlots(false);
     }
