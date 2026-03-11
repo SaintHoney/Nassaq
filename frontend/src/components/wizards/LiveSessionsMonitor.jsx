@@ -79,8 +79,14 @@ export const LiveSessionsMonitor = ({ open, onClose, onOpenChange }) => {
     return currentTime >= startMinutes && currentTime <= endMinutes;
   };
 
+  // Handle close - support both onClose and onOpenChange
+  const handleClose = () => {
+    if (onOpenChange) onOpenChange(false);
+    else if (onClose) onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="live-sessions-monitor">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between font-cairo text-xl">
