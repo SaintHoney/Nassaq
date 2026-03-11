@@ -503,12 +503,8 @@ export default function UsersClassesManagement() {
             
             <div className="flex-1" />
             
-            <Button variant="outline" size="icon" onClick={handleRefresh} className="rounded-xl">
+            <Button variant="outline" size="icon" onClick={handleRefresh} className="rounded-xl" title={labels.refresh}>
               <RefreshCw className="h-4 w-4" />
-            </Button>
-            
-            <Button variant="outline" size="icon" className="rounded-xl">
-              <Download className="h-4 w-4" />
             </Button>
           </div>
           
