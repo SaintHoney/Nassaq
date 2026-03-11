@@ -841,7 +841,26 @@ ${API_URL}/login
                         <History className="h-5 w-5 text-brand-navy" />
                         سجل النشاط
                       </h3>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // تصدير سجل النشاط كملف CSV
+                          const csvContent = [
+                            'النشاط,الجهاز,العنوان IP,التاريخ',
+                            ...SAMPLE_ACTIVITIES.map(a => 
+                              `"${a.action}","${a.device}","${a.ip}","${a.timestamp}"`
+                            )
+                          ].join('\n');
+                          
+                          const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                          const link = document.createElement('a');
+                          link.href = URL.createObjectURL(blob);
+                          link.download = `activity_log_${user?.full_name || 'user'}_${new Date().toISOString().split('T')[0]}.csv`;
+                          link.click();
+                          toast.success('تم تصدير سجل النشاط بنجاح');
+                        }}
+                      >
                         <Download className="h-4 w-4 ms-2" />
                         تصدير
                       </Button>
