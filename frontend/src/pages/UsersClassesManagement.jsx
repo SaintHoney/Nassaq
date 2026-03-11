@@ -689,12 +689,17 @@ export default function UsersClassesManagement() {
           open={showStudentWizard}
           onOpenChange={setShowStudentWizard}
           onSuccess={handleStudentCreated}
+          api={api}
+          isRTL={isRTL}
+          classes={classes}
         />
         
         <AddTeacherWizard 
           open={showTeacherWizard}
           onOpenChange={setShowTeacherWizard}
           onSuccess={handleTeacherCreated}
+          api={api}
+          isRTL={isRTL}
         />
         
         {showClassWizard && (
@@ -702,6 +707,8 @@ export default function UsersClassesManagement() {
             open={showClassWizard}
             onOpenChange={setShowClassWizard}
             onSuccess={handleClassCreated}
+            api={api}
+            isRTL={isRTL}
           />
         )}
       </div>
