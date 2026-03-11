@@ -264,76 +264,72 @@ export default function TeacherHomePage() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {todayLessons.map((lesson) => {
+                {todayLessons.map((lesson, index) => {
                   const timeStatus = getTimeUntilLesson(lesson.time);
-                  const cardStyle = getLessonCardStyle(timeStatus);
+                  const isCurrentLesson = index === 0 && (timeStatus?.status === 'ongoing' || timeStatus?.status === 'ready');
+                  const cardStyle = getLessonCardStyle(timeStatus, index === 0);
+                  const isWhiteText = timeStatus?.status !== 'ended';
                   
                   return (
                     <Card 
                       key={lesson.id}
-                      className={`transition-all duration-500 border-2 ${cardStyle}`}
+                      className={`transition-all duration-500 overflow-hidden rounded-2xl ${cardStyle}`}
                       data-testid={`lesson-card-${lesson.id}`}
                     >
-                      <CardContent className="p-4">
-                        {/* Lesson Header */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h3 className="font-cairo font-bold text-lg text-brand-navy">
-                              {lesson.subject}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {lesson.className}
-                            </p>
+                      <CardContent className="p-5">
+                        {/* Status Badge - Top Right */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            {isCurrentLesson ? (
+                              <Badge className="bg-white/20 text-white border-0 animate-pulse">
+                                الحصة الحالية
+                              </Badge>
+                            ) : timeStatus?.status === 'soon' || (!timeStatus && index > 0) ? (
+                              <Badge className="bg-white/20 text-white border-0">
+                                الحصة القادمة
+                              </Badge>
+                            ) : null}
                           </div>
-                          <div className="text-left">
-                            <div className="text-lg font-mono font-bold text-brand-navy">
-                              {lesson.time}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              الحصة {lesson.period}
-                            </div>
+                          <div className={`flex items-center gap-1 ${isWhiteText ? 'text-white' : 'text-muted-foreground'}`}>
+                            <Clock className="h-4 w-4" />
+                            <span className="font-mono font-bold">{lesson.time}</span>
                           </div>
                         </div>
 
-                        {/* Status Badge */}
-                        {timeStatus && (
-                          <div className="mb-3">
-                            {timeStatus.status === 'ongoing' && (
-                              <Badge className="bg-green-500 text-white animate-pulse">
-                                الحصة جارية الآن
-                              </Badge>
-                            )}
-                            {timeStatus.status === 'ready' && (
-                              <Badge className="bg-green-400 text-white">
-                                جاهزة للبدء
-                              </Badge>
-                            )}
-                            {timeStatus.status === 'soon' && (
-                              <Badge variant="outline" className="border-amber-400 text-amber-600">
-                                تبدأ بعد {timeStatus.minutes} دقيقة
-                              </Badge>
-                            )}
-                            {timeStatus.status === 'ended' && (
-                              <Badge variant="secondary">
-                                انتهت
-                              </Badge>
-                            )}
-                          </div>
-                        )}
+                        {/* Lesson Info */}
+                        <div className="text-right mb-4">
+                          <h3 className={`font-cairo font-bold text-2xl ${isWhiteText ? 'text-white' : 'text-brand-navy'}`}>
+                            {lesson.subject}
+                          </h3>
+                          <p className={`text-sm ${isWhiteText ? 'text-white/80' : 'text-muted-foreground'}`}>
+                            {lesson.className} • الحصة {lesson.period}
+                          </p>
+                        </div>
 
                         {/* Start Class Button - زر ابدأ الحصة */}
                         {timeStatus?.status !== 'ended' && (
                           <Button 
-                            className={`w-full h-14 text-lg font-bold transition-all ${
-                              timeStatus?.status === 'ongoing' || timeStatus?.status === 'ready'
-                                ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-200'
-                                : 'bg-brand-navy hover:bg-brand-navy/90 text-white'
+                            className={`w-full h-14 text-lg font-bold rounded-xl transition-all ${
+                              isWhiteText
+                                ? 'bg-white text-brand-navy hover:bg-white/90 shadow-lg'
+                                : 'bg-brand-navy text-white hover:bg-brand-navy/90'
                             }`}
                             onClick={() => handleStartClass(lesson)}
                             data-testid={`start-class-btn-${lesson.id}`}
                           >
                             <Play className="h-6 w-6 me-2" />
                             ابدأ الحصة
+                          </Button>
+                        )}
+                        
+                        {/* Manage Lesson Button for upcoming */}
+                        {!isCurrentLesson && timeStatus?.status !== 'ended' && index > 0 && (
+                          <Button 
+                            variant="ghost"
+                            className={`w-full mt-2 ${isWhiteText ? 'text-white/80 hover:text-white hover:bg-white/10' : ''}`}
+                            onClick={() => navigate('/teacher/schedule')}
+                          >
+                            إدارة الدرس
                           </Button>
                         )}
                       </CardContent>
