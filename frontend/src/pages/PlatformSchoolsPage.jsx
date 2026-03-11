@@ -505,7 +505,7 @@ export const PlatformSchoolsPage = () => {
                       <TableHead>{isRTL ? 'الحالة' : 'Status'}</TableHead>
                       <TableHead>{isRTL ? 'الطلاب' : 'Students'}</TableHead>
                       <TableHead>{isRTL ? 'المعلمين' : 'Teachers'}</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead>{isRTL ? 'الإجراءات' : 'Actions'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
