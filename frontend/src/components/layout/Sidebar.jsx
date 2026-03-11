@@ -136,8 +136,8 @@ export const Sidebar = ({ children }) => {
       // 2. Schedule Management
       {
         icon: Calendar,
-        label: isRTL ? 'الجدول المدرسي' : 'Schedule',
-        href: '/admin/schedule',
+        label: isRTL ? 'الجدول المدرسي' : 'School Schedule',
+        href: '/school/schedule',
         roles: ['school_principal', 'school_sub_admin'],
       },
       // 3. Users & Classes Management
