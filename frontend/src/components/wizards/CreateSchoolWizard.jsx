@@ -792,7 +792,7 @@ ${createdSchool?.tenant_code}
             </ScrollArea>
             
             {/* Footer Actions */}
-            <div className="p-6 pt-0 border-t mt-4">
+            <div className="p-4 border-t bg-background flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button variant="outline" onClick={handleClose} data-testid="cancel-btn">
