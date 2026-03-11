@@ -72,7 +72,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 export const PlatformSchoolsPage = () => {
-  const { user, api } = useAuth();
+  const navigate = useNavigate();
+  const { user, api, enterSchoolContext } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
