@@ -12527,9 +12527,12 @@ async def delete_exception_day(
     return {"message": "تم حذف يوم الاستثناء"}
 
 
+class UpdatePeriodsRequest(BaseModel):
+    periods_per_day: int
+
 @api_router.put("/school/settings/periods-per-day")
 async def update_periods_per_day(
-    periods: int,
+    data: UpdatePeriodsRequest,
     current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
     x_school_context: str = Header(default=None, alias="X-School-Context")
 ):
@@ -12539,6 +12542,7 @@ async def update_periods_per_day(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
+    periods = data.periods_per_day
     if periods < 1 or periods > 12:
         raise HTTPException(status_code=400, detail="عدد الحصص يجب أن يكون بين 1 و 12")
     
