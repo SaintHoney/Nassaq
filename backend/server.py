@@ -11772,3 +11772,213 @@ async def export_audit_report(
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+# ============== SYSTEM RULES APIs ==============
+@api_router.get("/system/rules")
+async def get_system_rules(
+    category: str = None,
+    status: str = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Get all system rules"""
+    query = {}
+    if category:
+        query["category"] = category
+    if status:
+        query["status"] = status
+    
+    rules = await db.system_rules.find(query, {"_id": 0}).to_list(100)
+    
+    # If no rules exist, return default rules
+    if len(rules) == 0:
+        rules = [
+            {
+                "id": "rule_1",
+                "name_ar": "الحد الأقصى للغياب",
+                "name_en": "Maximum Absence Days",
+                "description_ar": "عدد أيام الغياب المسموحة قبل الإنذار",
+                "description_en": "Allowed absence days before warning",
+                "category": "attendance",
+                "type": "numeric",
+                "value": 15,
+                "unit": "يوم",
+                "status": "active",
+                "priority": "high",
+                "applies_to": "all",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "id": "rule_2",
+                "name_ar": "نسبة النجاح الدنيا",
+                "name_en": "Minimum Pass Percentage",
+                "description_ar": "الحد الأدنى للنجاح في المواد",
+                "description_en": "Minimum percentage to pass subjects",
+                "category": "grading",
+                "type": "percentage",
+                "value": 50,
+                "unit": "%",
+                "status": "active",
+                "priority": "high",
+                "applies_to": "all",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "id": "rule_3",
+                "name_ar": "نصاب المعلم الأسبوعي",
+                "name_en": "Teacher Weekly Load",
+                "description_ar": "الحد الأقصى لحصص المعلم أسبوعياً",
+                "description_en": "Maximum weekly classes for teachers",
+                "category": "scheduling",
+                "type": "numeric",
+                "value": 24,
+                "unit": "حصة",
+                "status": "active",
+                "priority": "medium",
+                "applies_to": "all",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "id": "rule_4",
+                "name_ar": "الحد الأقصى للطلاب في الفصل",
+                "name_en": "Maximum Students per Class",
+                "description_ar": "العدد الأقصى للطلاب في الفصل الواحد",
+                "description_en": "Maximum number of students per class",
+                "category": "tenant",
+                "type": "numeric",
+                "value": 35,
+                "unit": "طالب",
+                "status": "active",
+                "priority": "high",
+                "applies_to": "all",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "id": "rule_5",
+                "name_ar": "طول كلمة المرور الأدنى",
+                "name_en": "Minimum Password Length",
+                "description_ar": "الحد الأدنى لطول كلمة المرور",
+                "description_en": "Minimum password length required",
+                "category": "security",
+                "type": "numeric",
+                "value": 8,
+                "unit": "حرف",
+                "status": "active",
+                "priority": "high",
+                "applies_to": "all",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        ]
+        # Insert default rules into database
+        for rule in rules:
+            await db.system_rules.update_one(
+                {"id": rule["id"]},
+                {"$set": rule},
+                upsert=True
+            )
+    
+    return {"rules": rules, "count": len(rules)}
+
+@api_router.post("/system/rules")
+async def create_system_rule(
+    rule_data: dict,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Create a new system rule"""
+    rule_id = f"rule_{uuid.uuid4().hex[:8]}"
+    
+    new_rule = {
+        "id": rule_id,
+        "name_ar": rule_data.get("name_ar"),
+        "name_en": rule_data.get("name_en"),
+        "description_ar": rule_data.get("description_ar"),
+        "description_en": rule_data.get("description_en"),
+        "category": rule_data.get("category", "general"),
+        "type": rule_data.get("type", "text"),
+        "value": rule_data.get("value"),
+        "unit": rule_data.get("unit", ""),
+        "status": rule_data.get("status", "draft"),
+        "priority": rule_data.get("priority", "medium"),
+        "applies_to": rule_data.get("applies_to", "all"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"],
+    }
+    
+    await db.system_rules.insert_one(new_rule)
+    
+    # Log audit
+    await log_audit(
+        action="create_system_rule",
+        performed_by=current_user["id"],
+        entity_type="system_rule",
+        entity_id=rule_id,
+        details={"rule_name": new_rule.get("name_ar")}
+    )
+    
+    return {"success": True, "rule": {k: v for k, v in new_rule.items() if k != "_id"}}
+
+@api_router.put("/system/rules/{rule_id}")
+async def update_system_rule(
+    rule_id: str,
+    rule_data: dict,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Update a system rule"""
+    existing = await db.system_rules.find_one({"id": rule_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="القاعدة غير موجودة")
+    
+    update_data = {
+        "name_ar": rule_data.get("name_ar", existing.get("name_ar")),
+        "name_en": rule_data.get("name_en", existing.get("name_en")),
+        "description_ar": rule_data.get("description_ar", existing.get("description_ar")),
+        "description_en": rule_data.get("description_en", existing.get("description_en")),
+        "category": rule_data.get("category", existing.get("category")),
+        "type": rule_data.get("type", existing.get("type")),
+        "value": rule_data.get("value", existing.get("value")),
+        "unit": rule_data.get("unit", existing.get("unit")),
+        "status": rule_data.get("status", existing.get("status")),
+        "priority": rule_data.get("priority", existing.get("priority")),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"],
+    }
+    
+    await db.system_rules.update_one({"id": rule_id}, {"$set": update_data})
+    
+    # Log audit
+    await log_audit(
+        action="update_system_rule",
+        performed_by=current_user["id"],
+        entity_type="system_rule",
+        entity_id=rule_id,
+        details={"changes": list(rule_data.keys())}
+    )
+    
+    return {"success": True, "message": "تم تحديث القاعدة بنجاح"}
+
+@api_router.delete("/system/rules/{rule_id}")
+async def delete_system_rule(
+    rule_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Delete a system rule"""
+    result = await db.system_rules.delete_one({"id": rule_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="القاعدة غير موجودة")
+    
+    # Log audit
+    await log_audit(
+        action="delete_system_rule",
+        performed_by=current_user["id"],
+        entity_type="system_rule",
+        entity_id=rule_id
+    )
+    
+    return {"success": True, "message": "تم حذف القاعدة بنجاح"}
