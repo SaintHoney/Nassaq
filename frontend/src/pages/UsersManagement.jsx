@@ -72,10 +72,11 @@ const ACCOUNT_STATUSES = [
 
 // Teacher Request Status
 const REQUEST_STATUSES = [
-  { id: 'pending', name: 'قيد المراجعة', color: 'bg-yellow-500' },
-  { id: 'approved', name: 'موافق عليه', color: 'bg-green-500' },
-  { id: 'rejected', name: 'مرفوض', color: 'bg-red-500' },
-  { id: 'info_required', name: 'يحتاج معلومات', color: 'bg-blue-500' },
+  { id: 'all', name: 'جميع الطلبات', name_en: 'All Requests', color: '' },
+  { id: 'approved', name: 'المعتمدين', name_en: 'Approved', color: 'bg-green-500' },
+  { id: 'pending', name: 'قيد الاعتماد', name_en: 'Pending Review', color: 'bg-yellow-500' },
+  { id: 'info_required', name: 'بانتظار معلومات', name_en: 'Info Required', color: 'bg-blue-500' },
+  { id: 'rejected', name: 'المرفوضين', name_en: 'Rejected', color: 'bg-red-500' },
 ];
 
 export default function UsersManagement() {
