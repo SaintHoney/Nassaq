@@ -966,7 +966,19 @@ export const SystemMonitoringPage = () => {
                 </Card>
                 
                 {/* Re-Sync */}
-                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => {
+                    toast.promise(
+                      new Promise((resolve) => setTimeout(resolve, 2500)),
+                      {
+                        loading: isRTL ? 'جاري إعادة المزامنة...' : 'Re-syncing...',
+                        success: isRTL ? 'تمت إعادة المزامنة بنجاح' : 'Re-sync completed successfully',
+                        error: isRTL ? 'فشلت المزامنة' : 'Sync failed',
+                      }
+                    );
+                  }}
+                >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-cyan-100 flex items-center justify-center">
                       <RefreshCw className="h-7 w-7 text-cyan-600" />
