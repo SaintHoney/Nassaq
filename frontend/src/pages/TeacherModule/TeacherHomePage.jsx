@@ -1,0 +1,373 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Card, CardContent } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { toast } from 'sonner';
+import {
+  Users, BookOpen, Calendar, GraduationCap, Clock,
+  Play, ChevronLeft, RefreshCw, Loader2
+} from 'lucide-react';
+import { HakimAssistant } from '../../components/hakim/HakimAssistant';
+
+// Get current Hijri date
+const getCurrentHijriDate = () => {
+  const today = new Date();
+  try {
+    const hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    return hijriFormatter.format(today);
+  } catch (e) {
+    return today.toLocaleDateString('ar-SA');
+  }
+};
+
+// Get time until lesson
+const getTimeUntilLesson = (lessonTime) => {
+  if (!lessonTime) return null;
+  
+  const now = new Date();
+  const [hours, minutes] = lessonTime.split(':').map(Number);
+  const lessonDate = new Date();
+  lessonDate.setHours(hours, minutes, 0, 0);
+  
+  const diff = lessonDate - now;
+  const diffMinutes = Math.floor(diff / 60000);
+  
+  if (diffMinutes < -45) return { status: 'ended', minutes: Math.abs(diffMinutes) };
+  if (diffMinutes < 0) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
+  if (diffMinutes <= 10) return { status: 'ready', minutes: diffMinutes };
+  if (diffMinutes <= 30) return { status: 'soon', minutes: diffMinutes };
+  return { status: 'upcoming', minutes: diffMinutes };
+};
+
+// Get card color based on time
+const getLessonCardStyle = (timeStatus) => {
+  if (!timeStatus) return 'border-gray-200 bg-white';
+  
+  switch (timeStatus.status) {
+    case 'ongoing':
+      return 'border-green-500 bg-green-50 ring-2 ring-green-300';
+    case 'ready':
+      return 'border-green-400 bg-green-50/70';
+    case 'soon':
+      return 'border-amber-300 bg-amber-50/50';
+    case 'ended':
+      return 'border-gray-300 bg-gray-100 opacity-60';
+    default:
+      return 'border-gray-200 bg-white';
+  }
+};
+
+export default function TeacherHomePage() {
+  const { user, api, isRTL } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [teacherInfo, setTeacherInfo] = useState(null);
+  const [todayLessons, setTodayLessons] = useState([]);
+  const [stats, setStats] = useState({
+    classesCount: 0,
+    studentsCount: 0,
+    stage: ''
+  });
+
+  const teacherId = user?.teacher_id || user?.id;
+
+  const fetchTeacherData = useCallback(async () => {
+    if (!teacherId) return;
+    
+    setLoading(true);
+    try {
+      // Fetch teacher dashboard data
+      const dashboardRes = await api.get(`/teacher/dashboard/${teacherId}`).catch(() => null);
+      
+      if (dashboardRes?.data) {
+        const data = dashboardRes.data;
+        
+        setTeacherInfo({
+          name: data.teacher?.full_name || user?.full_name || 'معلم',
+          school: data.school_name || 'المدرسة',
+          stage: data.stage || 'المرحلة الابتدائية'
+        });
+        
+        setStats({
+          classesCount: data.stats?.my_classes || 0,
+          studentsCount: data.stats?.my_students || 0,
+          stage: data.stage || 'الابتدائية'
+        });
+        
+        // Transform today's schedule to lessons
+        const lessons = (data.today_schedule || []).map((lesson, idx) => ({
+          id: lesson.session_id || lesson.id || `lesson-${idx}`,
+          schedule_session_id: lesson.schedule_session_id || lesson.id,
+          subject: lesson.subject || lesson.subject_name || 'مادة',
+          className: lesson.class_name || 'فصل',
+          classId: lesson.class_id,
+          subjectId: lesson.subject_id,
+          time: lesson.time || lesson.start_time || `${8 + idx}:00`,
+          endTime: lesson.end_time || `${9 + idx}:00`,
+          period: lesson.period || lesson.slot_number || idx + 1
+        }));
+        
+        setTodayLessons(lessons);
+      } else {
+        // Set defaults
+        setTeacherInfo({
+          name: user?.full_name || 'معلم',
+          school: 'المدرسة',
+          stage: 'المرحلة'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching teacher data:', error);
+      toast.error('خطأ في تحميل البيانات');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [api, teacherId, user]);
+
+  useEffect(() => {
+    fetchTeacherData();
+    
+    // Refresh every minute to update lesson status
+    const interval = setInterval(fetchTeacherData, 60000);
+    return () => clearInterval(interval);
+  }, [fetchTeacherData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchTeacherData();
+  };
+
+  const handleStartClass = (lesson) => {
+    // Navigate to session page with lesson info
+    navigate('/teacher/session/start', { 
+      state: { 
+        lesson,
+        schedule_session_id: lesson.schedule_session_id,
+        class_id: lesson.classId,
+        subject_id: lesson.subjectId
+      } 
+    });
+  };
+
+  return (
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Pull to refresh indicator */}
+        {refreshing && (
+          <div className="fixed top-0 left-0 right-0 z-50 flex justify-center py-2 bg-brand-turquoise/10">
+            <Loader2 className="h-5 w-5 animate-spin text-brand-turquoise" />
+          </div>
+        )}
+
+        <div className="p-4 space-y-4 max-w-lg mx-auto">
+          
+          {/* Teacher Info Card - بطاقة معلومات المعلم */}
+          <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/90 text-white overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-14 w-14 border-2 border-white/30">
+                    <AvatarImage src={user?.avatar_url} />
+                    <AvatarFallback className="bg-brand-turquoise text-white text-lg font-bold">
+                      {teacherInfo?.name?.charAt(0) || 'م'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h1 className="font-cairo text-lg font-bold">
+                      الأستاذ {teacherInfo?.name}
+                    </h1>
+                    <p className="text-white/80 text-sm">
+                      {teacherInfo?.school}
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                >
+                  <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+
+              {/* Date */}
+              <div className="text-center py-2 border-t border-white/20">
+                <p className="font-cairo text-white/90">
+                  {getCurrentHijriDate()}
+                </p>
+              </div>
+
+              {/* Quick Stats - مؤشرات سريعة */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur">
+                  <BookOpen className="h-6 w-6 mx-auto mb-1 text-brand-turquoise" />
+                  <div className="text-xl font-bold">{loading ? '-' : stats.classesCount}</div>
+                  <div className="text-xs text-white/70">عدد الفصول</div>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur">
+                  <Users className="h-6 w-6 mx-auto mb-1 text-brand-turquoise" />
+                  <div className="text-xl font-bold">{loading ? '-' : stats.studentsCount}</div>
+                  <div className="text-xs text-white/70">عدد الطلاب</div>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur">
+                  <GraduationCap className="h-6 w-6 mx-auto mb-1 text-brand-turquoise" />
+                  <div className="text-sm font-bold mt-1">{stats.stage || 'الابتدائية'}</div>
+                  <div className="text-xs text-white/70">المرحلة</div>
+                </div>
+              </div>
+
+              {/* View Schedule Button - زر عرض الجدول */}
+              <Button 
+                className="w-full mt-4 bg-brand-turquoise hover:bg-brand-turquoise/90 text-white"
+                onClick={() => navigate('/teacher/schedule')}
+              >
+                <Calendar className="h-4 w-4 me-2" />
+                عرض الجدول
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Today's Lessons - حصص اليوم */}
+          <div>
+            <h2 className="font-cairo font-bold text-lg text-brand-navy mb-3 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-brand-turquoise" />
+              حصص اليوم
+              {todayLessons.length > 0 && (
+                <Badge variant="secondary" className="mr-2">
+                  {todayLessons.length}
+                </Badge>
+              )}
+            </h2>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-brand-turquoise" />
+              </div>
+            ) : todayLessons.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="text-center py-12">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-muted-foreground">لا توجد حصص اليوم</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {todayLessons.map((lesson) => {
+                  const timeStatus = getTimeUntilLesson(lesson.time);
+                  const cardStyle = getLessonCardStyle(timeStatus);
+                  
+                  return (
+                    <Card 
+                      key={lesson.id}
+                      className={`transition-all duration-500 border-2 ${cardStyle}`}
+                      data-testid={`lesson-card-${lesson.id}`}
+                    >
+                      <CardContent className="p-4">
+                        {/* Lesson Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="font-cairo font-bold text-lg text-brand-navy">
+                              {lesson.subject}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {lesson.className}
+                            </p>
+                          </div>
+                          <div className="text-left">
+                            <div className="text-lg font-mono font-bold text-brand-navy">
+                              {lesson.time}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              الحصة {lesson.period}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        {timeStatus && (
+                          <div className="mb-3">
+                            {timeStatus.status === 'ongoing' && (
+                              <Badge className="bg-green-500 text-white animate-pulse">
+                                الحصة جارية الآن
+                              </Badge>
+                            )}
+                            {timeStatus.status === 'ready' && (
+                              <Badge className="bg-green-400 text-white">
+                                جاهزة للبدء
+                              </Badge>
+                            )}
+                            {timeStatus.status === 'soon' && (
+                              <Badge variant="outline" className="border-amber-400 text-amber-600">
+                                تبدأ بعد {timeStatus.minutes} دقيقة
+                              </Badge>
+                            )}
+                            {timeStatus.status === 'ended' && (
+                              <Badge variant="secondary">
+                                انتهت
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Start Class Button - زر ابدأ الحصة */}
+                        {timeStatus?.status !== 'ended' && (
+                          <Button 
+                            className={`w-full h-14 text-lg font-bold transition-all ${
+                              timeStatus?.status === 'ongoing' || timeStatus?.status === 'ready'
+                                ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-200'
+                                : 'bg-brand-navy hover:bg-brand-navy/90 text-white'
+                            }`}
+                            onClick={() => handleStartClass(lesson)}
+                            data-testid={`start-class-btn-${lesson.id}`}
+                          >
+                            <Play className="h-6 w-6 me-2" />
+                            ابدأ الحصة
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Navigation */}
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            <Button
+              variant="outline"
+              className="h-16 flex-col gap-1 border-2"
+              onClick={() => navigate('/teacher/classes')}
+            >
+              <BookOpen className="h-5 w-5 text-brand-navy" />
+              <span className="text-sm">فصولي</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-16 flex-col gap-1 border-2"
+              onClick={() => navigate('/teacher/students')}
+            >
+              <Users className="h-5 w-5 text-brand-navy" />
+              <span className="text-sm">طلابي</span>
+            </Button>
+          </div>
+
+        </div>
+      </div>
+      <HakimAssistant />
+    </Sidebar>
+  );
+}
