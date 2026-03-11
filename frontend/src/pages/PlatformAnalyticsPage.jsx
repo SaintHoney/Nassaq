@@ -574,13 +574,31 @@ export const PlatformAnalyticsPage = () => {
     setShowExportDialog(false);
   };
   
-  // Download AI summary
+  // Download AI summary - تنزيل حقيقي لملخص AI
   const handleDownloadAISummary = () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success(isRTL ? 'تم تحميل ملخص AI' : 'AI Summary downloaded');
-    }, 1500);
+    
+    const aiSummary = {
+      generated_at: new Date().toISOString(),
+      insights: AI_INSIGHTS,
+      recommendations: [
+        isRTL ? 'تحسين نسب الحضور في المدارس ذات المعدل المنخفض' : 'Improve attendance in low-rate schools',
+        isRTL ? 'زيادة عدد المعلمين في المدارس الكبيرة' : 'Increase teachers in large schools',
+        isRTL ? 'تفعيل ميزات AI في المزيد من المدارس' : 'Enable AI features in more schools',
+      ],
+      summary: isRTL 
+        ? 'تحليل شامل للأداء باستخدام الذكاء الاصطناعي'
+        : 'Comprehensive AI-powered performance analysis',
+    };
+    
+    const blob = new Blob([JSON.stringify(aiSummary, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `ai_summary_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    setLoading(false);
+    toast.success(isRTL ? 'تم تحميل ملخص AI' : 'AI Summary downloaded');
   };
   
   // Generate AI report
