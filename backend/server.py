@@ -1429,15 +1429,38 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
         return HakimResponse(response=response, suggestions=suggestions)
         
     except ImportError:
-        return HakimResponse(
-            response="مرحباً! أنا حكيم، مساعدك الذكي في منصة نَسَّق. كيف يمكنني مساعدتك اليوم؟",
-            suggestions=["تعرف على النظام", "إدارة المدارس", "إدارة المستخدمين"]
-        )
+        # Provide smart fallback response based on user question
+        msg_lower = message.message.lower()
+        if "إضافة مدرسة" in message.message or "مدرسة جديدة" in message.message:
+            return HakimResponse(
+                response="لإضافة مدرسة جديدة:\n1. اذهب إلى 'مركز القيادة'\n2. انقر على 'إضافة مدرسة جديدة' في قسم الإجراءات السريعة\n3. املأ بيانات المدرسة والمدير\n4. اضغط 'إنشاء' لإتمام العملية",
+                suggestions=["إدارة المدارس", "إضافة مستخدم جديد", "عرض التقارير"]
+            )
+        elif "مستخدم" in message.message or "حساب" in message.message:
+            return HakimResponse(
+                response="لإنشاء حساب مستخدم جديد:\n1. اذهب إلى 'إدارة المستخدمين' من القائمة الجانبية\n2. انقر على 'إنشاء حساب جديد'\n3. اختر نوع الحساب وأدخل البيانات المطلوبة\n4. اضغط 'إنشاء' لإتمام العملية",
+                suggestions=["أنواع الحسابات", "صلاحيات المستخدمين", "إدارة المدارس"]
+            )
+        elif "تقرير" in message.message or "تحليل" in message.message:
+            return HakimResponse(
+                response="للوصول للتقارير والتحليلات:\n1. اذهب إلى 'التقارير والتحليلات' من القائمة الجانبية\n2. اختر نوع التقرير المطلوب\n3. حدد الفترة الزمنية والفلاتر\n4. يمكنك تصدير التقرير بصيغ مختلفة",
+                suggestions=["تقارير الحضور", "تقارير الأداء", "تقارير المدارس"]
+            )
+        elif "حضور" in message.message:
+            return HakimResponse(
+                response="لإدارة الحضور والغياب:\n1. اذهب إلى لوحة تحكم المدرسة\n2. اختر 'الحضور اليومي'\n3. حدد الفصل والتاريخ\n4. سجّل الحضور والغياب لكل طالب",
+                suggestions=["تقارير الحضور", "إشعارات الغياب", "إعدادات الحضور"]
+            )
+        else:
+            return HakimResponse(
+                response="مرحباً! أنا حكيم، مساعدك الذكي في منصة نَسَّق لإدارة المدارس. يمكنني مساعدتك في:\n\n• إدارة المدارس والحسابات\n• فهم ميزات النظام\n• إنشاء التقارير والتحليلات\n• إدارة الحضور والجداول\n\nكيف يمكنني مساعدتك؟",
+                suggestions=["تعرف على النظام", "إدارة المدارس", "إدارة المستخدمين"]
+            )
     except Exception as e:
         logging.error(f"Hakim error: {str(e)}")
         return HakimResponse(
-            response="مرحباً! أنا حكيم. كيف يمكنني مساعدتك؟",
-            suggestions=["تعرف على النظام", "إدارة المدارس", "إدارة المستخدمين"]
+            response="مرحباً! أنا حكيم. يمكنني مساعدتك في استخدام منصة نَسَّق. ما الذي تحتاج المساعدة فيه؟",
+            suggestions=["إضافة مدرسة", "إنشاء مستخدم", "عرض التقارير"]
         )
 
 # ============== REGISTRATION REQUESTS MODELS ==============
