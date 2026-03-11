@@ -2545,9 +2545,11 @@ async def delete_subject(
     return {"message": "تم حذف المادة"}
 
 # ============== SEED DATA ==============
+# NOTE: These endpoints should only be used in development/testing
+# In production, they should be disabled or require special auth
 @api_router.post("/seed/admin")
-async def seed_admin():
-    """Create initial platform admin if not exists"""
+async def seed_admin(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
+    """Create initial platform admin if not exists - Platform Admin only"""
     # Check for old admin and delete
     await db.users.delete_one({"email": "admin@nassaq.sa"})
     
