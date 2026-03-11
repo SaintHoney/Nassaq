@@ -48,21 +48,20 @@ const getTimeUntilLesson = (lessonTime) => {
   return { status: 'upcoming', minutes: diffMinutes };
 };
 
-// Get card color based on time
-const getLessonCardStyle = (timeStatus) => {
-  if (!timeStatus) return 'border-gray-200 bg-white';
+// Get card color based on time - matching reference design
+const getLessonCardStyle = (timeStatus, isFirst = false) => {
+  if (!timeStatus) return isFirst ? 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' : 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
   
   switch (timeStatus.status) {
     case 'ongoing':
-      return 'border-green-500 bg-green-50 ring-2 ring-green-300';
     case 'ready':
-      return 'border-green-400 bg-green-50/70';
+      return 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200';
     case 'soon':
-      return 'border-amber-300 bg-amber-50/50';
+      return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200';
     case 'ended':
       return 'border-gray-300 bg-gray-100 opacity-60';
     default:
-      return 'border-gray-200 bg-white';
+      return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
   }
 };
 
