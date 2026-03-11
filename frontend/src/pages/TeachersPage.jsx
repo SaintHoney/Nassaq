@@ -72,6 +72,7 @@ export const TeachersPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [studentWizardOpen, setStudentWizardOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSchool, setSelectedSchool] = useState('all');
   const [submitting, setSubmitting] = useState(false);
