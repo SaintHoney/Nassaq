@@ -185,6 +185,9 @@ export default function UsersManagement() {
       // Apply frontend filters
       let filtered = fetchedUsers;
       
+      // Filter out school principals from main users list (they appear in school users tab)
+      filtered = filtered.filter(u => u.role !== 'school_principal');
+      
       if (selectedStatus !== 'all') {
         filtered = filtered.filter(u => {
           if (selectedStatus === 'active') return u.is_active !== false;
