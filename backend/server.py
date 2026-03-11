@@ -11518,10 +11518,53 @@ async def get_teacher_dashboard(
     - الحصص اليومية
     - الإحصائيات
     """
+    # First try to find in teachers collection by id
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
+    
+    # If not found, try to find by user_id
     if not teacher:
+        teacher = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0})
+    
+    # If still not found, try to find in users and then match to teachers
+    if not teacher:
+        user = await db.users.find_one({"id": teacher_id, "role": "teacher"}, {"_id": 0})
+        if user:
+            # Find teacher by email or full_name
+            teacher = await db.teachers.find_one({
+                "$or": [
+                    {"email": user.get("email")},
+                    {"full_name": user.get("full_name")}
+                ]
+            }, {"_id": 0})
+    
+    if not teacher:
+        # Return default data if teacher not found in teachers collection
+        # This allows the dashboard to work even if data is only in users collection
+        user = await db.users.find_one({"id": teacher_id}, {"_id": 0})
+        if user and user.get("role") == "teacher":
+            return {
+                "teacher": {
+                    "id": teacher_id,
+                    "full_name": user.get("full_name"),
+                    "email": user.get("email"),
+                    "school_id": user.get("tenant_id")
+                },
+                "stats": {
+                    "my_classes": 0,
+                    "my_students": 0,
+                    "today_lessons": 0,
+                    "pending_attendance": 0,
+                    "weekly_sessions": 0,
+                    "subjects_count": 0
+                },
+                "classes": [],
+                "today_schedule": [],
+                "recent_activities": []
+            }
         raise HTTPException(status_code=404, detail="المعلم غير موجود")
     
+    # Use teacher's id from teachers collection for lookups
+    actual_teacher_id = teacher.get("id")
     school_id = teacher.get("school_id")
     
     # Get teacher assignments
