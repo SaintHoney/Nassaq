@@ -446,8 +446,22 @@ const getPermissionsByRole = (roleId) => {
     case 'platform_admin':
       return PLATFORM_ADMIN_PERMISSIONS;
     case 'platform_sub_admin':
-      return OPERATIONS_MANAGER_PERMISSIONS; // Using operations manager permissions for sub-admin
+      return PLATFORM_SUB_ADMIN_PERMISSIONS;
     case 'independent_teacher':
+      return INDEPENDENT_TEACHER_PERMISSIONS;
+    case 'platform_operations_manager':
+      return OPERATIONS_MANAGER_PERMISSIONS;
+    case 'platform_technical_admin':
+      return TECHNICAL_ADMIN_PERMISSIONS;
+    case 'platform_support_specialist':
+      return SUPPORT_SPECIALIST_PERMISSIONS;
+    case 'platform_data_analyst':
+      return DATA_ANALYST_PERMISSIONS;
+    case 'platform_security_officer':
+      return SECURITY_OFFICER_PERMISSIONS;
+    case 'testing_account':
+      return TESTING_ACCOUNT_PERMISSIONS;
+    case 'teacher':
       return TEACHER_PERMISSIONS;
     default:
       return [];
