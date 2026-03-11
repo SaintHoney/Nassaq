@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Upload,
   UserPlus,
+  GraduationCap,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -60,6 +61,7 @@ import {
 import { Link } from 'react-router-dom';
 import { AddTeacherWizard } from '../components/wizards/AddTeacherWizard';
 import { BulkTeacherImport } from '../components/wizards/BulkTeacherImport';
+import AddStudentWizard from '../components/wizards/AddStudentWizard';
 
 export const TeachersPage = () => {
   const { user, api } = useAuth();
