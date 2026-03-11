@@ -266,24 +266,16 @@ export default function CreateSchoolWizard({ open, onOpenChange, onSuccess, api,
     } catch (error) {
       console.error('Error creating school:', error);
       
-      // Still show success for demo purposes with mock data
-      const tempPassword = generateTempPassword();
-      const year = new Date().getFullYear().toString().slice(-2);
-      const mockCode = `NSS-${schoolData.country}-${year}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;
+      // Show actual error message to user
+      const errorMessage = error.response?.data?.detail || 
+                          (isRTL ? 'حدث خطأ أثناء إنشاء المدرسة. يرجى المحاولة مرة أخرى.' 
+                                 : 'Error creating school. Please try again.');
       
-      setCreatedSchool({
-        tenant_code: mockCode,
-        name: schoolData.name,
-        principal: {
-          full_name: principalData.fullName,
-          email: principalData.email,
-          temp_password: tempPassword,
-        },
-        status: 'active',
-      });
+      toast.error(errorMessage);
       
-      setIsComplete(true);
-      toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح!' : 'School created successfully!');
+      // Do NOT show success or set isComplete to true
+      // Let user try again or fix the issue
+      
     } finally {
       setIsSubmitting(false);
     }
