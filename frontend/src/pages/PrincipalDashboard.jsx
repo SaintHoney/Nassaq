@@ -27,11 +27,13 @@ export default function PrincipalDashboard() {
   
   // Handle exit impersonation mode
   const handleExitImpersonation = () => {
-    exitSchoolContext();
-    // Add small delay to ensure context is cleared before navigation
+    // First navigate, then exit context to avoid ProtectedRoute redirect race condition
+    // The navigation happens immediately while context is still set
+    navigate('/admin/tenants', { replace: true });
+    // Then clear context after navigation has started
     setTimeout(() => {
-      navigate('/admin/tenants', { replace: true });
-    }, 100);
+      exitSchoolContext();
+    }, 50);
   };
 
   return (
