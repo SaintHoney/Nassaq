@@ -322,9 +322,18 @@ async def get_current_user(
             raise HTTPException(status_code=401, detail="User not found")
         
         # Convert _id to string id for consistency
+        # Only use _id as id if the user doesn't have a separate 'id' field (UUID)
         if "_id" in user:
-            user["id"] = str(user["_id"])
+            if "id" not in user or not user.get("id"):
+                user["id"] = str(user["_id"])
             del user["_id"]
+        
+        # Add teacher_id if user is a teacher
+        if user.get("role") == UserRole.TEACHER.value and not user.get("teacher_id"):
+            # Try to find teacher record by user email or user id
+            teacher = await db.teachers.find_one({"email": user.get("email")}, {"_id": 0, "id": 1})
+            if teacher:
+                user["teacher_id"] = teacher.get("id")
         
         # Support School Context Switching for Platform Admin
         # When X-School-Context header is present, override tenant_id for data isolation
