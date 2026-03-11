@@ -171,10 +171,17 @@ export const AuthProvider = ({ children }) => {
     api,
     isAuthenticated: !!user,
     isPlatformAdmin: user?.role === 'platform_admin',
-    isSchoolPrincipal: user?.role === 'school_principal',
+    isSchoolPrincipal: user?.role === 'school_principal' || (isImpersonating && user?.role === 'platform_admin'),
     isTeacher: user?.role === 'teacher',
     isStudent: user?.role === 'student',
     isParent: user?.role === 'parent',
+    // School Context Switching
+    schoolContext,
+    isImpersonating,
+    enterSchoolContext,
+    exitSchoolContext,
+    getEffectiveRole,
+    getEffectiveTenantId,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
