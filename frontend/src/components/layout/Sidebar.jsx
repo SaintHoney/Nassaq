@@ -357,28 +357,18 @@ export const Sidebar = ({ children }) => {
       {/* User Info & Logout */}
       {!collapsed && user && (
         <div className="p-4 border-t border-white/10">
-          {/* Impersonation Notice */}
+          {/* Impersonation Notice - Display only, button removed (use top banner instead) */}
           {isImpersonating && schoolContext && (
             <div className="mb-3 p-2 rounded-lg bg-amber-500/20 border border-amber-500/30">
-              <div className="flex items-center gap-2 text-amber-200 text-xs mb-2">
+              <div className="flex items-center gap-2 text-amber-200 text-xs">
                 <Shield className="h-3 w-3" />
                 <span className="font-medium">
                   {isRTL ? 'وضع المعاينة' : 'Preview Mode'}
                 </span>
               </div>
-              <p className="text-[10px] text-amber-100/80 truncate mb-2">
+              <p className="text-[10px] text-amber-100/80 truncate mt-1">
                 {schoolContext.school_name}
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExitSchoolContext}
-                className="w-full text-xs h-7 text-amber-200 hover:text-white hover:bg-amber-500/30"
-                data-testid="exit-school-context-btn"
-              >
-                <ChevronLeft className="h-3 w-3 me-1" />
-                {isRTL ? 'العودة للمنصة' : 'Back to Platform'}
-              </Button>
             </div>
           )}
           
