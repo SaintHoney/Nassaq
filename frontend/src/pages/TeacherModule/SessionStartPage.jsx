@@ -71,10 +71,34 @@ export default function SessionStartPage() {
     } catch (error) {
       console.error('Error starting session:', error);
       const message = error.response?.data?.detail || 'خطأ في بدء الحصة';
-      toast.error(message);
       
-      if (message.includes('قيد التشغيل') || message.includes('تم إنهاء')) {
+      // If session already running, try to continue it
+      if (message.includes('قيد التشغيل')) {
+        toast.info('جارٍ استكمال الحصة الحالية');
+        // Try to get the existing session
+        try {
+          const existingSession = await api.get(`/session/current?schedule_session_id=${lessonData.schedule_session_id || lessonData.id}`);
+          if (existingSession.data?.session_record_id) {
+            setSessionId(existingSession.data.session_record_id);
+            setSessionInfo({
+              className: existingSession.data.class_name || lessonData.className,
+              subjectName: existingSession.data.subject_name || lessonData.subject,
+              teacherName: existingSession.data.teacher_name,
+              studentCount: existingSession.data.student_count
+            });
+            await fetchStudents(existingSession.data.session_record_id);
+            setStep('attendance');
+            return;
+          }
+        } catch (e) {
+          console.error('Error getting existing session:', e);
+        }
         navigate('/teacher');
+      } else if (message.includes('تم إنهاء')) {
+        toast.error(message);
+        navigate('/teacher');
+      } else {
+        toast.error(message);
       }
     } finally {
       setLoading(false);
