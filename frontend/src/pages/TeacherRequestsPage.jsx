@@ -170,7 +170,7 @@ export const TeacherRequestsPage = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="rounded-xl" onClick={() => setLoading(true)}>
+              <Button variant="outline" className="rounded-xl" onClick={() => fetchRequests()}>
                 <RefreshCw className={`h-4 w-4 me-2 ${loading ? 'animate-spin' : ''}`} />
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
