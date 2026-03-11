@@ -61,6 +61,9 @@ app = FastAPI(
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Initialize Session Engine
+session_engine = TeacherSessionEngine(db)
+
 security = HTTPBearer()
 
 # ============== LOGGING ==============
