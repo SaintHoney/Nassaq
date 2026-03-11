@@ -249,10 +249,8 @@ export const Sidebar = ({ children }) => {
     // Combine all items
     const allItems = [...platformAdminItems, ...schoolItems, ...teacherItems];
     
-    // Get effective role for filtering
-    const effectiveRole = getEffectiveRole ? getEffectiveRole() : user?.role;
-    
     // Filter by effective role (supports impersonation)
+    // effectiveRole is already defined at the start of this function
     const filteredItems = allItems.filter((item) => item.roles.includes(effectiveRole));
     
     // Remove duplicates by href
