@@ -185,8 +185,14 @@ export default function UsersManagement() {
       // Apply frontend filters
       let filtered = fetchedUsers;
       
-      // Filter out school principals from main users list (they appear in school users tab)
-      filtered = filtered.filter(u => u.role !== 'school_principal');
+      // Filter out school-related users from main users list (they appear in school users tab)
+      filtered = filtered.filter(u => 
+        u.role !== 'school_principal' && 
+        u.role !== 'school_sub_admin' &&
+        u.role !== 'school_manager' &&
+        // Only filter school teachers (those with tenant_id), keep independent teachers
+        !(u.role === 'teacher' && u.tenant_id)
+      );
       
       if (selectedStatus !== 'all') {
         filtered = filtered.filter(u => {
