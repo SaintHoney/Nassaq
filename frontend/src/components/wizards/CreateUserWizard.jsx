@@ -560,7 +560,7 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
           return false;
         }
         // للمعلم، يجب اختيار المنطقة والمدينة
-        if (formData.role === 'teacher') {
+        if (formData.role === 'independent_teacher') {
           return formData.region !== '' && formData.city !== '';
         }
         return true;
