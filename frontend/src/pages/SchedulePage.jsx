@@ -521,7 +521,7 @@ export const SchedulePage = () => {
 
     // Move the session
     try {
-      await api.put(`/api/schedule-sessions/${sessionId}/move`, {
+      await api.put(`/schedule-sessions/${sessionId}/move`, {
         new_day_of_week: targetDay,
         new_time_slot_id: targetSlotId,
       });
