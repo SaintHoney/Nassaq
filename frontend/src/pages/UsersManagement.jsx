@@ -85,9 +85,12 @@ export default function UsersManagement() {
   
   // State
   const [users, setUsers] = useState([]);
+  const [schoolUsers, setSchoolUsers] = useState({}); // Users grouped by school
+  const [schools, setSchools] = useState([]); // List of schools
   const [teacherRequests, setTeacherRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
+  const [requestStatusFilter, setRequestStatusFilter] = useState('all'); // Filter for teacher requests
   
   // Stats
   const [stats, setStats] = useState({
