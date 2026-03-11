@@ -55,23 +55,24 @@ const getLessonCardStyle = (timeStatus, isFirst = false) => {
     if (timeStatus?.status === 'ended') {
       return 'border-gray-300 bg-gray-100 opacity-60';
     }
-    return 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200';
+    // Use !important equivalent by adding more specific classes
+    return 'border-0 !bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200 [background:linear-gradient(to_bottom_right,#10b981,#059669)]';
   }
   
   // Other lessons
-  if (!timeStatus) return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
+  if (!timeStatus) return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white';
   
   switch (timeStatus.status) {
     case 'ongoing':
     case 'ready':
-      return 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200';
+      return 'border-0 [background:linear-gradient(to_bottom_right,#10b981,#059669)] text-white shadow-lg shadow-emerald-200';
     case 'soon':
     case 'upcoming':
-      return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200';
+      return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white shadow-lg shadow-blue-200';
     case 'ended':
       return 'border-gray-300 bg-gray-100 opacity-60';
     default:
-      return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
+      return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white';
   }
 };
 
