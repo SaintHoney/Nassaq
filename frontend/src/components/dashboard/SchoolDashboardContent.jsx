@@ -405,7 +405,9 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
   const { isRTL } = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   
   // Wizard states
   const [showAddStudentWizard, setShowAddStudentWizard] = useState(false);
@@ -416,82 +418,99 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
   const [showLiveSessionsMonitor, setShowLiveSessionsMonitor] = useState(false);
 
   // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('nassaq_token');
-        
-        // Build headers with school context support
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        // Add school context header if impersonating
-        if (isImpersonating && schoolContext?.school_id) {
-          headers['X-School-Context'] = schoolContext.school_id;
-        }
-        
-        const response = await axios.get(`${API_URL}/api/school/dashboard`, { headers });
-        
-        const data = response.data;
-        
-        // Transform API response to match component expected format
-        const transformedData = {
-          metrics: {
-            totalStudents: data.metrics.totalStudents,
-            totalTeachers: data.metrics.totalTeachers,
-            totalClasses: data.metrics.totalClasses,
-            todaySessions: data.metrics.todaySessions,
-            activeUsers: data.metrics.attendanceRate || { value: 342, change: '+28', changeType: 'up', status: 'normal' },
-            waitingSubstitute: data.metrics.waitingSubstitute,
-          },
-          attendance: data.attendance,
-          interventions: data.interventions,
-          alerts: data.alerts.map(alert => ({
-            id: alert.id,
-            type: alert.type,
-            title: isRTL ? (alert.title_ar || alert.title) : (alert.title_en || alert.title),
-            time: isRTL ? (alert.time_ar || alert.time) : (alert.time_en || alert.time),
-          })),
-        };
-        
-        setDashboardData(transformedData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        
-        // Fallback to mock data on error
+  const fetchDashboardData = useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    }
+    
+    try {
+      const token = localStorage.getItem('nassaq_token');
+      
+      // Build headers with school context support
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Add school context header if impersonating
+      if (isImpersonating && schoolContext?.school_id) {
+        headers['X-School-Context'] = schoolContext.school_id;
+      }
+      
+      const response = await axios.get(`${API_URL}/api/school/dashboard`, { headers });
+      
+      const data = response.data;
+      
+      // Transform API response to match component expected format
+      const transformedData = {
+        metrics: {
+          totalStudents: data.metrics.totalStudents,
+          totalTeachers: data.metrics.totalTeachers,
+          totalClasses: data.metrics.totalClasses,
+          todaySessions: data.metrics.todaySessions,
+          activeUsers: data.metrics.attendanceRate || { value: 342, change: '+28', changeType: 'up', status: 'normal' },
+          waitingSubstitute: data.metrics.waitingSubstitute,
+        },
+        attendance: data.attendance,
+        interventions: data.interventions,
+        alerts: data.alerts.map(alert => ({
+          id: alert.id,
+          type: alert.type,
+          title: isRTL ? (alert.title_ar || alert.title) : (alert.title_en || alert.title),
+          time: isRTL ? (alert.time_ar || alert.time) : (alert.time_en || alert.time),
+        })),
+      };
+      
+      setDashboardData(transformedData);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      
+      // Only use fallback data on initial load
+      if (!dashboardData) {
         const mockData = {
           metrics: {
-            totalStudents: { value: 1245, change: '+12', changeType: 'up', status: 'normal' },
-            totalTeachers: { value: 87, change: '+3', changeType: 'up', status: 'normal' },
-            totalClasses: { value: 42, change: '0', changeType: 'same', status: 'normal' },
-            todaySessions: { value: 156, change: '-5', changeType: 'down', status: 'warning' },
-            activeUsers: { value: 342, change: '+28', changeType: 'up', status: 'normal' },
-            waitingSubstitute: { value: 3, change: '+1', changeType: 'up', status: 'warning' },
+            totalStudents: { value: 0, change: '0', changeType: 'same', status: 'normal' },
+            totalTeachers: { value: 0, change: '0', changeType: 'same', status: 'normal' },
+            totalClasses: { value: 0, change: '0', changeType: 'same', status: 'normal' },
+            todaySessions: { value: 0, change: '0', changeType: 'same', status: 'normal' },
+            activeUsers: { value: 0, change: '0', changeType: 'same', status: 'normal' },
+            waitingSubstitute: { value: 0, change: '0', changeType: 'same', status: 'normal' },
           },
           attendance: {
-            students: { present: 1120, absent: 85, excused: 40, total: 1245 },
-            teachers: { present: 82, absent: 3, excused: 2, total: 87 },
+            students: { present: 0, absent: 0, excused: 0, total: 0 },
+            teachers: { present: 0, absent: 0, excused: 0, total: 0 },
           },
           interventions: {
-            classesWithoutTeacher: 2,
-            teachersWithFrequentAbsence: 1,
-            classesLowAttendance: 4,
+            classesWithoutTeacher: 0,
+            teachersWithFrequentAbsence: 0,
+            classesLowAttendance: 0,
           },
-          alerts: [
-            { id: 1, type: 'warning', title: isRTL ? 'معلم غائب في الصف الرابع أ' : 'Teacher absent in Grade 4A', time: isRTL ? 'منذ 10 دقائق' : '10 min ago' },
-            { id: 2, type: 'info', title: isRTL ? 'اكتمل تسجيل الحضور للصف الخامس' : 'Attendance complete for Grade 5', time: isRTL ? 'منذ 25 دقيقة' : '25 min ago' },
-            { id: 3, type: 'error', title: isRTL ? 'نسبة حضور منخفضة في الصف الثاني ب' : 'Low attendance in Grade 2B', time: isRTL ? 'منذ ساعة' : '1 hour ago' },
-            { id: 4, type: 'info', title: isRTL ? 'تم إضافة 5 طلاب جدد' : '5 new students added', time: isRTL ? 'منذ ساعتين' : '2 hours ago' },
-          ],
+          alerts: [],
         };
-        
         setDashboardData(mockData);
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isRTL, isImpersonating, schoolContext, dashboardData]);
 
+  // Initial fetch
+  useEffect(() => {
     fetchDashboardData();
-  }, [isRTL, isImpersonating, schoolContext]);
+  }, []);
+
+  // Auto-refresh every 20 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboardData(false);
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
+
+  // Manual refresh handler
+  const handleManualRefresh = () => {
+    fetchDashboardData(true);
+  };
 
   // Handle quick actions
   const handleQuickAction = (actionId) => {
