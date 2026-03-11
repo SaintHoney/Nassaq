@@ -239,7 +239,8 @@ export default function TenantsManagement() {
     setLoading(true);
     try {
       const response = await api.get('/api/schools');
-      const schoolsData = response.data.schools || response.data || [];
+      // API returns array directly or object with schools property
+      const schoolsData = Array.isArray(response.data) ? response.data : (response.data.schools || []);
       
       // Map API data to component format
       const mappedSchools = schoolsData.map(school => ({
@@ -253,7 +254,7 @@ export default function TenantsManagement() {
         country: 'SA',
         students_count: school.student_count || school.current_students || 0,
         teachers_count: school.teacher_count || school.current_teachers || 0,
-        users_count: (school.student_count || 0) + (school.teacher_count || 0),
+        users_count: (school.current_students || 0) + (school.current_teachers || 0),
         status: school.status || 'active',
         ai_enabled: school.ai_enabled || false,
         subscription_status: school.subscription_status || 'active',
