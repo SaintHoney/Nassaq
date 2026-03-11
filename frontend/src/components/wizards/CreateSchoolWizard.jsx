@@ -340,7 +340,7 @@ ${createdSchool?.tenant_code}
   
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" data-testid="create-school-wizard">
+      <DialogContent className="max-w-4xl h-auto max-h-[85vh] flex flex-col p-0" data-testid="create-school-wizard">
         {!isComplete ? (
           <>
             {/* Header with Steps */}
