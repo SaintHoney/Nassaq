@@ -541,6 +541,16 @@ export const TeachersPage = () => {
             fetchTeachers();
           }} 
         />
+        
+        {/* Add Student Wizard */}
+        <AddStudentWizard 
+          open={studentWizardOpen}
+          onOpenChange={setStudentWizardOpen}
+          isRTL={isRTL}
+          onSuccess={() => {
+            toast.success(isRTL ? 'تم إضافة الطالب بنجاح' : 'Student added successfully');
+          }}
+        />
       </div>
       <HakimAssistant />
     </Sidebar>
