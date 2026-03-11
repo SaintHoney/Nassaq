@@ -456,44 +456,57 @@ export default function SessionTeachPage() {
           </Card>
         ) : (
           <>
-            {/* Random Student Button */}
+            {/* Random Student Button with visual feedback */}
             <Button
-              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-brand-turquoise to-brand-navy shadow-lg"
+              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-brand-turquoise to-brand-navy shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
               onClick={selectRandomStudent}
               disabled={loading}
               data-testid="random-student-btn"
             >
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin me-2" />
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin me-2" />
+                  جارٍ الاختيار...
+                </>
               ) : (
-                <Shuffle className="h-6 w-6 me-2" />
+                <>
+                  <Shuffle className="h-6 w-6 me-2" />
+                  🎲 اختيار طالب عشوائي
+                </>
               )}
-              اختيار طالب عشوائي
             </Button>
 
-            {/* Students Grid */}
+            {/* Students Grid with enhanced cards */}
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {students.filter(s => s.attendance_status === 'present').map((student, idx) => (
                 <Card 
                   key={student.id}
-                  className={`cursor-pointer transition-all ${
+                  className={`cursor-pointer transition-all duration-200 ${
                     student.isFlashing 
-                      ? 'ring-4 ring-brand-turquoise bg-brand-turquoise/20 scale-105' 
-                      : 'hover:shadow-md hover:scale-102'
+                      ? 'ring-4 ring-brand-turquoise bg-gradient-to-br from-brand-turquoise/30 to-brand-navy/20 scale-110 shadow-xl z-10' 
+                      : 'hover:shadow-md hover:scale-105 hover:bg-gray-50'
                   }`}
                   onClick={() => handleStudentClick(student)}
                   data-testid={`student-grid-${student.id}`}
+                  style={{
+                    transform: student.isFlashing ? 'scale(1.1)' : undefined,
+                    animation: student.isFlashing ? 'pulse 0.3s infinite' : undefined
+                  }}
                 >
                   <CardContent className="p-2 text-center">
-                    <Avatar className={`h-12 w-12 mx-auto mb-1 ${student.isFlashing ? 'ring-2 ring-brand-turquoise' : ''}`}>
+                    <Avatar className={`h-12 w-12 mx-auto mb-1 transition-all ${
+                      student.isFlashing ? 'ring-4 ring-brand-turquoise ring-offset-2' : ''
+                    }`}>
                       <AvatarImage src={student.avatar_url} />
-                      <AvatarFallback className="bg-brand-navy text-white text-sm">
+                      <AvatarFallback className={`text-white text-sm transition-all ${
+                        student.isFlashing ? 'bg-brand-turquoise' : 'bg-brand-navy'
+                      }`}>
                         {student.full_name?.charAt(0) || (idx + 1)}
                       </AvatarFallback>
                     </Avatar>
                     <p className="text-xs font-medium truncate">{student.full_name?.split(' ')[0]}</p>
                     {student.correctAnswers > 0 && (
-                      <Badge variant="secondary" className="text-[10px] mt-1">
+                      <Badge variant="secondary" className="text-[10px] mt-1 bg-green-100 text-green-700">
                         {student.correctAnswers} ✓
                       </Badge>
                     )}
