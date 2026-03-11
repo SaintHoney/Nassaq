@@ -124,7 +124,7 @@ export default function SessionStartPage() {
         } catch (e) {
           console.error('Error getting existing session:', e);
         }
-        navigate('/teacher');
+        navigate('/teacher/home');
       } else if (message.includes('تم إنهاء')) {
         toast.error(message);
         navigate('/teacher/home');
