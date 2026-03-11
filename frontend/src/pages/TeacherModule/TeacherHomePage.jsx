@@ -355,8 +355,8 @@ export default function TeacherHomePage() {
                             إدارة الدرس
                           </Button>
                         )}
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
