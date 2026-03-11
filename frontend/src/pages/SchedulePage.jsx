@@ -8,6 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  useDraggable,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
   Calendar,
   Plus,
   Trash2,
@@ -31,6 +44,8 @@ import {
   Filter,
   Lightbulb,
   Wand2,
+  GripVertical,
+  Move,
 } from 'lucide-react';
 import {
   Dialog,
