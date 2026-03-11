@@ -279,17 +279,27 @@ export default function TeacherHomePage() {
                   const timeStatus = getTimeUntilLesson(lesson.time);
                   const isFirstLesson = index === 0;
                   const isCurrentLesson = isFirstLesson && timeStatus?.status !== 'ended';
-                  const cardStyle = getLessonCardStyle(timeStatus, isFirstLesson);
+                  const isEnded = timeStatus?.status === 'ended';
                   // White text for colored cards (green for first, blue for others, unless ended)
-                  const isWhiteText = isFirstLesson ? timeStatus?.status !== 'ended' : timeStatus?.status !== 'ended';
+                  const isWhiteText = !isEnded;
+                  
+                  // Inline style for gradient background
+                  const cardBackground = isEnded 
+                    ? {} 
+                    : isFirstLesson 
+                      ? { background: 'linear-gradient(to bottom right, #10b981, #059669)' }
+                      : { background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)' };
                   
                   return (
-                    <Card 
+                    <div 
                       key={lesson.id}
-                      className={`transition-all duration-500 overflow-hidden rounded-2xl ${cardStyle}`}
+                      className={`rounded-2xl overflow-hidden transition-all duration-500 ${
+                        isEnded ? 'bg-gray-100 border border-gray-300 opacity-60' : 'shadow-lg'
+                      }`}
+                      style={cardBackground}
                       data-testid={`lesson-card-${lesson.id}`}
                     >
-                      <CardContent className="p-5">
+                      <div className="p-5">
                         {/* Status Badge - Top Right */}
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-2">
