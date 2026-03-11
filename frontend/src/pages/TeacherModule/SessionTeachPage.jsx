@@ -110,23 +110,37 @@ export default function SessionTeachPage() {
     }
   };
 
-  // Select random student
+  // Select random student with enhanced visual and audio effects
   const selectRandomStudent = async () => {
     setLoading(true);
     
-    // Visual flashing effect
+    // Play drum roll sound effect
+    try {
+      const drumRoll = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdGmBenZxeHt9gYKAf35+gYOFhYSCgH59fYCDhYaGhYOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+');
+      drumRoll.volume = 0.2;
+      drumRoll.play().catch(() => {});
+    } catch {}
+    
+    // Visual flashing effect - faster spinning through students
+    let flashCount = 0;
+    const maxFlashes = 25;
     const flashInterval = setInterval(() => {
+      flashCount++;
       const randomIdx = Math.floor(Math.random() * students.length);
       setStudents(prev => prev.map((s, i) => ({
         ...s,
         isFlashing: i === randomIdx
       })));
-    }, 100);
+      
+      if (flashCount >= maxFlashes) {
+        clearInterval(flashInterval);
+      }
+    }, 80); // Faster interval for spinning effect
 
     try {
       const response = await api.post(`/session/${sessionId}/random-student`);
       
-      // Stop flashing after 2 seconds
+      // Stop flashing after 2.5 seconds and show result
       setTimeout(() => {
         clearInterval(flashInterval);
         
@@ -144,9 +158,24 @@ export default function SessionTeachPage() {
           participation_count: selected.participation_count
         });
         
+        // Play selection sound
+        try {
+          const selectSound = new Audio('data:audio/wav;base64,UklGRigBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQBAACAf4B/gH+Af4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpubnJucnJycnJycm5ubmpqamZiXl5aVlJSTkpGQj46NjIuKiYiHhoWEg4KBgH+Af4B/gH+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbm5ycnJycnJybm5uampmYl5eWlZSUk5KRkI+OjYyLiomIh4aFhIOCgYB/gH+Af4B/');
+          selectSound.volume = 0.4;
+          selectSound.play().catch(() => {});
+        } catch {}
+        
+        // Small confetti burst on selection
+        confetti({
+          particleCount: 20,
+          spread: 40,
+          origin: { y: 0.7 },
+          colors: ['#0ea5e9', '#14b8a6']
+        });
+        
         setShowStudentDialog(true);
         setLoading(false);
-      }, 2000);
+      }, 2500);
     } catch (error) {
       clearInterval(flashInterval);
       setStudents(prev => prev.map(s => ({ ...s, isFlashing: false })));
