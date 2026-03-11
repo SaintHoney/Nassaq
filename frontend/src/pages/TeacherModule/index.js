@@ -1,5 +1,14 @@
 // Teacher Module Index - Export all pages
+
+// Main Dashboard (Mobile First)
+export { default as TeacherHomePage } from './TeacherHomePage';
 export { default as TeacherMainDashboard } from './TeacherMainDashboard';
+
+// Session Management (Teacher Session Engine)
+export { default as SessionStartPage } from './SessionStartPage';
+export { default as SessionTeachPage } from './SessionTeachPage';
+
+// Core Pages
 export { default as TeacherSchedulePage } from './TeacherSchedulePage';
 export { default as TeacherClassesPage } from './TeacherClassesPage';
 export { default as TeacherClassDetailPage } from './TeacherClassDetailPage';
