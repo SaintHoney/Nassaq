@@ -618,19 +618,43 @@ export const RulesManagementPage = () => {
     }
   };
   
-  // Handle duplicate rule
-  const handleDuplicateRule = (rule) => {
-    const newRule = {
-      ...rule,
-      id: Date.now().toString(),
+  // Handle duplicate rule - connected to API
+  const handleDuplicateRule = async (rule) => {
+    const newRuleData = {
       name_ar: rule.name_ar + ' (نسخة)',
       name_en: rule.name_en + ' (Copy)',
+      description_ar: rule.description_ar,
+      description_en: rule.description_en,
+      category: rule.category,
+      type: rule.type,
+      value: rule.value,
+      unit: rule.unit,
       status: 'draft',
-      created_at: new Date().toISOString().split('T')[0],
-      updated_at: new Date().toISOString().split('T')[0],
+      priority: rule.priority,
+      applies_to: rule.applies_to,
     };
-    setRules(prev => [newRule, ...prev]);
-    toast.success(t.ruleDuplicated);
+    
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/system/rules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(newRuleData)
+      });
+      
+      if (response.ok) {
+        toast.success(t.ruleDuplicated);
+        fetchRules(); // Refresh data from API
+      } else {
+        toast.error(isRTL ? 'فشل في نسخ القاعدة' : 'Failed to duplicate rule');
+      }
+    } catch (error) {
+      console.error('Error duplicating rule:', error);
+      toast.error(isRTL ? 'فشل في نسخ القاعدة' : 'Failed to duplicate rule');
+    }
   };
   
   // Handle toggle status
