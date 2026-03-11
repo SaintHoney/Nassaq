@@ -991,7 +991,10 @@ export const SystemMonitoringPage = () => {
                 </Card>
                 
                 {/* Escalate Alert */}
-                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => toast.success(isRTL ? 'تم تصعيد التنبيه للفريق التقني' : 'Alert escalated to tech team')}
+                >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-yellow-100 flex items-center justify-center">
                       <Bell className="h-7 w-7 text-yellow-600" />
