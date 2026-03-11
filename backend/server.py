@@ -12032,6 +12032,937 @@ async def export_audit_report(
     return report
 
 
+# ============================================================
+# School Settings APIs - إعدادات المدرسة (15 قسم)
+# ============================================================
+
+# ============== MODELS ==============
+
+class SchoolInfoUpdate(BaseModel):
+    """معلومات المدرسة الأساسية"""
+    name: Optional[str] = None
+    name_en: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    region: Optional[str] = None
+    address: Optional[str] = None
+
+
+class WorkDaysConfig(BaseModel):
+    """أيام العمل الأسبوعية"""
+    sunday: bool = True
+    monday: bool = True
+    tuesday: bool = True
+    wednesday: bool = True
+    thursday: bool = True
+    friday: bool = False
+    saturday: bool = False
+
+
+class OfficialHoliday(BaseModel):
+    """إجازة رسمية"""
+    name: str
+    start_date: str
+    end_date: Optional[str] = None
+
+
+class ExceptionDay(BaseModel):
+    """يوم استثناء"""
+    date: str
+    reason: str
+    is_holiday: bool = True
+
+
+class SchoolTiming(BaseModel):
+    """بداية ونهاية اليوم الدراسي"""
+    start: str = "07:00"
+    end: str = "14:00"
+
+
+class BreakPeriod(BaseModel):
+    """فترة استراحة"""
+    id: Optional[str] = None
+    name: Optional[str] = None
+    start: str
+    end: str
+
+
+class ActivityDay(BaseModel):
+    """يوم نشاط"""
+    date: str
+    name: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class TeachingLoadUpdate(BaseModel):
+    """النصاب التدريسي"""
+    teacher_id: str
+    weekly_periods: int
+
+
+class TeacherAvailability(BaseModel):
+    """توفر المعلم"""
+    teacher_id: str
+    available_days: List[str] = []
+    available_periods: Optional[List[int]] = None
+
+
+class AdminConstraint(BaseModel):
+    """قيد إداري"""
+    id: Optional[str] = None
+    type: str  # no_first_period, no_last_period, no_day, max_consecutive, custom
+    teacher_id: Optional[str] = None
+    day: Optional[str] = None
+    period: Optional[int] = None
+    description: Optional[str] = None
+
+
+class EducationalStageCreate(BaseModel):
+    """مرحلة تعليمية"""
+    name: str
+    name_en: Optional[str] = None
+    order: int = 1
+
+
+class GradeCreate(BaseModel):
+    """صف دراسي"""
+    name: str
+    name_en: Optional[str] = None
+    stage_id: Optional[str] = None
+
+
+class SectionCreate(BaseModel):
+    """شعبة"""
+    name: str
+    grade_id: Optional[str] = None
+    class_id: Optional[str] = None
+
+
+class AcademicTermCreate(BaseModel):
+    """فصل دراسي"""
+    name: str
+    name_en: Optional[str] = None
+    start_date: str
+    end_date: str
+    is_active: bool = True
+
+
+class SubjectCreateForSchool(BaseModel):
+    """مادة دراسية"""
+    name: str
+    name_en: Optional[str] = None
+    grade_id: Optional[str] = None
+    weekly_periods: int = 4
+
+
+class SchoolSettingsResponse(BaseModel):
+    """نموذج استجابة إعدادات المدرسة"""
+    school_info: dict
+    work_days: dict
+    official_holidays: List[dict]
+    exception_days: List[dict]
+    periods_per_day: int
+    timing: dict
+    breaks: List[dict]
+    activity_days: List[dict]
+    teaching_loads: dict
+    teacher_availability: dict
+    constraints: List[dict]
+    educational_stages: List[dict]
+    grades: List[dict]
+    sections: List[dict]
+    academic_terms: List[dict]
+
+
+# ============== HELPER FUNCTIONS ==============
+
+async def get_school_id_from_context(current_user: dict, x_school_context: str = None) -> str:
+    """Get school ID from context header or user's tenant_id"""
+    if x_school_context:
+        return x_school_context
+    return current_user.get("tenant_id")
+
+
+# ============== API ENDPOINTS ==============
+
+@api_router.get("/school/settings")
+async def get_school_settings(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get all school settings - جلب جميع إعدادات المدرسة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    # Get school info
+    school = await db.schools.find_one({"id": school_id}, {"_id": 0})
+    
+    # Get settings collection
+    settings = await db.school_settings.find_one({"school_id": school_id}, {"_id": 0})
+    
+    if not settings:
+        # Create default settings
+        settings = {
+            "school_id": school_id,
+            "work_days": {
+                "sunday": True, "monday": True, "tuesday": True,
+                "wednesday": True, "thursday": True, "friday": False, "saturday": False
+            },
+            "official_holidays": [],
+            "exception_days": [],
+            "periods_per_day": 7,
+            "timing": {"start": "07:00", "end": "14:00"},
+            "breaks": [],
+            "activity_days": [],
+            "teaching_loads": {},
+            "teacher_availability": {},
+            "constraints": [],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.school_settings.insert_one(settings)
+    
+    # Get educational stages
+    stages = await db.school_stages.find({"school_id": school_id}, {"_id": 0}).to_list(50)
+    
+    # Get grades
+    grades = await db.school_grades.find({"school_id": school_id}, {"_id": 0}).to_list(100)
+    
+    # Get sections
+    sections = await db.school_sections.find({"school_id": school_id}, {"_id": 0}).to_list(200)
+    
+    # Get academic terms
+    terms = await db.academic_terms.find({"school_id": school_id}, {"_id": 0}).to_list(10)
+    
+    return {
+        "school_info": school or {},
+        "work_days": settings.get("work_days", {}),
+        "official_holidays": settings.get("official_holidays", []),
+        "exception_days": settings.get("exception_days", []),
+        "periods_per_day": settings.get("periods_per_day", 7),
+        "timing": settings.get("timing", {"start": "07:00", "end": "14:00"}),
+        "breaks": settings.get("breaks", []),
+        "activity_days": settings.get("activity_days", []),
+        "teaching_loads": settings.get("teaching_loads", {}),
+        "teacher_availability": settings.get("teacher_availability", {}),
+        "constraints": settings.get("constraints", []),
+        "educational_stages": stages,
+        "grades": grades,
+        "sections": sections,
+        "academic_terms": terms
+    }
+
+
+@api_router.put("/school/settings/info")
+async def update_school_info(
+    data: SchoolInfoUpdate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update school basic info - تحديث معلومات المدرسة الأساسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = current_user["id"]
+    
+    await db.schools.update_one(
+        {"id": school_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "تم تحديث معلومات المدرسة بنجاح", "updated": update_data}
+
+
+@api_router.put("/school/settings/work-days")
+async def update_work_days(
+    data: WorkDaysConfig,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update work days - تحديث أيام العمل"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "work_days": data.model_dump(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث أيام العمل بنجاح", "work_days": data.model_dump()}
+
+
+@api_router.post("/school/settings/holidays")
+async def add_official_holiday(
+    data: OfficialHoliday,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Add official holiday - إضافة إجازة رسمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    holiday = data.model_dump()
+    holiday["id"] = str(uuid.uuid4())
+    holiday["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$push": {"official_holidays": holiday}},
+        upsert=True
+    )
+    
+    return {"message": "تم إضافة الإجازة الرسمية", "holiday": holiday}
+
+
+@api_router.delete("/school/settings/holidays/{holiday_id}")
+async def delete_official_holiday(
+    holiday_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete official holiday - حذف إجازة رسمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$pull": {"official_holidays": {"id": holiday_id}}}
+    )
+    
+    return {"message": "تم حذف الإجازة الرسمية"}
+
+
+@api_router.post("/school/settings/exception-days")
+async def add_exception_day(
+    data: ExceptionDay,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Add exception day - إضافة يوم استثناء"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    exception = data.model_dump()
+    exception["id"] = str(uuid.uuid4())
+    exception["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$push": {"exception_days": exception}},
+        upsert=True
+    )
+    
+    return {"message": "تم إضافة يوم الاستثناء", "exception": exception}
+
+
+@api_router.delete("/school/settings/exception-days/{exception_id}")
+async def delete_exception_day(
+    exception_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete exception day - حذف يوم استثناء"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$pull": {"exception_days": {"id": exception_id}}}
+    )
+    
+    return {"message": "تم حذف يوم الاستثناء"}
+
+
+@api_router.put("/school/settings/periods-per-day")
+async def update_periods_per_day(
+    periods: int,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update periods per day - تحديث عدد الحصص في اليوم"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    if periods < 1 or periods > 12:
+        raise HTTPException(status_code=400, detail="عدد الحصص يجب أن يكون بين 1 و 12")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "periods_per_day": periods,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث عدد الحصص", "periods_per_day": periods}
+
+
+@api_router.put("/school/settings/timing")
+async def update_school_timing(
+    data: SchoolTiming,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update school timing - تحديث بداية ونهاية اليوم الدراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "timing": data.model_dump(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث أوقات الدوام", "timing": data.model_dump()}
+
+
+@api_router.put("/school/settings/breaks")
+async def update_breaks(
+    breaks: List[BreakPeriod],
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update break periods - تحديث فترات الاستراحة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    breaks_data = []
+    for b in breaks:
+        break_dict = b.model_dump()
+        if not break_dict.get("id"):
+            break_dict["id"] = str(uuid.uuid4())
+        breaks_data.append(break_dict)
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "breaks": breaks_data,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث فترات الاستراحة", "breaks": breaks_data}
+
+
+@api_router.post("/school/settings/activity-days")
+async def add_activity_day(
+    data: ActivityDay,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Add activity day - إضافة يوم نشاط"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    activity = data.model_dump()
+    activity["id"] = str(uuid.uuid4())
+    activity["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$push": {"activity_days": activity}},
+        upsert=True
+    )
+    
+    return {"message": "تم إضافة يوم النشاط", "activity": activity}
+
+
+@api_router.delete("/school/settings/activity-days/{activity_id}")
+async def delete_activity_day(
+    activity_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete activity day - حذف يوم نشاط"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$pull": {"activity_days": {"id": activity_id}}}
+    )
+    
+    return {"message": "تم حذف يوم النشاط"}
+
+
+@api_router.put("/school/settings/teaching-loads")
+async def update_teaching_loads(
+    loads: dict,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update teaching loads - تحديث الأنصبة التدريسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "teaching_loads": loads,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث الأنصبة التدريسية", "teaching_loads": loads}
+
+
+@api_router.put("/school/settings/teacher-availability")
+async def update_teacher_availability(
+    data: TeacherAvailability,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update teacher availability - تحديث توفر المعلم"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                f"teacher_availability.{data.teacher_id}": {
+                    "available_days": data.available_days,
+                    "available_periods": data.available_periods
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث توفر المعلم"}
+
+
+@api_router.put("/school/settings/constraints")
+async def update_constraints(
+    constraints: List[AdminConstraint],
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update administrative constraints - تحديث القيود الإدارية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    constraints_data = []
+    for c in constraints:
+        c_dict = c.model_dump()
+        if not c_dict.get("id"):
+            c_dict["id"] = str(uuid.uuid4())
+        constraints_data.append(c_dict)
+    
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {
+            "$set": {
+                "constraints": constraints_data,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث القيود الإدارية", "constraints": constraints_data}
+
+
+# ============== EDUCATIONAL STAGES ==============
+
+@api_router.get("/school/settings/stages")
+async def get_school_stages(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school educational stages - جلب المراحل التعليمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    stages = await db.school_stages.find({"school_id": school_id}, {"_id": 0}).sort("order", 1).to_list(50)
+    return {"stages": stages}
+
+
+@api_router.post("/school/settings/stages")
+async def create_school_stage(
+    data: EducationalStageCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create educational stage - إنشاء مرحلة تعليمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    stage = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "order": data.order,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.school_stages.insert_one(stage)
+    stage.pop("_id", None)
+    
+    return {"message": "تم إضافة المرحلة التعليمية", "stage": stage}
+
+
+@api_router.delete("/school/settings/stages/{stage_id}")
+async def delete_school_stage(
+    stage_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete educational stage - حذف مرحلة تعليمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_stages.delete_one({"id": stage_id, "school_id": school_id})
+    
+    return {"message": "تم حذف المرحلة التعليمية"}
+
+
+# ============== GRADES ==============
+
+@api_router.get("/school/settings/grades")
+async def get_school_grades(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school grades - جلب الصفوف الدراسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    grades = await db.school_grades.find({"school_id": school_id}, {"_id": 0}).to_list(100)
+    return {"grades": grades}
+
+
+@api_router.post("/school/settings/grades")
+async def create_school_grade(
+    data: GradeCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create grade - إنشاء صف دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    grade = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "stage_id": data.stage_id,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.school_grades.insert_one(grade)
+    grade.pop("_id", None)
+    
+    return {"message": "تم إضافة الصف الدراسي", "grade": grade}
+
+
+@api_router.delete("/school/settings/grades/{grade_id}")
+async def delete_school_grade(
+    grade_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete grade - حذف صف دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_grades.delete_one({"id": grade_id, "school_id": school_id})
+    
+    return {"message": "تم حذف الصف الدراسي"}
+
+
+# ============== SECTIONS ==============
+
+@api_router.get("/school/settings/sections")
+async def get_school_sections(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school sections - جلب الشعب"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    sections = await db.school_sections.find({"school_id": school_id}, {"_id": 0}).to_list(200)
+    return {"sections": sections}
+
+
+@api_router.post("/school/settings/sections")
+async def create_school_section(
+    data: SectionCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create section - إنشاء شعبة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    section = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "name": data.name,
+        "grade_id": data.grade_id,
+        "class_id": data.class_id,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.school_sections.insert_one(section)
+    section.pop("_id", None)
+    
+    return {"message": "تم إضافة الشعبة", "section": section}
+
+
+@api_router.delete("/school/settings/sections/{section_id}")
+async def delete_school_section(
+    section_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete section - حذف شعبة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.school_sections.delete_one({"id": section_id, "school_id": school_id})
+    
+    return {"message": "تم حذف الشعبة"}
+
+
+# ============== ACADEMIC TERMS ==============
+
+@api_router.get("/school/settings/academic-terms")
+async def get_academic_terms(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get academic terms - جلب الفصول الدراسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    terms = await db.academic_terms.find({"school_id": school_id}, {"_id": 0}).sort("start_date", 1).to_list(10)
+    return {"terms": terms}
+
+
+@api_router.post("/school/settings/academic-terms")
+async def create_academic_term(
+    data: AcademicTermCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create academic term - إنشاء فصل دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    term = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.academic_terms.insert_one(term)
+    term.pop("_id", None)
+    
+    return {"message": "تم إضافة الفصل الدراسي", "term": term}
+
+
+@api_router.put("/school/settings/academic-terms/{term_id}")
+async def update_academic_term(
+    term_id: str,
+    data: AcademicTermCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update academic term - تحديث فصل دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.academic_terms.update_one(
+        {"id": term_id, "school_id": school_id},
+        {
+            "$set": {
+                "name": data.name,
+                "name_en": data.name_en,
+                "start_date": data.start_date,
+                "end_date": data.end_date,
+                "is_active": data.is_active,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "تم تحديث الفصل الدراسي"}
+
+
+@api_router.delete("/school/settings/academic-terms/{term_id}")
+async def delete_academic_term(
+    term_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete academic term - حذف فصل دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.academic_terms.delete_one({"id": term_id, "school_id": school_id})
+    
+    return {"message": "تم حذف الفصل الدراسي"}
+
+
+# ============== SUBJECTS (for scheduling) ==============
+
+@api_router.get("/school/settings/subjects")
+async def get_school_subjects(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school subjects - جلب المواد الدراسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    subjects = await db.subjects.find({"tenant_id": school_id}, {"_id": 0}).to_list(100)
+    return {"subjects": subjects}
+
+
+@api_router.post("/school/settings/subjects")
+async def create_school_subject(
+    data: SubjectCreateForSchool,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create subject - إنشاء مادة دراسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    subject = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": school_id,
+        "name": data.name,
+        "name_en": data.name_en,
+        "grade_id": data.grade_id,
+        "weekly_periods": data.weekly_periods,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.subjects.insert_one(subject)
+    subject.pop("_id", None)
+    
+    return {"message": "تم إضافة المادة الدراسية", "subject": subject}
+
+
+@api_router.delete("/school/settings/subjects/{subject_id}")
+async def delete_school_subject(
+    subject_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete subject - حذف مادة دراسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    await db.subjects.delete_one({"id": subject_id, "tenant_id": school_id})
+    
+    return {"message": "تم حذف المادة الدراسية"}
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
