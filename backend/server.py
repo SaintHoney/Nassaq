@@ -1690,12 +1690,20 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
             raise HTTPException(status_code=500, detail="AI service not configured")
         
         system_prompt = """أنت حكيم، المساعد الذكي لمنصة نَسَّق لإدارة المدارس.
-        
+
 مهمتك:
 - مساعدة المستخدمين في فهم النظام وميزاته
 - الإجابة على الأسئلة المتعلقة بإدارة المدارس والعمليات التعليمية
 - تقديم توصيات ذكية بناءً على البيانات المتاحة
 - شرح كيفية استخدام الميزات المختلفة في النظام
+- المساعدة في إدارة الجداول الدراسية وتوزيع الحصص
+
+خبراتك في الجدولة:
+- إنشاء جداول دراسية متوازنة ومحسّنة
+- توزيع الحصص على المعلمين بشكل عادل
+- كشف التعارضات في الجداول
+- اقتراح حلول للتعارضات
+- تحسين استغلال الوقت والموارد
 
 أسلوبك:
 - ودود ومهني
@@ -1720,19 +1728,51 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
         user_msg = UserMessage(text=message.message + context_info)
         response = await chat.send_message(user_msg)
         
+        # Enhanced suggestions based on context
         suggestions = []
-        if "مدرسة" in message.message or "school" in message.message.lower():
+        msg_lower = message.message.lower()
+        if "جدول" in message.message or "schedule" in msg_lower:
+            suggestions = ["إنشاء جدول جديد", "توليد جدول تلقائي", "كشف التعارضات", "تعديل حصة"]
+        elif "حصة" in message.message or "حصص" in message.message:
+            suggestions = ["إضافة حصة", "نقل حصة", "حذف حصة", "عرض الجدول"]
+        elif "تعارض" in message.message or "conflict" in msg_lower:
+            suggestions = ["عرض التعارضات", "حل التعارضات", "اقتراحات الإصلاح"]
+        elif "معلم" in message.message or "teacher" in msg_lower:
+            suggestions = ["جدول المعلم", "نصاب المعلم", "توفر المعلم", "إضافة معلم"]
+        elif "فصل" in message.message or "class" in msg_lower:
+            suggestions = ["جدول الفصل", "طلاب الفصل", "مواد الفصل", "إضافة فصل"]
+        elif "مدرسة" in message.message or "school" in msg_lower:
             suggestions = ["إنشاء مدرسة جديدة", "عرض قائمة المدارس", "تعديل بيانات المدرسة"]
-        elif "طالب" in message.message or "student" in message.message.lower():
+        elif "طالب" in message.message or "student" in msg_lower:
             suggestions = ["إضافة طالب جديد", "عرض سجلات الطلاب", "تقارير الحضور"]
-        elif "معلم" in message.message or "teacher" in message.message.lower():
-            suggestions = ["إضافة معلم جديد", "جدول الحصص", "تقييم الأداء"]
+        elif "حضور" in message.message or "attendance" in msg_lower:
+            suggestions = ["تسجيل الحضور", "تقرير الحضور", "إشعارات الغياب"]
+        elif "تقرير" in message.message or "report" in msg_lower:
+            suggestions = ["تقارير الجداول", "تقارير الحضور", "تقارير الأداء"]
         
         return HakimResponse(response=response, suggestions=suggestions)
         
     except ImportError:
         # Provide smart fallback response based on user question
-        if "إضافة مدرسة" in message.message or "مدرسة جديدة" in message.message:
+        msg = message.message.lower()
+        
+        # Scheduling-related responses
+        if "جدول" in message.message or "schedule" in msg:
+            return HakimResponse(
+                response="لإدارة الجداول الدراسية:\n\n📅 **إنشاء جدول جديد:**\n1. اذهب إلى 'الجدول المدرسي'\n2. انقر على 'جديد'\n3. أدخل بيانات الجدول\n\n⚡ **توليد تلقائي:**\n1. انقر على 'توليد'\n2. اختر الإعدادات\n3. سيقوم النظام بتوزيع الحصص تلقائياً\n\n✋ **السحب والإفلات:**\nيمكنك سحب أي حصة ونقلها لوقت آخر مباشرة",
+                suggestions=["توليد جدول تلقائي", "كشف التعارضات", "إعدادات الجدولة"]
+            )
+        elif "حصة" in message.message or "حصص" in message.message:
+            return HakimResponse(
+                response="لإدارة الحصص:\n\n➕ **إضافة حصة:**\n1. انقر على الخلية الفارغة في الجدول\n2. اختر المادة والمعلم والفصل\n3. احفظ الحصة\n\n🔄 **نقل حصة:**\nاسحب الحصة وأفلتها في الوقت الجديد\n\n❌ **حذف حصة:**\nانقر على الحصة ثم 'حذف'",
+                suggestions=["عرض الجدول", "كشف التعارضات", "إعدادات الفترات"]
+            )
+        elif "تعارض" in message.message:
+            return HakimResponse(
+                response="لحل تعارضات الجدول:\n\n🔍 **أنواع التعارضات:**\n- معلم له حصتان بنفس الوقت\n- فصل له حصتان بنفس الوقت\n- تجاوز النصاب التدريسي\n\n💡 **الحل:**\n1. انقر على 'كشف التعارضات'\n2. النظام سيعرض قائمة التعارضات\n3. انقل الحصص المتعارضة أو احذفها",
+                suggestions=["عرض التعارضات", "توليد جدول جديد", "إعدادات القيود"]
+            )
+        elif "إضافة مدرسة" in message.message or "مدرسة جديدة" in message.message:
             return HakimResponse(
                 response="لإضافة مدرسة جديدة:\n1. اذهب إلى 'مركز القيادة'\n2. انقر على 'إضافة مدرسة جديدة' في قسم الإجراءات السريعة\n3. املأ بيانات المدرسة والمدير\n4. اضغط 'إنشاء' لإتمام العملية",
                 suggestions=["إدارة المدارس", "إضافة مستخدم جديد", "عرض التقارير"]
@@ -1752,16 +1792,21 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
                 response="لإدارة الحضور والغياب:\n1. اذهب إلى لوحة تحكم المدرسة\n2. اختر 'الحضور اليومي'\n3. حدد الفصل والتاريخ\n4. سجّل الحضور والغياب لكل طالب",
                 suggestions=["تقارير الحضور", "إشعارات الغياب", "إعدادات الحضور"]
             )
+        elif "إعدادات" in message.message or "settings" in msg:
+            return HakimResponse(
+                response="لضبط إعدادات المدرسة:\n1. اذهب إلى 'إعدادات المدرسة'\n2. يمكنك تعديل:\n   - أيام العمل والإجازات\n   - عدد الحصص والأوقات\n   - فترات الاستراحة\n   - النصاب التدريسي للمعلمين\n   - القيود الإدارية",
+                suggestions=["أيام العمل", "الفترات الزمنية", "القيود الإدارية"]
+            )
         else:
             return HakimResponse(
-                response="مرحباً! أنا حكيم، مساعدك الذكي في منصة نَسَّق لإدارة المدارس. يمكنني مساعدتك في:\n\n• إدارة المدارس والحسابات\n• فهم ميزات النظام\n• إنشاء التقارير والتحليلات\n• إدارة الحضور والجداول\n\nكيف يمكنني مساعدتك؟",
-                suggestions=["تعرف على النظام", "إدارة المدارس", "إدارة المستخدمين"]
+                response="مرحباً! أنا حكيم، مساعدك الذكي في منصة نَسَّق لإدارة المدارس. يمكنني مساعدتك في:\n\n📅 **إدارة الجداول:**\n• إنشاء وتعديل الجداول الدراسية\n• توليد جداول تلقائية\n• كشف وحل التعارضات\n\n🏫 **إدارة المدارس:**\n• إضافة وتعديل المدارس\n• إدارة المستخدمين والصلاحيات\n\n📊 **التقارير:**\n• تقارير الحضور والأداء\n• تحليلات شاملة\n\nكيف يمكنني مساعدتك؟",
+                suggestions=["إدارة الجداول", "إدارة المدارس", "التقارير والتحليلات"]
             )
     except Exception as e:
         logging.error(f"Hakim error: {str(e)}")
         return HakimResponse(
             response="مرحباً! أنا حكيم. يمكنني مساعدتك في استخدام منصة نَسَّق. ما الذي تحتاج المساعدة فيه؟",
-            suggestions=["إضافة مدرسة", "إنشاء مستخدم", "عرض التقارير"]
+            suggestions=["إدارة الجداول", "إدارة المدارس", "التقارير"]
         )
 
 # ============== REGISTRATION REQUESTS MODELS ==============
