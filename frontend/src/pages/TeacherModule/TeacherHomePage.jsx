@@ -43,17 +43,13 @@ const getTimeUntilLesson = (lessonTime) => {
   lessonEndDate.setMinutes(lessonEndDate.getMinutes() + 45);
   
   const diff = lessonDate - now;
-  const endDiff = lessonEndDate - now;
   const diffMinutes = Math.floor(diff / 60000);
   
-  // If lesson end time has passed by more than 4 hours, mark as ended
-  if (endDiff < -240 * 60000) return { status: 'ended', minutes: Math.abs(diffMinutes) };
-  
   // If lesson is currently happening (started but not ended)
-  if (diff < 0 && endDiff > 0) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
+  if (diff < 0 && now < lessonEndDate) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
   
-  // If lesson recently ended (within 4 hours), still show as ready (teacher can still start)
-  if (endDiff < 0) return { status: 'ready', minutes: Math.abs(diffMinutes), recentlyEnded: true };
+  // If lesson ended but it's the same day - show as "ready" so teacher can still start late
+  if (diff < 0) return { status: 'ready', minutes: Math.abs(diffMinutes), recentlyEnded: true };
   
   // Lesson hasn't started yet
   if (diffMinutes <= 10) return { status: 'ready', minutes: diffMinutes };
