@@ -251,6 +251,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/audit"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'platform_security_officer', 'platform_data_analyst']}>
+            <AuditLogsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/communication"
         element={
           <ProtectedRoute allowedRoles={['platform_admin']}>
