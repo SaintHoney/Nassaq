@@ -470,6 +470,55 @@ export const SchedulePage = () => {
   // Display teachers based on filter
   const displayTeachers = filterTeacher === 'all' ? teachers : teachers.filter(t => t.id === filterTeacher);
 
+  // Drag and Drop Handlers
+  const handleDragStart = (event) => {
+    const { active } = event;
+    const session = sessions.find(s => s.id === active.id);
+    setActiveSession(session);
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveSession(null);
+    setIsDragging(false);
+
+    if (!over) return;
+
+    const sessionId = active.id;
+    const [targetTeacherId, targetDay, targetSlotId] = over.id.split('__');
+    
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    // Check if dropped in the same place
+    if (session.teacher_id === targetTeacherId && 
+        session.day_of_week === targetDay && 
+        session.time_slot_id === targetSlotId) {
+      return;
+    }
+
+    // Move the session
+    try {
+      await api.put(`/api/schedule-sessions/${sessionId}/move`, {
+        target_day: targetDay,
+        target_slot_id: targetSlotId,
+        target_teacher_id: targetTeacherId,
+      });
+
+      toast.success(isRTL ? 'تم نقل الحصة بنجاح' : 'Session moved successfully');
+      fetchSessions();
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || (isRTL ? 'فشل نقل الحصة - قد يوجد تعارض' : 'Failed to move session - conflict may exist');
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveSession(null);
+    setIsDragging(false);
+  };
+
   return (
     <Sidebar>
       <div className="min-h-screen bg-background overflow-hidden max-w-full" data-testid="schedule-page">
