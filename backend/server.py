@@ -26,6 +26,9 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
 import random
+import qrcode
+import io
+import base64
 from enum import Enum
 
 # Import Audit Engine
