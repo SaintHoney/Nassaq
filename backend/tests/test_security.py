@@ -29,85 +29,83 @@ class TestRBAC:
         user = {"role": "platform_admin", "permissions": []}
         
         # Test critical permissions
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_SCHOOLS.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_ALL_USERS.value)
-        assert RBACMiddleware.has_permission(user, Permission.VIEW_AUDIT_LOGS.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_AI_FEATURES.value)
+        assert RBACMiddleware.has_permission(user, Permission.TENANTS_CREATE.value)
+        assert RBACMiddleware.has_permission(user, Permission.USERS_CREATE.value)
+        assert RBACMiddleware.has_permission(user, Permission.AUDIT_VIEW.value)
+        assert RBACMiddleware.has_permission(user, Permission.AI_FEATURES.value)
     
     def test_school_principal_limited_permissions(self):
         """School Principal should have school-level permissions only"""
         user = {"role": "school_principal", "permissions": []}
         
         # Should have school management
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_CLASSES.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_TEACHERS.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_STUDENTS.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_SCHEDULES.value)
+        assert RBACMiddleware.has_permission(user, Permission.ACADEMIC_MANAGE_SECTIONS.value)
+        assert RBACMiddleware.has_permission(user, Permission.USERS_CREATE.value)
+        assert RBACMiddleware.has_permission(user, Permission.SCHEDULE_CREATE.value)
         
         # Should NOT have platform-level permissions
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_SCHOOLS.value)
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_ALL_USERS.value)
+        assert not RBACMiddleware.has_permission(user, Permission.TENANTS_CREATE.value)
     
     def test_teacher_limited_permissions(self):
         """Teacher should have teaching-related permissions only"""
         user = {"role": "teacher", "permissions": []}
         
         # Should have teaching permissions
-        assert RBACMiddleware.has_permission(user, Permission.RECORD_ATTENDANCE.value)
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_GRADES.value)
-        assert RBACMiddleware.has_permission(user, Permission.RECORD_BEHAVIOR.value)
+        assert RBACMiddleware.has_permission(user, Permission.ATTENDANCE_RECORD.value)
+        assert RBACMiddleware.has_permission(user, Permission.ASSESSMENTS_GRADE.value)
+        assert RBACMiddleware.has_permission(user, Permission.BEHAVIOUR_RECORD.value)
         
         # Should NOT have management permissions
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_TEACHERS.value)
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_SCHEDULES.value)
+        assert not RBACMiddleware.has_permission(user, Permission.USERS_CREATE.value)
+        assert not RBACMiddleware.has_permission(user, Permission.TENANTS_CREATE.value)
     
     def test_student_minimal_permissions(self):
         """Student should have view-only permissions"""
         user = {"role": "student", "permissions": []}
         
         # Should have view permissions
-        assert RBACMiddleware.has_permission(user, Permission.VIEW_OWN_GRADES.value)
-        assert RBACMiddleware.has_permission(user, Permission.VIEW_SCHEDULE.value)
+        assert RBACMiddleware.has_permission(user, Permission.ASSESSMENTS_VIEW.value)
+        assert RBACMiddleware.has_permission(user, Permission.SCHEDULE_VIEW.value)
         
         # Should NOT have any management permissions
-        assert not RBACMiddleware.has_permission(user, Permission.RECORD_ATTENDANCE.value)
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_GRADES.value)
+        assert not RBACMiddleware.has_permission(user, Permission.ATTENDANCE_RECORD.value)
+        assert not RBACMiddleware.has_permission(user, Permission.ASSESSMENTS_GRADE.value)
     
     def test_parent_limited_permissions(self):
         """Parent should have child monitoring permissions only"""
         user = {"role": "parent", "permissions": []}
         
         # Should have monitoring permissions
-        assert RBACMiddleware.has_permission(user, Permission.VIEW_CHILD_GRADES.value)
-        assert RBACMiddleware.has_permission(user, Permission.VIEW_CHILD_ATTENDANCE.value)
+        assert RBACMiddleware.has_permission(user, Permission.ASSESSMENTS_VIEW.value)
+        assert RBACMiddleware.has_permission(user, Permission.ATTENDANCE_VIEW.value)
         
         # Should NOT have any management permissions
-        assert not RBACMiddleware.has_permission(user, Permission.MANAGE_STUDENTS.value)
+        assert not RBACMiddleware.has_permission(user, Permission.USERS_CREATE.value)
     
     def test_custom_permissions_override(self):
         """Custom permissions should override role defaults"""
         user = {
             "role": "teacher",
-            "permissions": [Permission.MANAGE_SCHEDULES.value]  # Custom override
+            "permissions": [Permission.SCHEDULE_CREATE.value]  # Custom override
         }
         
         # Should have custom permission
-        assert RBACMiddleware.has_permission(user, Permission.MANAGE_SCHEDULES.value)
+        assert RBACMiddleware.has_permission(user, Permission.SCHEDULE_CREATE.value)
     
     def test_has_any_permission(self):
         """Test checking for any of multiple permissions"""
         user = {"role": "teacher", "permissions": []}
         
-        # Teacher has RECORD_ATTENDANCE but not MANAGE_SCHOOLS
+        # Teacher has ATTENDANCE_RECORD but not TENANTS_CREATE
         assert RBACMiddleware.has_any_permission(
             user, 
-            [Permission.MANAGE_SCHOOLS.value, Permission.RECORD_ATTENDANCE.value]
+            [Permission.TENANTS_CREATE.value, Permission.ATTENDANCE_RECORD.value]
         )
         
         # Teacher has neither of these
         assert not RBACMiddleware.has_any_permission(
             user,
-            [Permission.MANAGE_SCHOOLS.value, Permission.MANAGE_ALL_USERS.value]
+            [Permission.TENANTS_CREATE.value, Permission.USERS_DELETE.value]
         )
 
 
