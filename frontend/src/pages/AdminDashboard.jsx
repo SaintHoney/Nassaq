@@ -282,18 +282,18 @@ export const AdminDashboard = () => {
         active_teachers: response.data.active_teachers || response.data.total_teachers - (response.data.teachers_without_rank || 0),
         new_teachers_this_month: response.data.new_teachers_this_month || 85,
         total_admins: response.data.total_admins || 245,
-        active_users_today: response.data.active_users_today || response.data.active_users || 12500,
-        api_calls_today: response.data.api_calls_today || 45000,
+        active_users_today: response.data.active_users_today || response.data.active_users || 0,
+        api_calls_today: response.data.api_calls_today || 0,
       });
       
       if (showToast) toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
     } catch (error) {
-      // Use mock data
+      // Set zeros instead of mock data
       setStats({
-        total_schools: 202, active_schools: 185, suspended_schools: 10, pending_schools: 7,
-        total_students: 50000, active_students: 48500, new_students_this_month: 1200,
-        total_teachers: 3062, active_teachers: 2980, new_teachers_this_month: 85,
-        total_admins: 245, active_users_today: 12500, api_calls_today: 45000,
+        total_schools: 0, active_schools: 0, suspended_schools: 0, pending_schools: 0,
+        total_students: 0, active_students: 0, new_students_this_month: 0,
+        total_teachers: 0, active_teachers: 0, new_teachers_this_month: 0,
+        total_admins: 0, active_users_today: 0, api_calls_today: 0,
       });
     } finally {
       setLoading(false);
