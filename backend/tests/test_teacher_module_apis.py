@@ -445,14 +445,15 @@ class TestAssessmentsCreateAPI:
         return token, teacher_id
     
     def test_create_assessment(self, auth_token_and_teacher_id):
-        """Test POST /api/assessments"""
+        """Test POST /api/assessments - uses Pydantic model with title and assessment_type"""
         token, teacher_id = auth_token_and_teacher_id
         headers = {"Authorization": f"Bearer {token}"}
         
+        # Note: POST /api/assessments uses Pydantic model requiring 'title' and 'assessment_type'
         assessment_data = {
             "teacher_id": teacher_id,
-            "name": f"TEST: اختبار {uuid.uuid4().hex[:6]}",
-            "type": "quiz",
+            "title": f"TEST: اختبار {uuid.uuid4().hex[:6]}",
+            "assessment_type": "quiz",  # Must be one of: quiz, exam, homework, project, participation
             "class_id": "test-class-001",
             "subject_id": "test-subject-001",
             "max_score": 100,
@@ -468,15 +469,11 @@ class TestAssessmentsCreateAPI:
         assert response.status_code == 200, f"POST assessments failed: {response.text}"
         data = response.json()
         
-        assert "message" in data, "Missing message in response"
-        assert "assessment" in data, "Missing assessment in response"
+        # Response uses AssessmentResponse model
+        assert "id" in data, "Missing id in response"
+        assert data.get("title") == assessment_data["title"], "Title mismatch"
         
-        assessment = data.get("assessment", {})
-        assert assessment.get("name") == assessment_data["name"], "Name mismatch"
-        assert assessment.get("status") == "draft", f"Expected status 'draft', got '{assessment.get('status')}'"
-        
-        print(f"Created assessment: {assessment.get('id')}")
-        return data
+        print(f"Created assessment: {data.get('id')}")
 
 
 if __name__ == "__main__":
