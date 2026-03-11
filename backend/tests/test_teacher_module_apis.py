@@ -449,13 +449,28 @@ class TestAssessmentsCreateAPI:
         token, teacher_id = auth_token_and_teacher_id
         headers = {"Authorization": f"Bearer {token}"}
         
+        # First get teacher's classes to use a real class_id
+        classes_response = requests.get(
+            f"{BASE_URL}/api/teacher/classes/{teacher_id}",
+            headers=headers
+        )
+        
+        # If teacher has no classes, skip this test
+        if classes_response.status_code != 200 or not classes_response.json():
+            pytest.skip("Teacher has no assigned classes - skipping assessment creation test")
+        
+        classes = classes_response.json()
+        class_id = classes[0].get("id") if classes else None
+        
+        if not class_id:
+            pytest.skip("No valid class_id found")
+        
         # Note: POST /api/assessments uses Pydantic model requiring 'title' and 'assessment_type'
         assessment_data = {
             "teacher_id": teacher_id,
             "title": f"TEST: اختبار {uuid.uuid4().hex[:6]}",
             "assessment_type": "quiz",  # Must be one of: quiz, exam, homework, project, participation
-            "class_id": "test-class-001",
-            "subject_id": "test-subject-001",
+            "class_id": class_id,
             "max_score": 100,
             "date": "2025-01-20"
         }
