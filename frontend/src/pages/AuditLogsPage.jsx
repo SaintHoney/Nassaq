@@ -300,7 +300,7 @@ const AuditLogsPage = () => {
                   <SelectValue placeholder={isRTL ? 'الخطورة' : 'Severity'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
                   <SelectItem value="low">{isRTL ? 'منخفضة' : 'Low'}</SelectItem>
                   <SelectItem value="medium">{isRTL ? 'متوسطة' : 'Medium'}</SelectItem>
                   <SelectItem value="high">{isRTL ? 'عالية' : 'High'}</SelectItem>
