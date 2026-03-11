@@ -2092,6 +2092,219 @@ class SubjectResponse(BaseModel):
     created_at: Optional[str] = None
 
 # ============== TEACHERS ROUTES ==============
+
+# Teacher Wizard Options
+@api_router.get("/teachers/options/subjects")
+async def get_teacher_subjects_options(current_user: dict = Depends(get_current_user)):
+    """Get available subjects for teacher creation"""
+    school_id = current_user.get("tenant_id")
+    
+    subjects = await db.subjects.find(
+        {"school_id": school_id} if school_id else {},
+        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "code": 1}
+    ).to_list(100)
+    
+    # Default subjects if none exist
+    if not subjects:
+        subjects = [
+            {"id": "subj-1", "name": "اللغة العربية", "name_en": "Arabic Language", "code": "ARB"},
+            {"id": "subj-2", "name": "الرياضيات", "name_en": "Mathematics", "code": "MTH"},
+            {"id": "subj-3", "name": "العلوم", "name_en": "Science", "code": "SCI"},
+            {"id": "subj-4", "name": "اللغة الإنجليزية", "name_en": "English Language", "code": "ENG"},
+            {"id": "subj-5", "name": "الدراسات الإسلامية", "name_en": "Islamic Studies", "code": "ISL"},
+            {"id": "subj-6", "name": "الدراسات الاجتماعية", "name_en": "Social Studies", "code": "SOC"},
+            {"id": "subj-7", "name": "الحاسب الآلي", "name_en": "Computer Science", "code": "CMP"},
+            {"id": "subj-8", "name": "التربية الفنية", "name_en": "Art Education", "code": "ART"},
+            {"id": "subj-9", "name": "التربية البدنية", "name_en": "Physical Education", "code": "PHY"},
+        ]
+    
+    return {"subjects": subjects}
+
+@api_router.get("/teachers/options/grades")
+async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
+    """Get available grade levels for teacher assignment"""
+    school_id = current_user.get("tenant_id")
+    
+    grades = await db.grade_levels.find(
+        {"school_id": school_id} if school_id else {},
+        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "grade": 1, "stage": 1}
+    ).to_list(100)
+    
+    if not grades:
+        grades = [
+            {"id": "grade-1", "name": "الصف الأول", "name_en": "Grade 1", "grade": 1, "stage": "ابتدائي"},
+            {"id": "grade-2", "name": "الصف الثاني", "name_en": "Grade 2", "grade": 2, "stage": "ابتدائي"},
+            {"id": "grade-3", "name": "الصف الثالث", "name_en": "Grade 3", "grade": 3, "stage": "ابتدائي"},
+            {"id": "grade-4", "name": "الصف الرابع", "name_en": "Grade 4", "grade": 4, "stage": "ابتدائي"},
+            {"id": "grade-5", "name": "الصف الخامس", "name_en": "Grade 5", "grade": 5, "stage": "ابتدائي"},
+            {"id": "grade-6", "name": "الصف السادس", "name_en": "Grade 6", "grade": 6, "stage": "ابتدائي"},
+        ]
+    
+    return {"grades": grades}
+
+@api_router.get("/teachers/options/academic-degrees")
+async def get_academic_degrees_options(current_user: dict = Depends(get_current_user)):
+    """Get available academic degrees"""
+    degrees = [
+        {"id": "diploma", "name": "دبلوم", "name_en": "Diploma"},
+        {"id": "bachelor", "name": "بكالوريوس", "name_en": "Bachelor's"},
+        {"id": "master", "name": "ماجستير", "name_en": "Master's"},
+        {"id": "doctorate", "name": "دكتوراه", "name_en": "Doctorate"},
+    ]
+    return {"degrees": degrees}
+
+@api_router.get("/teachers/options/teacher-ranks")
+async def get_teacher_ranks_options(current_user: dict = Depends(get_current_user)):
+    """Get available teacher ranks (Saudi system)"""
+    ranks = [
+        {"id": "trainee", "name": "معلم متدرب", "name_en": "Trainee Teacher"},
+        {"id": "practicing", "name": "معلم ممارس", "name_en": "Practicing Teacher"},
+        {"id": "advanced", "name": "معلم متقدم", "name_en": "Advanced Teacher"},
+        {"id": "expert", "name": "معلم خبير", "name_en": "Expert Teacher"},
+    ]
+    return {"ranks": ranks}
+
+@api_router.get("/teachers/options/contract-types")
+async def get_contract_types_options(current_user: dict = Depends(get_current_user)):
+    """Get available contract types"""
+    types = [
+        {"id": "permanent", "name": "دائم", "name_en": "Permanent"},
+        {"id": "contract", "name": "عقد", "name_en": "Contract"},
+        {"id": "hourly", "name": "بالساعة", "name_en": "Hourly"},
+        {"id": "temporary", "name": "مؤقت", "name_en": "Temporary"},
+    ]
+    return {"types": types}
+
+@api_router.get("/teachers/options/nationalities")
+async def get_nationalities_options(current_user: dict = Depends(get_current_user)):
+    """Get available nationalities"""
+    nationalities = [
+        {"id": "sa", "name": "سعودي", "name_en": "Saudi"},
+        {"id": "eg", "name": "مصري", "name_en": "Egyptian"},
+        {"id": "jo", "name": "أردني", "name_en": "Jordanian"},
+        {"id": "sy", "name": "سوري", "name_en": "Syrian"},
+        {"id": "pk", "name": "باكستاني", "name_en": "Pakistani"},
+        {"id": "in", "name": "هندي", "name_en": "Indian"},
+        {"id": "other", "name": "أخرى", "name_en": "Other"},
+    ]
+    return {"nationalities": nationalities}
+
+class TeacherWizardCreate(BaseModel):
+    """Teacher creation via wizard"""
+    full_name: str
+    full_name_en: Optional[str] = None
+    email: str
+    phone: str
+    national_id: Optional[str] = None
+    gender: str = "male"
+    nationality: Optional[str] = "sa"
+    date_of_birth: Optional[str] = None
+    subject_ids: List[str] = []
+    grade_ids: List[str] = []
+    academic_degree: Optional[str] = None
+    specialization: Optional[str] = None
+    teacher_rank: Optional[str] = None
+    contract_type: Optional[str] = "permanent"
+    years_of_experience: Optional[int] = 0
+    hire_date: Optional[str] = None
+
+@api_router.post("/teachers/create")
+async def create_teacher_wizard(
+    data: TeacherWizardCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new teacher via wizard"""
+    school_id = current_user.get("tenant_id")
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Check if email exists
+    existing = await db.users.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="البريد الإلكتروني مسجل مسبقاً")
+    
+    # Get school info
+    school = await db.schools.find_one({"id": school_id}, {"_id": 0, "code": 1})
+    school_code = school.get("code", "NSS") if school else "NSS"
+    
+    # Generate IDs and password
+    teacher_id = str(uuid.uuid4())
+    user_id = str(uuid.uuid4())
+    temp_password = f"T{random.randint(100000, 999999)}"
+    
+    # Create teacher document
+    teacher_doc = {
+        "id": teacher_id,
+        "school_id": school_id,
+        "user_id": user_id,
+        "full_name": data.full_name,
+        "full_name_en": data.full_name_en or data.full_name,
+        "email": data.email,
+        "phone": data.phone,
+        "national_id": data.national_id,
+        "gender": data.gender,
+        "nationality": data.nationality,
+        "date_of_birth": data.date_of_birth,
+        "specialization": data.specialization or (data.subject_ids[0] if data.subject_ids else None),
+        "subject_ids": data.subject_ids,
+        "grade_ids": data.grade_ids,
+        "qualification": data.academic_degree,
+        "rank": data.teacher_rank,
+        "contract_type": data.contract_type,
+        "years_of_experience": data.years_of_experience or 0,
+        "hire_date": data.hire_date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    # Create user document
+    user_doc = {
+        "id": user_id,
+        "email": data.email,
+        "password_hash": bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+        "full_name": data.full_name,
+        "full_name_en": data.full_name_en or data.full_name,
+        "role": "teacher",
+        "is_active": True,
+        "is_suspended": False,
+        "tenant_id": school_id,
+        "school_id": school_id,
+        "teacher_id": teacher_id,
+        "phone": data.phone,
+        "permissions": [
+            "view_students", "manage_attendance", "manage_grades",
+            "view_schedule", "manage_behavior", "view_reports"
+        ],
+        "preferred_language": "ar",
+        "preferred_theme": "light",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.teachers.insert_one(teacher_doc)
+    await db.users.insert_one(user_doc)
+    
+    # Update school teacher count
+    await db.schools.update_one(
+        {"id": school_id},
+        {"$inc": {"current_teachers": 1}}
+    )
+    
+    return {
+        "success": True,
+        "teacher": {
+            "id": teacher_id,
+            "full_name": data.full_name,
+            "email": data.email,
+            "temp_password": temp_password,
+            "specialization": data.specialization,
+            "rank": data.teacher_rank,
+        },
+        "message": "تم إنشاء حساب المعلم بنجاح"
+    }
+
 @api_router.post("/teachers", response_model=TeacherResponse)
 async def create_teacher(
     teacher_data: TeacherCreate,
