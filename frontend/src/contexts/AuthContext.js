@@ -9,6 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('nassaq_token'));
   const [loading, setLoading] = useState(true);
+  
+  // School Context Switching (Platform Admin -> School Manager simulation)
+  const [schoolContext, setSchoolContext] = useState(() => {
+    const saved = sessionStorage.getItem('nassaq_school_context');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isImpersonating, setIsImpersonating] = useState(() => {
+    return sessionStorage.getItem('nassaq_impersonating') === 'true';
+  });
 
   const api = axios.create({
     baseURL: `${API_URL}/api`,
