@@ -373,6 +373,16 @@ function AppRoutes() {
         }
       />
       
+      {/* Principal Users & Classes Management */}
+      <Route
+        path="/principal/users-management"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <UsersClassesManagement />
+          </ProtectedRoute>
+        }
+      />
+      
       {/* Assessment Route */}
       <Route
         path="/admin/assessments"
