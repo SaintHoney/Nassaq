@@ -57,33 +57,48 @@ class TestAuthAPI:
 class TestUsersManagementAPI:
     """Test Users Management API - Issue #15"""
     
-    def test_get_users_list(self, auth_headers):
-        """Test that users list API returns data successfully"""
-        response = requests.get(f"{BASE_URL}/api/users", headers=auth_headers)
+    def test_get_platform_users_list(self, auth_headers):
+        """Test that platform users list API returns data successfully - Issue #15"""
+        response = requests.get(f"{BASE_URL}/api/users/platform-users", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), "Expected list of users"
-        assert len(data) > 0, "Expected at least one user"
-        print(f"✅ Users API returned {len(data)} users - Issue #15 VERIFIED")
+        assert "users" in data, "Expected 'users' key in response"
+        assert "total" in data, "Expected 'total' key in response"
+        assert isinstance(data["users"], list), "Expected list of users"
+        assert len(data["users"]) > 0, "Expected at least one user"
+        print(f"✅ Platform Users API returned {len(data['users'])} users (total: {data['total']}) - Issue #15 VERIFIED")
     
-    def test_get_users_with_pagination(self, auth_headers):
-        """Test users list with pagination parameters"""
-        response = requests.get(f"{BASE_URL}/api/users?page=1&limit=10", headers=auth_headers)
+    def test_get_platform_users_with_pagination(self, auth_headers):
+        """Test platform users list with pagination parameters"""
+        response = requests.get(f"{BASE_URL}/api/users/platform-users?skip=0&limit=10", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), "Expected list of users"
-        print(f"✅ Users API with pagination returned {len(data)} users")
+        assert "users" in data, "Expected 'users' key in response"
+        assert len(data["users"]) <= 10, "Expected max 10 users with limit=10"
+        print(f"✅ Platform Users API with pagination returned {len(data['users'])} users")
     
-    def test_get_users_with_role_filter(self, auth_headers):
-        """Test users list with role filter"""
-        response = requests.get(f"{BASE_URL}/api/users?role=teacher", headers=auth_headers)
+    def test_get_platform_users_with_role_filter(self, auth_headers):
+        """Test platform users list with role filter"""
+        response = requests.get(f"{BASE_URL}/api/users/platform-users?role=teacher", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), "Expected list of users"
-        print(f"✅ Users API with role filter returned {len(data)} users")
+        assert "users" in data, "Expected 'users' key in response"
+        # Verify all returned users have the teacher role
+        for user in data["users"]:
+            assert user.get("role") == "teacher", f"Expected teacher role, got {user.get('role')}"
+        print(f"✅ Platform Users API with role filter returned {len(data['users'])} teachers")
+    
+    def test_get_platform_users_with_search(self, auth_headers):
+        """Test platform users list with search"""
+        response = requests.get(f"{BASE_URL}/api/users/platform-users?search=admin", headers=auth_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        
+        data = response.json()
+        assert "users" in data, "Expected 'users' key in response"
+        print(f"✅ Platform Users API with search returned {len(data['users'])} users")
 
 
 class TestDashboardAPIs:
@@ -95,31 +110,27 @@ class TestDashboardAPIs:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
+        # Verify expected fields
+        assert "total_schools" in data or "schools" in data, "Expected schools count in response"
         print(f"✅ Dashboard stats API working")
-    
-    def test_dashboard_activity(self, auth_headers):
-        """Test dashboard activity endpoint"""
-        response = requests.get(f"{BASE_URL}/api/dashboard/activity", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Dashboard activity API working")
-        else:
-            print(f"ℹ️ Dashboard activity endpoint status: {response.status_code}")
     
     def test_dashboard_with_type_filter(self, auth_headers):
         """Test dashboard with type filter - Issue #2"""
         response = requests.get(f"{BASE_URL}/api/dashboard/stats?type=private", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Dashboard with type filter working - Issue #2 VERIFIED")
-        else:
-            print(f"ℹ️ Dashboard type filter status: {response.status_code}")
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        print("✅ Dashboard with type filter working - Issue #2 VERIFIED")
     
     def test_dashboard_with_school_filter(self, auth_headers):
         """Test dashboard with school filter - Issue #3"""
         response = requests.get(f"{BASE_URL}/api/dashboard/stats?school_id=test", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Dashboard with school filter working - Issue #3 VERIFIED")
-        else:
-            print(f"ℹ️ Dashboard school filter status: {response.status_code}")
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        print("✅ Dashboard with school filter working - Issue #3 VERIFIED")
+    
+    def test_dashboard_with_time_window(self, auth_headers):
+        """Test dashboard with time window filter"""
+        response = requests.get(f"{BASE_URL}/api/dashboard/stats?time_window=today", headers=auth_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        print("✅ Dashboard with time window filter working")
 
 
 class TestSchoolsAPI:
@@ -133,36 +144,6 @@ class TestSchoolsAPI:
         data = response.json()
         assert isinstance(data, list), "Expected list of schools"
         print(f"✅ Schools API returned {len(data)} schools")
-
-
-class TestExportAPIs:
-    """Test Export APIs - Issues #18, #21, #42
-    Note: Most export functionality is frontend-only using jsPDF/xlsx libraries
-    """
-    
-    def test_export_dashboard_pdf(self, auth_headers):
-        """Test dashboard PDF export endpoint"""
-        response = requests.get(f"{BASE_URL}/api/export/dashboard?format=pdf", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Dashboard PDF export endpoint exists")
-        else:
-            print(f"ℹ️ Dashboard PDF export is frontend-only (status: {response.status_code})")
-    
-    def test_export_dashboard_excel(self, auth_headers):
-        """Test dashboard Excel export endpoint"""
-        response = requests.get(f"{BASE_URL}/api/export/dashboard?format=excel", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Dashboard Excel export endpoint exists")
-        else:
-            print(f"ℹ️ Dashboard Excel export is frontend-only (status: {response.status_code})")
-    
-    def test_export_security_report(self, auth_headers):
-        """Test security report export endpoint"""
-        response = requests.get(f"{BASE_URL}/api/security/report", headers=auth_headers)
-        if response.status_code == 200:
-            print("✅ Security report export endpoint exists")
-        else:
-            print(f"ℹ️ Security report export is frontend-only (status: {response.status_code})")
 
 
 class TestHakimAPI:
@@ -181,6 +162,19 @@ class TestHakimAPI:
             print("✅ Hakim chat API working")
         else:
             print(f"ℹ️ Hakim chat status: {response.status_code}")
+
+
+class TestNotificationsAPI:
+    """Test Notifications API"""
+    
+    def test_get_unread_count(self, auth_headers):
+        """Test unread notifications count endpoint"""
+        response = requests.get(f"{BASE_URL}/api/notifications/unread-count", headers=auth_headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        
+        data = response.json()
+        assert "count" in data or isinstance(data, int), "Expected count in response"
+        print("✅ Notifications unread count API working")
 
 
 if __name__ == "__main__":
