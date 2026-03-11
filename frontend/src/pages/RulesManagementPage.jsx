@@ -542,37 +542,80 @@ export const RulesManagementPage = () => {
     setSelectedStatus('all');
   };
   
-  // Handle create rule
-  const handleCreateRule = () => {
-    const newRule = {
-      id: Date.now().toString(),
-      ...formData,
-      created_at: new Date().toISOString().split('T')[0],
-      updated_at: new Date().toISOString().split('T')[0],
-    };
-    setRules(prev => [newRule, ...prev]);
-    toast.success(t.ruleCreated);
-    setShowCreateDialog(false);
-    resetForm();
+  // Handle create rule - connected to API
+  const handleCreateRule = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/system/rules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        toast.success(t.ruleCreated);
+        setShowCreateDialog(false);
+        resetForm();
+        fetchRules(); // Refresh data from API
+      } else {
+        toast.error(isRTL ? 'فشل في إنشاء القاعدة' : 'Failed to create rule');
+      }
+    } catch (error) {
+      console.error('Error creating rule:', error);
+      toast.error(isRTL ? 'فشل في إنشاء القاعدة' : 'Failed to create rule');
+    }
   };
   
-  // Handle edit rule
-  const handleEditRule = () => {
-    setRules(prev => prev.map(r => 
-      r.id === showEditSheet.id 
-        ? { ...r, ...formData, updated_at: new Date().toISOString().split('T')[0] }
-        : r
-    ));
-    toast.success(t.ruleUpdated);
-    setShowEditSheet(null);
-    resetForm();
+  // Handle edit rule - connected to API
+  const handleEditRule = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/system/rules/${showEditSheet.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        toast.success(t.ruleUpdated);
+        setShowEditSheet(null);
+        resetForm();
+        fetchRules(); // Refresh data from API
+      } else {
+        toast.error(isRTL ? 'فشل في تحديث القاعدة' : 'Failed to update rule');
+      }
+    } catch (error) {
+      console.error('Error updating rule:', error);
+      toast.error(isRTL ? 'فشل في تحديث القاعدة' : 'Failed to update rule');
+    }
   };
   
-  // Handle delete rule
-  const handleDeleteRule = () => {
-    setRules(prev => prev.filter(r => r.id !== showDeleteDialog.id));
-    toast.success(t.ruleDeleted);
-    setShowDeleteDialog(null);
+  // Handle delete rule - connected to API
+  const handleDeleteRule = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/system/rules/${showDeleteDialog.id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (response.ok) {
+        toast.success(t.ruleDeleted);
+        setShowDeleteDialog(null);
+        fetchRules(); // Refresh data from API
+      } else {
+        toast.error(isRTL ? 'فشل في حذف القاعدة' : 'Failed to delete rule');
+      }
+    } catch (error) {
+      console.error('Error deleting rule:', error);
+      toast.error(isRTL ? 'فشل في حذف القاعدة' : 'Failed to delete rule');
+    }
   };
   
   // Handle duplicate rule
