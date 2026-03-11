@@ -1359,8 +1359,8 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 ## المهام القادمة
 
 ### P0 - حرج:
-- [ ] اختبار شامل للطبقات الأساسية (RBAC, Tenant Isolation, Audit)
-- [ ] تطبيق RBAC على جميع endpoints الحساسة
+- [x] اختبار شامل للطبقات (RBAC, Tenant Isolation) ✅ 22/22 اختبار نجح
+- [x] تطبيق RBAC على جميع endpoints الحساسة ✅
 
 ### P1 - عاجل:
 - [ ] استكمال محرك التقارير (Reporting Engine)
