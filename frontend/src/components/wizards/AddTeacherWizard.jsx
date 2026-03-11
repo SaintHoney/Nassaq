@@ -740,8 +740,6 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
     setResult(null);
   };
 
-  const handleClose = () => { handleReset(); onClose(); };
-
   const steps = [
     { num: 1, title: isRTL ? 'البيانات' : 'Basic', icon: User },
     { num: 2, title: isRTL ? 'المؤهلات' : 'Qualifications', icon: GraduationCap },
