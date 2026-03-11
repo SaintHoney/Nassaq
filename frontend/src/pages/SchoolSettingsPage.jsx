@@ -1465,47 +1465,249 @@ export default function SchoolSettingsPage() {
 
   // Save handlers
   const handleSaveSchoolInfo = async (info) => {
-    const tenantId = user?.tenant_id;
-    if (tenantId) {
-      await api.put(`/api/schools/${tenantId}`, info);
-      setSchoolInfo(info);
-    }
+    await api.put('/api/school/settings/info', info);
+    setSchoolInfo(prev => ({ ...prev, ...info }));
   };
 
-  const handleSaveSettings = async (key, value) => {
-    try {
-      await api.post('/api/school/settings', { [key]: value });
-      setSettings(prev => ({ ...prev, [key]: value }));
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      throw error;
-    }
+  const handleSaveWorkDays = async (workDays) => {
+    await api.put('/api/school/settings/work-days', workDays);
+    setSettings(prev => ({ ...prev, workDays }));
+  };
+
+  const handleSavePeriodsPerDay = async (periods) => {
+    await api.put(`/api/school/settings/periods-per-day?periods=${periods}`);
+    setSettings(prev => ({ ...prev, periodsPerDay: periods }));
+  };
+
+  const handleSaveTiming = async (timing) => {
+    await api.put('/api/school/settings/timing', timing);
+    setSettings(prev => ({ ...prev, timing }));
+  };
+
+  const handleSaveBreaks = async (breaks) => {
+    await api.put('/api/school/settings/breaks', breaks);
+    setSettings(prev => ({ ...prev, breaks }));
+  };
+
+  const handleSaveTeachingLoads = async (loads) => {
+    await api.put('/api/school/settings/teaching-loads', loads);
+    setSettings(prev => ({ ...prev, teachingLoads: loads }));
+  };
+
+  const handleSaveConstraints = async (constraints) => {
+    await api.put('/api/school/settings/constraints', constraints);
+    setSettings(prev => ({ ...prev, constraints }));
   };
 
   const handleAddSubject = async (subjectData) => {
     try {
-      await api.post('/api/subjects', subjectData);
-      fetchData();
+      const response = await api.post('/api/school/settings/subjects', subjectData);
+      const newSubject = response.data?.subject || subjectData;
+      setSubjects(prev => [...prev, newSubject]);
       toast.success(isRTL ? 'تمت إضافة المادة بنجاح' : 'Subject added successfully');
     } catch (error) {
       toast.error(isRTL ? 'خطأ في إضافة المادة' : 'Error adding subject');
+      throw error;
     }
   };
 
   const handleDeleteSubject = async (subject) => {
     try {
-      await api.delete(`/api/subjects/${subject.id}`);
-      fetchData();
+      await api.delete(`/api/school/settings/subjects/${subject.id}`);
+      setSubjects(prev => prev.filter(s => s.id !== subject.id));
       toast.success(isRTL ? 'تم حذف المادة' : 'Subject deleted');
     } catch (error) {
       toast.error(isRTL ? 'خطأ في حذف المادة' : 'Error deleting subject');
+      throw error;
     }
   };
 
   const handleAddHoliday = async (holiday) => {
-    const updated = [...(settings.officialHolidays || []), holiday];
-    await handleSaveSettings('officialHolidays', updated);
-    toast.success(isRTL ? 'تمت إضافة الإجازة' : 'Holiday added');
+    try {
+      const response = await api.post('/api/school/settings/holidays', holiday);
+      const newHoliday = response.data?.holiday || holiday;
+      setSettings(prev => ({ 
+        ...prev, 
+        officialHolidays: [...(prev.officialHolidays || []), newHoliday] 
+      }));
+      toast.success(isRTL ? 'تمت إضافة الإجازة' : 'Holiday added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة الإجازة' : 'Error adding holiday');
+      throw error;
+    }
+  };
+
+  const handleDeleteHoliday = async (holidayId) => {
+    try {
+      await api.delete(`/api/school/settings/holidays/${holidayId}`);
+      setSettings(prev => ({
+        ...prev,
+        officialHolidays: prev.officialHolidays.filter(h => h.id !== holidayId)
+      }));
+      toast.success(isRTL ? 'تم حذف الإجازة' : 'Holiday deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف الإجازة' : 'Error deleting holiday');
+    }
+  };
+
+  const handleAddExceptionDay = async (exceptionDay) => {
+    try {
+      const response = await api.post('/api/school/settings/exception-days', exceptionDay);
+      const newException = response.data?.exception || exceptionDay;
+      setSettings(prev => ({
+        ...prev,
+        exceptionDays: [...(prev.exceptionDays || []), newException]
+      }));
+      toast.success(isRTL ? 'تم إضافة يوم الاستثناء' : 'Exception day added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة يوم الاستثناء' : 'Error adding exception day');
+    }
+  };
+
+  const handleAddActivityDay = async (activityDay) => {
+    try {
+      const response = await api.post('/api/school/settings/activity-days', activityDay);
+      const newActivity = response.data?.activity || activityDay;
+      setSettings(prev => ({
+        ...prev,
+        activityDays: [...(prev.activityDays || []), newActivity]
+      }));
+      toast.success(isRTL ? 'تم إضافة يوم النشاط' : 'Activity day added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة يوم النشاط' : 'Error adding activity day');
+    }
+  };
+
+  const handleDeleteActivityDay = async (activityId) => {
+    try {
+      await api.delete(`/api/school/settings/activity-days/${activityId}`);
+      setSettings(prev => ({
+        ...prev,
+        activityDays: prev.activityDays.filter(a => a.id !== activityId)
+      }));
+      toast.success(isRTL ? 'تم حذف يوم النشاط' : 'Activity day deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف يوم النشاط' : 'Error deleting activity day');
+    }
+  };
+
+  // Academic structure handlers
+  const handleAddStage = async (stage) => {
+    try {
+      const response = await api.post('/api/school/settings/stages', stage);
+      const newStage = response.data?.stage || stage;
+      setSettings(prev => ({
+        ...prev,
+        educationalStages: [...(prev.educationalStages || []), newStage]
+      }));
+      toast.success(isRTL ? 'تم إضافة المرحلة التعليمية' : 'Stage added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة المرحلة' : 'Error adding stage');
+    }
+  };
+
+  const handleDeleteStage = async (stageId) => {
+    try {
+      await api.delete(`/api/school/settings/stages/${stageId}`);
+      setSettings(prev => ({
+        ...prev,
+        educationalStages: prev.educationalStages.filter(s => s.id !== stageId)
+      }));
+      toast.success(isRTL ? 'تم حذف المرحلة' : 'Stage deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف المرحلة' : 'Error deleting stage');
+    }
+  };
+
+  const handleAddGrade = async (grade) => {
+    try {
+      const response = await api.post('/api/school/settings/grades', grade);
+      const newGrade = response.data?.grade || grade;
+      setGrades(prev => [...prev, newGrade]);
+      toast.success(isRTL ? 'تم إضافة الصف' : 'Grade added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة الصف' : 'Error adding grade');
+    }
+  };
+
+  const handleDeleteGrade = async (gradeId) => {
+    try {
+      await api.delete(`/api/school/settings/grades/${gradeId}`);
+      setGrades(prev => prev.filter(g => g.id !== gradeId));
+      toast.success(isRTL ? 'تم حذف الصف' : 'Grade deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف الصف' : 'Error deleting grade');
+    }
+  };
+
+  const handleAddSection = async (section) => {
+    try {
+      const response = await api.post('/api/school/settings/sections', section);
+      const newSection = response.data?.section || section;
+      setSettings(prev => ({
+        ...prev,
+        sections: [...(prev.sections || []), newSection]
+      }));
+      toast.success(isRTL ? 'تم إضافة الشعبة' : 'Section added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة الشعبة' : 'Error adding section');
+    }
+  };
+
+  const handleDeleteSection = async (sectionId) => {
+    try {
+      await api.delete(`/api/school/settings/sections/${sectionId}`);
+      setSettings(prev => ({
+        ...prev,
+        sections: prev.sections.filter(s => s.id !== sectionId)
+      }));
+      toast.success(isRTL ? 'تم حذف الشعبة' : 'Section deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف الشعبة' : 'Error deleting section');
+    }
+  };
+
+  const handleAddTerm = async (term) => {
+    try {
+      const response = await api.post('/api/school/settings/academic-terms', term);
+      const newTerm = response.data?.term || term;
+      setSettings(prev => ({
+        ...prev,
+        academicTerms: [...(prev.academicTerms || []), newTerm]
+      }));
+      toast.success(isRTL ? 'تم إضافة الفصل الدراسي' : 'Term added');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في إضافة الفصل' : 'Error adding term');
+    }
+  };
+
+  const handleDeleteTerm = async (termId) => {
+    try {
+      await api.delete(`/api/school/settings/academic-terms/${termId}`);
+      setSettings(prev => ({
+        ...prev,
+        academicTerms: prev.academicTerms.filter(t => t.id !== termId)
+      }));
+      toast.success(isRTL ? 'تم حذف الفصل الدراسي' : 'Term deleted');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حذف الفصل' : 'Error deleting term');
+    }
+  };
+
+  const handleSaveAvailability = async (data) => {
+    try {
+      await api.put('/api/school/settings/teacher-availability', data);
+      setSettings(prev => ({
+        ...prev,
+        teacherAvailability: {
+          ...(prev.teacherAvailability || {}),
+          [data.teacher_id]: { available_days: data.available_days, available_periods: data.available_periods }
+        }
+      }));
+      toast.success(isRTL ? 'تم حفظ توفر المعلم' : 'Availability saved');
+    } catch (error) {
+      toast.error(isRTL ? 'خطأ في حفظ التوفر' : 'Error saving availability');
+    }
   };
 
   return (
