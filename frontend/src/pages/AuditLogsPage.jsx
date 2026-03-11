@@ -47,7 +47,7 @@ const AuditLogsPage = () => {
   
   // Filters
   const [actionFilter, setActionFilter] = useState('');
-  const [severityFilter, setSeverityFilter] = useState('');
+  const [severityFilter, setSeverityFilter] = useState('all');
   const [entityTypeFilter, setEntityTypeFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [daysFilter, setDaysFilter] = useState('30');
