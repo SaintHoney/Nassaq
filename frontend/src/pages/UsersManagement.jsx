@@ -950,26 +950,181 @@ export default function UsersManagement() {
               )}
             </TabsContent>
             
+            {/* School Users Tab - NEW */}
+            <TabsContent value="school-users" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between flex-row-reverse">
+                    <CardTitle className="font-cairo flex items-center gap-2 flex-row-reverse">
+                      <Building2 className="h-5 w-5 text-brand-navy" />
+                      مستخدمو المدارس
+                    </CardTitle>
+                    <Badge variant="outline" className="text-sm">
+                      {Object.keys(schoolUsers).length} مدرسة
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {Object.keys(schoolUsers).length === 0 ? (
+                    <div className="py-12 text-center">
+                      <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                      <h3 className="font-bold text-lg mb-2">لا توجد مدارس</h3>
+                      <p className="text-muted-foreground">لم يتم إضافة مدارس بعد</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {Object.values(schoolUsers).map(({ school, users: schoolUsersList }) => (
+                        <Card key={school.id} className="border-2 border-teal-200 bg-gradient-to-br from-teal-50/50 to-white" data-testid={`school-card-${school.id}`}>
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between flex-row-reverse">
+                              <div className="flex items-center gap-3 flex-row-reverse">
+                                <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
+                                  <School className="h-6 w-6 text-teal-600" />
+                                </div>
+                                <div className="text-right">
+                                  <h4 className="font-bold text-lg">{school.name}</h4>
+                                  <Badge variant="outline" className={`text-[10px] ${school.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {school.status === 'active' ? 'نشط' : school.status === 'setup' ? 'قيد الإعداد' : school.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-start gap-1">
+                                <span className="text-xs text-muted-foreground">{schoolUsersList.length} مستخدم</span>
+                                <span className="text-xs text-muted-foreground">{school.city || 'غير محدد'}</span>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                            {schoolUsersList.length === 0 ? (
+                              <div className="py-4 text-center text-muted-foreground text-sm">
+                                لا يوجد مستخدمين في هذه المدرسة
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                {schoolUsersList.slice(0, 5).map((user) => {
+                                  const roleInfo = getRoleInfo(user.role);
+                                  const RoleIcon = roleInfo.icon;
+                                  return (
+                                    <div key={user.id} className="flex items-center justify-between p-2 rounded-lg bg-white border flex-row-reverse">
+                                      <div className="flex items-center gap-2 flex-row-reverse">
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarFallback className={`${roleInfo.color} text-white text-xs`}>
+                                            {user.full_name?.charAt(0)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className="text-right">
+                                          <p className="text-sm font-medium">{user.full_name}</p>
+                                          <Badge variant="outline" className="text-[9px]">
+                                            <RoleIcon className="h-2.5 w-2.5 ms-1" />
+                                            {roleInfo.name}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-7 w-7 p-0"
+                                        onClick={() => handleViewUser(user)}
+                                      >
+                                        <Eye className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
+                                {schoolUsersList.length > 5 && (
+                                  <p className="text-center text-xs text-muted-foreground pt-2">
+                                    +{schoolUsersList.length - 5} مستخدمين آخرين
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* School Actions */}
+                            <div className="flex gap-2 mt-4 pt-3 border-t">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1 text-xs"
+                                onClick={() => navigate(`/admin/tenants/${school.id}`)}
+                              >
+                                <Eye className="h-3 w-3 ms-1" />
+                                تفاصيل
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1 text-xs"
+                                onClick={() => {/* Open add user dialog for this school */}}
+                              >
+                                <UserPlus className="h-3 w-3 ms-1" />
+                                إضافة مستخدم
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
             {/* Teacher Requests Tab */}
             <TabsContent value="requests" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-cairo flex items-center gap-2 flex-row-reverse justify-end">
-                    <FileText className="h-5 w-5 text-brand-navy" />
-                    طلبات حسابات المعلمين
-                  </CardTitle>
+                  <div className="flex items-center justify-between flex-row-reverse">
+                    <CardTitle className="font-cairo flex items-center gap-2 flex-row-reverse">
+                      <FileText className="h-5 w-5 text-brand-navy" />
+                      طلبات المعلمين المستقلين
+                    </CardTitle>
+                    {/* Status Filter Tabs */}
+                    <div className="flex gap-2 flex-wrap">
+                      {REQUEST_STATUSES.map((status) => (
+                        <Button
+                          key={status.id}
+                          variant={requestStatusFilter === status.id ? 'default' : 'outline'}
+                          size="sm"
+                          className={`text-xs ${requestStatusFilter === status.id ? status.color + ' text-white' : ''}`}
+                          onClick={() => setRequestStatusFilter(status.id)}
+                        >
+                          {status.name}
+                          {status.id !== 'all' && (
+                            <Badge variant="secondary" className="ms-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+                              {teacherRequests.filter(r => r.status === status.id).length}
+                            </Badge>
+                          )}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {teacherRequests.length === 0 ? (
+                  {filteredTeacherRequests.length === 0 ? (
                     <div className="py-12 text-center">
                       <FileText className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
                       <h3 className="font-bold text-lg mb-2">لا توجد طلبات</h3>
-                      <p className="text-muted-foreground">لا توجد طلبات معلمين معلقة حالياً</p>
+                      <p className="text-muted-foreground">
+                        {requestStatusFilter === 'all' 
+                          ? 'لا توجد طلبات معلمين مستقلين حالياً' 
+                          : `لا توجد طلبات في حالة "${REQUEST_STATUSES.find(s => s.id === requestStatusFilter)?.name}"`}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {teacherRequests.map((request) => (
-                        <Card key={request.id} className="border-2 border-yellow-200 bg-yellow-50/30" data-testid={`request-card-${request.id}`}>
+                      {filteredTeacherRequests.map((request) => {
+                        const statusInfo = REQUEST_STATUSES.find(s => s.id === request.status) || REQUEST_STATUSES[2];
+                        return (
+                        <Card 
+                          key={request.id} 
+                          className={`border-2 ${
+                            request.status === 'approved' ? 'border-green-200 bg-green-50/30' :
+                            request.status === 'rejected' ? 'border-red-200 bg-red-50/30' :
+                            request.status === 'info_required' ? 'border-blue-200 bg-blue-50/30' :
+                            'border-yellow-200 bg-yellow-50/30'
+                          }`} 
+                          data-testid={`request-card-${request.id}`}
+                        >
                           <CardContent className="p-4">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                               {/* Request Info */}
@@ -977,7 +1132,7 @@ export default function UsersManagement() {
                                 <div className="flex items-center gap-3 flex-row-reverse justify-end">
                                   <div className="text-right">
                                     <h4 className="font-bold text-lg">{request.full_name}</h4>
-                                    <Badge className="bg-yellow-500 text-white text-xs mt-1">قيد المراجعة</Badge>
+                                    <Badge className={`${statusInfo.color} text-white text-xs mt-1`}>{statusInfo.name}</Badge>
                                   </div>
                                   <Avatar className="h-12 w-12 border-2">
                                     <AvatarFallback className="bg-cyan-500 text-white">
@@ -1017,42 +1172,50 @@ export default function UsersManagement() {
                                     <span className="text-muted-foreground">تاريخ الطلب:</span>
                                     <span className="font-medium">{formatDate(request.created_at)}</span>
                                   </div>
+                                  {request.rejection_reason && (
+                                    <div className="flex items-center gap-2 flex-row-reverse col-span-2">
+                                      <span className="text-muted-foreground">سبب الرفض:</span>
+                                      <span className="font-medium text-red-600">{request.rejection_reason}</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               
-                              {/* Action Buttons */}
-                              <div className="flex flex-wrap lg:flex-col gap-2">
-                                <Button 
-                                  className="bg-green-600 hover:bg-green-700 flex-1 lg:flex-none"
-                                  onClick={() => setShowApproveConfirm(request)}
-                                  data-testid={`approve-request-${request.id}`}
-                                >
-                                  <CheckCircle2 className="h-4 w-4 ms-2" />
-                                  موافقة
-                                </Button>
-                                <Button 
-                                  variant="destructive"
-                                  className="flex-1 lg:flex-none"
-                                  onClick={() => setShowRejectRequest(request)}
-                                  data-testid={`reject-request-${request.id}`}
-                                >
-                                  <XCircle className="h-4 w-4 ms-2" />
-                                  رفض
-                                </Button>
-                                <Button 
-                                  variant="outline"
-                                  className="flex-1 lg:flex-none"
-                                  onClick={() => setShowMoreInfoRequest(request)}
-                                  data-testid={`info-request-${request.id}`}
-                                >
-                                  <Info className="h-4 w-4 ms-2" />
-                                  طلب معلومات
-                                </Button>
-                              </div>
+                              {/* Action Buttons - Show only for pending/info_required */}
+                              {(request.status === 'pending' || request.status === 'info_required') && (
+                                <div className="flex flex-wrap lg:flex-col gap-2">
+                                  <Button 
+                                    className="bg-green-600 hover:bg-green-700 flex-1 lg:flex-none"
+                                    onClick={() => setShowApproveConfirm(request)}
+                                    data-testid={`approve-request-${request.id}`}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4 ms-2" />
+                                    موافقة
+                                  </Button>
+                                  <Button 
+                                    variant="destructive"
+                                    className="flex-1 lg:flex-none"
+                                    onClick={() => setShowRejectRequest(request)}
+                                    data-testid={`reject-request-${request.id}`}
+                                  >
+                                    <XCircle className="h-4 w-4 ms-2" />
+                                    رفض
+                                  </Button>
+                                  <Button 
+                                    variant="outline"
+                                    className="flex-1 lg:flex-none"
+                                    onClick={() => setShowMoreInfoRequest(request)}
+                                    data-testid={`info-request-${request.id}`}
+                                  >
+                                    <Info className="h-4 w-4 ms-2" />
+                                    طلب معلومات
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                      );})}
                     </div>
                   )}
                 </CardContent>
