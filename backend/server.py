@@ -13460,6 +13460,247 @@ async def change_user_password(
     return {"message": "تم تغيير كلمة المرور"}
 
 
+# ============== TEACHER SESSION ENGINE APIs ==============
+
+@api_router.post("/session/start")
+async def start_class_session(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    بدء حصة جديدة
+    Start a new class session
+    
+    Required fields:
+    - schedule_session_id: ID from schedule_sessions
+    - teacher_id: Teacher ID
+    - class_id: Class ID
+    - subject_id: Subject ID
+    """
+    result = await session_engine.start_session(
+        teacher_id=data.get("teacher_id") or current_user.get("teacher_id") or current_user["id"],
+        schedule_session_id=data.get("schedule_session_id"),
+        class_id=data.get("class_id"),
+        subject_id=data.get("subject_id")
+    )
+    return result
+
+
+@api_router.get("/session/{session_id}")
+async def get_session_info(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get session information"""
+    session = await db.class_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
+    return session
+
+
+@api_router.get("/session/{session_id}/students")
+async def get_session_students(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب قائمة الطلاب للحصة مع حالة الحضور
+    Get students list with attendance status for session
+    """
+    students = await session_engine.get_session_students(session_id)
+    return {
+        "session_id": session_id,
+        "total": len(students),
+        "students": students
+    }
+
+
+@api_router.put("/session/{session_id}/attendance/{student_id}")
+async def update_student_attendance(
+    session_id: str,
+    student_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    تحديث حالة حضور طالب
+    Update student attendance status
+    """
+    from engines.session_engine import AttendanceStatus
+    status = AttendanceStatus(data.get("status", "present"))
+    result = await session_engine.update_attendance(
+        session_id=session_id,
+        student_id=student_id,
+        status=status,
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/attendance/approve")
+async def approve_session_attendance(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    اعتماد الحضور
+    Approve and finalize attendance
+    """
+    result = await session_engine.approve_attendance(
+        session_id=session_id,
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/mode")
+async def set_session_mode(
+    session_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    تحديد نمط التفاعل (متابعة واجب / مراجعة / امتحان مفاجئ)
+    Set interaction mode (homework / review / quiz)
+    """
+    mode = data.get("mode", "review")
+    result = await session_engine.set_interaction_mode(session_id, mode)
+    return result
+
+
+@api_router.post("/session/{session_id}/random-student")
+async def select_random_student(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    اختيار طالب عشوائي
+    Select random student using fair algorithm
+    """
+    result = await session_engine.select_random_student(session_id)
+    return result
+
+
+@api_router.post("/session/{session_id}/answer")
+async def record_student_answer(
+    session_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    تسجيل إجابة الطالب
+    Record student answer (correct/wrong/no_answer)
+    """
+    from engines.session_engine import AnswerResult
+    result = await session_engine.record_answer(
+        session_id=session_id,
+        student_id=data.get("student_id"),
+        result=AnswerResult(data.get("result", "correct")),
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/participation")
+async def record_student_participation(
+    session_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    تسجيل مشاركة الطالب
+    Record student participation
+    """
+    from engines.session_engine import ParticipationType
+    result = await session_engine.record_participation(
+        session_id=session_id,
+        student_id=data.get("student_id"),
+        participation_type=ParticipationType(data.get("type", "active")),
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/behaviour")
+async def record_student_behaviour(
+    session_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    تسجيل سلوك الطالب
+    Record student behaviour (positive/negative/skill)
+    """
+    from engines.session_engine import BehaviourCategory
+    result = await session_engine.record_behaviour(
+        session_id=session_id,
+        student_id=data.get("student_id"),
+        category=BehaviourCategory(data.get("category", "positive")),
+        behaviour_type=data.get("behaviour_type"),
+        details=data.get("details"),
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/seating")
+async def update_seating_order(
+    session_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    حفظ ترتيب جلوس الطلاب
+    Save student seating order
+    """
+    result = await session_engine.update_seating_order(
+        session_id=session_id,
+        student_order=data.get("student_order", [])
+    )
+    return result
+
+
+@api_router.post("/session/{session_id}/end")
+async def end_class_session(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    إنهاء الحصة
+    End class session and get summary
+    """
+    result = await session_engine.end_session(
+        session_id=session_id,
+        teacher_id=current_user.get("teacher_id") or current_user["id"]
+    )
+    return result
+
+
+@api_router.get("/student/{student_id}/score")
+async def get_student_score(
+    student_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب نقاط الطالب
+    Get student score information
+    """
+    result = await session_engine.get_student_score(student_id)
+    return result
+
+
+@api_router.get("/session/behaviour-types/all")
+async def get_behaviour_types(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب أنواع السلوكيات المتاحة
+    Get available behaviour types
+    """
+    from engines.session_engine import DEFAULT_BEHAVIOUR_TYPES
+    return DEFAULT_BEHAVIOUR_TYPES
+
+
 # Re-include api_router to pick up school settings routes
 app.include_router(api_router)
 
