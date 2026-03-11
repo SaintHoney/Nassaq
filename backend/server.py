@@ -13534,6 +13534,18 @@ async def get_session_info(
     return session
 
 
+@api_router.get("/session/by-schedule/{schedule_session_id}")
+async def get_session_by_schedule_id(
+    schedule_session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get session information by schedule session ID"""
+    session = await db.class_sessions.find_one({"schedule_session_id": schedule_session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
+    return session
+
+
 @api_router.get("/session/{session_id}/students")
 async def get_session_students(
     session_id: str,
