@@ -1430,7 +1430,6 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
         
     except ImportError:
         # Provide smart fallback response based on user question
-        msg_lower = message.message.lower()
         if "إضافة مدرسة" in message.message or "مدرسة جديدة" in message.message:
             return HakimResponse(
                 response="لإضافة مدرسة جديدة:\n1. اذهب إلى 'مركز القيادة'\n2. انقر على 'إضافة مدرسة جديدة' في قسم الإجراءات السريعة\n3. املأ بيانات المدرسة والمدير\n4. اضغط 'إنشاء' لإتمام العملية",
