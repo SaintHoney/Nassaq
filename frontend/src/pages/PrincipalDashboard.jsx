@@ -27,13 +27,14 @@ export default function PrincipalDashboard() {
   
   // Handle exit impersonation mode
   const handleExitImpersonation = () => {
-    // First navigate, then exit context to avoid ProtectedRoute redirect race condition
-    // The navigation happens immediately while context is still set
-    navigate('/admin/tenants', { replace: true });
-    // Then clear context after navigation has started
+    // Clear context first, then navigate with a slight delay
+    // This ensures context is fully cleared before redirect logic runs
+    exitSchoolContext();
+    
+    // Use window.location for a hard redirect to avoid React Router's state checks
     setTimeout(() => {
-      exitSchoolContext();
-    }, 50);
+      window.location.href = '/admin/tenants';
+    }, 100);
   };
 
   return (
