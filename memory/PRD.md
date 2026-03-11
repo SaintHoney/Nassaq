@@ -1,462 +1,125 @@
-# نَسَّق | NASSAQ - نظام إدارة المدارس الشامل
+# نَسَّق | NASSAQ - School Management System PRD
 
-## المعلومات الأساسية
-- **اسم المشروع**: نَسَّق | NASSAQ
-- **النوع**: نظام إدارة مدارس متعدد المستأجرين (Multi-tenant SaaS)
-- **آخر تحديث**: 11 مارس 2026
+## Original Problem Statement
+بناء نظام شامل ومتعدد المستأجرين لإدارة المدارس يعمل بالذكاء الاصطناعي، يسمى "نَسَّق | NASSAQ".
 
 ---
 
-## ✅ ما تم إنجازه - جلسة 11 مارس 2026 (الجزء 5 - الأحدث)
+## Current Status: Teacher Session Engine - Backend Complete ✅
 
-### 13. وحدة المعلم الكاملة (Teacher Module) ✅
+### What's Been Implemented
 
-تم بناء وحدة المعلم الكاملة بـ 12 صفحة و APIs جديدة متكاملة:
+#### 1. Teacher Session Engine (Backend) ✅ COMPLETE
+- **Session Start API** (`POST /api/session/start`): Starts a new class session, creates attendance records
+- **Get Session Students** (`GET /api/session/{id}/students`): Returns students with attendance status, grouped by gender
+- **Update Attendance** (`PUT /api/session/{id}/attendance/{student_id}`): Updates individual student attendance
+- **Approve Attendance** (`POST /api/session/{id}/approve-attendance`): Finalizes attendance
+- **Get Current Session** (`GET /api/session/current`): Gets in-progress session by schedule_session_id
+- **Record Interaction** (`POST /api/session/{id}/interaction`): Logs student participation/answers
+- **Record Behavior** (`POST /api/session/{id}/behaviour`): Logs student behavior (positive/negative/skills)
+- **End Session** (`POST /api/session/{id}/end`): Finalizes and closes session
 
-#### أ) صفحات Frontend جديدة (12 صفحة) ✅
-1. ✅ **TeacherMainDashboard** - لوحة التحكم الرئيسية للمعلم
-   - بطاقة الترحيب مع معلومات المعلم
-   - إجراءات سريعة (الحضور، التقييمات، السلوك، التواصل)
-   - إحصائيات (الفصول، الطلاب، حصص اليوم، المعلق)
-   - جدول اليوم
-   - آخر النشاطات
-   - المهام المعلقة
+#### 2. Mobile-First Teacher UI ✅ SCAFFOLDED
+- **TeacherHomePage.jsx**: Mobile-first dashboard with colored lesson cards (green for current, blue for upcoming)
+- **SessionStartPage.jsx**: Attendance management with student cards grouped by gender
+- **SessionTeachPage.jsx**: Interactive teaching grid (placeholder for random selection & confetti)
 
-2. ✅ **TeacherSchedulePage** - جدول المعلم
-   - عرض أسبوعي/يومي
-   - شبكة الأيام والحصص
-   - ألوان مميزة للمواد
-   - أزرار الطباعة والتصدير
-
-3. ✅ **TeacherClassesPage** - فصول المعلم
-   - عرض بطاقات الفصول
-   - إحصائيات لكل فصل
-   - البحث والتصفية
-
-4. ✅ **TeacherClassDetailPage** - تفاصيل الفصل
-   - قائمة الطلاب مع الإحصائيات
-   - جدول الفصل
-   - إحصائيات الأداء
-   - إجراءات سريعة
-
-5. ✅ **TeacherAttendanceManagePage** - إدارة الحضور
-   - تسجيل سريع للحضور
-   - حالات متعددة (حاضر، غائب، متأخر، مستأذن)
-   - تقرير يومي
-
-6. ✅ **TeacherAssessmentsPage** - التقييمات
-   - إنشاء تقييمات جديدة
-   - رصد الدرجات
-   - تصفية (مسودة، منشور، مُقيّم)
-   - إحصائيات التقييمات
-
-7. ✅ **TeacherBehaviorPage** - المتابعة السلوكية
-   - تسجيل سريع للسلوكيات الإيجابية/السلبية
-   - نقاط السلوك لكل طالب
-   - سجل الملاحظات
-   - إحصائيات السلوك
-
-8. ✅ **TeacherStudentsPage** - طلابي
-   - عرض جميع طلاب المعلم
-   - إحصائيات كل طالب
-   - تفاصيل الطالب (حضور، درجات، سلوك)
-
-9. ✅ **TeacherCommunicationPage** - التواصل مع أولياء الأمور
-   - إرسال رسائل
-   - قوالب رسائل جاهزة
-   - سجل الرسائل المرسلة
-   - جهات الاتصال
-
-10. ✅ **TeacherReportsPage** - التقارير والإحصائيات
-    - نظرة عامة على الأداء
-    - توزيع الدرجات
-    - المتفوقون
-    - طلاب يحتاجون متابعة
-
-11. ✅ **TeacherResourcesPage** - المصادر التعليمية
-    - إضافة مصادر (مستندات، فيديو، روابط)
-    - تصنيف حسب المادة والفصل
-    - البحث والتصفية
-
-12. ✅ **TeacherSettingsPage** - الإعدادات
-    - الملف الشخصي
-    - إعدادات الإشعارات
-    - الأمان (تغيير كلمة المرور)
-    - التفضيلات (اللغة، المظهر)
-
-#### ب) Backend APIs جديدة ✅
-- ✅ `GET /api/teacher/classes/{teacher_id}` - فصول المعلم
-- ✅ `GET /api/teacher/schedule/{teacher_id}` - جدول المعلم
-- ✅ `GET /api/teacher/assessments/{teacher_id}` - تقييمات المعلم
-- ✅ `GET /api/students/{student_id}/grades` - درجات طالب
-- ✅ `GET /api/students/{student_id}/attendance-stats` - إحصائيات حضور طالب
-- ✅ `GET/POST /api/behavior` - سجلات السلوك
-- ✅ `GET/POST/DELETE /api/resources` - المصادر التعليمية
-- ✅ `GET/POST /api/messages` - الرسائل
-- ✅ `GET /api/grades` - الدرجات مع تصفية
-- ✅ `GET/PUT /api/users/{user_id}/notifications/settings` - إعدادات الإشعارات
-- ✅ `PUT /api/users/{user_id}/password` - تغيير كلمة المرور
-
-#### ج) إصلاحات مهمة ✅
-- ✅ **إصلاح تسجيل الدخول**: إرجاع `user.id` الصحيح بدلاً من ObjectId
-- ✅ **إضافة teacher_id**: في استجابة تسجيل الدخول للمعلمين
-- ✅ **تحسين API لوحة المعلم**: البحث عن المعلم بالـ id أو email أو full_name
-
-#### د) نتائج الاختبار ✅
-- **Backend:** 92% (12/13 اختبار ناجح)
-- **Frontend:** 100% (جميع الـ 10 مسارات تعمل)
+#### 3. Bug Fixes ✅
+- Fixed `/api/auth/me` returning incorrect `id` and missing `teacher_id`
+- Fixed `/api/teacher/dashboard` not returning today's lessons correctly
+- Added fallback logic for session data retrieval
 
 ---
 
-## ✅ ما تم إنجازه - جلسة 11 مارس 2026 (الجزء 4)
+## Architecture
 
-### 9. صفحة إعدادات المدرسة الشاملة (15 قسم) ✅
-
-#### أ) Backend APIs جديدة (18 API) ✅
-- ✅ `GET /api/school/settings` - جلب جميع إعدادات المدرسة
-- ✅ `PUT /api/school/settings/info` - تحديث معلومات المدرسة الأساسية
-- ✅ `PUT /api/school/settings/work-days` - تحديث أيام العمل
-- ✅ `PUT /api/school/settings/periods-per-day` - تحديث عدد الحصص
-- ✅ `PUT /api/school/settings/timing` - تحديث أوقات الدوام
-- ✅ `PUT /api/school/settings/breaks` - تحديث فترات الاستراحة
-- ✅ `POST/DELETE /api/school/settings/holidays` - الإجازات الرسمية
-- ✅ `POST/DELETE /api/school/settings/exception-days` - أيام الاستثناء
-- ✅ `POST/DELETE /api/school/settings/activity-days` - أيام الأنشطة
-- ✅ `PUT /api/school/settings/teaching-loads` - الأنصبة التدريسية
-- ✅ `PUT /api/school/settings/teacher-availability` - توفر المعلمين
-- ✅ `PUT /api/school/settings/constraints` - القيود الإدارية
-- ✅ `CRUD /api/school/settings/stages` - المراحل التعليمية
-- ✅ `CRUD /api/school/settings/grades` - الصفوف الدراسية
-- ✅ `CRUD /api/school/settings/sections` - الشعب
-- ✅ `CRUD /api/school/settings/academic-terms` - الفصول الدراسية
-- ✅ `CRUD /api/school/settings/subjects` - المواد الدراسية
-
-#### ب) Frontend - 15 قسم كامل ✅
-1. ✅ **معلومات المدرسة** - الاسم، البريد، الهاتف، العنوان
-2. ✅ **بيانات المعلمين** - مع رابط لإضافة/تعديل معلم
-3. ✅ **بيانات الفصول** - مع رابط لإضافة/تعديل فصل
-4. ✅ **المواد الدراسية** - إضافة/حذف مواد مرتبطة بالصفوف
-5. ✅ **أيام العمل** - تحديد أيام الدراسة والإجازات الأسبوعية
-6. ✅ **الإجازات الرسمية** - تقويم سنوي للإجازات
-7. ✅ **أيام الاستثناء** - إجازات استثنائية مع أسباب
-8. ✅ **عدد الحصص في اليوم** - قابل للتعديل (1-12)
-9. ✅ **بداية ونهاية اليوم الدراسي** - أوقات الدوام
-10. ✅ **فترات الاستراحة** - إضافة استراحات متعددة
-11. ✅ **أيام الأنشطة** - أيام مستثناة للأنشطة
-12. ✅ **النصاب التدريسي** - حصص أسبوعية لكل معلم
-13. ✅ **التوافر** - أيام توفر المعلمين
-14. ✅ **القيود الإدارية** - قواعد مثل "معلم لا يبدأ الحصة الأولى"
-15. ✅ **الهيكل الأكاديمي** - المراحل، الصفوف، الشعب، الفصول الدراسية
-
-#### ج) إصلاح مشكلة التوجيه في وضع المعاينة ✅
-- ✅ زر "العودة للمنصة" يوجه الآن بشكل صحيح إلى `/admin/tenants`
-- ✅ استخدام `window.location.href` بدلاً من React Router لتجنب race conditions
-
-#### د) نتائج الاختبار ✅
-- **Backend:** 100% (18/18 اختبار ناجح)
-- **Frontend:** 100% (جميع الميزات تعمل)
-
-### 10. تحديثات قسم الإجراءات السريعة لمدير المنصة ✅
-
-- ✅ **إزالة زر "إدارة القواعد"** من قسم الإجراءات السريعة
-- ✅ **زر "التقارير"** يقود الآن لصفحة `/admin/analytics` (التقارير والتحليلات) التي تحتوي على:
-  - نظرة عامة
-  - التقارير
-  - رؤى الذكاء الاصطناعي
-  - الأدوات
-- ✅ **إضافة زر "التكاملات"** (أخضر) يقود لصفحة `/admin/integrations`
-
-### 11. محرك الجدولة مع السحب والإفلات (Drag & Drop) ✅
-
-- ✅ **تثبيت مكتبة @dnd-kit** للسحب والإفلات
-- ✅ **مكونات جديدة:**
-  - `DraggableSession`: حصة قابلة للسحب مع مقبض السحب
-  - `DroppableCell`: خلية قابلة للإفلات مع تأثيرات بصرية
-  - `SessionDragOverlay`: معاينة الحصة أثناء السحب
-- ✅ **ميزات السحب والإفلات:**
-  - سحب الحصص بين الخلايا المختلفة
-  - تأثيرات بصرية أثناء السحب (تكبير، ظل، لون)
-  - رسالة إرشادية تظهر أثناء السحب
-  - التحقق من التعارضات عند الإفلات
-  - API موجودة `/api/schedule-sessions/{id}/move`
-- ✅ **إنشاء الفترات الزمنية الافتراضية:**
-  - زر "إنشاء الفترات الافتراضية" عندما لا توجد فترات
-  - 7 حصص + استراحة + صلاة
-  - من 7:00 صباحاً إلى 1:15 ظهراً
-- ✅ **نتائج الاختبار:** 750 حصة، 25 معلم، 93% Backend / 100% Frontend
-
-### 12. مساعد "حكيم" الذكي ✅
-
-- ✅ **نافذة محادثة تفاعلية** في الزاوية السفلية
-- ✅ **رسالة ترحيب** مع صورة حكيم
-- ✅ **أزرار اقتراحات سريعة** (تعرف على النظام، إدارة المدارس، إدارة المستخدمين)
-- ✅ **تكامل GPT-5.2** عبر Emergent LLM Key
-- ✅ **ردود ذكية** مبنية على سياق المستخدم
+```
+/app
+├── backend/
+│   ├── engines/
+│   │   └── session_engine.py    # NEW - Session business logic (1000+ lines)
+│   └── server.py                # Main API routes
+└── frontend/src/
+    ├── pages/TeacherModule/
+    │   ├── TeacherHomePage.jsx  # Mobile-first dashboard
+    │   ├── SessionStartPage.jsx # Attendance page
+    │   └── SessionTeachPage.jsx # Teaching page
+    └── App.js                   # Routes
+```
 
 ---
 
-## ✅ ما تم إنجازه - جلسة 11 مارس 2026 (الجزء 3)
+## Pending/In-Progress Tasks
 
-### 8. تحسينات واجهة مدير المنصة ومركز القيادة ✅
+### 🔴 P0 - Critical
+1. **Fix Frontend Navigation Issue**
+   - `location.state` not being passed correctly from TeacherHomePage to SessionStartPage
+   - When clicking "ابدأ الحصة", user should go to `/teacher/session/start` with lesson data
 
-#### أ) إلغاء صفحة إدارة القواعد من قائمة مدير المنصة ✅
-- ✅ تمت إزالة "إدارة القواعد" من القائمة الجانبية لمدير المنصة
+2. **Complete Teaching Page UI**
+   - Random student selection feature
+   - Confetti animation for correct answers
+   - Interaction panel for logging participation/behavior
 
-#### ب) تحسين وضع معاينة المدرسة (Impersonation) ✅
-- ✅ الشريط البرتقالي **Sticky** ظاهر في جميع الصفحات أثناء المعاينة
-- ✅ رسالة "أنت الآن تعاين مدرسة: {اسم المدرسة}" 
-- ✅ زر **"العودة للمنصة"** في الشريط العلوي فقط (تمت إزالته من القائمة الجانبية)
-- ✅ الزر يعود لصفحة إدارة المدارس (`/admin/tenants`)
+### 🟡 P1 - Important
+3. **Scheduling Engine**
+   - Schedule generation logic
+   - Conflict detection
+   - Drag-and-drop saving
 
-#### ج) تحسين مركز القيادة لمدير المدرسة ✅
-- ✅ زر **"عرض الجدول"** ينتقل لصفحة الجدول المدرسي (`/school/schedule`)
-- ✅ تغيير اسم "إعدادات مدير المدرسة" إلى **"إعدادات المدرسة"**
+4. **School Settings Verification**
+   - Test all 15 sections save correctly to database
 
-#### د) المسارات الجديدة ✅
-- ✅ `/school/schedule` - صفحة الجدول المدرسي
-- ✅ `/school/settings` - صفحة إعدادات المدرسة
-- ✅ `/admin/tenants` - صفحة إدارة المدارس (مسار بديل)
+5. **System Cleanup**
+   - Remove all mock/static data
 
----
-
-## ✅ ما تم إنجازه - جلسة 11 مارس 2026 (الجزء 2)
-
-### 7. تحسينات واجهة مركز القيادة ومعاينة المدارس ✅
-
-#### أ) تحسين وضع معاينة المدرسة (School Preview Mode) ✅
-- ✅ شريط المعاينة البرتقالي **ثابت (Sticky)** في أعلى الشاشة
-- ✅ رسالة توضيحية **"أنت الآن تعاين مدرسة: {اسم المدرسة}"** مع جلب الاسم ديناميكياً
-- ✅ زر **"العودة للمنصة"** واضح وكبير
-- ✅ الزر يعود لصفحة إدارة المدارس (`/admin/tenants`)
-
-#### ب) تحسين أزرار مركز القيادة لمدير المدرسة ✅
-- ✅ زر **Refresh أيقونة فقط** (بدون نص)
-- ✅ **إزالة زر الحصص** من الإجراءات السريعة
-- ✅ **إزالة زر الإشعار** من الإجراءات السريعة
-- ✅ تغيير اسم الزر من **"جدول"** إلى **"عرض الجدول"**
-- ✅ زر عرض الجدول ينتقل لصفحة `/school/schedule`
-
-#### ج) إصلاح مشكلة إغلاق النوافذ المنبثقة ✅
-- ✅ نافذة **إضافة معلم** تُغلق بشكل صحيح
-- ✅ نافذة **إنشاء فصل** تُغلق بشكل صحيح
-- ✅ جميع المعالجات تدعم `onOpenChange` و `onClose`
-
-#### د) توحيد التسميات ✅
-- ✅ تغيير **"الجدول الدراسي"** إلى **"الجدول المدرسي"** في جميع الصفحات
-- ✅ القائمة الجانبية، معالج الجدول، الصفحة الرئيسية
+### 🟢 P2 - Nice to Have
+6. **Add Student Wizard** (with QR code)
+7. **Add Teacher Wizard**
+8. **Create Class Wizard**
 
 ---
 
-## ✅ ما تم إنجازه - جلسة 11 مارس 2026 (الجزء 1)
+## Key Database Collections
 
-### 6. تحسينات إدارة المستخدمين والمدارس ✅
-
-#### أ) حفظ المدرسة كمسودة (Draft Mode) ✅
-- ✅ API جديد `POST /api/schools/draft` لإنشاء مدرسة بحالة `status='setup'`
-- ✅ زر "حفظ كمسودة" في معالج إنشاء المدرسة
-- ✅ المدارس قيد الإعداد تظهر في فلتر "قيد الإعداد" في صفحة إدارة المدارس
-
-#### ب) تصحيح مركز القيادة (Leadership Dashboard) ✅
-- ✅ زر **"تحديث البيانات" (Refresh)** مع أيقونة دوارة أثناء التحميل
-- ✅ **تحديث تلقائي كل 20 ثانية**
-- ✅ مؤشر "آخر تحديث" مع الوقت
-- ✅ جميع البيانات تأتي من قاعدة البيانات عبر `/api/school/dashboard`
-
-#### ج) تعديل أنواع الحسابات ✅
-- ✅ **3 أنواع فقط** عند إنشاء مستخدم جديد:
-  1. مدير منصة (Platform Admin)
-  2. نائب مدير منصة (Platform Sub-Admin) 
-  3. معلم مستقل (Independent Teacher)
-- ✅ صلاحيات مخصصة لكل نوع
-
-#### د) قسم طلبات المعلمين المستقلين ✅
-- ✅ تغيير الاسم من "طلبات المعلمين" إلى **"طلبات المعلمين المستقلين"**
-- ✅ **5 فلاتر** للحالات:
-  1. جميع الطلبات
-  2. المعتمدين ✅
-  3. قيد الاعتماد 🟡
-  4. بانتظار معلومات 🔵
-  5. المرفوضين ❌
-- ✅ أزرار الإجراءات تظهر فقط للطلبات قيد الاعتماد
-
-#### ه) قائمة مستخدمي المدارس الجديدة ✅
-- ✅ **تاب جديد** "مستخدمو المدارس" بين "المستخدمين" و "طلبات المعلمين المستقلين"
-- ✅ كل مدرسة في **كارت منفصل** يحتوي على:
-  - اسم المدرسة وحالتها
-  - عدد المستخدمين والمدينة
-  - قائمة المستخدمين (مدير، نائب، معلمين)
-  - أزرار: تفاصيل، إضافة مستخدم
-- ✅ مديرو المدارس **لا يظهرون** في قائمة المستخدمين العامة
-
-#### و) الفلاتر المتقدمة ✅
-- ✅ فلاتر موجودة في صفحات المستخدمين ومستخدمي المدارس وطلبات المعلمين
-
----
-
-## ✅ ما تم إنجازه سابقاً
-
-### 1. نظام Context Switching الكامل ✅
-- ✅ Platform Admin يمكنه الدخول لسياق أي مدرسة
-- ✅ **القائمة الجانبية تعرض فقط menu مدير المدرسة** (لا يوجد أي عنصر من menu مدير المنصة)
-- ✅ شريط المعاينة يظهر اسم المدرسة + زر "العودة للمنصة"
-- ✅ صندوق المعاينة في أسفل القائمة الجانبية
-- ✅ التجربة مطابقة 100% لتسجيل الدخول المباشر كمدير مدرسة
-- ✅ X-School-Context Header للـ API
-
-### 2. قاعدة البيانات الواقعية ✅
-- 🏫 5 مدارس: النور، الأمل، المستقبل، الرواد، الإبداع
-- 👨‍🎓 500 طالب (100 لكل مدرسة)
-- 👨‍🏫 125 معلم (25 لكل مدرسة)
-- 🏛️ 125 فصل (25 لكل مدرسة)
-- ✅ 18,750 سجل حضور
-- 📝 1,486 سجل سلوك
-- 📊 10,000 درجة
-
-### 3. صفحة إدارة المستخدمين والفصول ✅
-- ✅ تصميم بطاقات (5 في الصف)
-- ✅ أزرار: طالب/طلاب 🔵، معلم/معلمين 🔷، فصل/فصول 🟢
-- ✅ فلاتر تبويب مع URL parameters
-- ✅ إزالة زر الاستيراد الجماعي (ينتقل داخل المعالجات)
-- ✅ **إصلاح خطأ `fetchTeachers`** عند إغلاق معالج إضافة المعلم (تاريخ: 11 مارس 2026)
-
-### 4. معالجات الإضافة (Wizards) ✅
-
-**معالج إضافة طالب:**
-- المراحل: بيانات الطالب → ولي الأمر → البيانات الصحية → المراجعة → الإنشاء
-- API: `/student-wizard/create`, `/student-wizard/check-parent`
-- ميزة: فحص وجود ولي الأمر مسبقاً (الأشقاء)
-
-**معالج إضافة معلم:**
-- المراحل: البيانات → المؤهلات → المواد → الجدول → المراجعة
-- API: `/teachers/create`, options endpoints
-- ميزة: اختيار المواد والصفوف والمؤهلات
-
-**معالج إنشاء فصل:**
-- المراحل: بيانات الفصل → المعلم → الطلاب → المراجعة
-- API: `/classes/create`, options endpoints
-- ميزة: تعيين معلم الفصل واختيار الطلاب
-
----
-
-## الحسابات التجريبية
-
-| الدور | البريد | كلمة المرور |
-|------|-------|------------|
-| مدير المنصة | admin@nassaq.com | Admin@123 |
-| مدير مدرسة النور | principal1@nassaq.com | Principal@123 |
-| مدير مدرسة الأمل | principal2@nassaq.com | Principal@123 |
-| نائب مدير | subadmin1@nassaq.com | SubAdmin@123 |
-| معلم | teacher1@nor.edu.sa | Teacher@123 |
-| طالب | student1@nor.edu.sa | Student@123 |
-| ولي أمر | parent1@nor.edu.sa | Parent@123 |
-
----
-
-### 4. لوحة تحكم Super Admin - البيانات الحية ✅ (تاريخ: 11 مارس 2026)
-- ✅ API جديد `/api/super-admin/dashboard-stats` يجلب جميع الإحصائيات من قاعدة البيانات
-- ✅ **9 مؤشرات أداء رئيسية**:
-  1. إجمالي المدارس
-  2. إجمالي الطلاب
-  3. إجمالي المعلمين
-  4. إجمالي الفصول
-  5. حصص اليوم
-  6. المستخدمين النشطين
-  7. نسبة حضور الطلاب (مع تفاصيل الحاضر/الغائب)
-  8. نسبة حضور المعلمين (مع تفاصيل الحاضر/الغائب)
-  9. حصص الانتظار
-- ✅ **تحديث في الوقت الحقيقي** كل 30 ثانية
-- ✅ **زر تحديث يدوي**
-- ✅ **مؤشر البيانات الحية** (نقطة خضراء)
-- ✅ إزالة جميع البيانات الوهمية من صفحة التقارير والتحليلات
-
-### 5. المراجعة التقنية الشاملة للنظام ✅ (تاريخ: 11 مارس 2026)
-- ✅ تحليل 44 صفحة في النظام
-- ✅ تحويل 80% من الصفحات إلى Dynamic Data
-- ✅ إنشاء `/api/system/rules` API كامل (CRUD)
-- ✅ إزالة البيانات الوهمية من:
-  - `UsersManagement.jsx`
-  - `RulesManagementPage.jsx`
-  - `TeacherRequestsPage.jsx`
-  - `ParentDashboard.jsx`
-- ✅ تقرير مفصل في `/app/memory/SYSTEM_AUDIT_REPORT.md`
-
-## المهام القادمة (P0)
-
-## المهام المستقبلية (P1)
-
-### 1. إزالة البيانات الوهمية من PlatformAnalyticsPage.jsx
-- ربط الرسوم البيانية بـ API حقيقي
-- جلب توزيع المدارس حسب المدينة
-
-### 2. تفاصيل المستخدم (UserDetailsPage)
-- عرض تفصيلي للطالب/المعلم
-- تاريخ الحضور والسلوك
-
-### 3. توسيع نظام Audit Log
-- تسجيل جميع العمليات الحساسة
-
-### 4. مساعد "حكيم" الذكي (AI Assistant)
-- استخدام Emergent LLM Key
-- تحليل البيانات والتوصيات
+```
+- class_sessions: Active/completed class sessions
+- session_attendance: Student attendance records per session
+- session_interactions: Student participation/answer logs
+- session_behaviours: Student behavior records
+- behaviour_types: Predefined behavior types (13 entries)
+```
 
 ---
 
 ## API Endpoints
 
-### Student Wizard
-| Endpoint | Method | الوصف |
-|----------|--------|-------|
-| `/student-wizard/create` | POST | إنشاء طالب مع ولي أمر |
-| `/student-wizard/check-parent` | POST | فحص وجود ولي أمر |
-
-### Teacher Wizard
-| Endpoint | Method | الوصف |
-|----------|--------|-------|
-| `/teachers/create` | POST | إنشاء معلم |
-| `/teachers/options/subjects` | GET | المواد المتاحة |
-| `/teachers/options/grades` | GET | الصفوف المتاحة |
-| `/teachers/options/academic-degrees` | GET | الدرجات العلمية |
-| `/teachers/options/teacher-ranks` | GET | الرتب التعليمية |
-
-### Class Wizard
-| Endpoint | Method | الوصف |
-|----------|--------|-------|
-| `/classes/create` | POST | إنشاء فصل |
-| `/classes/options/grades` | GET | الصفوف المتاحة |
-| `/classes/options/teachers` | GET | المعلمين المتاحين |
-
-### School Context
-| Header | الوصف |
-|--------|-------|
-| `X-School-Context` | معرف المدرسة للـ Context Switching |
+### Session APIs
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/session/start` | Start new session |
+| GET | `/api/session/{id}` | Get session info |
+| GET | `/api/session/{id}/students` | Get students with attendance |
+| PUT | `/api/session/{id}/attendance/{student_id}` | Update attendance |
+| POST | `/api/session/{id}/approve-attendance` | Approve attendance |
+| POST | `/api/session/{id}/interaction` | Log interaction |
+| POST | `/api/session/{id}/behaviour` | Log behavior |
+| POST | `/api/session/{id}/end` | End session |
+| GET | `/api/session/current` | Get current session by schedule_session_id |
 
 ---
 
-## الملفات الرئيسية
+## Test Credentials
+- **Teacher**: `teacher1@nor.edu.sa` / `Teacher@123`
+- **Principal**: `principal1@nassaq.com` / `Principal@123`
+- **Admin**: `admin@nassaq.com` / `Admin@123`
 
-```
-/app
-├── backend/
-│   ├── server.py          # APIs (updated with wizard routes)
-│   └── scripts/
-│       └── seed_realistic_data.py
-├── frontend/src/
-│   ├── contexts/
-│   │   └── AuthContext.js  # School Context support
-│   ├── components/
-│   │   ├── layout/
-│   │   │   └── Sidebar.jsx # Role-based menu
-│   │   └── wizards/
-│   │       ├── AddStudentWizard.jsx
-│   │       ├── AddTeacherWizard.jsx
-│   │       └── CreateClassWizard.jsx
-│   └── pages/
-│       ├── TenantsManagement.jsx # Dynamic schools
-│       ├── UsersClassesManagement.jsx # New page
-│       └── PrincipalDashboard.jsx # Impersonation banner
-└── memory/
-    └── PRD.md
-```
+---
+
+## Tech Stack
+- **Backend**: FastAPI, MongoDB (motor), Pydantic
+- **Frontend**: React, TailwindCSS, Shadcn/UI, canvas-confetti
+- **Dependencies**: @dnd-kit, lucide-react, sonner
 
 ---
 
