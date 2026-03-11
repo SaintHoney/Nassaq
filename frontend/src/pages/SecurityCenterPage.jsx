@@ -400,7 +400,29 @@ export default function SecurityCenterPage() {
   
   const handleDownloadReport = () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); toast.success(isRTL ? 'تم تحميل تقرير الأمان' : 'Security report downloaded'); }, 2000);
+    // إنشاء تقرير أمان حقيقي
+    const report = {
+      generated_at: new Date().toISOString(),
+      security_score: metrics.securityScore,
+      metrics: metrics,
+      alerts: SECURITY_ALERTS,
+      recent_events: SECURITY_EVENTS.slice(0, 20),
+      recommendations: [
+        'تفعيل المصادقة الثنائية لجميع المستخدمين',
+        'مراجعة الحسابات غير النشطة',
+        'تحديث سياسات كلمات المرور',
+        'فحص سجلات الدخول المشبوهة',
+      ],
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `security_report_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    setLoading(false);
+    toast.success(isRTL ? 'تم تحميل تقرير الأمان' : 'Security report downloaded');
   };
   
   const handleGenerateAIReport = () => {
