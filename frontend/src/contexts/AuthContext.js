@@ -186,6 +186,9 @@ export const AuthProvider = ({ children }) => {
     exitSchoolContext,
     getEffectiveRole,
     getEffectiveTenantId,
+    // Language
+    preferredLanguage,
+    isRTL,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
