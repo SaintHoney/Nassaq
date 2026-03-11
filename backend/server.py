@@ -538,7 +538,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         must_change_password=current_user.get("must_change_password", False),
         preferred_language=current_user.get("preferred_language", "ar"),
         preferred_theme=current_user.get("preferred_theme", "light"),
-        created_at=current_user["created_at"]
+        created_at=current_user["created_at"],
+        teacher_id=current_user.get("teacher_id")  # Include teacher_id for teachers
     )
 
 @api_router.put("/auth/preferences")
