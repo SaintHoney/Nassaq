@@ -861,7 +861,7 @@ ${loginUrl}
                   </div>
                   
                   {/* الإدارة التعليمية - للمعلم فقط */}
-                  {formData.role === 'teacher' && (
+                  {formData.role === 'independent_teacher' && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2">
                         <GraduationCap className="h-4 w-4" />
