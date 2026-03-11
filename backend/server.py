@@ -10795,7 +10795,7 @@ async def get_login_analytics(
 
 
 @api_router.get("/audit/user-activity/{user_id}")
-async def get_user_activity(
+async def get_audit_user_activity(
     user_id: str,
     current_user: dict = Depends(require_roles([
         UserRole.PLATFORM_ADMIN,
