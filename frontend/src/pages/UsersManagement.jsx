@@ -330,6 +330,7 @@ export default function UsersManagement() {
   useEffect(() => {
     fetchUsers();
     fetchTeacherRequests();
+    fetchSchoolUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
