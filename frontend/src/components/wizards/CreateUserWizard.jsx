@@ -368,6 +368,26 @@ const PLATFORM_ADMIN_PERMISSIONS = [
   { id: 'audit_logs', name: 'سجلات المراجعة', name_en: 'Audit Logs', icon: Activity },
 ];
 
+// صلاحيات نائب مدير المنصة
+const PLATFORM_SUB_ADMIN_PERMISSIONS = [
+  { id: 'view_dashboard', name: 'عرض لوحة التحكم', name_en: 'View Dashboard', icon: LayoutDashboard },
+  { id: 'view_schools', name: 'عرض المدارس', name_en: 'View Schools', icon: Building2 },
+  { id: 'view_users', name: 'عرض المستخدمين', name_en: 'View Users', icon: Users },
+  { id: 'manage_support', name: 'إدارة الدعم الفني', name_en: 'Manage Support', icon: MessageSquare },
+  { id: 'view_reports', name: 'عرض التقارير', name_en: 'View Reports', icon: BarChart3 },
+  { id: 'view_activity', name: 'عرض سجل النشاط', name_en: 'View Activity Log', icon: Activity },
+  { id: 'manage_teacher_requests', name: 'إدارة طلبات المعلمين', name_en: 'Manage Teacher Requests', icon: UserCheck },
+];
+
+// صلاحيات المعلم المستقل
+const INDEPENDENT_TEACHER_PERMISSIONS = [
+  { id: 'view_schools', name: 'عرض المدارس المتاحة', name_en: 'View Available Schools', icon: Building2 },
+  { id: 'apply_to_schools', name: 'التقدم للمدارس', name_en: 'Apply to Schools', icon: FileText },
+  { id: 'manage_profile', name: 'إدارة الملف الشخصي', name_en: 'Manage Profile', icon: User },
+  { id: 'view_own_schedule', name: 'عرض الجدول الشخصي', name_en: 'View Own Schedule', icon: CalendarCheck },
+  { id: 'use_ai_assistant', name: 'استخدام مساعد AI', name_en: 'Use AI Assistant', icon: Brain },
+];
+
 // صلاحيات مدير العمليات
 const OPERATIONS_MANAGER_PERMISSIONS = [
   { id: 'view_dashboard', name: 'عرض لوحة التحكم', name_en: 'View Dashboard', icon: LayoutDashboard },
