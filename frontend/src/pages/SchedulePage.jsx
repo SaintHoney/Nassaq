@@ -236,6 +236,16 @@ export const SchedulePage = () => {
     effective_from: new Date().toISOString().split('T')[0],
   });
 
+  // Drag and Drop State
+  const [activeSession, setActiveSession] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
   const schoolId = user?.tenant_id;
 
   const fetchData = useCallback(async () => {
