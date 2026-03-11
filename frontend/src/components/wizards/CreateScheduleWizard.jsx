@@ -184,7 +184,11 @@ export const CreateScheduleWizard = ({ open, onClose, onOpenChange }) => {
     setResult(null);
   };
 
-  const handleClose = () => { handleReset(); onClose(); };
+  const handleClose = () => { 
+    handleReset(); 
+    if (onOpenChange) onOpenChange(false);
+    else if (onClose) onClose();
+  };
 
   const getDayName = (day) => options.days.find(d => d.code === day)?.[isRTL ? 'name_ar' : 'name_en'] || day;
 
