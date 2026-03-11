@@ -5,55 +5,61 @@
 
 ---
 
-## Current Status: Teacher Session Engine - COMPLETE ✅
+## Current Status: All P0-P2 Tasks COMPLETE ✅
 
 ### What's Been Implemented (11 مارس 2026)
 
-#### 1. Teacher Session Engine (Backend) ✅ COMPLETE
-- **Session Start API** (`POST /api/session/start`): Starts a new class session, creates attendance records
-- **Get Current Session** (`GET /api/session/current`): Gets in-progress session by schedule_session_id (FIXED route ordering)
-- **Get Session Students** (`GET /api/session/{id}/students`): Returns students with attendance status, grouped by gender
-- **Update Attendance** (`PUT /api/session/{id}/attendance/{student_id}`): Updates individual student attendance
-- **Approve Attendance** (`POST /api/session/{id}/attendance/approve`): Finalizes attendance
-- **Record Interaction** (`POST /api/session/{id}/interaction`): Logs student participation/answers
-- **Record Behavior** (`POST /api/session/{id}/behaviour`): Logs student behavior (positive/negative/skills)
-- **End Session** (`POST /api/session/{id}/end`): Finalizes and closes session
+#### 1. Teacher Session Engine ✅ COMPLETE
+- Session lifecycle management (start, attendance, teaching, end)
+- Random student selection with visual effects
+- Participation & behavior logging
+- Points system
+- Full API testing passed
 
 #### 2. Mobile-First Teacher UI ✅ COMPLETE
-- **TeacherHomePage.jsx**: Mobile-first dashboard with colored lesson cards
-  - Green cards for current lesson
-  - Blue cards for upcoming lessons
-  - Hijri date display
-  - Quick stats (classes, students, stage)
-  - Session storage for lesson data persistence
-  
-- **SessionStartPage.jsx**: Attendance management
-  - Students grouped by gender (الطلاب / الطالبات)
-  - All students default to "حاضر" (present)
-  - Click to change status (absent, late, excused)
-  - Progress bar showing attendance stats
-  - "اعتماد الحضور" button to proceed
-  - FIXED: Session storage fallback for lesson data
-  
-- **SessionTeachPage.jsx**: Interactive teaching
-  - Random student selection with spinning animation
-  - Confetti celebrations for correct answers
-  - Built-in audio feedback (base64 encoded)
-  - Multiple burst confetti effects
-  - Participation logging
-  - Behavior recording (skills, positive, negative)
+- TeacherHomePage with colored lesson cards
+- SessionStartPage with attendance management
+- SessionTeachPage with confetti and audio effects
+- Arabic as default language
+- RTL support
 
-#### 3. Bug Fixes ✅ COMPLETE
-- Fixed `/api/auth/me` returning incorrect `id` and missing `teacher_id`
-- Fixed `/api/teacher/dashboard` not returning today's lessons
-- Fixed `/api/session/current` route ordering (was being matched by `/{session_id}`)
-- Fixed `location.state` not being passed correctly (added sessionStorage fallback)
-- Added `isRTL` to AuthContext for Arabic language support
+#### 3. Scheduling Engine ✅ ALREADY COMPLETE
+- Auto-generation with conflict detection
+- Drag-and-drop with `/schedule-sessions/{id}/move`
+- Teacher workload balancing
+- Hakim AI integration ready
 
-#### 4. Language Settings ✅
-- Arabic is now the default language for all users
-- `isRTL` property added to AuthContext
-- All teacher pages support RTL layout
+#### 4. School Settings ✅ VERIFIED
+- 15+ setting endpoints available
+- Fixed `periods-per-day` endpoint (body instead of query param)
+
+#### 5. Mock Data Cleanup ✅ DONE
+- Removed mock data from:
+  - TeacherDashboard.jsx
+  - PlatformNotificationsPage.jsx
+  - AdminDashboard.jsx
+- Now shows zeros instead of fake data when API fails
+
+#### 6. Add Student Wizard ✅ COMPLETE
+- 5-step wizard (Student Info → Parent Info → Health → Review → Success)
+- QR Code generation (base64 PNG)
+- Parent account linking
+- Sibling detection
+- Welcome message generation
+- API: `POST /api/student-wizard/create`
+
+#### 7. Add Teacher Wizard ✅ COMPLETE
+- Multi-step wizard
+- Subject & grade assignment
+- Rank & contract type
+- Temporary password generation
+- API: `POST /api/teachers/create`
+
+#### 8. Create Class Wizard ✅ COMPLETE
+- Class info (name, grade, section)
+- Capacity settings
+- Homeroom teacher assignment
+- Room assignment
 
 ---
 
@@ -63,69 +69,52 @@
 /app
 ├── backend/
 │   ├── engines/
-│   │   └── session_engine.py    # Session business logic (1000+ lines)
-│   └── server.py                # Main API routes
+│   │   ├── session_engine.py    # Session business logic
+│   │   └── audit_engine.py      # Audit logging
+│   └── server.py                # Main API routes (13800+ lines)
 └── frontend/src/
     ├── contexts/
-    │   └── AuthContext.js       # Added isRTL, preferredLanguage
+    │   ├── AuthContext.js       # Added isRTL, preferredLanguage
+    │   └── ThemeContext.js
+    ├── components/wizards/
+    │   ├── AddStudentWizard.jsx # Student creation with QR
+    │   ├── AddTeacherWizard.jsx # Teacher creation
+    │   └── CreateClassWizard.jsx # Class creation
     ├── pages/TeacherModule/
     │   ├── TeacherHomePage.jsx  # Mobile-first dashboard
     │   ├── SessionStartPage.jsx # Attendance page
-    │   └── SessionTeachPage.jsx # Teaching page with confetti
-    └── App.js                   # Routes
+    │   └── SessionTeachPage.jsx # Teaching with confetti
+    └── App.js
 ```
 
 ---
 
-## Remaining Tasks
+## Key APIs
 
-### 🟡 P1 - Important
-1. **Complete Teaching Page Flow**
-   - Test full "approve attendance → teaching → random selection → end session" flow
-
-2. **Scheduling Engine**
-   - Schedule generation logic (Hakim AI)
-   - Conflict detection
-   - Drag-and-drop saving
-
-3. **School Settings Verification**
-   - Test all 15 sections save correctly to database
-
-4. **System Cleanup**
-   - Remove all mock/static data
-
-### 🟢 P2 - Nice to Have
-5. **Add Student Wizard** (with QR code)
-6. **Add Teacher Wizard**
-7. **Create Class Wizard**
-
----
-
-## Key Database Collections
-
-```
-- class_sessions: Active/completed class sessions
-- session_attendance: Student attendance records per session
-- session_interactions: Student participation/answer logs
-- session_behaviours: Student behavior records
-- behaviour_types: Predefined behavior types (13 entries)
-```
-
----
-
-## API Endpoints (Session)
-
+### Session Management
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/session/start` | Start new session |
-| GET | `/api/session/current` | Get current session by schedule_session_id |
-| GET | `/api/session/{id}` | Get session info |
-| GET | `/api/session/{id}/students` | Get students with attendance |
-| PUT | `/api/session/{id}/attendance/{student_id}` | Update attendance |
+| POST | `/api/session/start` | Start session |
+| GET | `/api/session/current` | Get active session |
+| GET | `/api/session/{id}/students` | Get students |
 | POST | `/api/session/{id}/attendance/approve` | Approve attendance |
-| POST | `/api/session/{id}/interaction` | Log interaction |
-| POST | `/api/session/{id}/behaviour` | Log behavior |
+| POST | `/api/session/{id}/random-student` | Random selection |
+| POST | `/api/session/{id}/answer` | Log answer |
 | POST | `/api/session/{id}/end` | End session |
+
+### Wizards
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/student-wizard/create` | Create student with QR |
+| POST | `/api/teachers/create` | Create teacher |
+| POST | `/api/classes` | Create class |
+
+### Schedule
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/schedules/{id}/generate` | Auto-generate schedule |
+| PUT | `/api/schedule-sessions/{id}/move` | Move session (D&D) |
+| GET | `/api/schedules/{id}/conflicts` | Get conflicts |
 
 ---
 
@@ -136,10 +125,22 @@
 
 ---
 
+## Remaining Work (Future Enhancements)
+
+### Nice to Have
+- Bulk import (Excel/CSV) for students and teachers
+- Schedule export (PDF, CSV)
+- Advanced Hakim AI conversational assistant
+- Parent mobile app
+- Push notifications
+
+---
+
 ## Tech Stack
-- **Backend**: FastAPI, MongoDB (motor), Pydantic
+- **Backend**: FastAPI, MongoDB, Pydantic, qrcode
 - **Frontend**: React, TailwindCSS, Shadcn/UI, canvas-confetti
-- **Dependencies**: @dnd-kit, lucide-react, sonner
+- **Auth**: JWT with RBAC
+- **Languages**: Arabic (default), English
 
 ---
 
