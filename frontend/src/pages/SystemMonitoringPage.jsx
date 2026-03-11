@@ -1007,7 +1007,25 @@ export const SystemMonitoringPage = () => {
                 </Card>
                 
                 {/* Download Report */}
-                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => {
+                    const report = {
+                      generated_at: new Date().toISOString(),
+                      metrics: metrics,
+                      errors: SAMPLE_ERRORS,
+                      jobs: SAMPLE_JOBS,
+                      integrations: SAMPLE_INTEGRATIONS,
+                      alerts: SAMPLE_ALERTS,
+                    };
+                    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `system_diagnostic_${new Date().toISOString().split('T')[0]}.json`;
+                    link.click();
+                    toast.success(isRTL ? 'تم تنزيل التقرير التشخيصي' : 'Diagnostic report downloaded');
+                  }}
+                >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-green-100 flex items-center justify-center">
                       <Download className="h-7 w-7 text-green-600" />
