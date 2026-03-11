@@ -1274,3 +1274,23 @@ Build a comprehensive, AI-powered, multi-tenant school management system named "
 - ✅ Backend: 100% (17/17 passed)
 - ✅ Frontend: Teacher & Student dashboards working
 - ⚠️ Parent dashboard uses mock data (no parent accounts in DB)
+
+### ✅ إصلاحات P0 الحرجة (March 11, 2026) - iteration_46.json:
+
+#### Bug Fix 1: زر "إنشاء حساب مستخدم جديد" ✅
+- **المشكلة:** كان `tempPassword` يُولّد عند الانتقال **من** الخطوة 4 بدلاً من **إلى** الخطوة 4
+- **الحل:** تغيير شرط التوليد من `step === 4` إلى `step === 3` في دالة `nextStep`
+- **الملف:** `/app/frontend/src/components/wizards/CreateUserWizard.jsx`
+
+#### Bug Fix 2: أزرار Quick Actions في لوحة تحكم المدير ✅
+- **المشكلة:** `AddStudentWizard` كان يستقبل `onClose` بينما يتوقع `onOpenChange`
+- **الحل:** تغيير الـ prop من `onClose` إلى `onOpenChange` مع تمرير `setShowAddStudentWizard`
+- **الملف:** `/app/frontend/src/components/dashboard/SchoolDashboardContent.jsx`
+
+#### Feature 3: إعادة تسمية صفحة المعلمين + زر إضافة طالب ✅
+- **التغيير:** "إدارة المعلمين" → "إدارة المستخدمين والفصول"
+- **إضافة:** زر "إضافة طالب" باللون الأزرق الغامق مع `AddStudentWizard`
+- **الملف:** `/app/frontend/src/pages/TeachersPage.jsx`
+
+**نتائج الاختبار:** 100% Backend + 100% Frontend ✅
+
