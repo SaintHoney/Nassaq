@@ -445,6 +445,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/school/schedule"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SchedulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/time-slots"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
