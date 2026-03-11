@@ -86,7 +86,7 @@ const SUGGESTED_ACTIONS = [
     title: '12 معلماً بدون رتبة محددة', 
     priority: 'medium', 
     type: 'data',
-    link: '/teachers',
+    link: '/admin/teachers',
     linkText: 'إدارة المعلمين'
   },
   { 
@@ -94,7 +94,7 @@ const SUGGESTED_ACTIONS = [
     title: '4 ملفات استيراد تحتاج مراجعة', 
     priority: 'high', 
     type: 'import',
-    link: '/admin/imports',
+    link: '/admin/users',
     linkText: 'ملفات الاستيراد'
   },
   { 
