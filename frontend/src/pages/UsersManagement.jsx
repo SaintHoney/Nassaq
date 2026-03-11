@@ -666,17 +666,21 @@ export default function UsersManagement() {
           
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-4">
               <TabsTrigger value="users" className="font-cairo">
                 <Users className="h-4 w-4 ms-2" />
                 المستخدمين
               </TabsTrigger>
+              <TabsTrigger value="school-users" className="font-cairo">
+                <Building2 className="h-4 w-4 ms-2" />
+                مستخدمو المدارس
+              </TabsTrigger>
               <TabsTrigger value="requests" className="font-cairo relative">
                 <FileText className="h-4 w-4 ms-2" />
-                طلبات المعلمين
-                {teacherRequests.filter(r => r.status === 'pending').length > 0 && (
+                طلبات المعلمين المستقلين
+                {teacherRequests.filter(r => r.status === 'pending' || r.status === 'info_required').length > 0 && (
                   <span className="absolute -top-1 -start-1 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
-                    {teacherRequests.filter(r => r.status === 'pending').length}
+                    {teacherRequests.filter(r => r.status === 'pending' || r.status === 'info_required').length}
                   </span>
                 )}
               </TabsTrigger>
