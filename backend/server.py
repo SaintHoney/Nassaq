@@ -13177,26 +13177,6 @@ async def get_teacher_assessments(
     return assessments
 
 
-@api_router.post("/assessments")
-async def create_assessment(
-    data: dict = Body(...),
-    current_user: dict = Depends(get_current_user)
-):
-    """Create new assessment - إنشاء تقييم جديد"""
-    assessment = {
-        "id": str(uuid.uuid4()),
-        **data,
-        "status": data.get("status", "draft"),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "created_by": current_user["id"]
-    }
-    
-    await db.assessments.insert_one(assessment)
-    assessment.pop("_id", None)
-    
-    return {"message": "تم إنشاء التقييم", "assessment": assessment}
-
-
 @api_router.get("/assessments/{assessment_id}/grades")
 async def get_assessment_grades(
     assessment_id: str,
