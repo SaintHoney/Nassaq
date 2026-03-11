@@ -168,15 +168,17 @@ export default function TeacherHomePage() {
   };
 
   const handleStartClass = (lesson) => {
+    // Store lesson data in sessionStorage for backup
+    const lessonData = {
+      lesson,
+      schedule_session_id: lesson.schedule_session_id,
+      class_id: lesson.classId,
+      subject_id: lesson.subjectId
+    };
+    sessionStorage.setItem('current_lesson', JSON.stringify(lessonData));
+    
     // Navigate to session page with lesson info
-    navigate('/teacher/session/start', { 
-      state: { 
-        lesson,
-        schedule_session_id: lesson.schedule_session_id,
-        class_id: lesson.classId,
-        subject_id: lesson.subjectId
-      } 
-    });
+    navigate('/teacher/session/start', { state: lessonData });
   };
 
   return (
