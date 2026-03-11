@@ -178,8 +178,8 @@ export const Sidebar = ({ children }) => {
       // 6. School Settings
       {
         icon: Settings,
-        label: isRTL ? 'إعدادات مدير المدرسة' : 'School Settings',
-        href: '/principal/settings',
+        label: isRTL ? 'إعدادات المدرسة' : 'School Settings',
+        href: '/school/settings',
         roles: ['school_principal'],
       },
       // 7. Communication & Notifications
