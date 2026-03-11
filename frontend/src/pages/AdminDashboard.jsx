@@ -210,15 +210,44 @@ export const AdminDashboard = () => {
     showUsers: true
   });
 
-  // Get current Hijri date
+  // Get current Hijri date - تحويل حقيقي للتاريخ الهجري
   const getCurrentHijriDate = useCallback(() => {
     const today = new Date();
-    const hijriYear = 1447;
-    const hijriMonth = Math.floor(today.getMonth() + 1);
-    const hijriDay = today.getDate();
+    
+    // خوارزمية تحويل التاريخ الميلادي إلى هجري (Umm al-Qura algorithm approximation)
+    const gregorianToHijri = (gDate) => {
+      const jd = Math.floor((1461 * (gDate.getFullYear() + 4800 + Math.floor((gDate.getMonth() + 1 - 14) / 12))) / 4)
+        + Math.floor((367 * (gDate.getMonth() + 1 - 2 - 12 * Math.floor((gDate.getMonth() + 1 - 14) / 12))) / 12)
+        - Math.floor((3 * Math.floor((gDate.getFullYear() + 4900 + Math.floor((gDate.getMonth() + 1 - 14) / 12)) / 100)) / 4)
+        + gDate.getDate() - 32075;
+      
+      const l = jd - 1948440 + 10632;
+      const n = Math.floor((l - 1) / 10631);
+      const ll = l - 10631 * n + 354;
+      const j = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719)
+        + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
+      const lll = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50)
+        - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+      const hijriMonth = Math.floor((24 * lll) / 709);
+      const hijriDay = lll - Math.floor((709 * hijriMonth) / 24);
+      const hijriYear = 30 * n + j - 30;
+      
+      return { year: hijriYear, month: hijriMonth, day: hijriDay };
+    };
+    
+    const hijri = gregorianToHijri(today);
+    
+    // أسماء الأشهر الهجرية
+    const hijriMonthNames = [
+      '', 'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة',
+      'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+    ];
+    
     return {
-      hijri: `${hijriYear}/${String(hijriMonth).padStart(2, '0')}/${String(hijriDay).padStart(2, '0')} هـ`,
-      gregorian: today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      hijri: `${hijri.year}/${String(hijri.month).padStart(2, '0')}/${String(hijri.day).padStart(2, '0')} هـ`,
+      hijriFormatted: `${hijri.day} ${hijriMonthNames[hijri.month]} ${hijri.year} هـ`,
+      gregorian: today.toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/'),
+      gregorianFormatted: today.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }) // DD/MM/YYYY
     };
   }, []);
 
