@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -33,6 +34,8 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  LogIn,
+  ExternalLink,
 } from 'lucide-react';
 import {
   DropdownMenu,
