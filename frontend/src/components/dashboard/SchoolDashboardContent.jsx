@@ -491,7 +491,7 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
     };
 
     fetchDashboardData();
-  }, [isRTL]);
+  }, [isRTL, isImpersonating, schoolContext]);
 
   // Handle quick actions
   const handleQuickAction = (actionId) => {
