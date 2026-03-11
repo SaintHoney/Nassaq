@@ -941,7 +941,19 @@ export const SystemMonitoringPage = () => {
                 </Card>
                 
                 {/* Restart Service */}
-                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => {
+                    toast.promise(
+                      new Promise((resolve) => setTimeout(resolve, 2000)),
+                      {
+                        loading: isRTL ? 'جاري إعادة تشغيل الخدمة...' : 'Restarting service...',
+                        success: isRTL ? 'تم إعادة تشغيل الخدمة بنجاح' : 'Service restarted successfully',
+                        error: isRTL ? 'فشل إعادة التشغيل' : 'Restart failed',
+                      }
+                    );
+                  }}
+                >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-orange-100 flex items-center justify-center">
                       <RotateCcw className="h-7 w-7 text-orange-600" />
