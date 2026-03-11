@@ -3203,26 +3203,36 @@ async def create_student_with_wizard(
 🔗 رابط تسجيل الدخول: {os.environ.get('FRONTEND_URL', '')}
 """
     
+    # Generate QR Code for student
+    qr_code = generate_student_qr_code(student_id, data.full_name, student_number)
+    
     return {
         "success": True,
         "student": {
             "id": student_id,
+            "student_id": student_number,  # Alias for student_number
             "student_number": student_number,
             "full_name": data.full_name,
             "email": student_email,
-            "password": student_password,
+            "temp_password": student_password,
             "class_name": class_doc.get("name") if class_doc else None,
             "grade": class_doc.get("grade") if class_doc else None,
             "section": class_doc.get("section") if class_doc else None,
+            "qr_code": qr_code,  # Base64 encoded QR code image
         },
         "parent": {
             "id": parent_doc.get("id") if parent_doc else None,
             "full_name": parent_doc.get("full_name") if parent_doc else None,
             "email": parent_doc.get("email") if parent_doc else None,
-            "password": parent_password,
+            "phone": parent_doc.get("phone") if parent_doc else None,
+            "temp_password": parent_password,
             "is_new": parent_password is not None,
         } if parent_doc else None,
         "welcome_message": welcome_message,
+        "siblings": {
+            "count": 0,
+            "list": [],
+        }
     }
 
 # ============== CLASSES ROUTES ==============
