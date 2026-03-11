@@ -13522,18 +13522,6 @@ async def start_class_session(
     return result
 
 
-@api_router.get("/session/{session_id}")
-async def get_session_info(
-    session_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get session information"""
-    session = await db.class_sessions.find_one({"id": session_id}, {"_id": 0})
-    if not session:
-        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
-    return session
-
-
 @api_router.get("/session/current")
 async def get_current_session(
     schedule_session_id: str,
@@ -13566,6 +13554,18 @@ async def get_current_session(
         "teacher_name": teacher.get("full_name") if teacher else "معلم",
         "student_count": student_count
     }
+
+
+@api_router.get("/session/{session_id}")
+async def get_session_info(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get session information"""
+    session = await db.class_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
+    return session
 
 
 @api_router.get("/session/by-schedule/{schedule_session_id}")
