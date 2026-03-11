@@ -55,7 +55,7 @@ import AuditLogsPage from "./pages/AuditLogsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, isImpersonating, getEffectiveRole } = useAuth();
 
   if (loading) {
     return (
@@ -73,10 +73,13 @@ const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) =
   if (!skipPasswordCheck && user?.must_change_password) {
     return <Navigate to="/change-password" replace />;
   }
+  
+  // Get effective role (supports impersonation)
+  const effectiveRole = getEffectiveRole ? getEffectiveRole() : user?.role;
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    // Redirect to appropriate dashboard based on role
-    switch (user?.role) {
+  if (allowedRoles && !allowedRoles.includes(effectiveRole)) {
+    // Redirect to appropriate dashboard based on effective role
+    switch (effectiveRole) {
       case 'platform_admin':
         return <Navigate to="/admin" replace />;
       case 'school_principal':
