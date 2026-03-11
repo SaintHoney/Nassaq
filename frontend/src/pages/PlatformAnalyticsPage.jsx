@@ -461,6 +461,12 @@ export const PlatformAnalyticsPage = () => {
   // Get auth token from localStorage
   const getAuthToken = () => {
     try {
+      // First try nassaq_token (primary storage)
+      const nassaqToken = localStorage.getItem('nassaq_token');
+      if (nassaqToken) {
+        return nassaqToken;
+      }
+      // Fallback to auth object
       const authData = localStorage.getItem('auth');
       if (authData) {
         const parsed = JSON.parse(authData);
