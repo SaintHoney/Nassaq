@@ -871,11 +871,19 @@ export const SystemMonitoringPage = () => {
                               <Badge className="bg-green-500">{isRTL ? 'تم الحل' : 'Resolved'}</Badge>
                             ) : (
                               <>
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => toast.success(isRTL ? 'تم تصعيد التنبيه للفريق التقني' : 'Alert escalated to tech team')}
+                                >
                                   <Bell className="h-4 w-4 me-2" />
                                   {t.escalateAlert}
                                 </Button>
-                                <Button size="sm" className="bg-brand-navy">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-brand-navy"
+                                  onClick={() => toast.success(isRTL ? 'تم بدء معالجة التنبيه' : 'Alert processing started')}
+                                >
                                   {isRTL ? 'معالجة' : 'Handle'}
                                 </Button>
                               </>
