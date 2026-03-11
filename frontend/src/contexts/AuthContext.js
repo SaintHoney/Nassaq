@@ -26,11 +26,20 @@ export const AuthProvider = ({ children }) => {
     },
   });
 
-  // Add token to requests
+  // Add token to requests - with school context support
   api.interceptors.request.use((config) => {
     const storedToken = localStorage.getItem('nassaq_token');
     if (storedToken) {
       config.headers.Authorization = `Bearer ${storedToken}`;
+    }
+    
+    // Add school context header when impersonating
+    const savedContext = sessionStorage.getItem('nassaq_school_context');
+    if (savedContext) {
+      const ctx = JSON.parse(savedContext);
+      if (ctx?.school_id) {
+        config.headers['X-School-Context'] = ctx.school_id;
+      }
     }
     return config;
   });
