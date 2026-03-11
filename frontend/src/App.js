@@ -30,7 +30,10 @@ import { NotificationsPage } from "./pages/NotificationsPage";
 
 // Teacher Module Pages
 import {
+  TeacherHomePage,
   TeacherMainDashboard,
+  SessionStartPage,
+  SessionTeachPage,
   TeacherSchedulePage,
   TeacherClassesPage,
   TeacherClassDetailPage,
