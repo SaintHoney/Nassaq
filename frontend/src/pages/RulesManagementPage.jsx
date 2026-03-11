@@ -651,7 +651,31 @@ export const RulesManagementPage = () => {
                 className="mb-0"
               />
               <div className="flex items-center gap-3">
-                <Button variant="outline" className="rounded-xl">
+                <Button 
+                  variant="outline" 
+                  className="rounded-xl"
+                  onClick={() => {
+                    // تصدير القواعد كملف JSON
+                    const exportData = rules.map(r => ({
+                      name_ar: r.name_ar,
+                      name_en: r.name_en,
+                      category: r.category,
+                      type: r.type,
+                      value: r.value,
+                      status: r.status,
+                      priority: r.priority,
+                      description_ar: r.description_ar,
+                      description_en: r.description_en,
+                    }));
+                    
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `rules_export_${new Date().toISOString().split('T')[0]}.json`;
+                    link.click();
+                    toast.success(isRTL ? 'تم تصدير القواعد بنجاح' : 'Rules exported successfully');
+                  }}
+                >
                   <Download className="h-4 w-4 me-2" />
                   {t.export}
                 </Button>
