@@ -365,6 +365,31 @@ export const Sidebar = ({ children }) => {
       {/* User Info & Logout */}
       {!collapsed && user && (
         <div className="p-4 border-t border-white/10">
+          {/* Impersonation Notice */}
+          {isImpersonating && schoolContext && (
+            <div className="mb-3 p-2 rounded-lg bg-amber-500/20 border border-amber-500/30">
+              <div className="flex items-center gap-2 text-amber-200 text-xs mb-2">
+                <Shield className="h-3 w-3" />
+                <span className="font-medium">
+                  {isRTL ? 'وضع المعاينة' : 'Preview Mode'}
+                </span>
+              </div>
+              <p className="text-[10px] text-amber-100/80 truncate mb-2">
+                {schoolContext.school_name}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExitSchoolContext}
+                className="w-full text-xs h-7 text-amber-200 hover:text-white hover:bg-amber-500/30"
+                data-testid="exit-school-context-btn"
+              >
+                <ChevronLeft className="h-3 w-3 me-1" />
+                {isRTL ? 'العودة للمنصة' : 'Back to Platform'}
+              </Button>
+            </div>
+          )}
+          
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-brand-turquoise flex items-center justify-center">
               <span className="text-white font-semibold">
@@ -374,15 +399,19 @@ export const Sidebar = ({ children }) => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{user.full_name}</p>
               <p className="text-xs text-white/50 truncate">
-                {isRTL
-                  ? user.role === 'platform_admin'
-                    ? 'مدير المنصة'
-                    : user.role === 'school_principal'
-                    ? 'مدير المدرسة'
-                    : user.role === 'teacher'
-                    ? 'معلم'
-                    : user.role
-                  : user.role.replace('_', ' ')}
+                {(() => {
+                  const effectiveRole = getEffectiveRole ? getEffectiveRole() : user.role;
+                  if (isRTL) {
+                    return effectiveRole === 'platform_admin'
+                      ? 'مدير المنصة'
+                      : effectiveRole === 'school_principal'
+                      ? 'مدير المدرسة'
+                      : effectiveRole === 'teacher'
+                      ? 'معلم'
+                      : effectiveRole;
+                  }
+                  return effectiveRole?.replace('_', ' ');
+                })()}
               </p>
             </div>
           </div>
