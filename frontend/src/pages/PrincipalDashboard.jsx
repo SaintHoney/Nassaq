@@ -28,45 +28,45 @@ export default function PrincipalDashboard() {
   // Handle exit impersonation mode
   const handleExitImpersonation = () => {
     exitSchoolContext();
-    navigate('/admin/schools');
+    navigate('/admin/tenants');
   };
 
   return (
     <Sidebar>
       <div className="min-h-screen" data-testid="principal-dashboard">
-        {/* Impersonation Banner - Shows when Platform Admin is viewing school context */}
+        {/* Impersonation Banner - Sticky at top, shows when Platform Admin is viewing school context */}
         {isImpersonating && schoolContext && (
-          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-4 py-2 flex items-center justify-between" data-testid="impersonation-banner">
+          <div 
+            className="sticky top-0 z-50 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-4 py-3 flex items-center justify-between shadow-lg" 
+            data-testid="impersonation-banner"
+          >
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5" />
-              <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
                 <span className="font-bold text-sm">
-                  {isRTL ? 'وضع المعاينة:' : 'Preview Mode:'}
+                  {isRTL ? 'أنت الآن تعاين مدرسة:' : 'You are now previewing:'}
                 </span>
-                <Badge variant="outline" className="bg-white/20 text-white border-white/30">
-                  <Building2 className="h-3 w-3 me-1" />
+                <span className="text-white/90 font-cairo text-lg">
                   {schoolContext.school_name}
-                </Badge>
-                <span className="text-xs opacity-80">
-                  {isRTL ? '(أنت تشاهد كمدير مدرسة)' : '(Viewing as School Manager)'}
                 </span>
               </div>
             </div>
             <Button 
-              size="sm" 
-              variant="ghost" 
-              className="text-white hover:bg-white/20 rounded-lg"
+              size="default" 
+              className="bg-white text-amber-600 hover:bg-white/90 rounded-xl font-bold shadow-md"
               onClick={handleExitImpersonation}
               data-testid="exit-impersonation-btn"
             >
-              <ArrowLeft className="h-4 w-4 me-1" />
+              <ArrowLeft className={`h-4 w-4 me-2 ${isRTL ? 'rotate-180' : ''}`} />
               {isRTL ? 'العودة للمنصة' : 'Back to Platform'}
             </Button>
           </div>
         )}
         
         {/* Header */}
-        <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
+        <header className={`sticky ${isImpersonating ? 'top-[64px]' : 'top-0'} z-30 glass border-b border-border/50 px-6 py-4`}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-cairo text-2xl font-bold">
