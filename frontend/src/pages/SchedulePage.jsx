@@ -927,13 +927,40 @@ export const SchedulePage = () => {
             <Card className="card-nassaq">
               <CardContent className="text-center py-16">
                 <Clock className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-                <p className="text-muted-foreground mb-4">{isRTL ? 'لم يتم تحديد الفترات الزمنية' : 'Time slots not defined'}</p>
-                <Link to="/admin/time-slots">
-                  <Button className="rounded-xl">
-                    <Settings className="h-4 w-4 me-2" />
-                    {isRTL ? 'إعداد الفترات' : 'Setup Slots'}
+                <h3 className="text-xl font-bold mb-2 text-brand-navy dark:text-brand-turquoise">
+                  {isRTL ? 'لم يتم تحديد الفترات الزمنية' : 'Time slots not defined'}
+                </h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  {isRTL 
+                    ? 'يجب إعداد الفترات الزمنية (الحصص) أولاً قبل إنشاء الجدول المدرسي. يمكنك إنشاء الفترات الافتراضية بنقرة واحدة.'
+                    : 'Time slots (periods) must be set up before creating a schedule. You can create default slots with one click.'}
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button 
+                    className="rounded-xl bg-brand-turquoise hover:bg-brand-turquoise/90"
+                    onClick={seedDefaultTimeSlots}
+                    disabled={seedingSlots}
+                    data-testid="seed-time-slots-btn"
+                  >
+                    {seedingSlots ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Sparkles className="h-4 w-4 me-2" />}
+                    {isRTL ? 'إنشاء الفترات الافتراضية' : 'Create Default Slots'}
                   </Button>
-                </Link>
+                  <Link to="/school/settings">
+                    <Button variant="outline" className="rounded-xl">
+                      <Settings className="h-4 w-4 me-2" />
+                      {isRTL ? 'إعدادات المدرسة' : 'School Settings'}
+                    </Button>
+                  </Link>
+                </div>
+                <div className="mt-6 p-4 bg-muted/50 rounded-xl max-w-lg mx-auto">
+                  <h4 className="font-medium mb-2 text-sm">{isRTL ? 'الفترات الافتراضية تشمل:' : 'Default slots include:'}</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1 text-start">
+                    <li>• {isRTL ? '7 حصص دراسية (45 دقيقة لكل حصة)' : '7 study periods (45 min each)'}</li>
+                    <li>• {isRTL ? 'استراحة واحدة (20 دقيقة)' : '1 break (20 min)'}</li>
+                    <li>• {isRTL ? 'فترة صلاة (20 دقيقة)' : '1 prayer time (20 min)'}</li>
+                    <li>• {isRTL ? 'من 7:00 صباحاً إلى 1:15 ظهراً' : 'From 7:00 AM to 1:15 PM'}</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           ) : (
