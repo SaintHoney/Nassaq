@@ -76,7 +76,7 @@ export default function TeacherDashboard() {
           time: a.time ? new Date(a.time).toLocaleDateString('ar-SA') : 'مؤخراً'
         })) || []);
       } else {
-        // Fallback to mock data if API fails
+        // No data available - show zeros instead of mock data
         const [classesRes, assignmentsRes] = await Promise.all([
           api.get('/classes').catch(() => ({ data: [] })),
           api.get('/teacher-assignments').catch(() => ({ data: [] }))
@@ -86,24 +86,15 @@ export default function TeacherDashboard() {
         const myClassIds = [...new Set(myAssignments.map(a => a.class_id))];
         
         setStats({
-          myClasses: myClassIds.length || 5,
-          myStudents: myClassIds.length * 25 || 125,
-          todayLessons: 4,
-          pendingAttendance: 2,
-          pendingAssessments: 3,
-          upcomingLessons: [
-            { time: '08:00', subject: 'الرياضيات', class: 'الصف الأول أ' },
-            { time: '09:00', subject: 'العلوم', class: 'الصف الثاني ب' },
-            { time: '10:30', subject: 'اللغة العربية', class: 'الصف الأول ب' },
-            { time: '11:30', subject: 'الرياضيات', class: 'الصف الثالث أ' },
-          ]
+          myClasses: myClassIds.length || 0,
+          myStudents: 0,
+          todayLessons: 0,
+          pendingAttendance: 0,
+          pendingAssessments: 0,
+          upcomingLessons: []
         });
 
-        setRecentActivities([
-          { type: 'attendance', message: 'تم تسجيل حضور الصف الأول أ', time: 'منذ ساعة' },
-          { type: 'assessment', message: 'تم إضافة تقييم جديد للرياضيات', time: 'منذ 3 ساعات' },
-          { type: 'notification', message: 'اجتماع أولياء الأمور غداً', time: 'أمس' },
-        ]);
+        setRecentActivities([]);
       }
 
     } catch (error) {
