@@ -265,6 +265,15 @@ export const TeachersPage = () => {
               </Button>
               
               <Button 
+                className="bg-brand-navy hover:bg-brand-navy/90 rounded-xl" 
+                onClick={() => setStudentWizardOpen(true)}
+                data-testid="add-student-btn"
+              >
+                <GraduationCap className="h-5 w-5 me-2" />
+                {isRTL ? 'إضافة طالب' : 'Add Student'}
+              </Button>
+              
+              <Button 
                 className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl" 
                 onClick={() => setWizardOpen(true)}
                 data-testid="add-teacher-btn"
