@@ -12963,6 +12963,10 @@ async def delete_school_subject(
     return {"message": "تم حذف المادة الدراسية"}
 
 
+# Re-include api_router to pick up school settings routes
+app.include_router(api_router)
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
