@@ -249,6 +249,22 @@ export const SchedulePage = () => {
 
   const schoolId = user?.tenant_id;
 
+  // Seed default time slots
+  const seedDefaultTimeSlots = async () => {
+    if (!schoolId) return;
+    
+    setSeedingSlots(true);
+    try {
+      const response = await api.post(`/api/seed/time-slots/${schoolId}`);
+      toast.success(response.data.message || (isRTL ? 'تم إنشاء الفترات الزمنية' : 'Time slots created'));
+      fetchData();
+    } catch (error) {
+      toast.error(isRTL ? 'فشل إنشاء الفترات الزمنية' : 'Failed to create time slots');
+    } finally {
+      setSeedingSlots(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     if (!schoolId) return;
     
