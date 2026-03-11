@@ -342,7 +342,97 @@ function AppRoutes() {
         path="/teacher"
         element={
           <ProtectedRoute allowedRoles={['teacher']}>
-            <TeacherDashboard />
+            <TeacherMainDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Teacher Module Routes */}
+      <Route
+        path="/teacher/schedule"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherSchedulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/classes"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherClassesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/class/:classId"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherClassDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/attendance"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherAttendanceManagePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/assessments"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherAssessmentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/behavior"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherBehaviorPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/students"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherStudentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/communication"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherCommunicationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/reports"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/resources"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherResourcesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/settings"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherSettingsPage />
           </ProtectedRoute>
         }
       />
