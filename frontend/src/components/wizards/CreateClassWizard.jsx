@@ -361,6 +361,10 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
         setResult(response.data);
         setCurrentStep(5);
         toast.success(isRTL ? 'تم إنشاء الفصل' : 'Class created');
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
       } else {
         toast.error(response.data.error);
       }
@@ -377,8 +381,6 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
     setErrors({});
     setResult(null);
   };
-
-  const handleClose = () => { handleReset(); onClose(); };
 
   const steps = [
     { num: 1, title: isRTL ? 'البيانات' : 'Info', icon: School },
