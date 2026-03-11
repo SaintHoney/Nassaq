@@ -31,6 +31,9 @@ from enum import Enum
 # Import Audit Engine
 from engines.audit_engine import AuditLogEngine, AuditAction, AuditSeverity
 
+# Import Teacher Session Engine
+from engines.session_engine import TeacherSessionEngine, session_router
+
 # ============== INITIALIZATION ==============
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
