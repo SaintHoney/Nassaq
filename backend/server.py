@@ -254,7 +254,10 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    x_school_context: Optional[str] = Header(None, alias="X-School-Context")
+) -> dict:
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub")
@@ -279,6 +282,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if "_id" in user:
             user["id"] = str(user["_id"])
             del user["_id"]
+        
+        # Support School Context Switching for Platform Admin
+        # When X-School-Context header is present, override tenant_id for data isolation
+        if x_school_context and user.get("role") == UserRole.PLATFORM_ADMIN.value:
+            # Verify the school exists
+            school = await db.schools.find_one({"id": x_school_context})
+            if school:
+                user["tenant_id"] = x_school_context
+                user["is_impersonating"] = True
+                user["original_role"] = user["role"]
+                # Simulate school_principal permissions but keep platform_admin flag
         
         return user
     except jwt.ExpiredSignatureError:
