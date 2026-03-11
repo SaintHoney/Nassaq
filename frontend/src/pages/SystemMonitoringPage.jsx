@@ -909,7 +909,10 @@ export const SystemMonitoringPage = () => {
                 </Card>
                 
                 {/* Monitor APIs */}
-                <Card className="card-nassaq hover:shadow-lg transition-all cursor-pointer">
+                <Card 
+                  className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => toast.success(isRTL ? 'جاري فتح لوحة مراقبة APIs...' : 'Opening API monitoring...')}
+                >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-100 flex items-center justify-center">
                       <Globe className="h-7 w-7 text-blue-600" />
