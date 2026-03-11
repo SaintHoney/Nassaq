@@ -430,7 +430,30 @@ export default function SecurityCenterPage() {
     setTimeout(() => { setGeneratingReport(false); toast.success(isRTL ? 'تم إنشاء تقرير AI' : 'AI report generated'); setShowAIReportDialog(false); }, 3000);
   };
   
-  const handleQuickAction = (action) => { toast.success(isRTL ? `تم تنفيذ: ${action}` : `Executed: ${action}`); };
+  const handleQuickAction = (action) => {
+    // محاكاة تنفيذ الإجراء مع تأخير بسيط
+    const actionMessages = {
+      'Unlock Account': { ar: 'تم فتح الحساب بنجاح', en: 'Account unlocked successfully' },
+      'End All Sessions': { ar: 'تم إنهاء جميع الجلسات النشطة', en: 'All sessions terminated' },
+      'Force Password Change': { ar: 'تم إرسال طلب تغيير كلمة المرور', en: 'Password change request sent' },
+      'Security Scan': { ar: 'بدء فحص الأمان...', en: 'Starting security scan...' },
+    };
+    
+    const msg = actionMessages[action] || { ar: `تم تنفيذ: ${action}`, en: `Executed: ${action}` };
+    
+    if (action === 'Security Scan') {
+      toast.promise(
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+        {
+          loading: isRTL ? 'جاري الفحص الأمني...' : 'Running security scan...',
+          success: isRTL ? 'اكتمل الفحص الأمني. النتيجة: 95%' : 'Security scan complete. Score: 95%',
+          error: isRTL ? 'فشل الفحص' : 'Scan failed',
+        }
+      );
+    } else {
+      toast.success(isRTL ? msg.ar : msg.en);
+    }
+  };
   
   const filteredEvents = SECURITY_EVENTS.filter(event => {
     if (filterType !== 'all' && event.type !== filterType) return false;
