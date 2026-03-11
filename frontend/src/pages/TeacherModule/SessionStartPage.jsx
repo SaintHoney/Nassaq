@@ -209,10 +209,12 @@ export default function SessionStartPage() {
     }
   };
 
-  // Initialize session on mount
+  // Initialize session when lessonData becomes available
   useEffect(() => {
-    startSession();
-  }, [startSession]);
+    if (lessonData && teacherId) {
+      startSession();
+    }
+  }, [lessonData, teacherId, startSession]);
 
   // Separate students by gender
   const maleStudents = students.filter(s => s.gender === 'male');
