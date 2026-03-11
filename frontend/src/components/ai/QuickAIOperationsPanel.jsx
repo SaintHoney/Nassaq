@@ -202,7 +202,7 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
           title: isRTL ? 'التنبيهات غير المقروءة' : 'Unread Alerts',
           summary: isRTL ? `لديك ${openAlerts} تنبيهات غير مقروءة` : `You have ${openAlerts} unread alerts`,
           unreadCount: openAlerts,
-          alertsLink: '/admin/alerts',
+          alertsLink: '/admin/audit',
           items: [
             { label: isRTL ? 'مدرسة الأمل - نشاط منخفض' : 'Al-Amal School - Low activity', type: 'warning', time: '10:30' },
             { label: isRTL ? 'فشل استيراد ملف الطلاب' : 'Student import failed', type: 'critical', time: '09:45' },
