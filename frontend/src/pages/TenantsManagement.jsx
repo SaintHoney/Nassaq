@@ -492,7 +492,8 @@ export default function TenantsManagement() {
   const handleSchoolAction = (action, school) => {
     switch (action) {
       case 'view':
-        navigate(`/admin/schools/${school.id}`);
+        // Enter school context and navigate to principal dashboard
+        handleEnterSchoolDashboard(school);
         break;
       case 'edit':
         toast.info(isRTL ? 'جاري فتح صفحة التعديل...' : 'Opening edit page...');
@@ -521,6 +522,27 @@ export default function TenantsManagement() {
       default:
         break;
     }
+  };
+  
+  // Enter School Dashboard - Full context switch
+  const handleEnterSchoolDashboard = (school) => {
+    if (!school || !school.id) {
+      toast.error(isRTL ? 'خطأ: بيانات المدرسة غير صالحة' : 'Error: Invalid school data');
+      return;
+    }
+    
+    // Enter school context
+    enterSchoolContext(school);
+    
+    // Show success message
+    toast.success(
+      isRTL 
+        ? `تم الدخول إلى ${school.name} كمدير مدرسة` 
+        : `Entered ${school.name_en || school.name} as School Manager`
+    );
+    
+    // Navigate to school principal dashboard
+    navigate('/principal');
   };
   
   // Handle suspend toggle
