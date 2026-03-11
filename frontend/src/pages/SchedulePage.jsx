@@ -107,6 +107,87 @@ const getSubjectColor = (subjectName) => {
   return SUBJECT_COLORS[subjectName] || SUBJECT_COLORS.default;
 };
 
+// Draggable Session Component
+const DraggableSession = ({ session, isRTL, onClick }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: session.id,
+    data: { session },
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: isDragging ? 1000 : 1,
+    opacity: isDragging ? 0.8 : 1,
+    cursor: 'grabbing',
+  } : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`p-0.5 rounded border cursor-grab transition-all hover:shadow-md active:cursor-grabbing ${
+        getSubjectColor(session.subject_name)
+      } ${isDragging ? 'shadow-lg ring-2 ring-brand-turquoise scale-105' : ''}`}
+      data-testid={`session-${session.id}`}
+    >
+      <div className="flex items-start gap-0.5">
+        <div 
+          {...listeners} 
+          {...attributes}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 hover:bg-black/5 rounded"
+        >
+          <GripVertical className="h-2.5 w-2.5 text-muted-foreground/50" />
+        </div>
+        <div 
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+          className="flex-1 min-w-0"
+        >
+          <p className="font-medium truncate leading-tight text-[8px]">
+            {session.subject_name?.split(' ')[0]?.slice(0, 4)}
+          </p>
+          <p className="opacity-70 truncate leading-tight text-[8px]">
+            {session.class_name?.slice(0, 5)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Droppable Cell Component
+const DroppableCell = ({ id, children, isOver }) => {
+  const { setNodeRef, isOver: hovering } = useDroppable({ id });
+
+  return (
+    <td 
+      ref={setNodeRef}
+      className={`p-0.5 border-e border-border/20 min-w-[40px] max-w-[50px] align-top transition-colors ${
+        hovering ? 'bg-brand-turquoise/20 ring-2 ring-brand-turquoise ring-inset' : ''
+      }`}
+    >
+      {children}
+    </td>
+  );
+};
+
+// Session Overlay for Drag Preview
+const SessionDragOverlay = ({ session, isRTL }) => {
+  if (!session) return null;
+  
+  return (
+    <div className={`p-2 rounded-lg border-2 shadow-xl ${getSubjectColor(session.subject_name)} min-w-[80px]`}>
+      <div className="flex items-center gap-2">
+        <Move className="h-4 w-4 text-brand-navy" />
+        <div>
+          <p className="font-bold text-sm">{session.subject_name}</p>
+          <p className="text-xs opacity-70">{session.class_name}</p>
+          <p className="text-xs opacity-70">{session.teacher_name}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const SchedulePage = () => {
   const { user, api } = useAuth();
   const { isRTL, isDark } = useTheme();
