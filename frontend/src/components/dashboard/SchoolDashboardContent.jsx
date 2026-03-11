@@ -720,8 +720,8 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
         </div>
       </section>
 
-      {/* Section 2: Attendance + Interventions + Alerts */}
-      <section className="grid lg:grid-cols-3 gap-6" data-testid="dashboard-middle-section">
+      {/* Section 2: KPIs - Attendance & Interventions */}
+      <section className="grid lg:grid-cols-2 gap-6" data-testid="dashboard-kpi-section">
         <AttendanceSummary 
           data={dashboardData?.attendance} 
           isRTL={isRTL} 
@@ -730,11 +730,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
           data={dashboardData?.interventions}
           isRTL={isRTL}
           onViewDetails={() => navigate('/school/issues')}
-        />
-        <AlertsCard 
-          alerts={dashboardData?.alerts}
-          isRTL={isRTL}
-          onAlertAction={handleAlertAction}
         />
       </section>
 
