@@ -149,6 +149,10 @@ export const AuthProvider = ({ children }) => {
     }
     return user?.tenant_id;
   };
+  
+  // Language preference - Default to Arabic for teachers, use user preference if set
+  const preferredLanguage = user?.preferred_language || (user?.role === 'teacher' ? 'ar' : 'ar');
+  const isRTL = preferredLanguage === 'ar';
 
   const updatePreferences = async (preferences) => {
     try {
