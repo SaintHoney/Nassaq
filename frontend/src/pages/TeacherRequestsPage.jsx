@@ -100,20 +100,30 @@ export const TeacherRequestsPage = () => {
     fetchRequests();
   }, [statusFilter]);
 
-  const handleApprove = (requestId) => {
-    setRequests(prev => prev.map(r => 
-      r.id === requestId ? { ...r, status: 'approved' } : r
-    ));
-    toast.success(isRTL ? 'تم قبول الطلب بنجاح' : 'Request approved successfully');
-    setDetailsDialogOpen(false);
+  const handleApprove = async (requestId) => {
+    try {
+      await api.post(`/teacher-registration/requests/${requestId}/approve`);
+      toast.success(isRTL ? 'تم قبول الطلب بنجاح' : 'Request approved successfully');
+      setDetailsDialogOpen(false);
+      fetchRequests(); // Refresh data from API
+    } catch (error) {
+      console.error('Failed to approve request:', error);
+      toast.error(isRTL ? 'فشل في قبول الطلب' : 'Failed to approve request');
+    }
   };
 
-  const handleReject = (requestId) => {
-    setRequests(prev => prev.map(r => 
-      r.id === requestId ? { ...r, status: 'rejected' } : r
-    ));
-    toast.success(isRTL ? 'تم رفض الطلب' : 'Request rejected');
-    setDetailsDialogOpen(false);
+  const handleReject = async (requestId) => {
+    try {
+      await api.post(`/teacher-registration/requests/${requestId}/reject`, {
+        reason: isRTL ? 'تم رفض الطلب من قبل المسؤول' : 'Rejected by admin'
+      });
+      toast.success(isRTL ? 'تم رفض الطلب' : 'Request rejected');
+      setDetailsDialogOpen(false);
+      fetchRequests(); // Refresh data from API
+    } catch (error) {
+      console.error('Failed to reject request:', error);
+      toast.error(isRTL ? 'فشل في رفض الطلب' : 'Failed to reject request');
+    }
   };
 
   const filteredRequests = requests.filter(request => {
