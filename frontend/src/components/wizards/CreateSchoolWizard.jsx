@@ -380,7 +380,7 @@ ${createdSchool?.tenant_code}
             </DialogHeader>
             
             {/* Content */}
-            <ScrollArea className="p-6 max-h-[60vh]">
+            <ScrollArea className="flex-1 min-h-0 p-6">
               {/* Step 1: School Profile */}
               {currentStep === 1 && (
                 <div className="space-y-6" data-testid="wizard-step-1">
