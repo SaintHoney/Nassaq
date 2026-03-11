@@ -1420,31 +1420,44 @@ export default function SchoolSettingsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const tenantId = user?.tenant_id;
-      
-      const [teachersRes, classesRes, subjectsRes, gradesRes, schoolRes, settingsRes] = await Promise.all([
+      // Fetch from the new comprehensive school settings API
+      const [teachersRes, classesRes, settingsRes] = await Promise.all([
         api.get('/api/teachers').catch(() => ({ data: [] })),
         api.get('/api/classes').catch(() => ({ data: [] })),
-        api.get('/api/subjects').catch(() => ({ data: [] })),
-        api.get('/api/classes/options/grades').catch(() => ({ data: [] })),
-        tenantId ? api.get(`/api/schools/${tenantId}`).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
         api.get('/api/school/settings').catch(() => ({ data: {} })),
       ]);
       
       setTeachers(teachersRes.data || []);
       setClasses(classesRes.data || []);
-      setSubjects(subjectsRes.data || []);
-      setGrades(gradesRes.data || []);
-      setSchoolInfo(schoolRes.data);
-      if (settingsRes.data) {
-        setSettings(prev => ({ ...prev, ...settingsRes.data }));
-      }
+      
+      // Set data from school settings API
+      const settingsData = settingsRes.data || {};
+      setSchoolInfo(settingsData.school_info || null);
+      setSubjects(settingsData.subjects || settingsRes.data?.subjects || []);
+      setGrades(settingsData.grades || []);
+      
+      setSettings({
+        workDays: settingsData.work_days || { sunday: true, monday: true, tuesday: true, wednesday: true, thursday: true, friday: false, saturday: false },
+        officialHolidays: settingsData.official_holidays || [],
+        exceptionDays: settingsData.exception_days || [],
+        periodsPerDay: settingsData.periods_per_day || 7,
+        timing: settingsData.timing || { start: '07:00', end: '14:00' },
+        breaks: settingsData.breaks || [],
+        activityDays: settingsData.activity_days || [],
+        teachingLoads: settingsData.teaching_loads || {},
+        teacherAvailability: settingsData.teacher_availability || {},
+        constraints: settingsData.constraints || [],
+        educationalStages: settingsData.educational_stages || [],
+        sections: settingsData.sections || [],
+        academicTerms: settingsData.academic_terms || [],
+      });
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast.error(isRTL ? 'خطأ في تحميل البيانات' : 'Error loading data');
     } finally {
       setLoading(false);
     }
-  }, [api, user]);
+  }, [api, user, isRTL]);
 
   useEffect(() => {
     fetchData();
