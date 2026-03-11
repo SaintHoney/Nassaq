@@ -1279,9 +1279,7 @@ export default function TenantsManagement() {
       <CreateSchoolWizard
         open={showCreateWizard}
         onOpenChange={setShowCreateWizard}
-        onSuccess={(newSchool) => {
-          toast.success(t.createdSuccessfully);
-        }}
+        onSuccess={handleSchoolCreated}
         api={api}
         isRTL={isRTL}
       />
