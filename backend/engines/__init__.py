@@ -44,4 +44,8 @@ __all__ = [
     
     # Student Management
     "StudentManagementEngine",
+    
+    # Teacher Session
+    "TeacherSessionEngine",
+    "session_router",
 ]
