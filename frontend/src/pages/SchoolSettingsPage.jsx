@@ -1745,35 +1745,76 @@ export default function SchoolSettingsPage() {
 
         {/* Main Content */}
         <main className="p-6 space-y-6">
-          {/* School Info */}
+          {/* Section 0: School Info - معلومات المدرسة */}
           <SchoolInfoSection schoolInfo={schoolInfo} onSave={handleSaveSchoolInfo} loading={loading} isRTL={isRTL} />
 
-          {/* Teachers and Classes */}
+          {/* Section 1 & 2: Teachers and Classes - المعلمين والفصول */}
           <div className="grid lg:grid-cols-2 gap-6">
             <TeachersSection teachers={teachers} loading={loading} onRefresh={fetchData} onAddTeacher={() => setShowAddTeacherWizard(true)} onEditTeacher={(t) => console.log('Edit teacher:', t)} isRTL={isRTL} />
             <ClassesSection classes={classes} loading={loading} onRefresh={fetchData} onAddClass={() => setShowCreateClassWizard(true)} onEditClass={(c) => console.log('Edit class:', c)} isRTL={isRTL} />
           </div>
 
-          {/* Subjects */}
+          {/* Section 3: Subjects - المواد الدراسية */}
           <SubjectsSection subjects={subjects} grades={grades} loading={loading} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} isRTL={isRTL} />
 
-          {/* Work Days */}
-          <WorkDaysSection workDays={settings.workDays} officialHolidays={settings.officialHolidays} onSaveWorkDays={(days) => handleSaveSettings('workDays', days)} onAddHoliday={handleAddHoliday} isRTL={isRTL} />
+          {/* Section 4: Work Days - أيام العمل */}
+          <WorkDaysSection 
+            workDays={settings.workDays} 
+            officialHolidays={settings.officialHolidays} 
+            onSaveWorkDays={handleSaveWorkDays} 
+            onAddHoliday={handleAddHoliday}
+            onDeleteHoliday={handleDeleteHoliday}
+            onAddExceptionDay={handleAddExceptionDay}
+            isRTL={isRTL} 
+          />
 
-          {/* Periods and Timing */}
+          {/* Section 5 & 6: Periods and Timing - الحصص وأوقات الدوام */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <PeriodsPerDaySection periodsPerDay={settings.periodsPerDay} onSave={(p) => handleSaveSettings('periodsPerDay', p)} isRTL={isRTL} />
-            <SchoolTimingSection timing={settings.timing} onSave={(t) => handleSaveSettings('timing', t)} isRTL={isRTL} />
+            <PeriodsPerDaySection periodsPerDay={settings.periodsPerDay} onSave={handleSavePeriodsPerDay} isRTL={isRTL} />
+            <SchoolTimingSection timing={settings.timing} onSave={handleSaveTiming} isRTL={isRTL} />
           </div>
 
-          {/* Breaks */}
-          <BreaksSection breaks={settings.breaks} onSave={(b) => handleSaveSettings('breaks', b)} isRTL={isRTL} />
+          {/* Section 7: Breaks - فترات الاستراحة */}
+          <BreaksSection breaks={settings.breaks} onSave={handleSaveBreaks} isRTL={isRTL} />
 
-          {/* Teaching Load */}
-          <TeachingLoadSection teachers={teachers} teachingLoads={settings.teachingLoads} onSave={(l) => handleSaveSettings('teachingLoads', l)} isRTL={isRTL} />
+          {/* Section 8: Activity Days - أيام الأنشطة */}
+          <ActivityDaysSection 
+            activityDays={settings.activityDays || []} 
+            onAddActivity={handleAddActivityDay}
+            onDeleteActivity={handleDeleteActivityDay}
+            isRTL={isRTL} 
+          />
 
-          {/* Constraints */}
-          <ConstraintsSection teachers={teachers} constraints={settings.constraints} onSave={(c) => handleSaveSettings('constraints', c)} isRTL={isRTL} />
+          {/* Section 9: Teaching Load - النصاب التدريسي */}
+          <TeachingLoadSection teachers={teachers} teachingLoads={settings.teachingLoads} onSave={handleSaveTeachingLoads} isRTL={isRTL} />
+
+          {/* Section 10: Availability - التوافر */}
+          <AvailabilitySection 
+            teachers={teachers} 
+            availability={settings.teacherAvailability || {}}
+            onSave={handleSaveAvailability}
+            isRTL={isRTL} 
+          />
+
+          {/* Section 11: Constraints - القيود الإدارية */}
+          <ConstraintsSection teachers={teachers} constraints={settings.constraints} onSave={handleSaveConstraints} isRTL={isRTL} />
+
+          {/* Section 12-15: Academic Structure - الهيكل الأكاديمي */}
+          <AcademicStructureSection 
+            stages={settings.educationalStages || []}
+            grades={grades}
+            sections={settings.sections || []}
+            terms={settings.academicTerms || []}
+            onAddStage={handleAddStage}
+            onDeleteStage={handleDeleteStage}
+            onAddGrade={handleAddGrade}
+            onDeleteGrade={handleDeleteGrade}
+            onAddSection={handleAddSection}
+            onDeleteSection={handleDeleteSection}
+            onAddTerm={handleAddTerm}
+            onDeleteTerm={handleDeleteTerm}
+            isRTL={isRTL}
+          />
         </main>
 
         {/* Wizards */}
