@@ -37,7 +37,7 @@ const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-
 export const Sidebar = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isImpersonating, schoolContext, getEffectiveRole, exitSchoolContext } = useAuth();
   const { isRTL } = useTheme();
   const { t } = useTranslation();
   const location = useLocation();
@@ -47,8 +47,17 @@ export const Sidebar = ({ children }) => {
     logout();
     navigate('/login');
   };
+  
+  // Handle exit from school context (impersonation mode)
+  const handleExitSchoolContext = () => {
+    exitSchoolContext();
+    navigate('/admin/schools');
+  };
 
   const getMenuItems = () => {
+    // Get effective role (supports impersonation)
+    const effectiveRole = getEffectiveRole ? getEffectiveRole() : user?.role;
+    
     // Platform Admin Menu Items - مدير المنصة
     // Based on Platform Admin Role Documentation
     const platformAdminItems = [
