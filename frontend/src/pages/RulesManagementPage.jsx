@@ -1109,7 +1109,7 @@ export const RulesManagementPage = () => {
         
         {/* Edit Sheet */}
         <Sheet open={!!showEditSheet} onOpenChange={() => { setShowEditSheet(null); resetForm(); }}>
-          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px]">
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-brand-navy" />
