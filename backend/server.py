@@ -7278,122 +7278,190 @@ async def update_school(
 async def get_school_dashboard(
     current_user: dict = Depends(get_current_user)
 ):
-    """Get comprehensive dashboard data for the school principal"""
+    """Get comprehensive dashboard data for the school principal - LIVE DATA"""
     school_id = current_user.get("tenant_id")
     
     if not school_id:
         raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
     
-    # Get counts from database
-    total_students = await db.students.count_documents({"school_id": school_id})
-    total_teachers = await db.teachers.count_documents({"school_id": school_id})
-    total_classes = await db.classes.count_documents({"school_id": school_id})
+    # Get counts from database - REAL DATA
+    total_students = await db.students.count_documents({"school_id": school_id, "is_active": True})
+    total_teachers = await db.teachers.count_documents({"school_id": school_id, "is_active": True})
+    total_classes = await db.classes.count_documents({"school_id": school_id, "is_active": True})
     
-    # Get today's attendance
+    # Get today's attendance - using 'type' field
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
     student_attendance = await db.attendance.find({
         "school_id": school_id,
         "date": today,
-        "attendee_type": "student"
+        "type": "student"
     }, {"_id": 0}).to_list(10000)
     
     teacher_attendance = await db.attendance.find({
         "school_id": school_id,
         "date": today,
-        "attendee_type": "teacher"
+        "type": "teacher"
     }, {"_id": 0}).to_list(1000)
     
-    # Calculate attendance stats
+    # Calculate attendance stats - REAL DATA
     student_present = len([a for a in student_attendance if a.get("status") == "present"])
     student_absent = len([a for a in student_attendance if a.get("status") == "absent"])
+    student_late = len([a for a in student_attendance if a.get("status") == "late"])
     student_excused = len([a for a in student_attendance if a.get("status") == "excused"])
     
     teacher_present = len([a for a in teacher_attendance if a.get("status") == "present"])
     teacher_absent = len([a for a in teacher_attendance if a.get("status") == "absent"])
+    teacher_late = len([a for a in teacher_attendance if a.get("status") == "late"])
     teacher_excused = len([a for a in teacher_attendance if a.get("status") == "excused"])
     
-    # Get sessions for today (schedules)
+    # Get today's sessions count
+    today_day = datetime.now(timezone.utc).strftime("%A").lower()
     sessions_count = await db.schedule_sessions.count_documents({
         "school_id": school_id,
+        "day_of_week": today_day
     })
+    
+    # Get total sessions
+    total_sessions = await db.schedule_sessions.count_documents({"school_id": school_id})
     
     # Get recent notifications/alerts
     alerts = await db.notifications.find({
         "school_id": school_id
     }, {"_id": 0}).sort("created_at", -1).to_list(10)
     
-    # Calculate attendance rate
-    total_student_attendance = len(student_attendance) if student_attendance else total_students
-    student_attendance_rate = round((student_present / total_student_attendance) * 100, 1) if total_student_attendance > 0 else 90
+    # Calculate attendance rate from REAL data
+    total_student_today = len(student_attendance)
+    student_attendance_rate = round((student_present / total_student_today) * 100, 1) if total_student_today > 0 else 0
     
-    total_teacher_attendance = len(teacher_attendance) if teacher_attendance else total_teachers
-    teacher_attendance_rate = round((teacher_present / total_teacher_attendance) * 100, 1) if total_teacher_attendance > 0 else 95
+    total_teacher_today = len(teacher_attendance)
+    teacher_attendance_rate = round((teacher_present / total_teacher_today) * 100, 1) if total_teacher_today > 0 else 0
+    
+    # Count teachers with frequent absences (>2 in last 30 days)
+    from datetime import timedelta
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%d")
+    frequent_absence_pipeline = [
+        {"$match": {"school_id": school_id, "type": "teacher", "status": "absent", "date": {"$gte": thirty_days_ago}}},
+        {"$group": {"_id": "$teacher_id", "count": {"$sum": 1}}},
+        {"$match": {"count": {"$gt": 2}}}
+    ]
+    frequent_absences = await db.attendance.aggregate(frequent_absence_pipeline).to_list(100)
+    teachers_frequent_absence = len(frequent_absences)
+    
+    # Count classes with low attendance (<80%)
+    classes_low_attendance = 0
+    all_classes = await db.classes.find({"school_id": school_id, "is_active": True}, {"_id": 0, "id": 1}).to_list(100)
+    for cls in all_classes:
+        class_attendance = [a for a in student_attendance if a.get("class_id") == cls["id"]]
+        if class_attendance:
+            present_count = len([a for a in class_attendance if a.get("status") == "present"])
+            rate = (present_count / len(class_attendance)) * 100 if class_attendance else 0
+            if rate < 80:
+                classes_low_attendance += 1
+    
+    # Generate dynamic alerts based on real data
+    dynamic_alerts = []
+    if teacher_absent > 0:
+        dynamic_alerts.append({
+            "id": "alert-1",
+            "type": "warning",
+            "title_ar": f"{teacher_absent} معلم غائب اليوم",
+            "title_en": f"{teacher_absent} teacher(s) absent today",
+            "time_ar": "اليوم",
+            "time_en": "Today"
+        })
+    if student_absent > 0:
+        dynamic_alerts.append({
+            "id": "alert-2",
+            "type": "info",
+            "title_ar": f"{student_absent} طالب غائب من إجمالي {total_student_today}",
+            "title_en": f"{student_absent} student(s) absent out of {total_student_today}",
+            "time_ar": "اليوم",
+            "time_en": "Today"
+        })
+    if classes_low_attendance > 0:
+        dynamic_alerts.append({
+            "id": "alert-3",
+            "type": "error",
+            "title_ar": f"{classes_low_attendance} فصل بنسبة حضور أقل من 80%",
+            "title_en": f"{classes_low_attendance} class(es) with <80% attendance",
+            "time_ar": "اليوم",
+            "time_en": "Today"
+        })
+    if student_attendance_rate >= 90:
+        dynamic_alerts.append({
+            "id": "alert-4",
+            "type": "success",
+            "title_ar": f"نسبة حضور ممتازة: {student_attendance_rate}%",
+            "title_en": f"Excellent attendance rate: {student_attendance_rate}%",
+            "time_ar": "اليوم",
+            "time_en": "Today"
+        })
+    
+    # Use stored alerts if available, otherwise use dynamic
+    final_alerts = alerts if alerts else dynamic_alerts
     
     return {
         "metrics": {
             "totalStudents": {
                 "value": total_students,
-                "change": "+12",
+                "change": f"+{total_students}" if total_students > 0 else "0",
                 "changeType": "up" if total_students > 0 else "same",
                 "status": "normal"
             },
             "totalTeachers": {
                 "value": total_teachers,
-                "change": "+3",
+                "change": f"+{total_teachers}" if total_teachers > 0 else "0",
                 "changeType": "up" if total_teachers > 0 else "same",
                 "status": "normal"
             },
             "totalClasses": {
                 "value": total_classes,
-                "change": "0",
+                "change": str(total_classes),
                 "changeType": "same",
                 "status": "normal"
             },
             "todaySessions": {
-                "value": sessions_count if sessions_count > 0 else 156,
-                "change": "-5",
-                "changeType": "down",
-                "status": "warning"
+                "value": sessions_count,
+                "change": str(sessions_count),
+                "changeType": "same" if sessions_count > 0 else "down",
+                "status": "normal" if sessions_count > 0 else "warning"
             },
             "attendanceRate": {
                 "value": f"{student_attendance_rate}%",
-                "change": "+2%",
-                "changeType": "up",
+                "change": f"{student_attendance_rate}%",
+                "changeType": "up" if student_attendance_rate >= 80 else "down",
                 "status": "normal" if student_attendance_rate >= 80 else "warning"
             },
             "waitingSubstitute": {
                 "value": teacher_absent,
-                "change": f"+{teacher_absent}" if teacher_absent > 0 else "0",
+                "change": str(teacher_absent),
                 "changeType": "up" if teacher_absent > 0 else "same",
                 "status": "warning" if teacher_absent > 0 else "normal"
             },
         },
         "attendance": {
             "students": {
-                "present": student_present if student_present > 0 else int(total_students * 0.9),
-                "absent": student_absent if student_absent > 0 else int(total_students * 0.07),
-                "excused": student_excused if student_excused > 0 else int(total_students * 0.03),
-                "total": total_students if total_students > 0 else 1245
+                "present": student_present,
+                "absent": student_absent,
+                "late": student_late,
+                "excused": student_excused,
+                "total": total_student_today if total_student_today > 0 else total_students
             },
             "teachers": {
-                "present": teacher_present if teacher_present > 0 else int(total_teachers * 0.95),
-                "absent": teacher_absent if teacher_absent > 0 else int(total_teachers * 0.03),
-                "excused": teacher_excused if teacher_excused > 0 else int(total_teachers * 0.02),
-                "total": total_teachers if total_teachers > 0 else 87
+                "present": teacher_present,
+                "absent": teacher_absent,
+                "late": teacher_late,
+                "excused": teacher_excused,
+                "total": total_teacher_today if total_teacher_today > 0 else total_teachers
             },
         },
         "interventions": {
             "classesWithoutTeacher": teacher_absent,
-            "teachersWithFrequentAbsence": 1,
-            "classesLowAttendance": max(0, int(total_classes * 0.1)) if total_classes > 0 else 4,
+            "teachersWithFrequentAbsence": teachers_frequent_absence,
+            "classesLowAttendance": classes_low_attendance,
         },
-        "alerts": alerts if alerts else [
-            {"id": "1", "type": "warning", "title_ar": "معلم غائب في الصف الرابع أ", "title_en": "Teacher absent in Grade 4A", "time_ar": "منذ 10 دقائق", "time_en": "10 min ago"},
-            {"id": "2", "type": "info", "title_ar": "اكتمل تسجيل الحضور للصف الخامس", "title_en": "Attendance complete for Grade 5", "time_ar": "منذ 25 دقيقة", "time_en": "25 min ago"},
-            {"id": "3", "type": "error", "title_ar": "نسبة حضور منخفضة في الصف الثاني ب", "title_en": "Low attendance in Grade 2B", "time_ar": "منذ ساعة", "time_en": "1 hour ago"},
-            {"id": "4", "type": "info", "title_ar": "تم إضافة 5 طلاب جدد", "title_en": "5 new students added", "time_ar": "منذ ساعتين", "time_en": "2 hours ago"},
-        ],
+        "alerts": final_alerts,
         "generated_at": datetime.now(timezone.utc).isoformat()
     }
 
