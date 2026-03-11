@@ -28,7 +28,10 @@ export default function PrincipalDashboard() {
   // Handle exit impersonation mode
   const handleExitImpersonation = () => {
     exitSchoolContext();
-    navigate('/admin/tenants');
+    // Add small delay to ensure context is cleared before navigation
+    setTimeout(() => {
+      navigate('/admin/tenants', { replace: true });
+    }, 100);
   };
 
   return (
