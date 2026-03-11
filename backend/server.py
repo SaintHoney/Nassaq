@@ -2839,6 +2839,147 @@ async def create_student_with_wizard(
     }
 
 # ============== CLASSES ROUTES ==============
+
+# Class Wizard Options
+@api_router.get("/classes/options/grades")
+async def get_class_grades_options(current_user: dict = Depends(get_current_user)):
+    """Get available grade levels for class creation"""
+    school_id = current_user.get("tenant_id")
+    
+    grades = await db.grade_levels.find(
+        {"school_id": school_id} if school_id else {},
+        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "grade": 1, "stage": 1}
+    ).to_list(100)
+    
+    if not grades:
+        grades = [
+            {"id": "1", "name": "الصف الأول", "name_en": "Grade 1", "grade": 1, "stage": "ابتدائي"},
+            {"id": "2", "name": "الصف الثاني", "name_en": "Grade 2", "grade": 2, "stage": "ابتدائي"},
+            {"id": "3", "name": "الصف الثالث", "name_en": "Grade 3", "grade": 3, "stage": "ابتدائي"},
+            {"id": "4", "name": "الصف الرابع", "name_en": "Grade 4", "grade": 4, "stage": "ابتدائي"},
+            {"id": "5", "name": "الصف الخامس", "name_en": "Grade 5", "grade": 5, "stage": "ابتدائي"},
+            {"id": "6", "name": "الصف السادس", "name_en": "Grade 6", "grade": 6, "stage": "ابتدائي"},
+        ]
+    
+    return {"grades": grades}
+
+@api_router.get("/classes/options/teachers")
+async def get_class_teachers_options(current_user: dict = Depends(get_current_user)):
+    """Get available teachers for homeroom assignment"""
+    school_id = current_user.get("tenant_id")
+    
+    teachers = await db.teachers.find(
+        {"school_id": school_id, "is_active": True} if school_id else {"is_active": True},
+        {"_id": 0, "id": 1, "full_name": 1, "specialization": 1, "email": 1}
+    ).to_list(200)
+    
+    return {"teachers": teachers}
+
+@api_router.get("/classes/options/students")
+async def get_class_students_options(current_user: dict = Depends(get_current_user)):
+    """Get available students for class assignment"""
+    school_id = current_user.get("tenant_id")
+    
+    # Get students not assigned to any class
+    students = await db.students.find(
+        {"school_id": school_id, "is_active": True, "class_id": None} if school_id else {"is_active": True, "class_id": None},
+        {"_id": 0, "id": 1, "full_name": 1, "student_number": 1, "grade": 1}
+    ).to_list(500)
+    
+    return {"students": students}
+
+@api_router.get("/classes/options/class-types")
+async def get_class_types_options(current_user: dict = Depends(get_current_user)):
+    """Get available class types"""
+    types = [
+        {"id": "regular", "name": "عادي", "name_en": "Regular"},
+        {"id": "advanced", "name": "متقدم", "name_en": "Advanced"},
+        {"id": "special", "name": "تربية خاصة", "name_en": "Special Education"},
+        {"id": "gifted", "name": "موهوبين", "name_en": "Gifted"},
+    ]
+    return {"types": types}
+
+class ClassWizardCreate(BaseModel):
+    """Class creation via wizard"""
+    name: str
+    name_en: Optional[str] = None
+    grade_id: str
+    grade: int
+    section: str
+    class_type: Optional[str] = "regular"
+    capacity: int = 30
+    homeroom_teacher_id: Optional[str] = None
+    student_ids: List[str] = []
+
+@api_router.post("/classes/create")
+async def create_class_wizard(
+    data: ClassWizardCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new class via wizard"""
+    school_id = current_user.get("tenant_id")
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    class_id = str(uuid.uuid4())
+    
+    # Get grade level info
+    grade_level = await db.grade_levels.find_one({"id": data.grade_id}, {"_id": 0})
+    grade_name = grade_level.get("name") if grade_level else f"الصف {data.grade}"
+    
+    # Create class document
+    class_doc = {
+        "id": class_id,
+        "school_id": school_id,
+        "name": data.name or f"{grade_name} - {data.section}",
+        "name_en": data.name_en or f"Grade {data.grade} - {data.section}",
+        "grade_level_id": data.grade_id,
+        "grade": data.grade,
+        "section": data.section,
+        "class_type": data.class_type,
+        "capacity": data.capacity,
+        "student_count": len(data.student_ids),
+        "homeroom_teacher_id": data.homeroom_teacher_id,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.classes.insert_one(class_doc)
+    
+    # Assign students to class
+    if data.student_ids:
+        await db.students.update_many(
+            {"id": {"$in": data.student_ids}},
+            {"$set": {
+                "class_id": class_id,
+                "grade": data.grade,
+                "section": data.section,
+            }}
+        )
+    
+    # Get homeroom teacher name
+    teacher_name = None
+    if data.homeroom_teacher_id:
+        teacher = await db.teachers.find_one({"id": data.homeroom_teacher_id}, {"_id": 0, "full_name": 1})
+        if teacher:
+            teacher_name = teacher.get("full_name")
+    
+    return {
+        "success": True,
+        "class": {
+            "id": class_id,
+            "name": class_doc["name"],
+            "grade": data.grade,
+            "section": data.section,
+            "capacity": data.capacity,
+            "student_count": len(data.student_ids),
+            "homeroom_teacher_name": teacher_name,
+        },
+        "message": "تم إنشاء الفصل بنجاح"
+    }
+
 @api_router.post("/classes", response_model=ClassResponse)
 async def create_class(
     class_data: ClassCreate,
