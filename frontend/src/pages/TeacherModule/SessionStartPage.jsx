@@ -127,7 +127,7 @@ export default function SessionStartPage() {
         navigate('/teacher');
       } else if (message.includes('تم إنهاء')) {
         toast.error(message);
-        navigate('/teacher');
+        navigate('/teacher/home');
       } else {
         toast.error(message);
       }
