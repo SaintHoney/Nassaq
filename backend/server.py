@@ -2369,6 +2369,261 @@ async def delete_student(
     
     return {"message": "تم حذف الطالب"}
 
+# ============== STUDENT WIZARD ROUTES ==============
+class StudentWizardCreate(BaseModel):
+    """Student wizard creation model"""
+    full_name: str
+    email: Optional[str] = None
+    national_id: Optional[str] = None
+    gender: str = "male"
+    date_of_birth: Optional[str] = None
+    education_level: Optional[str] = None
+    grade_id: Optional[str] = None
+    class_id: Optional[str] = None
+    parent: Optional[dict] = None
+    health: Optional[dict] = None
+    link_to_parent_id: Optional[str] = None
+
+@api_router.post("/student-wizard/check-parent")
+async def check_parent_exists(
+    phone: Optional[str] = None,
+    email: Optional[str] = None,
+    national_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Check if parent already exists and return their students (siblings)"""
+    school_id = current_user.get("tenant_id")
+    
+    query = {"school_id": school_id}
+    conditions = []
+    
+    if phone:
+        conditions.append({"phone": phone})
+    if email:
+        conditions.append({"email": email})
+    if national_id:
+        conditions.append({"national_id": national_id})
+    
+    if not conditions:
+        return {"found": False}
+    
+    query["$or"] = conditions
+    
+    parent = await db.parents.find_one(query, {"_id": 0})
+    
+    if parent:
+        # Get parent's students (siblings)
+        students = await db.students.find(
+            {"school_id": school_id, "id": {"$in": parent.get("student_ids", [])}},
+            {"_id": 0, "id": 1, "full_name": 1, "student_number": 1, "grade": 1, "section": 1}
+        ).to_list(100)
+        
+        return {
+            "found": True,
+            "parent": parent,
+            "students": students
+        }
+    
+    return {"found": False}
+
+@api_router.post("/student-wizard/create")
+async def create_student_with_wizard(
+    data: StudentWizardCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create student with parent and health info via wizard"""
+    school_id = current_user.get("tenant_id")
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get school info
+    school = await db.schools.find_one({"id": school_id}, {"_id": 0, "code": 1, "name": 1})
+    if not school:
+        raise HTTPException(status_code=404, detail="المدرسة غير موجودة")
+    
+    # Generate student number: NSS-CODE-GRADE-XXXX
+    school_code = school.get("code", "NSS")
+    grade_num = data.grade_id[-1] if data.grade_id else "0"
+    
+    # Count existing students to generate sequential number
+    student_count = await db.students.count_documents({"school_id": school_id})
+    student_number = f"NSS-{school_code}-{grade_num}-{str(student_count + 1).zfill(4)}"
+    
+    student_id = str(uuid.uuid4())
+    
+    # Get class info
+    class_doc = None
+    if data.class_id:
+        class_doc = await db.classes.find_one({"id": data.class_id}, {"_id": 0})
+    
+    # Create student
+    student_doc = {
+        "id": student_id,
+        "school_id": school_id,
+        "student_number": student_number,
+        "full_name": data.full_name,
+        "full_name_en": data.full_name,
+        "email": data.email,
+        "national_id": data.national_id,
+        "gender": data.gender,
+        "date_of_birth": data.date_of_birth,
+        "grade": class_doc.get("grade") if class_doc else None,
+        "section": class_doc.get("section") if class_doc else None,
+        "class_id": data.class_id,
+        "education_level": data.education_level,
+        "is_active": True,
+        "enrollment_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    # Add health info if provided
+    if data.health:
+        student_doc["health_status"] = data.health.get("health_status")
+        student_doc["allergies"] = data.health.get("allergies", [])
+        student_doc["medications"] = data.health.get("medications", [])
+        student_doc["special_needs"] = data.health.get("special_needs")
+        student_doc["health_notes"] = data.health.get("notes")
+    
+    await db.students.insert_one(student_doc)
+    
+    # Handle parent
+    parent_doc = None
+    parent_password = None
+    
+    if data.link_to_parent_id:
+        # Link to existing parent
+        await db.parents.update_one(
+            {"id": data.link_to_parent_id},
+            {"$push": {"student_ids": student_id}}
+        )
+        parent_doc = await db.parents.find_one({"id": data.link_to_parent_id}, {"_id": 0})
+    elif data.parent:
+        # Create new parent
+        parent_id = str(uuid.uuid4())
+        parent_password = f"P{random.randint(100000, 999999)}"
+        
+        parent_doc = {
+            "id": parent_id,
+            "school_id": school_id,
+            "full_name": data.parent.get("full_name"),
+            "phone": data.parent.get("phone"),
+            "email": data.parent.get("email"),
+            "national_id": data.parent.get("national_id"),
+            "relation": data.parent.get("relationship", "father"),
+            "address": data.parent.get("address"),
+            "student_ids": [student_id],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.parents.insert_one(parent_doc)
+        
+        # Create parent user account
+        parent_user = {
+            "id": str(uuid.uuid4()),
+            "email": data.parent.get("email") or f"parent_{parent_id[:8]}@{school_code.lower()}.edu.sa",
+            "password_hash": bcrypt.hashpw(parent_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+            "full_name": data.parent.get("full_name"),
+            "role": "parent",
+            "is_active": True,
+            "is_suspended": False,
+            "tenant_id": school_id,
+            "school_id": school_id,
+            "parent_id": parent_id,
+            "student_ids": [student_id],
+            "permissions": ["view_child_data", "view_grades", "view_attendance"],
+            "preferred_language": "ar",
+            "preferred_theme": "light",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one(parent_user)
+    
+    # Update student with parent info
+    if parent_doc:
+        await db.students.update_one(
+            {"id": student_id},
+            {"$set": {
+                "parent_name": parent_doc.get("full_name"),
+                "parent_phone": parent_doc.get("phone"),
+            }}
+        )
+    
+    # Update class student count
+    if data.class_id:
+        await db.classes.update_one(
+            {"id": data.class_id},
+            {"$inc": {"student_count": 1}}
+        )
+    
+    # Update school student count
+    await db.schools.update_one(
+        {"id": school_id},
+        {"$inc": {"current_students": 1}}
+    )
+    
+    # Create student user account
+    student_password = f"S{random.randint(100000, 999999)}"
+    student_email = data.email or f"student_{student_id[:8]}@{school_code.lower()}.edu.sa"
+    
+    student_user = {
+        "id": str(uuid.uuid4()),
+        "email": student_email,
+        "password_hash": bcrypt.hashpw(student_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+        "full_name": data.full_name,
+        "role": "student",
+        "is_active": True,
+        "is_suspended": False,
+        "tenant_id": school_id,
+        "school_id": school_id,
+        "student_id": student_id,
+        "permissions": ["view_schedule", "view_grades", "view_attendance"],
+        "preferred_language": "ar",
+        "preferred_theme": "light",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(student_user)
+    
+    # Generate welcome message
+    welcome_message = f"""مرحباً في نظام نَسَّق!
+    
+🎓 بيانات الطالب:
+الاسم: {data.full_name}
+رقم الطالب: {student_number}
+البريد: {student_email}
+كلمة المرور: {student_password}
+
+👨‍👩‍👧 بيانات ولي الأمر:
+الاسم: {parent_doc.get('full_name') if parent_doc else 'غير محدد'}
+البريد: {parent_doc.get('email') if parent_doc else 'غير محدد'}
+كلمة المرور: {parent_password if parent_password else 'موجودة مسبقاً'}
+
+🔗 رابط تسجيل الدخول: {os.environ.get('FRONTEND_URL', '')}
+"""
+    
+    return {
+        "success": True,
+        "student": {
+            "id": student_id,
+            "student_number": student_number,
+            "full_name": data.full_name,
+            "email": student_email,
+            "password": student_password,
+            "class_name": class_doc.get("name") if class_doc else None,
+            "grade": class_doc.get("grade") if class_doc else None,
+            "section": class_doc.get("section") if class_doc else None,
+        },
+        "parent": {
+            "id": parent_doc.get("id") if parent_doc else None,
+            "full_name": parent_doc.get("full_name") if parent_doc else None,
+            "email": parent_doc.get("email") if parent_doc else None,
+            "password": parent_password,
+            "is_new": parent_password is not None,
+        } if parent_doc else None,
+        "welcome_message": welcome_message,
+    }
+
 # ============== CLASSES ROUTES ==============
 @api_router.post("/classes", response_model=ClassResponse)
 async def create_class(
