@@ -101,8 +101,53 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('nassaq_token');
+    sessionStorage.removeItem('nassaq_school_context');
+    sessionStorage.removeItem('nassaq_impersonating');
     setToken(null);
     setUser(null);
+    setSchoolContext(null);
+    setIsImpersonating(false);
+  };
+  
+  // Enter School Context (Platform Admin simulation of School Manager)
+  const enterSchoolContext = (school) => {
+    const ctx = {
+      school_id: school.id,
+      school_name: school.name,
+      school_name_en: school.name_en,
+      school_code: school.code,
+      original_role: user?.role,
+      entered_at: new Date().toISOString()
+    };
+    sessionStorage.setItem('nassaq_school_context', JSON.stringify(ctx));
+    sessionStorage.setItem('nassaq_impersonating', 'true');
+    setSchoolContext(ctx);
+    setIsImpersonating(true);
+    return ctx;
+  };
+  
+  // Exit School Context (Return to Platform Admin)
+  const exitSchoolContext = () => {
+    sessionStorage.removeItem('nassaq_school_context');
+    sessionStorage.removeItem('nassaq_impersonating');
+    setSchoolContext(null);
+    setIsImpersonating(false);
+  };
+  
+  // Get effective role (simulated or actual)
+  const getEffectiveRole = () => {
+    if (isImpersonating && schoolContext) {
+      return 'school_principal'; // Simulate School Manager role
+    }
+    return user?.role;
+  };
+  
+  // Get effective tenant_id (school_id)
+  const getEffectiveTenantId = () => {
+    if (isImpersonating && schoolContext) {
+      return schoolContext.school_id;
+    }
+    return user?.tenant_id;
   };
 
   const updatePreferences = async (preferences) => {
