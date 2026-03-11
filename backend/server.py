@@ -208,6 +208,8 @@ class DashboardStats(BaseModel):
     total_schools: int = 0
     total_students: int = 0
     total_teachers: int = 0
+    total_classes: int = 0
+    total_lessons_today: int = 0
     active_schools: int = 0
     pending_schools: int = 0
     suspended_schools: int = 0
@@ -215,7 +217,7 @@ class DashboardStats(BaseModel):
     total_users: int = 0
     pending_requests: int = 0
     active_users: int = 0
-    total_classes: int = 0
+    active_users_today: int = 0
     total_subjects: int = 0
     total_operations: int = 0
     teachers_without_classes: int = 0
@@ -223,6 +225,39 @@ class DashboardStats(BaseModel):
     schools_without_principal: int = 0
     students_missing_data: int = 0
     teachers_without_rank: int = 0
+    # New metrics for Super Admin Dashboard
+    student_attendance_rate: float = 0.0
+    teacher_attendance_rate: float = 0.0
+    waiting_sessions: int = 0
+    lessons_today: int = 0
+    last_updated: str = ""
+
+class SuperAdminDashboardStats(BaseModel):
+    """Complete stats for Super Admin leadership dashboard"""
+    total_schools: int = 0
+    total_students: int = 0
+    total_teachers: int = 0
+    total_classes: int = 0
+    total_lessons_today: int = 0
+    active_users_today: int = 0
+    student_attendance_percentage: float = 0.0
+    teacher_attendance_percentage: float = 0.0
+    waiting_sessions: int = 0
+    # Breakdown
+    active_schools: int = 0
+    suspended_schools: int = 0
+    pending_schools: int = 0
+    # Attendance details
+    students_present_today: int = 0
+    students_absent_today: int = 0
+    teachers_present_today: int = 0
+    teachers_absent_today: int = 0
+    # Growth metrics
+    schools_growth_rate: float = 0.0
+    students_growth_rate: float = 0.0
+    teachers_growth_rate: float = 0.0
+    # Timestamp
+    last_updated: str = ""
 
 class AIOperationResult(BaseModel):
     success: bool
