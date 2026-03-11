@@ -34,7 +34,21 @@ export default function SessionStartPage() {
     total: 0, present: 0, absent: 0, late: 0, excused: 0
   });
 
-  const lessonData = location.state?.lesson;
+  // Get lesson data from location.state or sessionStorage fallback
+  const getLessonData = () => {
+    if (location.state?.lesson) {
+      return location.state.lesson;
+    }
+    // Fallback to sessionStorage
+    const stored = sessionStorage.getItem('current_lesson');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.lesson;
+    }
+    return null;
+  };
+  
+  const lessonData = getLessonData();
   const teacherId = user?.teacher_id || user?.id;
 
   // Start the session
