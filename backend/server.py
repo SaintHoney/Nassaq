@@ -27,6 +27,9 @@ import jwt
 import bcrypt
 from enum import Enum
 
+# Import Audit Engine
+from engines.audit_engine import AuditLogEngine, AuditAction, AuditSeverity
+
 # ============== INITIALIZATION ==============
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
