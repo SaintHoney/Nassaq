@@ -29,8 +29,6 @@ import {
   BookOpen,
   Loader2,
   RefreshCw,
-  Download,
-  Upload,
   Eye,
   UserCheck,
   Award,
