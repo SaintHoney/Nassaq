@@ -435,7 +435,7 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
       
       {/* Dialog للنتائج */}
       <Dialog open={!!activeDialog} onOpenChange={() => { setActiveDialog(null); setOperationResult(null); }}>
-        <DialogContent className="max-w-2xl" data-testid="ai-result-dialog">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="ai-result-dialog">
           <DialogHeader>
             <DialogTitle className="font-cairo flex items-center gap-2">
               {activeDialog && getOperation(activeDialog) && (
