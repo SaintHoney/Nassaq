@@ -720,6 +720,10 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
         setResult(response.data);
         setCurrentStep(6);
         toast.success(isRTL ? 'تم إضافة المعلم بنجاح' : 'Teacher added successfully');
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
       } else {
         toast.error(response.data.error || (isRTL ? 'حدث خطأ' : 'Error occurred'));
       }
