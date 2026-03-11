@@ -2582,9 +2582,9 @@ async def seed_admin(current_user: dict = Depends(require_roles([UserRole.PLATFO
 
 # ============== SEED DEMO DATA ==============
 @api_router.post("/seed/demo-data")
-async def seed_demo_data():
+async def seed_demo_data(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
     """
-    Seed the database with demo data to match traction metrics:
+    Seed the database with demo data to match traction metrics - Platform Admin only:
     - +200 schools
     - +50,000 students  
     - +100,000 parents
