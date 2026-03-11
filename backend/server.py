@@ -11599,7 +11599,7 @@ async def get_teacher_dashboard(
     if schedule:
         sessions = await db.schedule_sessions.find({
             "schedule_id": schedule.get("id"),
-            "teacher_id": teacher_id,
+            "teacher_id": actual_teacher_id,
             "day_of_week": today_day,
             "status": SessionStatusEnum.SCHEDULED.value
         }, {"_id": 0}).to_list(20)
