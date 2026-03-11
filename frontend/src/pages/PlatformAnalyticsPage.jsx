@@ -833,9 +833,37 @@ export const PlatformAnalyticsPage = () => {
             
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              {/* Real-time indicator & Refresh */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${isRefreshing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
+                    <span className="text-sm text-muted-foreground">
+                      {isRTL ? 'البيانات الحية' : 'Live Data'}
+                    </span>
+                  </div>
+                  {lastRefreshTime && (
+                    <span className="text-xs text-muted-foreground">
+                      {isRTL ? 'آخر تحديث:' : 'Last update:'} {lastRefreshTime.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US')}
+                    </span>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefreshStats}
+                  disabled={isRefreshing}
+                  className="rounded-xl"
+                >
+                  <RefreshCw className={`h-4 w-4 me-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRTL ? 'تحديث' : 'Refresh'}
+                </Button>
+              </div>
+
+              {/* Main Stats Cards - 9 Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* 1. Total Schools */}
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white" data-testid="stat-total-schools">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
@@ -843,15 +871,16 @@ export const PlatformAnalyticsPage = () => {
                         <p className="text-3xl font-bold">{stats.totalSchools}</p>
                         <p className="text-xs text-white/60 mt-1 flex items-center">
                           <TrendingUp className="h-3 w-3 me-1" />
-                          +{stats.growthRate}%
+                          +{stats.schoolsGrowthRate}%
                         </p>
                       </div>
-                      <Building2 className="h-12 w-12 text-white/30" />
+                      <Building2 className="h-10 w-10 text-white/30" />
                     </div>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                {/* 2. Total Students */}
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white" data-testid="stat-total-students">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
@@ -859,15 +888,16 @@ export const PlatformAnalyticsPage = () => {
                         <p className="text-3xl font-bold">{stats.totalStudents.toLocaleString()}</p>
                         <p className="text-xs text-white/60 mt-1 flex items-center">
                           <TrendingUp className="h-3 w-3 me-1" />
-                          +8.2%
+                          +{stats.studentsGrowthRate > 100 ? '∞' : stats.studentsGrowthRate}%
                         </p>
                       </div>
-                      <GraduationCap className="h-12 w-12 text-white/30" />
+                      <GraduationCap className="h-10 w-10 text-white/30" />
                     </div>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                {/* 3. Total Teachers */}
+                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white" data-testid="stat-total-teachers">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
@@ -875,26 +905,131 @@ export const PlatformAnalyticsPage = () => {
                         <p className="text-3xl font-bold">{stats.totalTeachers.toLocaleString()}</p>
                         <p className="text-xs text-white/60 mt-1 flex items-center">
                           <TrendingUp className="h-3 w-3 me-1" />
-                          +5.4%
+                          +{stats.teachersGrowthRate > 100 ? '∞' : stats.teachersGrowthRate}%
                         </p>
                       </div>
-                      <Users className="h-12 w-12 text-white/30" />
+                      <Users className="h-10 w-10 text-white/30" />
                     </div>
                   </CardContent>
                 </Card>
-                
-                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+
+                {/* 4. Total Classes */}
+                <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white" data-testid="stat-total-classes">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white/70 text-sm">{t.activeUsers}</p>
-                        <p className="text-3xl font-bold">{stats.activeUsers.toLocaleString()}</p>
-                        <p className="text-xs text-white/60 mt-1 flex items-center">
-                          <TrendingUp className="h-3 w-3 me-1" />
-                          +15.7%
+                        <p className="text-white/70 text-sm">{isRTL ? 'إجمالي الفصول' : 'Total Classes'}</p>
+                        <p className="text-3xl font-bold">{stats.totalClasses.toLocaleString()}</p>
+                        <p className="text-xs text-white/60 mt-1">
+                          {isRTL ? 'فصل دراسي' : 'classrooms'}
                         </p>
                       </div>
-                      <Activity className="h-12 w-12 text-white/30" />
+                      <School className="h-10 w-10 text-white/30" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 5. Lessons Today */}
+                <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white" data-testid="stat-lessons-today">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">{isRTL ? 'حصص اليوم' : 'Lessons Today'}</p>
+                        <p className="text-3xl font-bold">{stats.totalLessonsToday.toLocaleString()}</p>
+                        <p className="text-xs text-white/60 mt-1">
+                          {isRTL ? 'حصة دراسية' : 'sessions'}
+                        </p>
+                      </div>
+                      <BookOpen className="h-10 w-10 text-white/30" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Second Row - Attendance & Activity */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 6. Active Users Today */}
+                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white" data-testid="stat-active-users">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">{isRTL ? 'المستخدمين النشطين' : 'Active Users'}</p>
+                        <p className="text-3xl font-bold">{stats.activeUsersToday.toLocaleString()}</p>
+                        <p className="text-xs text-white/60 mt-1">
+                          {isRTL ? 'مستخدم نشط اليوم' : 'active today'}
+                        </p>
+                      </div>
+                      <Activity className="h-10 w-10 text-white/30" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 7. Student Attendance Rate */}
+                <Card className="bg-white dark:bg-gray-800 border-2 border-green-200" data-testid="stat-student-attendance">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">{isRTL ? 'حضور الطلاب' : 'Student Attendance'}</p>
+                        <p className="text-3xl font-bold text-green-600">{stats.studentAttendancePercentage}%</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-green-600">{isRTL ? 'حاضر' : 'Present'}: {stats.studentsPresent}</span>
+                          <span className="text-xs text-red-500">{isRTL ? 'غائب' : 'Absent'}: {stats.studentsAbsent}</span>
+                        </div>
+                      </div>
+                      <div className="w-16 h-16 relative">
+                        <svg className="w-16 h-16 transform -rotate-90">
+                          <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="6" fill="none" />
+                          <circle cx="32" cy="32" r="28" stroke="#22c55e" strokeWidth="6" fill="none"
+                            strokeDasharray={`${stats.studentAttendancePercentage * 1.76} 176`} strokeLinecap="round" />
+                        </svg>
+                        <GraduationCap className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-5 w-5 text-green-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 8. Teacher Attendance Rate */}
+                <Card className="bg-white dark:bg-gray-800 border-2 border-blue-200" data-testid="stat-teacher-attendance">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">{isRTL ? 'حضور المعلمين' : 'Teacher Attendance'}</p>
+                        <p className="text-3xl font-bold text-blue-600">{stats.teacherAttendancePercentage}%</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-blue-600">{isRTL ? 'حاضر' : 'Present'}: {stats.teachersPresent}</span>
+                          <span className="text-xs text-red-500">{isRTL ? 'غائب' : 'Absent'}: {stats.teachersAbsent}</span>
+                        </div>
+                      </div>
+                      <div className="w-16 h-16 relative">
+                        <svg className="w-16 h-16 transform -rotate-90">
+                          <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="6" fill="none" />
+                          <circle cx="32" cy="32" r="28" stroke="#3b82f6" strokeWidth="6" fill="none"
+                            strokeDasharray={`${stats.teacherAttendancePercentage * 1.76} 176`} strokeLinecap="round" />
+                        </svg>
+                        <Users className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-5 w-5 text-blue-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 9. Waiting Sessions */}
+                <Card className={`bg-white dark:bg-gray-800 border-2 ${stats.waitingSessions > 0 ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-200'}`} data-testid="stat-waiting-sessions">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">{isRTL ? 'حصص الانتظار' : 'Waiting Sessions'}</p>
+                        <p className={`text-3xl font-bold ${stats.waitingSessions > 0 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                          {stats.waitingSessions}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {stats.waitingSessions > 0 
+                            ? (isRTL ? 'تحتاج تغطية' : 'Need coverage') 
+                            : (isRTL ? 'لا توجد حصص انتظار' : 'No waiting')}
+                        </p>
+                      </div>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stats.waitingSessions > 0 ? 'bg-yellow-100' : 'bg-gray-100'}`}>
+                        <Clock className={`h-6 w-6 ${stats.waitingSessions > 0 ? 'text-yellow-600' : 'text-gray-500'}`} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
