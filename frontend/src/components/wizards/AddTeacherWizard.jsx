@@ -607,9 +607,17 @@ NASSAQ Platform`;
 };
 
 // Main Wizard
-export const AddTeacherWizard = ({ open, onClose }) => {
+export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
   const { isRTL } = useTheme();
   const { token } = useAuth();
+  
+  // Handle close - supports both onClose and onOpenChange patterns
+  const handleCloseDialog = () => {
+    handleReset();
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+  };
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
