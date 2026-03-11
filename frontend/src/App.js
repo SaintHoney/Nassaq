@@ -28,6 +28,22 @@ import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 import { AssessmentPage } from "./pages/AssessmentPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 
+// Teacher Module Pages
+import {
+  TeacherMainDashboard,
+  TeacherSchedulePage,
+  TeacherClassesPage,
+  TeacherClassDetailPage,
+  TeacherAttendanceManagePage,
+  TeacherAssessmentsPage,
+  TeacherBehaviorPage,
+  TeacherStudentsPage,
+  TeacherCommunicationPage,
+  TeacherReportsPage,
+  TeacherResourcesPage,
+  TeacherSettingsPage
+} from "./pages/TeacherModule";
+
 // Platform Admin Pages
 import { PlatformSchoolsPage } from "./pages/PlatformSchoolsPage";
 import { PlatformUsersPage } from "./pages/PlatformUsersPage";
