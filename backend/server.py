@@ -1379,7 +1379,7 @@ async def ai_executive_summary(current_user: dict = Depends(require_roles([UserR
 
 # ============== AI ASSISTANT (HAKIM) ==============
 @api_router.post("/hakim/chat", response_model=HakimResponse)
-async def chat_with_hakim(message: HakimMessage):
+async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(get_current_user)):
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         
