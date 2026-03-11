@@ -865,20 +865,34 @@ async def create_school(
         }
         await db.users.insert_one(principal_doc)
         
-        # Log in audit
-        await db.audit_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "action": "CREATE_SCHOOL_WITH_PRINCIPAL",
-            "entity_type": "school",
-            "entity_id": school_id,
-            "details": {
+        # Log tenant creation using Audit Engine
+        await audit_engine.log_data_change(
+            action=AuditAction.TENANT_CREATED.value,
+            performed_by=current_user.get("id", current_user.get("user_id")),
+            entity_type="tenant",
+            entity_id=school_id,
+            new_values={
                 "school_code": school_code,
                 "school_name": school_data.name,
-                "principal_email": school_data.principal_email
-            },
-            "user_id": current_user.get("user_id"),
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
+                "principal_email": school_data.principal_email,
+                "school_type": school_data.school_type,
+                "stage": school_data.stage
+            }
+        )
+        
+        # Log principal creation
+        await audit_engine.log_data_change(
+            action=AuditAction.USER_CREATED.value,
+            performed_by=current_user.get("id", current_user.get("user_id")),
+            entity_type="user",
+            entity_id=principal_id,
+            tenant_id=school_id,
+            new_values={
+                "role": "school_principal",
+                "email": school_data.principal_email,
+                "full_name": school_data.principal_name
+            }
+        )
     
     return SchoolResponse(
         id=school_id,
