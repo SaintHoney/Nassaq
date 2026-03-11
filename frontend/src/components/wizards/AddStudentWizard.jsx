@@ -125,7 +125,7 @@ export default function AddStudentWizard({
       if (parentData.email) params.append('email', parentData.email);
       if (parentData.national_id) params.append('national_id', parentData.national_id);
       
-      const response = await api.post(`/api/student-wizard/check-parent?${params.toString()}`);
+      const response = await api.post(`/student-wizard/check-parent?${params.toString()}`);
       
       if (response.data?.found) {
         setExistingParent(response.data.parent);
