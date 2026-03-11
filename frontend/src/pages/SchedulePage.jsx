@@ -501,9 +501,8 @@ export const SchedulePage = () => {
     // Move the session
     try {
       await api.put(`/api/schedule-sessions/${sessionId}/move`, {
-        target_day: targetDay,
-        target_slot_id: targetSlotId,
-        target_teacher_id: targetTeacherId,
+        new_day_of_week: targetDay,
+        new_time_slot_id: targetSlotId,
       });
 
       toast.success(isRTL ? 'تم نقل الحصة بنجاح' : 'Session moved successfully');
