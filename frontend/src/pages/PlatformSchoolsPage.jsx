@@ -558,32 +558,50 @@ export const PlatformSchoolsPage = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewSchoolContext(school)}>
-                                  <Eye className="h-4 w-4 me-2" />
-                                  {isRTL ? 'الدخول للمدرسة' : 'Enter School'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setSelectedSchool(school); setEditDialogOpen(true); }}>
-                                  <Edit className="h-4 w-4 me-2" />
-                                  {isRTL ? 'تعديل' : 'Edit'}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleStatusChange(school.id, 'active')}>
-                                  <CheckCircle className="h-4 w-4 me-2 text-green-600" />
-                                  {isRTL ? 'تفعيل' : 'Activate'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleStatusChange(school.id, 'suspended')}>
-                                  <XCircle className="h-4 w-4 me-2 text-red-600" />
-                                  {isRTL ? 'إيقاف' : 'Suspend'}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex items-center gap-2">
+                              {/* Enter Dashboard Button - Primary Action */}
+                              <Button 
+                                size="sm" 
+                                className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-lg"
+                                onClick={() => handleEnterSchoolDashboard(school)}
+                                data-testid={`enter-dashboard-${school.id}`}
+                              >
+                                <LogIn className="h-4 w-4 me-1" />
+                                {isRTL ? 'الدخول' : 'Enter'}
+                              </Button>
+                              
+                              {/* More Actions Dropdown */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEnterSchoolDashboard(school)}>
+                                    <ExternalLink className="h-4 w-4 me-2" />
+                                    {isRTL ? 'الدخول للوحة التحكم' : 'Enter Dashboard'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleViewSchoolContext(school)}>
+                                    <Eye className="h-4 w-4 me-2" />
+                                    {isRTL ? 'عرض البيانات' : 'View Details'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setSelectedSchool(school); setEditDialogOpen(true); }}>
+                                    <Edit className="h-4 w-4 me-2" />
+                                    {isRTL ? 'تعديل' : 'Edit'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleStatusChange(school.id, 'active')}>
+                                    <CheckCircle className="h-4 w-4 me-2 text-green-600" />
+                                    {isRTL ? 'تفعيل' : 'Activate'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(school.id, 'suspended')}>
+                                    <XCircle className="h-4 w-4 me-2 text-red-600" />
+                                    {isRTL ? 'إيقاف' : 'Suspend'}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
