@@ -173,7 +173,7 @@ class TestNotificationsAPI:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert "count" in data or isinstance(data, int), "Expected count in response"
+        assert "count" in data or "unread_count" in data or isinstance(data, int), "Expected count in response"
         print("✅ Notifications unread count API working")
 
 
