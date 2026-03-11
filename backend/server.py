@@ -953,6 +953,101 @@ async def create_school(
         created_at=school_doc["created_at"]
     )
 
+@api_router.post("/schools/draft", response_model=SchoolResponse)
+async def create_school_draft(
+    school_data: SchoolCreate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """Create a school as draft (setup status) - does not create principal account"""
+    # Auto-generate code if not provided
+    if not school_data.code:
+        year_suffix = datetime.now().strftime("%y")
+        country_code = school_data.country[:2].upper() if school_data.country else "SA"
+        last_school = await db.schools.find_one(
+            {"code": {"$regex": f"^NSS-{country_code}-{year_suffix}-"}},
+            sort=[("code", -1)]
+        )
+        if last_school and last_school.get("code"):
+            try:
+                last_num = int(last_school["code"].split("-")[-1])
+                next_num = last_num + 1
+            except:
+                next_num = 1
+        else:
+            next_num = 1
+        school_code = f"NSS-{country_code}-{year_suffix}-{str(next_num).zfill(4)}"
+    else:
+        school_code = school_data.code
+    
+    # Check if code exists
+    existing = await db.schools.find_one({"code": school_code})
+    if existing:
+        raise HTTPException(status_code=400, detail="رمز المدرسة مستخدم مسبقاً")
+    
+    school_id = str(uuid.uuid4())
+    school_doc = {
+        "id": school_id,
+        "name": school_data.name or "مسودة مدرسة",
+        "name_en": school_data.name_en,
+        "code": school_code,
+        "email": school_data.email or f"school-{school_code.lower()}@nassaq.com",
+        "phone": school_data.phone or school_data.principal_phone,
+        "address": school_data.address or "",
+        "city": school_data.city or "",
+        "region": school_data.region,
+        "country": school_data.country or "SA",
+        "logo_url": None,
+        "status": "setup",  # Set as draft/setup
+        "student_capacity": school_data.student_capacity,
+        "current_students": 0,
+        "current_teachers": 0,
+        "language": school_data.language or "ar",
+        "calendar_system": school_data.calendar_system or "hijri_gregorian",
+        "school_type": school_data.school_type or "public",
+        "stage": school_data.stage or "primary",
+        "principal_name": school_data.principal_name or "",
+        "principal_email": school_data.principal_email or "",
+        "principal_phone": school_data.principal_phone or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user.get("user_id")
+    }
+    
+    await db.schools.insert_one(school_doc)
+    
+    # Log draft creation
+    await audit_engine.log_data_change(
+        action=AuditAction.TENANT_CREATED.value,
+        performed_by=current_user.get("id", current_user.get("user_id")),
+        entity_type="tenant",
+        entity_id=school_id,
+        new_values={
+            "school_code": school_code,
+            "school_name": school_data.name,
+            "status": "setup",
+            "is_draft": True
+        }
+    )
+    
+    return SchoolResponse(
+        id=school_id,
+        name=school_data.name or "مسودة مدرسة",
+        name_en=school_data.name_en,
+        code=school_code,
+        email=school_doc["email"],
+        phone=school_doc["phone"],
+        address=school_doc["address"],
+        city=school_doc["city"],
+        region=school_data.region,
+        country=school_data.country or "SA",
+        logo_url=None,
+        status=SchoolStatus.SETUP,
+        student_capacity=school_data.student_capacity,
+        current_students=0,
+        current_teachers=0,
+        created_at=school_doc["created_at"]
+    )
+
 @api_router.get("/schools", response_model=List[SchoolResponse])
 async def get_schools(
     status: Optional[str] = None,
