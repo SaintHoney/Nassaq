@@ -276,9 +276,11 @@ export default function TeacherHomePage() {
               <div className="space-y-3">
                 {todayLessons.map((lesson, index) => {
                   const timeStatus = getTimeUntilLesson(lesson.time);
-                  const isCurrentLesson = index === 0 && (timeStatus?.status === 'ongoing' || timeStatus?.status === 'ready');
-                  const cardStyle = getLessonCardStyle(timeStatus, index === 0);
-                  const isWhiteText = timeStatus?.status !== 'ended';
+                  const isFirstLesson = index === 0;
+                  const isCurrentLesson = isFirstLesson && timeStatus?.status !== 'ended';
+                  const cardStyle = getLessonCardStyle(timeStatus, isFirstLesson);
+                  // White text for colored cards (green for first, blue for others, unless ended)
+                  const isWhiteText = isFirstLesson ? timeStatus?.status !== 'ended' : timeStatus?.status !== 'ended';
                   
                   return (
                     <Card 
