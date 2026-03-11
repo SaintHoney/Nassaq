@@ -3,176 +3,143 @@
 ## المعلومات الأساسية
 - **اسم المشروع**: نَسَّق | NASSAQ
 - **النوع**: نظام إدارة مدارس متعدد المستأجرين (Multi-tenant SaaS)
-- **تاريخ الإنشاء**: مارس 2026
 - **آخر تحديث**: 11 مارس 2026
 
 ---
 
 ## ✅ ما تم إنجازه - جلسة 11 مارس 2026
 
-### 1. قاعدة البيانات الواقعية الشاملة ✅
-- 🏫 **5 مدارس** واقعية: النور، الأمل، المستقبل، الرواد، الإبداع
-- 👨‍🎓 **500 طالب** (100 لكل مدرسة)
-- 👨‍🏫 **125 معلم** (25 لكل مدرسة)
-- 🏛️ **125 فصل** (25 لكل مدرسة)
-- ✅ **18,750 سجل حضور** (آخر 30 يوم)
-- 📝 **1,486 سجل سلوك**
-- 📊 **10,000 درجة**
+### 1. نظام Context Switching الكامل ✅
+- ✅ Platform Admin يمكنه الدخول لسياق أي مدرسة
+- ✅ **القائمة الجانبية تعرض فقط menu مدير المدرسة** (لا يوجد أي عنصر من menu مدير المنصة)
+- ✅ شريط المعاينة يظهر اسم المدرسة + زر "العودة للمنصة"
+- ✅ صندوق المعاينة في أسفل القائمة الجانبية
+- ✅ التجربة مطابقة 100% لتسجيل الدخول المباشر كمدير مدرسة
+- ✅ X-School-Context Header للـ API
 
-### 2. نظام إدارة المدارس الديناميكي ✅
-- ✅ **تحميل ديناميكي للمدارس** من `/api/schools`
-- ✅ **التحديث التلقائي** بعد إنشاء مدرسة جديدة
-- ✅ **School Context Switching** - الدخول لسياق المدرسة
-- ✅ **شريط المعاينة** عند محاكاة مدير المدرسة
-- ✅ **عزل البيانات** - كل مدرسة ترى بياناتها فقط
-- ✅ **X-School-Context Header** للتحكم في الـ API
+### 2. قاعدة البيانات الواقعية ✅
+- 🏫 5 مدارس: النور، الأمل، المستقبل، الرواد، الإبداع
+- 👨‍🎓 500 طالب (100 لكل مدرسة)
+- 👨‍🏫 125 معلم (25 لكل مدرسة)
+- 🏛️ 125 فصل (25 لكل مدرسة)
+- ✅ 18,750 سجل حضور
+- 📝 1,486 سجل سلوك
+- 📊 10,000 درجة
 
-### 3. صفحة إدارة المستخدمين والفصول (الجديدة) ✅
-- ✅ **تصميم بطاقات** (5 في الصف)
-- ✅ **أزرار إضافة**: طالب/طلاب، معلم/معلمين، فصل/فصول
-- ✅ **فلاتر تبويب**: الكل، الطلاب، المعلمين، الفصول
-- ✅ **بطاقات مميزة** لكل نوع بألوان مختلفة
-- ✅ **إحصائيات** في أعلى الصفحة
-- ✅ **دعم URL parameters** للفلاتر
+### 3. صفحة إدارة المستخدمين والفصول ✅
+- ✅ تصميم بطاقات (5 في الصف)
+- ✅ أزرار: طالب/طلاب 🔵، معلم/معلمين 🔷، فصل/فصول 🟢
+- ✅ فلاتر تبويب مع URL parameters
 
-### 4. إصلاحات سابقة ✅
-- ✅ إصلاح خطأ `fetchTeachers`
-- ✅ تحديث API `/api/school/dashboard` للبيانات الحقيقية
-- ✅ تحديث API `/api/public/stats` للإحصائيات الحقيقية
+### 4. معالجات الإضافة (Wizards) ✅
+
+**معالج إضافة طالب:**
+- المراحل: بيانات الطالب → ولي الأمر → البيانات الصحية → المراجعة → الإنشاء
+- API: `/student-wizard/create`, `/student-wizard/check-parent`
+- ميزة: فحص وجود ولي الأمر مسبقاً (الأشقاء)
+
+**معالج إضافة معلم:**
+- المراحل: البيانات → المؤهلات → المواد → الجدول → المراجعة
+- API: `/teachers/create`, options endpoints
+- ميزة: اختيار المواد والصفوف والمؤهلات
+
+**معالج إنشاء فصل:**
+- المراحل: بيانات الفصل → المعلم → الطلاب → المراجعة
+- API: `/classes/create`, options endpoints
+- ميزة: تعيين معلم الفصل واختيار الطلاب
 
 ---
 
 ## الحسابات التجريبية
 
-### مدير المنصة
 | الدور | البريد | كلمة المرور |
 |------|-------|------------|
 | مدير المنصة | admin@nassaq.com | Admin@123 |
-
-### مدراء المدارس
-| المدرسة | البريد | كلمة المرور |
-|------|-------|------------|
-| مدرسة النور | principal1@nassaq.com | Principal@123 |
-| مدرسة الأمل | principal2@nassaq.com | Principal@123 |
-| مدرسة المستقبل | principal3@nassaq.com | Principal@123 |
-| مدرسة الرواد | principal4@nassaq.com | Principal@123 |
-| مدرسة الإبداع | principal5@nassaq.com | Principal@123 |
-
-### نواب المدراء
-| المدرسة | البريد | كلمة المرور |
-|------|-------|------------|
-| مدرسة النور | subadmin1@nassaq.com | SubAdmin@123 |
-
-### المعلمون والطلاب
-| النوع | البريد | كلمة المرور |
-|------|-------|------------|
+| مدير مدرسة النور | principal1@nassaq.com | Principal@123 |
+| مدير مدرسة الأمل | principal2@nassaq.com | Principal@123 |
+| نائب مدير | subadmin1@nassaq.com | SubAdmin@123 |
 | معلم | teacher1@nor.edu.sa | Teacher@123 |
 | طالب | student1@nor.edu.sa | Student@123 |
 | ولي أمر | parent1@nor.edu.sa | Parent@123 |
 
 ---
 
-## المهام القادمة (P0)
-
-### 1. تنفيذ معالج "إضافة طالب/طلاب" متعدد المراحل
-- معالج مراحل: بيانات أساسية → بيانات أكاديمية → ولي الأمر → تأكيد
-- دعم الإضافة الفردية والجماعية (استيراد Excel)
-- توليد رقم الطالب تلقائياً ورمز QR
-
-### 2. تنفيذ معالج "إضافة معلم/معلمين"
-- معالج مراحل: بيانات أساسية → التخصص → التعيينات → تأكيد
-- ربط المعلم بالمواد والفصول
-
-### 3. تنفيذ معالج "إنشاء فصل/فصول"
-- تحديد الصف والشعبة
-- تعيين معلم الفصل
-- تحديد السعة والجدول
-
----
-
 ## المهام المستقبلية (P1)
 
-1. **إزالة البيانات الوهمية من `PlatformAnalyticsPage.jsx`**
-   - ربط الرسوم البيانية بـ API حقيقي
-   - جلب توزيع المدارس حسب المدينة
+### 1. إزالة البيانات الوهمية من PlatformAnalyticsPage.jsx
+- ربط الرسوم البيانية بـ API حقيقي
+- جلب توزيع المدارس حسب المدينة
 
-2. **تفاصيل المستخدم (`UserDetailsPage`)**
-   - عرض تفصيلي للطالب/المعلم
-   - تاريخ الحضور والسلوك
+### 2. تفاصيل المستخدم (UserDetailsPage)
+- عرض تفصيلي للطالب/المعلم
+- تاريخ الحضور والسلوك
 
-3. **توسيع نظام Audit Log**
-   - تسجيل جميع العمليات الحساسة
-   - تقارير مفصلة
+### 3. توسيع نظام Audit Log
+- تسجيل جميع العمليات الحساسة
 
-4. **مساعد "حكيم" الذكي (AI Assistant)**
-   - استخدام Emergent LLM Key
-   - تحليل البيانات والتوصيات
+### 4. مساعد "حكيم" الذكي (AI Assistant)
+- استخدام Emergent LLM Key
+- تحليل البيانات والتوصيات
 
 ---
 
-## البنية التقنية
+## API Endpoints
+
+### Student Wizard
+| Endpoint | Method | الوصف |
+|----------|--------|-------|
+| `/student-wizard/create` | POST | إنشاء طالب مع ولي أمر |
+| `/student-wizard/check-parent` | POST | فحص وجود ولي أمر |
+
+### Teacher Wizard
+| Endpoint | Method | الوصف |
+|----------|--------|-------|
+| `/teachers/create` | POST | إنشاء معلم |
+| `/teachers/options/subjects` | GET | المواد المتاحة |
+| `/teachers/options/grades` | GET | الصفوف المتاحة |
+| `/teachers/options/academic-degrees` | GET | الدرجات العلمية |
+| `/teachers/options/teacher-ranks` | GET | الرتب التعليمية |
+
+### Class Wizard
+| Endpoint | Method | الوصف |
+|----------|--------|-------|
+| `/classes/create` | POST | إنشاء فصل |
+| `/classes/options/grades` | GET | الصفوف المتاحة |
+| `/classes/options/teachers` | GET | المعلمين المتاحين |
+
+### School Context
+| Header | الوصف |
+|--------|-------|
+| `X-School-Context` | معرف المدرسة للـ Context Switching |
+
+---
+
+## الملفات الرئيسية
 
 ```
 /app
 ├── backend/
-│   ├── scripts/
-│   │   └── seed_realistic_data.py   # سكريبت البيانات الواقعية ⭐
-│   ├── server.py                     # API الرئيسي (تم تحديثه) ⭐
-│   ├── engines/
-│   ├── models/
-│   └── routes/
-├── frontend/
-│   └── src/
-│       ├── contexts/
-│       │   └── AuthContext.js       # دعم School Context ⭐
-│       ├── components/
-│       │   └── dashboard/
-│       │       └── SchoolDashboardContent.jsx
-│       └── pages/
-│           ├── TenantsManagement.jsx    # إدارة المدارس الديناميكية ⭐
-│           ├── UsersClassesManagement.jsx  # الصفحة الجديدة ⭐
-│           ├── PrincipalDashboard.jsx   # شريط المعاينة ⭐
-│           └── App.js                    # Routing محدث ⭐
+│   ├── server.py          # APIs (updated with wizard routes)
+│   └── scripts/
+│       └── seed_realistic_data.py
+├── frontend/src/
+│   ├── contexts/
+│   │   └── AuthContext.js  # School Context support
+│   ├── components/
+│   │   ├── layout/
+│   │   │   └── Sidebar.jsx # Role-based menu
+│   │   └── wizards/
+│   │       ├── AddStudentWizard.jsx
+│   │       ├── AddTeacherWizard.jsx
+│   │       └── CreateClassWizard.jsx
+│   └── pages/
+│       ├── TenantsManagement.jsx # Dynamic schools
+│       ├── UsersClassesManagement.jsx # New page
+│       └── PrincipalDashboard.jsx # Impersonation banner
 └── memory/
     └── PRD.md
 ```
 
 ---
 
-## API Endpoints الرئيسية
-
-| Endpoint | الوصف |
-|----------|-------|
-| `GET /api/schools` | قائمة المدارس (Platform Admin) |
-| `GET /api/school/dashboard` | لوحة تحكم المدرسة |
-| `GET /api/students` | قائمة الطلاب (حسب المدرسة) |
-| `GET /api/teachers` | قائمة المعلمين (حسب المدرسة) |
-| `GET /api/classes` | قائمة الفصول (حسب المدرسة) |
-| `GET /api/public/stats` | إحصائيات المنصة العامة |
-
-### Headers المدعومة
-- `Authorization: Bearer {token}` - المصادقة
-- `X-School-Context: {school_id}` - Context Switching
-
----
-
-## الاختبارات
-
-| الاختبار | النتيجة | التاريخ |
-|----------|---------|--------|
-| iteration_48.json | 100% ✅ | 11 مارس 2026 |
-| Context Switching | 100% ✅ | 11 مارس 2026 |
-| Users/Classes Page | 100% ✅ | 11 مارس 2026 |
-
----
-
-## ملاحظات مهمة
-
-1. **Multi-Tenant Architecture**: كل مدرسة tenant مستقل
-2. **Context Switching**: Platform Admin يمكنه معاينة أي مدرسة
-3. **Data Isolation**: عزل تام للبيانات بين المدارس
-4. **Real Data**: جميع البيانات حقيقية من قاعدة البيانات
-
----
-
-*آخر تحديث: 11 مارس 2026 - 13:20 UTC*
+*آخر تحديث: 11 مارس 2026*
