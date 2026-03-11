@@ -3849,10 +3849,10 @@ class TimeSlotResponse(BaseModel):
     start_time: str
     end_time: str
     slot_number: int
-    duration_minutes: int
-    is_break: bool
-    is_active: bool
-    created_at: str
+    duration_minutes: Optional[int] = 45
+    is_break: bool = False
+    is_active: bool = True
+    created_at: Optional[str] = None
 
 # Teacher Assignment Models
 class TeacherAssignmentCreate(BaseModel):
