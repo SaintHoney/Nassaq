@@ -401,7 +401,7 @@ const QuickActionsCard = ({ onAction, isRTL }) => {
 };
 
 // ========== Main School Dashboard Component ==========
-export const SchoolDashboardContent = () => {
+export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
   const { isRTL } = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -420,9 +420,16 @@ export const SchoolDashboardContent = () => {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('nassaq_token');
-        const response = await axios.get(`${API_URL}/api/school/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        
+        // Build headers with school context support
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        // Add school context header if impersonating
+        if (isImpersonating && schoolContext?.school_id) {
+          headers['X-School-Context'] = schoolContext.school_id;
+        }
+        
+        const response = await axios.get(`${API_URL}/api/school/dashboard`, { headers });
         
         const data = response.data;
         
