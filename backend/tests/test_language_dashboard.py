@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://edusched-ai-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nassaq-platform-1.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "info@nassaqapp.com"
