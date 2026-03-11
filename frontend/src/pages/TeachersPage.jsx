@@ -529,7 +529,7 @@ export const TeachersPage = () => {
           open={wizardOpen} 
           onClose={() => {
             setWizardOpen(false);
-            fetchTeachers();
+            fetchData();
           }} 
         />
         
@@ -538,7 +538,7 @@ export const TeachersPage = () => {
           open={bulkImportOpen} 
           onClose={() => {
             setBulkImportOpen(false);
-            fetchTeachers();
+            fetchData();
           }} 
         />
         
