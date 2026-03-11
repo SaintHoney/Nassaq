@@ -39,6 +39,9 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Initialize Audit Engine
+audit_engine = AuditLogEngine(db)
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET_KEY', 'nassaq-secret-key')
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
