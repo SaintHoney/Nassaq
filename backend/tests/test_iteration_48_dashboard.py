@@ -51,7 +51,7 @@ class TestAuthenticationAPIs:
         data = response.json()
         assert "access_token" in data
         assert data["user"]["role"] == "school_principal"
-        assert data["user"]["tenant_id"] == "school-amal-002"
+        assert data["user"]["tenant_id"] == "school-aml-002"
     
     def test_teacher_login(self):
         """Test teacher login (teacher1@nor.edu.sa / Teacher@123)"""
