@@ -16,6 +16,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import ParentDashboard from "./pages/ParentDashboard";
 import PrincipalDashboard from "./pages/PrincipalDashboard";
 import { TeachersPage } from "./pages/TeachersPage";
+import UsersClassesManagement from "./pages/UsersClassesManagement";
 import { StudentsPage } from "./pages/StudentsPage";
 import { ClassesPage } from "./pages/ClassesPage";
 import { SubjectsPage } from "./pages/SubjectsPage";
