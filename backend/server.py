@@ -502,7 +502,8 @@ async def login(credentials: UserLogin):
         is_active=user.get("is_active", True),
         preferred_language=user.get("preferred_language", "ar"),
         preferred_theme=user.get("preferred_theme", "light"),
-        created_at=user.get("created_at", "")
+        created_at=user.get("created_at", ""),
+        teacher_id=user.get("teacher_id")
     )
     
     return TokenResponse(access_token=token, user=user_response)
