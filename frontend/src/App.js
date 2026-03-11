@@ -388,7 +388,7 @@ function AppRoutes() {
         path="/admin/users-management"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
-            <TeachersPage />
+            <UsersClassesManagement />
           </ProtectedRoute>
         }
       />
@@ -396,7 +396,7 @@ function AppRoutes() {
         path="/admin/teachers"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
-            <TeachersPage />
+            <UsersClassesManagement />
           </ProtectedRoute>
         }
       />
