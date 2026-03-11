@@ -93,70 +93,14 @@ export default function ParentDashboard() {
           type: n.type || 'info'
         })) || []);
       } else {
-        // Fallback to mock data
-        const mockChildren = [
-          {
-            id: '1',
-            name: 'أحمد محمد',
-            grade: 'الصف الثالث المتوسط',
-            section: 'شعبة أ',
-            avatar: null,
-            stats: {
-              attendanceRate: 95,
-              averageGrade: 88,
-              absences: 3,
-              lates: 2
-            },
-            recentGrades: [
-              { subject: 'الرياضيات', grade: 92, date: '2024-03-08' },
-              { subject: 'اللغة العربية', grade: 88, date: '2024-03-07' },
-              { subject: 'العلوم', grade: 85, date: '2024-03-06' },
-            ],
-            behaviourNotes: [
-              { type: 'positive', note: 'مشاركة فعالة في الصف', date: '2024-03-08' },
-              { type: 'positive', note: 'تفوق في اختبار الرياضيات', date: '2024-03-05' },
-            ],
-            schedule: [
-              { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد' },
-              { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة' },
-              { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد' },
-            ]
-          },
-          {
-            id: '2',
-            name: 'سارة محمد',
-            grade: 'الصف الأول الابتدائي',
-            section: 'شعبة ب',
-            avatar: null,
-            stats: {
-              attendanceRate: 98,
-              averageGrade: 92,
-              absences: 1,
-              lates: 0
-            },
-            recentGrades: [
-              { subject: 'الرياضيات', grade: 95, date: '2024-03-08' },
-              { subject: 'اللغة العربية', grade: 90, date: '2024-03-07' },
-            ],
-            behaviourNotes: [
-              { type: 'positive', note: 'طالبة مثالية', date: '2024-03-08' },
-            ],
-            schedule: [
-              { time: '07:30', subject: 'اللغة العربية', teacher: 'أ. نورة' },
-              { time: '08:30', subject: 'الرياضيات', teacher: 'أ. هدى' },
-            ]
-          }
-        ];
-
-        setChildren(mockChildren);
-        setChildData(mockChildren[selectedChild]);
-
+        // No data available - show empty state
+        console.log('No parent dashboard data available');
+        setChildren([]);
+        setChildData(null);
+        
+        // Try to get notifications anyway
         const notifRes = await api.get('/notifications?limit=5').catch(() => ({ data: [] }));
-        setNotifications(notifRes.data?.slice?.(0, 5) || [
-          { title: 'اختبار الرياضيات غداً - أحمد', time: 'منذ ساعة', type: 'exam' },
-          { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
-          { title: 'اجتماع أولياء الأمور الأسبوع القادم', time: 'أمس', type: 'meeting' },
-        ]);
+        setNotifications(notifRes.data?.slice?.(0, 5) || []);
       }
 
     } catch (error) {
