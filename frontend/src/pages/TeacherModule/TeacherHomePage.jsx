@@ -50,13 +50,23 @@ const getTimeUntilLesson = (lessonTime) => {
 
 // Get card color based on time - matching reference design
 const getLessonCardStyle = (timeStatus, isFirst = false) => {
-  if (!timeStatus) return isFirst ? 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' : 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
+  // First lesson should always be green unless explicitly ended
+  if (isFirst) {
+    if (timeStatus?.status === 'ended') {
+      return 'border-gray-300 bg-gray-100 opacity-60';
+    }
+    return 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200';
+  }
+  
+  // Other lessons
+  if (!timeStatus) return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white';
   
   switch (timeStatus.status) {
     case 'ongoing':
     case 'ready':
       return 'border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200';
     case 'soon':
+    case 'upcoming':
       return 'border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200';
     case 'ended':
       return 'border-gray-300 bg-gray-100 opacity-60';
