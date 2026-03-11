@@ -133,6 +133,7 @@ class UserResponse(BaseModel):
     preferred_language: str = "ar"
     preferred_theme: str = "light"
     created_at: str
+    teacher_id: Optional[str] = None  # For teachers - links to teachers collection
 
 class TokenResponse(BaseModel):
     access_token: str
