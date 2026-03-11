@@ -4546,9 +4546,9 @@ async def move_schedule_session(
 
 # ============== SEED TEST ACCOUNTS ==============
 @api_router.post("/seed/test-accounts")
-async def seed_test_accounts():
+async def seed_test_accounts(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
     """
-    إنشاء حسابات اختبار للنظام:
+    إنشاء حسابات اختبار للنظام - Platform Admin only:
     - مدير المدرسة: principal@nassaq.com / NassaqPrincipal2026
     - معلم: teacher@nassaq.com / NassaqTeacher2026
     """
