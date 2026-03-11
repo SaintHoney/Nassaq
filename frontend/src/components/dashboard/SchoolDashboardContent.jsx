@@ -704,7 +704,8 @@ export const SchoolDashboardContent = () => {
       {/* Wizards */}
       <AddStudentWizard 
         open={showAddStudentWizard} 
-        onClose={() => setShowAddStudentWizard(false)} 
+        onOpenChange={setShowAddStudentWizard}
+        isRTL={isRTL}
       />
       <AddTeacherWizard 
         open={showAddTeacherWizard} 
