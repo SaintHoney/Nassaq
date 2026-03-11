@@ -32,7 +32,7 @@ class TestRBAC:
         assert RBACMiddleware.has_permission(user, Permission.TENANTS_CREATE.value)
         assert RBACMiddleware.has_permission(user, Permission.USERS_CREATE.value)
         assert RBACMiddleware.has_permission(user, Permission.AUDIT_VIEW.value)
-        assert RBACMiddleware.has_permission(user, Permission.AI_FEATURES.value)
+        assert RBACMiddleware.has_permission(user, Permission.TENANTS_MANAGE_AI.value)
     
     def test_school_principal_limited_permissions(self):
         """School Principal should have school-level permissions only"""
