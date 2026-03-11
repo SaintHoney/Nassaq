@@ -199,10 +199,20 @@ export default function UsersManagement() {
       
       if (selectedAccountType !== 'all') {
         filtered = filtered.filter(u => {
-          if (selectedAccountType === 'platform') return u.role?.startsWith('platform_');
-          if (selectedAccountType === 'school') return u.school_name && !u.role?.startsWith('platform_');
-          if (selectedAccountType === 'independent') return u.role === 'independent_teacher';
-          if (selectedAccountType === 'testing') return u.role === 'testing_account';
+          const role = (u.role || '').toLowerCase();
+          if (selectedAccountType === 'platform') {
+            return role.includes('platform') || role === 'platform_admin';
+          }
+          if (selectedAccountType === 'school') {
+            return role.includes('school') || role === 'teacher' || role === 'student' || 
+                   role === 'parent' || (u.school_name && !role.includes('platform'));
+          }
+          if (selectedAccountType === 'independent') {
+            return role === 'independent_teacher';
+          }
+          if (selectedAccountType === 'testing') {
+            return role === 'testing_account' || role.includes('test');
+          }
           return true;
         });
       }
