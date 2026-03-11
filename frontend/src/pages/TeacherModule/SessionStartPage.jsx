@@ -33,23 +33,41 @@ export default function SessionStartPage() {
   const [attendanceStats, setAttendanceStats] = useState({
     total: 0, present: 0, absent: 0, late: 0, excused: 0
   });
+  const [lessonData, setLessonData] = useState(null);
 
-  // Get lesson data from location.state or sessionStorage fallback
-  const getLessonData = () => {
+  const teacherId = user?.teacher_id || user?.id;
+  
+  // Get lesson data from location.state or sessionStorage fallback - with useEffect
+  useEffect(() => {
+    // First check location.state
     if (location.state?.lesson) {
-      return location.state.lesson;
+      console.log('Got lesson from location.state:', location.state.lesson);
+      setLessonData(location.state.lesson);
+      return;
     }
+    
     // Fallback to sessionStorage
     const stored = sessionStorage.getItem('current_lesson');
     if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.lesson;
+      try {
+        const parsed = JSON.parse(stored);
+        console.log('Got lesson from sessionStorage:', parsed.lesson);
+        setLessonData(parsed.lesson);
+        return;
+      } catch (e) {
+        console.error('Error parsing sessionStorage:', e);
+      }
     }
-    return null;
-  };
-  
-  const lessonData = getLessonData();
-  const teacherId = user?.teacher_id || user?.id;
+    
+    // No lesson data found - redirect after a short delay
+    console.log('No lesson data found, redirecting...');
+    const timeout = setTimeout(() => {
+      toast.error('لم يتم تحديد الحصة');
+      navigate('/teacher/home');
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, [location.state, navigate]);
 
   // Start the session
   const startSession = useCallback(async () => {
