@@ -87,7 +87,7 @@ import {
 
 // Wizards
 import { AddTeacherWizard } from '../components/wizards/AddTeacherWizard';
-import { AddStudentWizard } from '../components/wizards/AddStudentWizard';
+import AddStudentWizard from '../components/wizards/AddStudentWizard';
 import { CreateClassWizard } from '../components/wizards/CreateClassWizard';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
