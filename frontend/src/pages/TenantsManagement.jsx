@@ -360,7 +360,7 @@ const SAMPLE_SCHOOLS = [
 ];
 
 export default function TenantsManagement() {
-  const { api, isRTL: contextIsRTL } = useAuth();
+  const { api, isRTL: contextIsRTL, enterSchoolContext } = useAuth();
   const navigate = useNavigate();
   const isRTL = contextIsRTL !== false; // Default to RTL
   const t = translations[isRTL ? 'ar' : 'en'];
