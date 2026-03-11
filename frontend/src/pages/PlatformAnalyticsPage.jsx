@@ -429,44 +429,127 @@ export const PlatformAnalyticsPage = () => {
     recipients: '',
   });
   
-  // Stats from API
+  // Live Stats from Super Admin Dashboard API
   const [stats, setStats] = useState({
-    totalSchools: 110,
-    totalStudents: 6000,
-    totalTeachers: 750,
-    activeUsers: 14750,
-    totalParents: 8000,
-    growthRate: 12.5,
+    totalSchools: 0,
+    totalStudents: 0,
+    totalTeachers: 0,
+    totalClasses: 0,
+    totalLessonsToday: 0,
+    activeUsersToday: 0,
+    studentAttendancePercentage: 0,
+    teacherAttendancePercentage: 0,
+    waitingSessions: 0,
+    activeSchools: 0,
+    suspendedSchools: 0,
+    pendingSchools: 0,
+    studentsPresent: 0,
+    studentsAbsent: 0,
+    teachersPresent: 0,
+    teachersAbsent: 0,
+    schoolsGrowthRate: 0,
+    studentsGrowthRate: 0,
+    teachersGrowthRate: 0,
+    lastUpdated: '',
   });
   
   // Data loaded flag
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
   
-  // Fetch stats from API
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/public/stats`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Stats loaded:', data);
-          setStats({
-            totalSchools: data.schools || 110,
-            totalStudents: data.students || 6000,
-            totalTeachers: data.teachers || 750,
-            totalParents: data.parents || 8000,
-            activeUsers: (data.students || 6000) + (data.teachers || 750) + (data.parents || 8000),
-            growthRate: 12.5,
-          });
-          setDataLoaded(true);
-        }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    try {
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        return parsed.token || parsed.access_token;
+      }
+    } catch (e) {
+      console.error('Error getting auth token:', e);
+    }
+    return null;
+  };
+  
+  // Fetch live stats from Super Admin Dashboard API
+  const fetchLiveStats = async () => {
+    setIsRefreshing(true);
+    const token = getAuthToken();
+    
+    try {
+      const response = await axios.get(`${API_URL}/api/super-admin/dashboard-stats`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (response.data) {
+        const data = response.data;
+        setStats({
+          totalSchools: data.total_schools || 0,
+          totalStudents: data.total_students || 0,
+          totalTeachers: data.total_teachers || 0,
+          totalClasses: data.total_classes || 0,
+          totalLessonsToday: data.total_lessons_today || 0,
+          activeUsersToday: data.active_users_today || 0,
+          studentAttendancePercentage: data.student_attendance_percentage || 0,
+          teacherAttendancePercentage: data.teacher_attendance_percentage || 0,
+          waitingSessions: data.waiting_sessions || 0,
+          activeSchools: data.active_schools || 0,
+          suspendedSchools: data.suspended_schools || 0,
+          pendingSchools: data.pending_schools || 0,
+          studentsPresent: data.students_present_today || 0,
+          studentsAbsent: data.students_absent_today || 0,
+          teachersPresent: data.teachers_present_today || 0,
+          teachersAbsent: data.teachers_absent_today || 0,
+          schoolsGrowthRate: data.schools_growth_rate || 0,
+          studentsGrowthRate: data.students_growth_rate || 0,
+          teachersGrowthRate: data.teachers_growth_rate || 0,
+          lastUpdated: data.last_updated || new Date().toISOString(),
+        });
+        setLastRefreshTime(new Date());
         setDataLoaded(true);
       }
-    };
-    fetchStats();
+    } catch (error) {
+      console.error('Failed to fetch live stats:', error);
+      // Fallback to public stats if super admin API fails
+      try {
+        const publicResponse = await fetch(`${API_URL}/api/public/stats`);
+        if (publicResponse.ok) {
+          const data = await publicResponse.json();
+          setStats(prev => ({
+            ...prev,
+            totalSchools: data.schools || 0,
+            totalStudents: data.students || 0,
+            totalTeachers: data.teachers || 0,
+            activeSchools: data.active_schools || 0,
+          }));
+        }
+      } catch (fallbackError) {
+        console.error('Fallback stats fetch failed:', fallbackError);
+      }
+      setDataLoaded(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
+  // Initial fetch and real-time polling
+  useEffect(() => {
+    fetchLiveStats();
+    
+    // Set up polling for real-time updates (every 30 seconds)
+    const pollInterval = setInterval(() => {
+      fetchLiveStats();
+    }, 30000);
+    
+    return () => clearInterval(pollInterval);
   }, []);
+  
+  // Manual refresh handler
+  const handleRefreshStats = () => {
+    fetchLiveStats();
+    toast.success(isRTL ? 'جاري تحديث البيانات...' : 'Refreshing data...');
+  };
   
   // Format date
   const formatDate = (dateStr) => {
