@@ -67,7 +67,7 @@ const AuditLogsPage = () => {
       });
       
       if (actionFilter) params.append('action', actionFilter);
-      if (severityFilter) params.append('severity', severityFilter);
+      if (severityFilter && severityFilter !== 'all') params.append('severity', severityFilter);
       if (entityTypeFilter) params.append('entity_type', entityTypeFilter);
       
       const response = await api.get(`/audit/logs?${params.toString()}`);
