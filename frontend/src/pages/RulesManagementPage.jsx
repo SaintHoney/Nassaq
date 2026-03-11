@@ -425,13 +425,52 @@ export const RulesManagementPage = () => {
   const t = translations[isRTL ? 'ar' : 'en'];
   
   // States
-  const [rules, setRules] = useState(SAMPLE_RULES);
-  const [filteredRules, setFilteredRules] = useState(SAMPLE_RULES);
+  const [rules, setRules] = useState([]);
+  const [filteredRules, setFilteredRules] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
+  
+  // Get API base URL
+  const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+  
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('nassaq_token') || null;
+  };
+  
+  // Fetch rules from API
+  const fetchRules = async () => {
+    setLoading(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/system/rules`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRules(data.rules || []);
+        setFilteredRules(data.rules || []);
+      } else {
+        console.error('Failed to fetch rules');
+        toast.error(isRTL ? 'فشل في تحميل القواعد' : 'Failed to load rules');
+      }
+    } catch (error) {
+      console.error('Error fetching rules:', error);
+      toast.error(isRTL ? 'فشل في تحميل القواعد' : 'Failed to load rules');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch on mount
+  useEffect(() => {
+    fetchRules();
+  }, []);
   
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
