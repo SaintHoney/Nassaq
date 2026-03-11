@@ -673,7 +673,7 @@ export const SchedulePage = () => {
                           className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
                           value={newSchedule.name}
                           onChange={(e) => setNewSchedule({ ...newSchedule, name: e.target.value })}
-                          placeholder={isRTL ? 'الجدول الدراسي - الفصل الأول' : 'Schedule - Semester 1'}
+                          placeholder={isRTL ? 'الجدول المدرسي - الفصل الأول' : 'Schedule - Semester 1'}
                         />
                       </div>
                     </div>
