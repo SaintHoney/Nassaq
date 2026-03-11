@@ -13534,6 +13534,40 @@ async def get_session_info(
     return session
 
 
+@api_router.get("/session/current")
+async def get_current_session(
+    schedule_session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current in-progress session by schedule session ID"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    session = await db.class_sessions.find_one({
+        "schedule_session_id": schedule_session_id,
+        "date": today,
+        "status": "in_progress"
+    }, {"_id": 0})
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="لا توجد جلسة جارية")
+    
+    # Get additional info
+    class_info = await db.classes.find_one({"id": session.get("class_id")}, {"_id": 0, "name": 1})
+    subject = await db.subjects.find_one({"id": session.get("subject_id")}, {"_id": 0, "name_ar": 1, "name": 1})
+    teacher = await db.teachers.find_one({"id": session.get("teacher_id")}, {"_id": 0, "full_name": 1})
+    
+    student_count = await db.session_attendance.count_documents({"session_id": session.get("id")})
+    
+    return {
+        "session_record_id": session.get("id"),
+        "session_status": session.get("status"),
+        "start_time": session.get("start_time"),
+        "class_name": class_info.get("name") if class_info else "فصل",
+        "subject_name": (subject.get("name_ar") or subject.get("name")) if subject else "مادة",
+        "teacher_name": teacher.get("full_name") if teacher else "معلم",
+        "student_count": student_count
+    }
+
+
 @api_router.get("/session/by-schedule/{schedule_session_id}")
 async def get_session_by_schedule_id(
     schedule_session_id: str,
