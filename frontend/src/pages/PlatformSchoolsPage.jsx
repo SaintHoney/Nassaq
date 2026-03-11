@@ -153,6 +153,27 @@ export const PlatformSchoolsPage = () => {
     setSelectedSchool(school);
     setViewDialogOpen(true);
   };
+  
+  // Enter School Dashboard - Full context switch
+  const handleEnterSchoolDashboard = (school) => {
+    if (!school || !school.id) {
+      toast.error(isRTL ? 'خطأ: بيانات المدرسة غير صالحة' : 'Error: Invalid school data');
+      return;
+    }
+    
+    // Enter school context
+    enterSchoolContext(school);
+    
+    // Show success message
+    toast.success(
+      isRTL 
+        ? `تم الدخول إلى ${school.name} كمدير مدرسة` 
+        : `Entered ${school.name_en || school.name} as School Manager`
+    );
+    
+    // Navigate to school principal dashboard
+    navigate('/principal');
+  };
 
   const filteredSchools = schools.filter(school => {
     const matchesSearch = 
