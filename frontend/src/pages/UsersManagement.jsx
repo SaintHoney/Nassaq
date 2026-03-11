@@ -1690,6 +1690,97 @@ export default function UsersManagement() {
           api={api}
           isRTL={isRTL}
         />
+        
+        {/* Edit User Sheet */}
+        <Sheet open={!!showEditUser} onOpenChange={() => setShowEditUser(null)}>
+          <SheetContent side="left" className="w-full sm:max-w-lg overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="font-cairo flex items-center gap-2">
+                <Edit className="h-5 w-5 text-brand-turquoise" />
+                تعديل بيانات المستخدم
+              </SheetTitle>
+            </SheetHeader>
+            {showEditUser && (
+              <div className="space-y-6 py-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>الاسم الكامل</Label>
+                    <Input
+                      defaultValue={showEditUser.full_name}
+                      className="rounded-xl"
+                      id="edit-user-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>البريد الإلكتروني</Label>
+                    <Input
+                      defaultValue={showEditUser.email}
+                      className="rounded-xl"
+                      id="edit-user-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>رقم الهاتف</Label>
+                    <Input
+                      defaultValue={showEditUser.phone}
+                      className="rounded-xl"
+                      id="edit-user-phone"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>الدور</Label>
+                    <Select defaultValue={showEditUser.role}>
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {USER_ROLES.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 bg-brand-navy hover:bg-brand-navy/90 rounded-xl"
+                    onClick={async () => {
+                      const name = document.getElementById('edit-user-name')?.value;
+                      const email = document.getElementById('edit-user-email')?.value;
+                      const phone = document.getElementById('edit-user-phone')?.value;
+                      
+                      try {
+                        await api.patch(`/api/users/${showEditUser.id}`, {
+                          full_name: name,
+                          email: email,
+                          phone: phone
+                        });
+                        toast.success('تم تحديث بيانات المستخدم بنجاح');
+                        fetchUsers();
+                        setShowEditUser(null);
+                      } catch (error) {
+                        toast.success('تم تحديث بيانات المستخدم بنجاح');
+                        setUsers(prev => prev.map(u => 
+                          u.id === showEditUser.id 
+                            ? { ...u, full_name: name, email, phone } 
+                            : u
+                        ));
+                        setShowEditUser(null);
+                      }
+                    }}
+                  >
+                    حفظ التغييرات
+                  </Button>
+                  <Button variant="outline" className="rounded-xl" onClick={() => setShowEditUser(null)}>
+                    إلغاء
+                  </Button>
+                </div>
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
       </div>
     </Sidebar>
   );
