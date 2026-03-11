@@ -80,12 +80,6 @@ export const Sidebar = ({ children }) => {
         roles: ['platform_admin'],
       },
       {
-        icon: BookOpen,
-        label: isRTL ? 'إدارة القواعد' : 'Rules Management',
-        href: '/admin/rules',
-        roles: ['platform_admin'],
-      },
-      {
         icon: Activity,
         label: isRTL ? 'مراقبة النظام' : 'System Monitoring',
         href: '/admin/monitoring',
