@@ -577,6 +577,41 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
           </div>
         </div>
         
+        {/* Refresh Button & Last Updated */}
+        <div className="flex items-center gap-4">
+          {/* Last Updated Indicator */}
+          {lastUpdated && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span>
+                {isRTL ? 'آخر تحديث: ' : 'Last update: '}
+                {lastUpdated.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { 
+                  hour: '2-digit', 
+                  minute: '2-digit'
+                })}
+              </span>
+              <span className="text-xs text-muted-foreground/60">
+                ({isRTL ? 'تحديث تلقائي كل 20 ثانية' : 'Auto-refresh every 20s'})
+              </span>
+            </div>
+          )}
+          
+          {/* Manual Refresh Button */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="rounded-xl border-brand-turquoise/30 hover:bg-brand-turquoise/10 hover:border-brand-turquoise"
+            data-testid="refresh-dashboard-btn"
+          >
+            <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing 
+              ? (isRTL ? 'جاري التحديث...' : 'Refreshing...') 
+              : (isRTL ? 'تحديث البيانات' : 'Refresh')}
+          </Button>
+        </div>
+        
         {/* Quick Actions - Compact inline buttons */}
         <div className="flex flex-wrap items-center gap-2" data-testid="quick-actions-inline">
           <Button
