@@ -202,7 +202,7 @@ export const TeachersPage = () => {
               </Button>
               <div>
                 <h1 className="font-cairo text-2xl font-bold text-foreground">
-                  {isRTL ? 'إدارة المعلمين' : 'Teachers Management'}
+                  {isRTL ? 'إدارة المستخدمين والفصول' : 'Users & Classes Management'}
                 </h1>
                 <p className="text-sm text-muted-foreground font-tajawal">
                   {isRTL ? `${filteredTeachers.length} معلم` : `${filteredTeachers.length} teachers`}
