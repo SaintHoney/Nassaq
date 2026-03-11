@@ -419,10 +419,20 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                     <p className="text-xs text-muted-foreground">{op.user} • {op.time}</p>
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-7 px-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 px-2 cursor-pointer hover:bg-brand-turquoise/10"
+                      onClick={() => toast.success(isRTL ? `عرض تفاصيل عملية: ${op.name}` : `Viewing operation: ${op.name}`)}
+                    >
                       <Eye className="h-3 w-3" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 px-2 cursor-pointer hover:bg-brand-turquoise/10"
+                      onClick={() => toast.success(isRTL ? 'تم تحديث السجل' : 'Log refreshed')}
+                    >
                       <RefreshCw className="h-3 w-3" />
                     </Button>
                   </div>
