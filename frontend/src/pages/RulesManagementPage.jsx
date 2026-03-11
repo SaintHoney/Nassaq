@@ -1209,7 +1209,7 @@ export const RulesManagementPage = () => {
         
         {/* View Sheet */}
         <Sheet open={!!showViewSheet} onOpenChange={() => setShowViewSheet(null)}>
-          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px]">
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[540px] overflow-y-auto">
             {showViewSheet && (
               <>
                 <SheetHeader>
