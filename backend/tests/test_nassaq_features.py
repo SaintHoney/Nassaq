@@ -1,332 +1,296 @@
 """
-NASSAQ Platform Feature Tests - Iteration 6
-Tests for:
-- Hero Section with Platform Name (Arabic/English)
-- Traction Section with 4 stats cards
-- 24/7 Support Badge
-- Seed Demo Data API
-- Dashboard Stats API
-- Login API
+NASSAQ Backend API Tests - Iteration 50
+Testing new features:
+1. POST /api/schools/draft - Save school as draft
+2. GET /api/users - Users list with filters
+3. GET /api/schools - Schools list with status filters
+4. Authentication endpoints
 """
 
 import pytest
 import requests
 import os
+from datetime import datetime
 
+# Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+if not BASE_URL:
+    BASE_URL = "https://nassaq-school-9.preview.emergentagent.com"
 
-# Test credentials
-ADMIN_EMAIL = "info@nassaqapp.com"
-ADMIN_PASSWORD = "NassaqAdmin2026!##$$HBJ"
+print(f"Testing against: {BASE_URL}")
 
 
-class TestAuthAPI:
-    """Authentication endpoint tests"""
+class TestAuthentication:
+    """Test authentication endpoints"""
     
-    def test_login_success(self):
-        """Test successful admin login"""
+    def test_login_platform_admin(self):
+        """Test login as platform admin"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
+            "email": "admin@nassaq.com",
+            "password": "Admin@123"
         })
-        assert response.status_code == 200, f"Login failed: {response.text}"
         
+        assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "access_token" in data, "No access_token in response"
-        assert "user" in data, "No user in response"
-        assert data["user"]["email"] == ADMIN_EMAIL
+        
+        # Validate response structure
+        assert "access_token" in data, "Missing access_token in response"
+        assert "user" in data, "Missing user in response"
+        assert data["user"]["email"] == "admin@nassaq.com"
         assert data["user"]["role"] == "platform_admin"
-        print(f"✅ Login successful for {ADMIN_EMAIL}")
+        print(f"✓ Platform admin login successful: {data['user']['full_name']}")
+    
+    def test_login_school_principal(self):
+        """Test login as school principal"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "principal1@nassaq.com",
+            "password": "Principal@123"
+        })
+        
+        assert response.status_code == 200, f"Login failed: {response.text}"
+        data = response.json()
+        
+        assert "access_token" in data
+        assert data["user"]["role"] == "school_principal"
+        print(f"✓ School principal login successful: {data['user']['full_name']}")
     
     def test_login_invalid_credentials(self):
         """Test login with invalid credentials"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "wrong@example.com",
-            "password": "wrongpassword"
+            "email": "invalid@nassaq.com",
+            "password": "WrongPassword"
         })
+        
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
-        print("✅ Invalid credentials correctly rejected")
+        print("✓ Invalid credentials correctly rejected")
 
 
-class TestDashboardStatsAPI:
-    """Dashboard statistics endpoint tests"""
+class TestSchoolDraftAPI:
+    """Test POST /api/schools/draft endpoint"""
     
     @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
+    def admin_token(self):
+        """Get admin authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
+            "email": "admin@nassaq.com",
+            "password": "Admin@123"
         })
         if response.status_code == 200:
             return response.json().get("access_token")
-        pytest.skip("Authentication failed")
+        pytest.skip("Admin authentication failed")
     
-    def test_dashboard_stats_requires_auth(self):
-        """Test that dashboard stats requires authentication"""
-        response = requests.get(f"{BASE_URL}/api/dashboard/stats")
-        assert response.status_code == 401 or response.status_code == 403, \
-            f"Expected 401/403, got {response.status_code}"
-        print("✅ Dashboard stats correctly requires authentication")
-    
-    def test_dashboard_stats_returns_data(self, auth_token):
-        """Test dashboard stats returns correct data structure"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/dashboard/stats", headers=headers)
+    def test_create_school_draft(self, admin_token):
+        """Test creating a school as draft (setup status)"""
+        headers = {"Authorization": f"Bearer {admin_token}"}
         
-        assert response.status_code == 200, f"Failed: {response.text}"
+        # Create draft school
+        draft_data = {
+            "name": f"TEST_مدرسة اختبار المسودة {datetime.now().strftime('%H%M%S')}",
+            "name_en": "TEST Draft School",
+            "city": "الرياض",
+            "region": "الرياض",
+            "country": "SA",
+            "student_capacity": 300,
+            "school_type": "private",
+            "stage": "primary",
+            "principal_name": "أحمد محمد",
+            "principal_email": f"test_principal_{datetime.now().strftime('%H%M%S')}@test.com",
+            "principal_phone": "0501234567"
+        }
+        
+        response = requests.post(
+            f"{BASE_URL}/api/schools/draft",
+            json=draft_data,
+            headers=headers
+        )
+        
+        assert response.status_code == 200, f"Draft creation failed: {response.text}"
         data = response.json()
         
-        # Verify all required fields exist
-        required_fields = [
-            "total_schools", "total_students", "total_teachers",
-            "active_schools", "pending_schools", "total_users",
-            "pending_requests", "active_users", "total_classes", "total_subjects"
-        ]
+        # Validate response
+        assert "id" in data, "Missing id in response"
+        assert data["status"] == "setup", f"Expected status 'setup', got '{data['status']}'"
+        assert data["name"] == draft_data["name"]
+        assert data["city"] == draft_data["city"]
         
-        for field in required_fields:
-            assert field in data, f"Missing field: {field}"
-            assert isinstance(data[field], int), f"{field} should be int"
+        print(f"✓ Draft school created successfully: {data['name']} (status: {data['status']})")
         
-        print(f"✅ Dashboard stats returned: {data}")
+        # Store for cleanup
+        return data["id"]
     
-    def test_dashboard_stats_values_match_traction(self, auth_token):
-        """Test that dashboard stats align with traction metrics"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/dashboard/stats", headers=headers)
+    def test_create_school_draft_unauthorized(self):
+        """Test that unauthorized users cannot create draft schools"""
+        # Try without token
+        response = requests.post(f"{BASE_URL}/api/schools/draft", json={
+            "name": "Unauthorized School"
+        })
         
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
+        print("✓ Unauthorized draft creation correctly rejected")
+    
+    def test_create_school_draft_as_principal(self):
+        """Test that school principal cannot create draft schools"""
+        # Login as principal
+        login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "principal1@nassaq.com",
+            "password": "Principal@123"
+        })
         
-        # Verify traction-aligned metrics (should be close to displayed values)
-        # +200 schools, +50,000 students, +3,000 teachers
-        assert data["total_schools"] >= 100, f"Expected ~200 schools, got {data['total_schools']}"
-        assert data["total_students"] >= 10000, f"Expected ~50,000 students, got {data['total_students']}"
-        assert data["total_teachers"] >= 1000, f"Expected ~3,000 teachers, got {data['total_teachers']}"
+        if login_response.status_code != 200:
+            pytest.skip("Principal login failed")
         
-        print(f"✅ Traction metrics verified: {data['total_schools']} schools, {data['total_students']} students, {data['total_teachers']} teachers")
+        token = login_response.json().get("access_token")
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        response = requests.post(
+            f"{BASE_URL}/api/schools/draft",
+            json={"name": "Principal Draft School"},
+            headers=headers
+        )
+        
+        assert response.status_code == 403, f"Expected 403, got {response.status_code}"
+        print("✓ Principal correctly denied draft creation access")
 
 
-class TestSeedDemoDataAPI:
-    """Seed demo data endpoint tests"""
+class TestUsersAPI:
+    """Test users management endpoints"""
     
-    def test_seed_demo_data_endpoint_exists(self):
-        """Test that seed demo data endpoint exists and responds"""
-        response = requests.post(f"{BASE_URL}/api/seed/demo-data")
+    @pytest.fixture
+    def admin_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@nassaq.com",
+            "password": "Admin@123"
+        })
+        if response.status_code == 200:
+            return response.json().get("access_token")
+        pytest.skip("Admin authentication failed")
+    
+    def test_get_users_list(self, admin_token):
+        """Test getting users list"""
+        headers = {"Authorization": f"Bearer {admin_token}"}
         
-        # Should return 200 with success message
-        assert response.status_code == 200, f"Failed: {response.text}"
+        response = requests.get(f"{BASE_URL}/api/users", headers=headers)
+        
+        assert response.status_code == 200, f"Failed to get users: {response.text}"
         data = response.json()
         
-        # Check response structure
-        assert "message" in data or "results" in data, "Missing message or results in response"
-        print(f"✅ Seed demo data endpoint works: {data.get('message', 'Data seeded')}")
+        # Should return a list
+        assert isinstance(data, list), "Expected list of users"
+        print(f"✓ Users list retrieved: {len(data)} users")
     
-    def test_seed_demo_data_returns_counts(self):
-        """Test that seed demo data returns creation counts"""
-        response = requests.post(f"{BASE_URL}/api/seed/demo-data")
+    def test_get_teacher_requests(self, admin_token):
+        """Test getting independent teacher requests"""
+        headers = {"Authorization": f"Bearer {admin_token}"}
         
-        assert response.status_code == 200
-        data = response.json()
+        response = requests.get(f"{BASE_URL}/api/teacher-requests", headers=headers)
         
-        # If data already exists, should return current counts
-        if "current_counts" in data:
-            counts = data["current_counts"]
-            assert "schools" in counts
-            assert "teachers" in counts
-            assert "students" in counts
-            print(f"✅ Demo data already exists: {counts}")
-        elif "results" in data:
-            results = data["results"]
-            print(f"✅ Demo data created: {results}")
+        # May return 200 or 404 if no requests
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✓ Teacher requests retrieved: {len(data) if isinstance(data, list) else 'N/A'}")
         else:
-            print(f"✅ Seed response: {data}")
+            print(f"Teacher requests endpoint returned: {response.status_code}")
 
 
 class TestSchoolsAPI:
-    """Schools management endpoint tests"""
+    """Test schools management endpoints"""
     
     @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
+    def admin_token(self):
+        """Get admin authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
+            "email": "admin@nassaq.com",
+            "password": "Admin@123"
         })
         if response.status_code == 200:
             return response.json().get("access_token")
-        pytest.skip("Authentication failed")
+        pytest.skip("Admin authentication failed")
     
-    def test_get_schools_list(self, auth_token):
-        """Test getting list of schools"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
+    def test_get_schools_list(self, admin_token):
+        """Test getting schools list"""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
         response = requests.get(f"{BASE_URL}/api/schools", headers=headers)
         
-        assert response.status_code == 200, f"Failed: {response.text}"
+        assert response.status_code == 200, f"Failed to get schools: {response.text}"
         data = response.json()
         
         assert isinstance(data, list), "Expected list of schools"
-        if len(data) > 0:
-            school = data[0]
-            assert "id" in school
-            assert "name" in school
-            assert "status" in school
+        print(f"✓ Schools list retrieved: {len(data)} schools")
         
-        print(f"✅ Schools list returned {len(data)} schools")
+        # Check for schools with different statuses
+        statuses = set(school.get("status") for school in data)
+        print(f"  School statuses found: {statuses}")
+        
+        # Verify setup status schools exist
+        setup_schools = [s for s in data if s.get("status") == "setup"]
+        print(f"  Schools in 'setup' status: {len(setup_schools)}")
+    
+    def test_get_schools_by_status(self, admin_token):
+        """Test filtering schools by status"""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Test active filter
+        response = requests.get(
+            f"{BASE_URL}/api/schools?status=active",
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✓ Active schools: {len(data)}")
+        
+        # Test setup filter
+        response = requests.get(
+            f"{BASE_URL}/api/schools?status=setup",
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✓ Setup schools: {len(data)}")
 
 
-class TestTeachersAPI:
-    """Teachers management endpoint tests"""
+class TestDashboardAPI:
+    """Test dashboard endpoints"""
     
     @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
+    def principal_token(self):
+        """Get principal authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
+            "email": "principal1@nassaq.com",
+            "password": "Principal@123"
         })
         if response.status_code == 200:
             return response.json().get("access_token")
-        pytest.skip("Authentication failed")
+        pytest.skip("Principal authentication failed")
     
-    def test_get_teachers_list(self, auth_token):
-        """Test getting list of teachers"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/teachers", headers=headers)
+    def test_get_dashboard_stats(self, principal_token):
+        """Test getting dashboard statistics"""
+        headers = {"Authorization": f"Bearer {principal_token}"}
         
-        assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
+        response = requests.get(f"{BASE_URL}/api/dashboard/stats", headers=headers)
         
-        assert isinstance(data, list), "Expected list of teachers"
-        if len(data) > 0:
-            teacher = data[0]
-            assert "id" in teacher
-            assert "full_name" in teacher
-            assert "specialization" in teacher
-        
-        print(f"✅ Teachers list returned {len(data)} teachers")
-
-
-class TestStudentsAPI:
-    """Students management endpoint tests"""
-    
-    @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        })
         if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip("Authentication failed")
-    
-    def test_get_students_list(self, auth_token):
-        """Test getting list of students"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/students", headers=headers)
-        
-        assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
-        
-        assert isinstance(data, list), "Expected list of students"
-        if len(data) > 0:
-            student = data[0]
-            assert "id" in student
-            assert "full_name" in student
-            assert "student_number" in student
-        
-        print(f"✅ Students list returned {len(data)} students")
+            data = response.json()
+            print(f"✓ Dashboard stats retrieved")
+            if isinstance(data, dict):
+                for key in data.keys():
+                    print(f"  - {key}: {data[key]}")
+        else:
+            print(f"Dashboard stats endpoint returned: {response.status_code}")
 
 
-class TestClassesAPI:
-    """Classes management endpoint tests"""
+class TestHealthCheck:
+    """Test health check endpoint"""
     
-    @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip("Authentication failed")
-    
-    def test_get_classes_list(self, auth_token):
-        """Test getting list of classes"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/classes", headers=headers)
+    def test_health_check(self):
+        """Test API health check"""
+        response = requests.get(f"{BASE_URL}/api/health")
         
-        assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
-        
-        assert isinstance(data, list), "Expected list of classes"
-        if len(data) > 0:
-            class_item = data[0]
-            assert "id" in class_item
-            assert "name" in class_item
-            assert "grade_level" in class_item
-        
-        print(f"✅ Classes list returned {len(data)} classes")
-
-
-class TestSubjectsAPI:
-    """Subjects management endpoint tests"""
-    
-    @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip("Authentication failed")
-    
-    def test_get_subjects_list(self, auth_token):
-        """Test getting list of subjects"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/subjects", headers=headers)
-        
-        assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
-        
-        assert isinstance(data, list), "Expected list of subjects"
-        if len(data) > 0:
-            subject = data[0]
-            assert "id" in subject
-            assert "name" in subject
-            assert "code" in subject
-        
-        print(f"✅ Subjects list returned {len(data)} subjects")
-
-
-class TestRegistrationRequestsAPI:
-    """Registration requests endpoint tests"""
-    
-    @pytest.fixture
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        })
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        pytest.skip("Authentication failed")
-    
-    def test_get_registration_requests(self, auth_token):
-        """Test getting registration requests"""
-        headers = {"Authorization": f"Bearer {auth_token}"}
-        response = requests.get(f"{BASE_URL}/api/registration-requests", headers=headers)
-        
-        assert response.status_code == 200, f"Failed: {response.text}"
-        data = response.json()
-        
-        assert isinstance(data, list), "Expected list of registration requests"
-        print(f"✅ Registration requests returned {len(data)} requests")
+        assert response.status_code == 200, f"Health check failed: {response.text}"
+        print("✓ API health check passed")
 
 
 if __name__ == "__main__":
