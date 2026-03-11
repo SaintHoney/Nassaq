@@ -1387,6 +1387,532 @@ const ConstraintsSection = ({ teachers, constraints, onSave, isRTL }) => {
 };
 
 // =============================================================
+// قسم أيام الأنشطة
+// =============================================================
+const ActivityDaysSection = ({ activityDays, onAddActivity, onDeleteActivity, isRTL }) => {
+  const [showDialog, setShowDialog] = useState(false);
+  const [newActivity, setNewActivity] = useState({ date: '', name: '', notes: '' });
+
+  const handleAdd = () => {
+    if (!newActivity.date) {
+      toast.error(isRTL ? 'يرجى تحديد التاريخ' : 'Please select a date');
+      return;
+    }
+    onAddActivity(newActivity);
+    setShowDialog(false);
+    setNewActivity({ date: '', name: '', notes: '' });
+  };
+
+  return (
+    <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50/50 to-white" data-testid="activity-days-section">
+      <CardHeader>
+        <div className="flex items-center justify-between flex-row-reverse">
+          <div className="flex items-center gap-3 flex-row-reverse">
+            <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+              <Activity className="h-6 w-6 text-pink-600" />
+            </div>
+            <div className="text-right">
+              <CardTitle className="font-cairo">{isRTL ? 'أيام الأنشطة' : 'Activity Days'}</CardTitle>
+              <CardDescription>{isRTL ? 'أيام الأنشطة تستثنى من الجدول العادي' : 'Activity days are excluded from regular schedule'}</CardDescription>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-lg px-4 py-2 bg-pink-100 text-pink-700">
+            {activityDays.length} {isRTL ? 'يوم' : 'Days'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={() => setShowDialog(true)} className="bg-pink-600 hover:bg-pink-700 mb-4">
+          <Plus className="h-4 w-4 me-2" />
+          {isRTL ? 'إضافة يوم نشاط' : 'Add Activity Day'}
+        </Button>
+
+        {activityDays.length === 0 ? (
+          <div className="py-8 text-center border-2 border-dashed border-pink-200 rounded-xl">
+            <Activity className="h-12 w-12 mx-auto mb-3 text-pink-200" />
+            <p className="text-muted-foreground">{isRTL ? 'لا توجد أيام أنشطة محددة (القيمة الافتراضية: صفر)' : 'No activity days defined (default: zero)'}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {activityDays.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-pink-300 transition-colors">
+                <div className="flex items-center gap-3 flex-row-reverse">
+                  <Badge variant="outline" className="font-mono">{activity.date}</Badge>
+                  {activity.name && <span className="text-sm font-medium">{activity.name}</span>}
+                  {activity.notes && <span className="text-xs text-muted-foreground">({activity.notes})</span>}
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => onDeleteActivity(activity.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة يوم نشاط' : 'Add Activity Day'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'التاريخ' : 'Date'} <span className="text-red-500">*</span></Label>
+                <Input type="date" value={newActivity.date} onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اسم النشاط (اختياري)' : 'Activity Name (Optional)'}</Label>
+                <Input value={newActivity.name} onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })} placeholder={isRTL ? 'مثال: يوم رياضي' : 'e.g., Sports Day'} className="text-right" dir="rtl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}</Label>
+                <Textarea value={newActivity.notes} onChange={(e) => setNewActivity({ ...newActivity, notes: e.target.value })} className="text-right" dir="rtl" rows={2} />
+              </div>
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleAdd} className="bg-pink-600 hover:bg-pink-700">
+                <Plus className="h-4 w-4 me-2" />
+                {isRTL ? 'إضافة' : 'Add'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};
+
+// =============================================================
+// قسم التوافر
+// =============================================================
+const AvailabilitySection = ({ teachers, availability, onSave, isRTL }) => {
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState('');
+  const [availableDays, setAvailableDays] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  const dayOptions = [
+    { id: 'sunday', name: isRTL ? 'الأحد' : 'Sunday' },
+    { id: 'monday', name: isRTL ? 'الاثنين' : 'Monday' },
+    { id: 'tuesday', name: isRTL ? 'الثلاثاء' : 'Tuesday' },
+    { id: 'wednesday', name: isRTL ? 'الأربعاء' : 'Wednesday' },
+    { id: 'thursday', name: isRTL ? 'الخميس' : 'Thursday' },
+  ];
+
+  const handleSave = async () => {
+    if (!selectedTeacher) {
+      toast.error(isRTL ? 'يرجى اختيار معلم' : 'Please select a teacher');
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave({ teacher_id: selectedTeacher, available_days: availableDays });
+      setShowDialog(false);
+      setSelectedTeacher('');
+      setAvailableDays([]);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleDay = (dayId) => {
+    setAvailableDays(prev => 
+      prev.includes(dayId) ? prev.filter(d => d !== dayId) : [...prev, dayId]
+    );
+  };
+
+  const teachersWithAvailability = Object.entries(availability).map(([teacherId, data]) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    return teacher ? { ...teacher, availability: data } : null;
+  }).filter(Boolean);
+
+  return (
+    <Card className="border-2 border-violet-200 bg-gradient-to-br from-violet-50/50 to-white" data-testid="availability-section">
+      <CardHeader>
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center">
+            <CalendarClock className="h-6 w-6 text-violet-600" />
+          </div>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo">{isRTL ? 'التوافر' : 'Availability'}</CardTitle>
+            <CardDescription>{isRTL ? 'تحديد مدى توفر المعلمين - يستخدم للتحقق أثناء الجدولة' : 'Teacher availability - Used for validation during scheduling'}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={() => setShowDialog(true)} className="bg-violet-600 hover:bg-violet-700 mb-4">
+          <Edit2 className="h-4 w-4 me-2" />
+          {isRTL ? 'تعديل التوافر' : 'Edit Availability'}
+        </Button>
+
+        {teachersWithAvailability.length === 0 ? (
+          <div className="py-8 text-center border-2 border-dashed border-violet-200 rounded-xl">
+            <CalendarClock className="h-12 w-12 mx-auto mb-3 text-violet-200" />
+            <p className="text-muted-foreground">{isRTL ? 'لم يتم تحديد توفر لأي معلم (الافتراضي: متوفر دائماً)' : 'No availability set (default: always available)'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {teachersWithAvailability.map((teacher) => (
+              <div key={teacher.id} className="p-3 rounded-lg bg-white border hover:border-violet-300 transition-colors">
+                <p className="font-medium text-sm truncate mb-2">{teacher.full_name}</p>
+                <div className="flex flex-wrap gap-1">
+                  {(teacher.availability?.available_days || []).map(day => (
+                    <Badge key={day} variant="secondary" className="text-xs">{dayOptions.find(d => d.id === day)?.name || day}</Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-right font-cairo">{isRTL ? 'تعديل توفر المعلم' : 'Edit Teacher Availability'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اختر المعلم' : 'Select Teacher'} <span className="text-red-500">*</span></Label>
+                <Select value={selectedTeacher} onValueChange={(v) => {
+                  setSelectedTeacher(v);
+                  setAvailableDays(availability[v]?.available_days || []);
+                }}>
+                  <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر معلم' : 'Select teacher'} /></SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>{teacher.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'الأيام المتاحة' : 'Available Days'}</Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {dayOptions.map(day => (
+                    <div
+                      key={day.id}
+                      onClick={() => toggleDay(day.id)}
+                      className={`p-2 rounded-lg text-center cursor-pointer transition-all border text-sm ${
+                        availableDays.includes(day.id)
+                          ? 'bg-violet-100 border-violet-500 text-violet-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
+                    >
+                      {day.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleSave} disabled={saving} className="bg-violet-600 hover:bg-violet-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
+                {isRTL ? 'حفظ' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};
+
+// =============================================================
+// قسم الهيكل الأكاديمي (المراحل، الصفوف، الشعب، الفصول الدراسية)
+// =============================================================
+const AcademicStructureSection = ({ 
+  stages, grades, sections, terms,
+  onAddStage, onDeleteStage, onAddGrade, onDeleteGrade,
+  onAddSection, onDeleteSection, onAddTerm, onDeleteTerm,
+  isRTL 
+}) => {
+  const [activeTab, setActiveTab] = useState('stages');
+  const [showStageDialog, setShowStageDialog] = useState(false);
+  const [showGradeDialog, setShowGradeDialog] = useState(false);
+  const [showSectionDialog, setShowSectionDialog] = useState(false);
+  const [showTermDialog, setShowTermDialog] = useState(false);
+  
+  const [newStage, setNewStage] = useState({ name: '', name_en: '', order: 1 });
+  const [newGrade, setNewGrade] = useState({ name: '', name_en: '', stage_id: '' });
+  const [newSection, setNewSection] = useState({ name: '', grade_id: '' });
+  const [newTerm, setNewTerm] = useState({ name: '', name_en: '', start_date: '', end_date: '', is_active: true });
+
+  const handleAddStage = () => {
+    if (!newStage.name) { toast.error(isRTL ? 'يرجى إدخال اسم المرحلة' : 'Please enter stage name'); return; }
+    onAddStage(newStage);
+    setShowStageDialog(false);
+    setNewStage({ name: '', name_en: '', order: 1 });
+  };
+
+  const handleAddGrade = () => {
+    if (!newGrade.name) { toast.error(isRTL ? 'يرجى إدخال اسم الصف' : 'Please enter grade name'); return; }
+    onAddGrade(newGrade);
+    setShowGradeDialog(false);
+    setNewGrade({ name: '', name_en: '', stage_id: '' });
+  };
+
+  const handleAddSection = () => {
+    if (!newSection.name) { toast.error(isRTL ? 'يرجى إدخال اسم الشعبة' : 'Please enter section name'); return; }
+    onAddSection(newSection);
+    setShowSectionDialog(false);
+    setNewSection({ name: '', grade_id: '' });
+  };
+
+  const handleAddTerm = () => {
+    if (!newTerm.name || !newTerm.start_date || !newTerm.end_date) { 
+      toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields'); 
+      return; 
+    }
+    onAddTerm(newTerm);
+    setShowTermDialog(false);
+    setNewTerm({ name: '', name_en: '', start_date: '', end_date: '', is_active: true });
+  };
+
+  return (
+    <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50/50 to-white" data-testid="academic-structure-section">
+      <CardHeader>
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center">
+            <Layers className="h-6 w-6 text-sky-600" />
+          </div>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo">{isRTL ? 'الهيكل الأكاديمي' : 'Academic Structure'}</CardTitle>
+            <CardDescription>{isRTL ? 'المراحل التعليمية، الصفوف، الشعب، والفصول الدراسية' : 'Stages, grades, sections, and academic terms'}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-4 w-full mb-4">
+            <TabsTrigger value="stages">{isRTL ? 'المراحل' : 'Stages'}</TabsTrigger>
+            <TabsTrigger value="grades">{isRTL ? 'الصفوف' : 'Grades'}</TabsTrigger>
+            <TabsTrigger value="sections">{isRTL ? 'الشعب' : 'Sections'}</TabsTrigger>
+            <TabsTrigger value="terms">{isRTL ? 'الفصول' : 'Terms'}</TabsTrigger>
+          </TabsList>
+
+          {/* Stages Tab */}
+          <TabsContent value="stages">
+            <Button onClick={() => setShowStageDialog(true)} className="bg-sky-600 hover:bg-sky-700 mb-4">
+              <Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة مرحلة' : 'Add Stage'}
+            </Button>
+            {stages.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-sky-200 rounded-xl">
+                <Layers className="h-12 w-12 mx-auto mb-3 text-sky-200" />
+                <p className="text-muted-foreground">{isRTL ? 'لا توجد مراحل تعليمية' : 'No educational stages'}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {stages.map((stage) => (
+                  <div key={stage.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-sky-300">
+                    <span className="font-medium">{stage.name}</span>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteStage(stage.id)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Grades Tab */}
+          <TabsContent value="grades">
+            <Button onClick={() => setShowGradeDialog(true)} className="bg-sky-600 hover:bg-sky-700 mb-4">
+              <Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة صف' : 'Add Grade'}
+            </Button>
+            {grades.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-sky-200 rounded-xl">
+                <ListChecks className="h-12 w-12 mx-auto mb-3 text-sky-200" />
+                <p className="text-muted-foreground">{isRTL ? 'لا توجد صفوف دراسية' : 'No grades'}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {grades.map((grade) => (
+                  <div key={grade.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-sky-300">
+                    <span className="font-medium text-sm">{grade.name}</span>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteGrade(grade.id)} className="text-red-500 hover:text-red-700 h-8 w-8">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Sections Tab */}
+          <TabsContent value="sections">
+            <Button onClick={() => setShowSectionDialog(true)} className="bg-sky-600 hover:bg-sky-700 mb-4">
+              <Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة شعبة' : 'Add Section'}
+            </Button>
+            {sections.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-sky-200 rounded-xl">
+                <Grid3X3 className="h-12 w-12 mx-auto mb-3 text-sky-200" />
+                <p className="text-muted-foreground">{isRTL ? 'لا توجد شعب' : 'No sections'}</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {sections.map((section) => (
+                  <Badge key={section.id} variant="outline" className="px-3 py-2 bg-white hover:bg-sky-50 group">
+                    {section.name}
+                    <button onClick={() => onDeleteSection(section.id)} className="ms-2 text-red-500 hover:text-red-700">
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Terms Tab */}
+          <TabsContent value="terms">
+            <Button onClick={() => setShowTermDialog(true)} className="bg-sky-600 hover:bg-sky-700 mb-4">
+              <Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة فصل دراسي' : 'Add Term'}
+            </Button>
+            {terms.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-sky-200 rounded-xl">
+                <CalendarDays className="h-12 w-12 mx-auto mb-3 text-sky-200" />
+                <p className="text-muted-foreground">{isRTL ? 'لا توجد فصول دراسية' : 'No academic terms'}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {terms.map((term) => (
+                  <div key={term.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-sky-300">
+                    <div className="flex items-center gap-3 flex-row-reverse">
+                      <span className="font-medium">{term.name}</span>
+                      <Badge variant={term.is_active ? "default" : "secondary"}>{term.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'غير نشط' : 'Inactive')}</Badge>
+                      <span className="text-sm text-muted-foreground">{term.start_date} - {term.end_date}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteTerm(term.id)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Stage Dialog */}
+        <Dialog open={showStageDialog} onOpenChange={setShowStageDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة مرحلة تعليمية' : 'Add Educational Stage'}</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اسم المرحلة' : 'Stage Name'} <span className="text-red-500">*</span></Label>
+                <Input value={newStage.name} onChange={(e) => setNewStage({ ...newStage, name: e.target.value })} placeholder={isRTL ? 'مثال: المرحلة الابتدائية' : 'e.g., Primary'} className="text-right" dir="rtl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'الاسم بالإنجليزية' : 'Name (English)'}</Label>
+                <Input value={newStage.name_en} onChange={(e) => setNewStage({ ...newStage, name_en: e.target.value })} placeholder="e.g., Primary" dir="ltr" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'الترتيب' : 'Order'}</Label>
+                <Input type="number" min="1" value={newStage.order} onChange={(e) => setNewStage({ ...newStage, order: parseInt(e.target.value) || 1 })} />
+              </div>
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowStageDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleAddStage} className="bg-sky-600 hover:bg-sky-700"><Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة' : 'Add'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Grade Dialog */}
+        <Dialog open={showGradeDialog} onOpenChange={setShowGradeDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة صف دراسي' : 'Add Grade'}</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اسم الصف' : 'Grade Name'} <span className="text-red-500">*</span></Label>
+                <Input value={newGrade.name} onChange={(e) => setNewGrade({ ...newGrade, name: e.target.value })} placeholder={isRTL ? 'مثال: الصف الأول' : 'e.g., Grade 1'} className="text-right" dir="rtl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'الاسم بالإنجليزية' : 'Name (English)'}</Label>
+                <Input value={newGrade.name_en} onChange={(e) => setNewGrade({ ...newGrade, name_en: e.target.value })} placeholder="e.g., Grade 1" dir="ltr" />
+              </div>
+              {stages.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-right block">{isRTL ? 'المرحلة' : 'Stage'}</Label>
+                  <Select value={newGrade.stage_id} onValueChange={(v) => setNewGrade({ ...newGrade, stage_id: v })}>
+                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر المرحلة' : 'Select stage'} /></SelectTrigger>
+                    <SelectContent>{stages.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}</SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowGradeDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleAddGrade} className="bg-sky-600 hover:bg-sky-700"><Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة' : 'Add'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Section Dialog */}
+        <Dialog open={showSectionDialog} onOpenChange={setShowSectionDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة شعبة' : 'Add Section'}</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اسم الشعبة' : 'Section Name'} <span className="text-red-500">*</span></Label>
+                <Input value={newSection.name} onChange={(e) => setNewSection({ ...newSection, name: e.target.value })} placeholder={isRTL ? 'مثال: أ' : 'e.g., A'} className="text-right" dir="rtl" />
+              </div>
+              {grades.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-right block">{isRTL ? 'الصف' : 'Grade'}</Label>
+                  <Select value={newSection.grade_id} onValueChange={(v) => setNewSection({ ...newSection, grade_id: v })}>
+                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر الصف' : 'Select grade'} /></SelectTrigger>
+                    <SelectContent>{grades.map((g) => (<SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>))}</SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowSectionDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleAddSection} className="bg-sky-600 hover:bg-sky-700"><Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة' : 'Add'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Term Dialog */}
+        <Dialog open={showTermDialog} onOpenChange={setShowTermDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة فصل دراسي' : 'Add Academic Term'}</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'اسم الفصل' : 'Term Name'} <span className="text-red-500">*</span></Label>
+                <Input value={newTerm.name} onChange={(e) => setNewTerm({ ...newTerm, name: e.target.value })} placeholder={isRTL ? 'مثال: الفصل الأول' : 'e.g., First Semester'} className="text-right" dir="rtl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-right block">{isRTL ? 'الاسم بالإنجليزية' : 'Name (English)'}</Label>
+                <Input value={newTerm.name_en} onChange={(e) => setNewTerm({ ...newTerm, name_en: e.target.value })} placeholder="e.g., First Semester" dir="ltr" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-right block">{isRTL ? 'تاريخ البداية' : 'Start Date'} <span className="text-red-500">*</span></Label>
+                  <Input type="date" value={newTerm.start_date} onChange={(e) => setNewTerm({ ...newTerm, start_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-right block">{isRTL ? 'تاريخ النهاية' : 'End Date'} <span className="text-red-500">*</span></Label>
+                  <Input type="date" value={newTerm.end_date} onChange={(e) => setNewTerm({ ...newTerm, end_date: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-row-reverse">
+                <Switch checked={newTerm.is_active} onCheckedChange={(v) => setNewTerm({ ...newTerm, is_active: v })} />
+                <Label>{isRTL ? 'فصل نشط' : 'Active Term'}</Label>
+              </div>
+            </div>
+            <DialogFooter className="flex gap-2 flex-row-reverse">
+              <Button variant="outline" onClick={() => setShowTermDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleAddTerm} className="bg-sky-600 hover:bg-sky-700"><Plus className="h-4 w-4 me-2" />{isRTL ? 'إضافة' : 'Add'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};
+
+// =============================================================
 // الصفحة الرئيسية
 // =============================================================
 export default function SchoolSettingsPage() {
