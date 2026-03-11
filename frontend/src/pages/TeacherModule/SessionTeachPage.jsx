@@ -184,7 +184,7 @@ export default function SessionTeachPage() {
     }
   };
 
-  // Record answer
+  // Record answer with enhanced celebrations
   const recordAnswer = async (result) => {
     if (!selectedStudent) return;
     
@@ -195,25 +195,46 @@ export default function SessionTeachPage() {
       });
 
       if (result === 'correct') {
-        // Celebration effect
+        // Big celebration effect!
         confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.6 }
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b']
         });
         
-        // Play sound (optional)
+        // Multiple bursts
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 }
+          });
+        }, 150);
+        
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 }
+          });
+        }, 300);
+        
+        // Play success sound
         try {
-          const audio = new Audio('/sounds/success.mp3');
-          audio.volume = 0.3;
-          audio.play().catch(() => {});
+          const successSound = new Audio('data:audio/wav;base64,UklGRigBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQBAACAf4B/gH9/f3+Af4GAgoKDhISFhoeIiYqLjI2OkJGSk5SVl5iZmpydnp+goaKjpKWmp6ipqqutrq+wsrO0tba3uLm6u7y9vr/AwMHCwsPDxMTFxcXGxsbGxsbGxsbGxsXFxcXExMPDwsLBwMC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZyampmalZSSkJCOjYuKiYiHhYSDgoF/fn17enl4d3Z1dHNycXBwb29ubm5ubm5ub29vb3BwcHFxcnJzc3R0dXZ2d3h5ent8fH1+f4A=');
+          successSound.volume = 0.4;
+          successSound.play().catch(() => {});
         } catch {}
         
-        toast.success(`+${response.data?.score_change || 5} نقاط! 🎉`);
+        toast.success(`🎉 +${response.data?.score_change || 5} نقاط! أحسنت!`);
       } else if (result === 'wrong') {
-        toast.info('إجابة خاطئة - حاول مرة أخرى');
+        // Gentle shake animation feedback
+        toast.info('❌ إجابة خاطئة - حاول مرة أخرى');
       } else {
-        toast.warning('لم يجب الطالب');
+        toast.warning('⏭️ لم يجب الطالب');
       }
 
       // Update student stats locally
