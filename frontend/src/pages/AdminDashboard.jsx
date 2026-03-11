@@ -33,7 +33,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../components/ui/select';
 import {
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar, Cell, Legend,
 } from 'recharts';
 import { jsPDF } from 'jspdf';
 import CreateSchoolWizard from '../components/wizards/CreateSchoolWizard';
