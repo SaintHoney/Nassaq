@@ -366,8 +366,9 @@ export default function TenantsManagement() {
   const t = translations[isRTL ? 'ar' : 'en'];
   
   // States
-  const [schools, setSchools] = useState(SAMPLE_SCHOOLS);
-  const [filteredSchools, setFilteredSchools] = useState(SAMPLE_SCHOOLS);
+  const [schools, setSchools] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filteredSchools, setFilteredSchools] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [selectedSchools, setSelectedSchools] = useState([]);
@@ -376,6 +377,60 @@ export default function TenantsManagement() {
   const [activeStatusFilter, setActiveStatusFilter] = useState(null);
   const [showSuspendDialog, setShowSuspendDialog] = useState(null);
   const [showAIDialog, setShowAIDialog] = useState(null);
+  
+  // Fetch schools from API
+  useEffect(() => {
+    fetchSchools();
+  }, []);
+  
+  const fetchSchools = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/api/schools');
+      const schoolsData = response.data.schools || response.data || [];
+      
+      // Map API data to component format
+      const mappedSchools = schoolsData.map(school => ({
+        id: school.id,
+        code: school.code || `NSS-${school.id?.slice(0, 8)}`,
+        name: school.name,
+        name_en: school.name_en,
+        type: school.type || 'private',
+        stage: school.stage || 'primary',
+        city: school.city,
+        country: 'SA',
+        students_count: school.student_count || school.current_students || 0,
+        teachers_count: school.teacher_count || school.current_teachers || 0,
+        users_count: (school.student_count || 0) + (school.teacher_count || 0),
+        status: school.status || 'active',
+        ai_enabled: school.ai_enabled || false,
+        subscription_status: school.subscription_status || 'active',
+        health_score: school.health_score || 85,
+        created_at: school.created_at,
+        last_activity: school.updated_at || school.created_at,
+        principal_name: school.principal_name || '',
+        principal_email: school.email || '',
+        principal_phone: school.phone || '',
+        logo_url: school.logo_url || null,
+        setup_complete: true,
+      }));
+      
+      setSchools(mappedSchools);
+      setFilteredSchools(mappedSchools);
+    } catch (error) {
+      console.error('Error fetching schools:', error);
+      toast.error(isRTL ? 'خطأ في تحميل المدارس' : 'Error loading schools');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle school created - refresh list
+  const handleSchoolCreated = (newSchool) => {
+    setShowCreateWizard(false);
+    fetchSchools(); // Refresh the list
+    toast.success(isRTL ? 'تم إنشاء المدرسة بنجاح' : 'School created successfully');
+  };
   
   // Filters state
   const [filters, setFilters] = useState({
