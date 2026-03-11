@@ -1950,7 +1950,7 @@ export default function SchoolSettingsPage() {
       const [teachersRes, classesRes, settingsRes] = await Promise.all([
         api.get('/api/teachers').catch(() => ({ data: [] })),
         api.get('/api/classes').catch(() => ({ data: [] })),
-        api.get('/api/school/settings').catch(() => ({ data: {} })),
+        api.get('/school/settings').catch(() => ({ data: {} })),
       ]);
       
       setTeachers(teachersRes.data || []);
@@ -1991,12 +1991,12 @@ export default function SchoolSettingsPage() {
 
   // Save handlers
   const handleSaveSchoolInfo = async (info) => {
-    await api.put('/api/school/settings/info', info);
+    await api.put('/school/settings/info', info);
     setSchoolInfo(prev => ({ ...prev, ...info }));
   };
 
   const handleSaveWorkDays = async (workDays) => {
-    await api.put('/api/school/settings/work-days', workDays);
+    await api.put('/school/settings/work-days', workDays);
     setSettings(prev => ({ ...prev, workDays }));
   };
 
@@ -2006,28 +2006,28 @@ export default function SchoolSettingsPage() {
   };
 
   const handleSaveTiming = async (timing) => {
-    await api.put('/api/school/settings/timing', timing);
+    await api.put('/school/settings/timing', timing);
     setSettings(prev => ({ ...prev, timing }));
   };
 
   const handleSaveBreaks = async (breaks) => {
-    await api.put('/api/school/settings/breaks', breaks);
+    await api.put('/school/settings/breaks', breaks);
     setSettings(prev => ({ ...prev, breaks }));
   };
 
   const handleSaveTeachingLoads = async (loads) => {
-    await api.put('/api/school/settings/teaching-loads', loads);
+    await api.put('/school/settings/teaching-loads', loads);
     setSettings(prev => ({ ...prev, teachingLoads: loads }));
   };
 
   const handleSaveConstraints = async (constraints) => {
-    await api.put('/api/school/settings/constraints', constraints);
+    await api.put('/school/settings/constraints', constraints);
     setSettings(prev => ({ ...prev, constraints }));
   };
 
   const handleAddSubject = async (subjectData) => {
     try {
-      const response = await api.post('/api/school/settings/subjects', subjectData);
+      const response = await api.post('/school/settings/subjects', subjectData);
       const newSubject = response.data?.subject || subjectData;
       setSubjects(prev => [...prev, newSubject]);
       toast.success(isRTL ? 'تمت إضافة المادة بنجاح' : 'Subject added successfully');
@@ -2050,7 +2050,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddHoliday = async (holiday) => {
     try {
-      const response = await api.post('/api/school/settings/holidays', holiday);
+      const response = await api.post('/school/settings/holidays', holiday);
       const newHoliday = response.data?.holiday || holiday;
       setSettings(prev => ({ 
         ...prev, 
@@ -2078,7 +2078,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddExceptionDay = async (exceptionDay) => {
     try {
-      const response = await api.post('/api/school/settings/exception-days', exceptionDay);
+      const response = await api.post('/school/settings/exception-days', exceptionDay);
       const newException = response.data?.exception || exceptionDay;
       setSettings(prev => ({
         ...prev,
@@ -2092,7 +2092,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddActivityDay = async (activityDay) => {
     try {
-      const response = await api.post('/api/school/settings/activity-days', activityDay);
+      const response = await api.post('/school/settings/activity-days', activityDay);
       const newActivity = response.data?.activity || activityDay;
       setSettings(prev => ({
         ...prev,
@@ -2120,7 +2120,7 @@ export default function SchoolSettingsPage() {
   // Academic structure handlers
   const handleAddStage = async (stage) => {
     try {
-      const response = await api.post('/api/school/settings/stages', stage);
+      const response = await api.post('/school/settings/stages', stage);
       const newStage = response.data?.stage || stage;
       setSettings(prev => ({
         ...prev,
@@ -2147,7 +2147,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddGrade = async (grade) => {
     try {
-      const response = await api.post('/api/school/settings/grades', grade);
+      const response = await api.post('/school/settings/grades', grade);
       const newGrade = response.data?.grade || grade;
       setGrades(prev => [...prev, newGrade]);
       toast.success(isRTL ? 'تم إضافة الصف' : 'Grade added');
@@ -2168,7 +2168,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddSection = async (section) => {
     try {
-      const response = await api.post('/api/school/settings/sections', section);
+      const response = await api.post('/school/settings/sections', section);
       const newSection = response.data?.section || section;
       setSettings(prev => ({
         ...prev,
@@ -2195,7 +2195,7 @@ export default function SchoolSettingsPage() {
 
   const handleAddTerm = async (term) => {
     try {
-      const response = await api.post('/api/school/settings/academic-terms', term);
+      const response = await api.post('/school/settings/academic-terms', term);
       const newTerm = response.data?.term || term;
       setSettings(prev => ({
         ...prev,
@@ -2222,7 +2222,7 @@ export default function SchoolSettingsPage() {
 
   const handleSaveAvailability = async (data) => {
     try {
-      await api.put('/api/school/settings/teacher-availability', data);
+      await api.put('/school/settings/teacher-availability', data);
       setSettings(prev => ({
         ...prev,
         teacherAvailability: {
