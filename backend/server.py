@@ -669,26 +669,16 @@ async def create_platform_user(
 async def get_platform_users(
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN])),
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 100,
     role: Optional[str] = None,
     search: Optional[str] = None
 ):
     """
-    Get list of platform users created by admin
+    Get list of all platform users for admin management
     """
-    query = {
-        "role": {"$in": [
-            'platform_operations_manager',
-            'platform_technical_admin',
-            'platform_support_specialist',
-            'platform_data_analyst',
-            'platform_security_officer',
-            'testing_account',
-            'teacher'
-        ]}
-    }
+    query = {}
     
-    if role:
+    if role and role != 'all':
         query["role"] = role
     
     if search:
