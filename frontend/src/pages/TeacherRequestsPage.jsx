@@ -58,61 +58,47 @@ export const TeacherRequestsPage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
-  // Simulated request data (will be replaced with API)
-  const mockRequests = [
-    {
-      id: '1',
-      teacher_name: 'محمد أحمد العلي',
-      email: 'mohammed.ali@email.com',
-      phone: '0501234567',
-      school_name: 'ابتدائية النور',
-      subject: 'الرياضيات',
-      experience_years: 5,
-      status: 'pending',
-      submitted_at: '2026-03-09T10:30:00',
-    },
-    {
-      id: '2',
-      teacher_name: 'فاطمة محمد السعيد',
-      email: 'fatima.saeed@email.com',
-      phone: '0559876543',
-      school_name: 'متوسطة الفلاح',
-      subject: 'اللغة العربية',
-      experience_years: 8,
-      status: 'approved',
-      submitted_at: '2026-03-08T14:20:00',
-    },
-    {
-      id: '3',
-      teacher_name: 'أحمد عبدالله الشمري',
-      email: 'ahmed.shamry@email.com',
-      phone: '0541112233',
-      school_name: 'ثانوية الأمل',
-      subject: 'العلوم',
-      experience_years: 3,
-      status: 'rejected',
-      submitted_at: '2026-03-07T09:15:00',
-    },
-    {
-      id: '4',
-      teacher_name: 'سارة خالد المنصور',
-      email: 'sara.mansour@email.com',
-      phone: '0534445566',
-      school_name: 'ابتدائية السلام',
-      subject: 'اللغة الإنجليزية',
-      experience_years: 6,
-      status: 'pending',
-      submitted_at: '2026-03-09T08:45:00',
-    },
-  ];
+  // Fetch teacher registration requests from API
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (statusFilter && statusFilter !== 'all') {
+        params.status = statusFilter;
+      }
+      
+      const response = await api.get('/teacher-registration/requests', { params });
+      
+      if (response.data && response.data.requests) {
+        // Transform API response to match UI expectations
+        const transformedRequests = response.data.requests.map(r => ({
+          id: r.id,
+          teacher_name: r.full_name,
+          email: r.email,
+          phone: r.phone,
+          school_name: r.school_name || '',
+          subject: r.subject,
+          experience_years: r.years_of_experience,
+          status: r.status,
+          submitted_at: r.created_at,
+          ...r
+        }));
+        setRequests(transformedRequests);
+      } else {
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch teacher requests:', error);
+      toast.error(isRTL ? 'فشل في تحميل الطلبات' : 'Failed to load requests');
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setRequests(mockRequests);
-      setLoading(false);
-    }, 500);
-  }, []);
+    fetchRequests();
+  }, [statusFilter]);
 
   const handleApprove = (requestId) => {
     setRequests(prev => prev.map(r => 
