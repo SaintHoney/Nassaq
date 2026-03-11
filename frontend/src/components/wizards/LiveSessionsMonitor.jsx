@@ -26,7 +26,7 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-export const LiveSessionsMonitor = ({ open, onClose }) => {
+export const LiveSessionsMonitor = ({ open, onClose, onOpenChange }) => {
   const { isRTL } = useTheme();
   const { token } = useAuth();
   
