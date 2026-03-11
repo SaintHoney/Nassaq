@@ -631,11 +631,18 @@ export const AdminDashboard = () => {
       action: () => setShowCreateUserWizard(true) 
     },
     { 
-      icon: BookOpen, 
-      label: isRTL ? 'إدارة القواعد' : 'Manage Rules', 
-      desc: isRTL ? 'القواعد التعليمية' : 'Educational rules',
+      icon: FileText, 
+      label: isRTL ? 'التقارير' : 'Reports', 
+      desc: isRTL ? 'التقارير والتحليلات' : 'Reports & Analytics',
+      color: 'bg-brand-purple', 
+      action: () => navigate('/admin/analytics') 
+    },
+    { 
+      icon: Plug, 
+      label: isRTL ? 'التكاملات' : 'Integrations', 
+      desc: isRTL ? 'ربط الخدمات الخارجية' : 'External services',
       color: 'bg-green-600', 
-      action: () => navigate('/admin/rules') 
+      action: () => navigate('/admin/integrations') 
     },
     { 
       icon: Settings, 
@@ -643,13 +650,6 @@ export const AdminDashboard = () => {
       desc: isRTL ? 'إعدادات المنصة' : 'Platform config',
       color: 'bg-gray-600', 
       action: () => navigate('/settings') 
-    },
-    { 
-      icon: FileText, 
-      label: isRTL ? 'التقارير' : 'Reports', 
-      desc: isRTL ? 'التحليلات والتقارير' : 'Analytics & reports',
-      color: 'bg-brand-purple', 
-      action: () => navigate('/admin/reports') 
     },
   ];
 
