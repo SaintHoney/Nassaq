@@ -503,14 +503,75 @@ export const PlatformAnalyticsPage = () => {
     toast.success(isRTL ? 'تم حفظ الفلاتر' : 'Filters saved');
   };
   
-  // Export report
+  // Export report - تنزيل حقيقي للتقرير
   const handleExport = () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success(isRTL ? `تم تحميل التقرير بصيغة ${exportFormat.toUpperCase()}` : `Report downloaded as ${exportFormat.toUpperCase()}`);
-      setShowExportDialog(false);
-    }, 1500);
+    
+    // إنشاء بيانات التقرير
+    const reportData = {
+      generated_at: new Date().toISOString(),
+      period: filters.period,
+      stats: stats,
+      charts: {
+        schools_by_city: SCHOOLS_BY_CITY,
+        attendance_rates: ATTENDANCE_DATA,
+        ai_insights: AI_INSIGHTS,
+      },
+      summary: isRTL 
+        ? `تقرير شامل للمنصة - ${stats.totalSchools} مدرسة - ${stats.totalStudents} طالب`
+        : `Platform Report - ${stats.totalSchools} schools - ${stats.totalStudents} students`,
+    };
+    
+    let blob;
+    let filename;
+    
+    if (exportFormat === 'pdf') {
+      // للـ PDF نُنشئ HTML بسيط
+      const htmlContent = `
+        <html dir="${isRTL ? 'rtl' : 'ltr'}">
+        <head><title>تقرير المنصة</title></head>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+          <h1>تقرير تحليلات المنصة</h1>
+          <p>تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}</p>
+          <hr/>
+          <h2>الإحصائيات</h2>
+          <ul>
+            <li>إجمالي المدارس: ${stats.totalSchools}</li>
+            <li>إجمالي الطلاب: ${stats.totalStudents}</li>
+            <li>إجمالي المعلمين: ${stats.totalTeachers}</li>
+            <li>نسبة النمو: ${stats.growthRate}%</li>
+          </ul>
+        </body>
+        </html>
+      `;
+      blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+      filename = `platform_report_${new Date().toISOString().split('T')[0]}.html`;
+    } else if (exportFormat === 'excel' || exportFormat === 'csv') {
+      // للـ CSV/Excel
+      const csvContent = [
+        'المؤشر,القيمة',
+        `إجمالي المدارس,${stats.totalSchools}`,
+        `إجمالي الطلاب,${stats.totalStudents}`,
+        `إجمالي المعلمين,${stats.totalTeachers}`,
+        `المستخدمين النشطين,${stats.activeUsers}`,
+        `نسبة النمو,${stats.growthRate}%`,
+      ].join('\n');
+      blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      filename = `platform_report_${new Date().toISOString().split('T')[0]}.csv`;
+    } else {
+      // JSON
+      blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      filename = `platform_report_${new Date().toISOString().split('T')[0]}.json`;
+    }
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    
+    setLoading(false);
+    toast.success(isRTL ? `تم تحميل التقرير بصيغة ${exportFormat.toUpperCase()}` : `Report downloaded as ${exportFormat.toUpperCase()}`);
+    setShowExportDialog(false);
   };
   
   // Download AI summary
