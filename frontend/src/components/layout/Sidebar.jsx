@@ -101,6 +101,12 @@ export const Sidebar = ({ children }) => {
         roles: ['platform_admin'],
       },
       {
+        icon: FileText,
+        label: isRTL ? 'سجلات التدقيق' : 'Audit Logs',
+        href: '/admin/audit',
+        roles: ['platform_admin', 'platform_security_officer', 'platform_data_analyst'],
+      },
+      {
         icon: MessageSquare,
         label: isRTL ? 'التواصل والإشعارات' : 'Communication & Notifications',
         href: '/admin/communication',
