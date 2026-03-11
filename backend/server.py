@@ -10712,6 +10712,155 @@ async def parent_contact_teacher(
     }
 
 
+# ============== AUDIT LOG ROUTES ==============
+@api_router.get("/audit/logs")
+async def get_audit_logs(
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER,
+        UserRole.PLATFORM_DATA_ANALYST
+    ])),
+    tenant_id: Optional[str] = None,
+    action: Optional[str] = None,
+    entity_type: Optional[str] = None,
+    severity: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get audit logs with filters - Platform Admin or Security Officer only"""
+    logs = await audit_engine.get_audit_logs(
+        tenant_id=tenant_id,
+        action=action,
+        entity_type=entity_type,
+        severity=severity,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        skip=skip
+    )
+    
+    total = await db.audit_logs.count_documents({})
+    
+    return {
+        "logs": logs,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+
+@api_router.get("/audit/stats")
+async def get_audit_stats(
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER,
+        UserRole.PLATFORM_DATA_ANALYST
+    ])),
+    tenant_id: Optional[str] = None,
+    days: int = 30
+):
+    """Get audit statistics - Platform Admin or Security Officer only"""
+    stats = await audit_engine.get_audit_stats(tenant_id=tenant_id, days=days)
+    return stats
+
+
+@api_router.get("/audit/critical-events")
+async def get_critical_events(
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER
+    ])),
+    tenant_id: Optional[str] = None,
+    days: int = 7
+):
+    """Get critical and high severity events - Platform Admin or Security Officer only"""
+    events = await audit_engine.get_critical_events(tenant_id=tenant_id, days=days)
+    return {"events": events, "count": len(events)}
+
+
+@api_router.get("/audit/login-analytics")
+async def get_login_analytics(
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER
+    ])),
+    tenant_id: Optional[str] = None,
+    days: int = 30
+):
+    """Get login analytics - Platform Admin or Security Officer only"""
+    analytics = await audit_engine.get_login_analytics(tenant_id=tenant_id, days=days)
+    return analytics
+
+
+@api_router.get("/audit/user-activity/{user_id}")
+async def get_user_activity(
+    user_id: str,
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER,
+        UserRole.SCHOOL_PRINCIPAL
+    ])),
+    days: int = 30
+):
+    """Get activity log for a specific user"""
+    activity = await audit_engine.get_user_activity(user_id=user_id, days=days)
+    return {"user_id": user_id, "activity": activity}
+
+
+@api_router.get("/audit/entity-history/{entity_type}/{entity_id}")
+async def get_entity_history(
+    entity_type: str,
+    entity_id: str,
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER,
+        UserRole.SCHOOL_PRINCIPAL
+    ]))
+):
+    """Get audit history for a specific entity"""
+    history = await audit_engine.get_entity_history(entity_type=entity_type, entity_id=entity_id)
+    return {"entity_type": entity_type, "entity_id": entity_id, "history": history}
+
+
+@api_router.post("/audit/export")
+async def export_audit_report(
+    current_user: dict = Depends(require_roles([
+        UserRole.PLATFORM_ADMIN,
+        UserRole.PLATFORM_SECURITY_OFFICER
+    ])),
+    tenant_id: str = None,
+    start_date: str = None,
+    end_date: str = None
+):
+    """Export audit report for compliance"""
+    if not start_date:
+        start_date = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    if not end_date:
+        end_date = datetime.now(timezone.utc).isoformat()
+    
+    report = await audit_engine.export_audit_report(
+        tenant_id=tenant_id or "all",
+        start_date=start_date,
+        end_date=end_date
+    )
+    
+    # Log the export action
+    await audit_engine.log(
+        action=AuditAction.DATA_EXPORTED.value,
+        performed_by=current_user["id"],
+        entity_type="audit_report",
+        details={
+            "start_date": start_date,
+            "end_date": end_date,
+            "tenant_id": tenant_id
+        }
+    )
+    
+    return report
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
