@@ -11605,6 +11605,7 @@ async def get_teacher_dashboard(
     
     today_lessons = []
     if schedule:
+        # First try with status filter
         sessions = await db.schedule_sessions.find({
             "schedule_id": schedule.get("id"),
             "teacher_id": actual_teacher_id,
@@ -11612,26 +11613,51 @@ async def get_teacher_dashboard(
             "status": SessionStatusEnum.SCHEDULED.value
         }, {"_id": 0}).to_list(20)
         
+        # If no sessions found, try without status filter (for active sessions)
+        if not sessions:
+            sessions = await db.schedule_sessions.find({
+                "schedule_id": schedule.get("id"),
+                "teacher_id": actual_teacher_id,
+                "day_of_week": today_day
+            }, {"_id": 0}).to_list(20)
+        
         # Get time slots
-        slot_ids = [s.get("time_slot_id") for s in sessions]
-        slots = await db.time_slots.find({"id": {"$in": slot_ids}}, {"_id": 0}).to_list(20)
+        slot_ids = [s.get("time_slot_id") for s in sessions if s.get("time_slot_id")]
+        slots = await db.time_slots.find({"id": {"$in": slot_ids}}, {"_id": 0}).to_list(20) if slot_ids else []
         slot_map = {s.get("id"): s for s in slots}
         
         for session in sessions:
             slot = slot_map.get(session.get("time_slot_id"), {})
+            
+            # Try to get data from assignment first, fallback to session data
             assignment = next((a for a in assignments if a.get("id") == session.get("assignment_id")), {})
             class_info = next((c for c in classes if c.get("id") == assignment.get("class_id")), {})
             subject_info = next((s for s in subjects if s.get("id") == assignment.get("subject_id")), {})
             
+            # Build lesson data with fallbacks
+            lesson_time = slot.get("start_time") or session.get("start_time", "")
+            lesson_period = slot.get("slot_number") or session.get("slot_number", 0)
+            lesson_subject = subject_info.get("name_ar") or subject_info.get("name_en") or session.get("subject_name") or "غير محدد"
+            lesson_class = class_info.get("name") or session.get("class_name") or "غير محدد"
+            lesson_class_id = class_info.get("id") or session.get("class_id")
+            lesson_subject_id = subject_info.get("id") or session.get("subject_id")
+            
             today_lessons.append({
-                "time": slot.get("start_time", ""),
-                "period": slot.get("slot_number", 0),
-                "subject": subject_info.get("name_ar") or subject_info.get("name_en") or "غير محدد",
-                "class_name": class_info.get("name", "غير محدد"),
-                "class_id": class_info.get("id")
+                "id": session.get("id"),
+                "schedule_session_id": session.get("id"),
+                "time": lesson_time,
+                "start_time": lesson_time,
+                "end_time": slot.get("end_time") or session.get("end_time", ""),
+                "period": lesson_period,
+                "slot_number": lesson_period,
+                "subject": lesson_subject,
+                "subject_name": lesson_subject,
+                "class_name": lesson_class,
+                "class_id": lesson_class_id,
+                "subject_id": lesson_subject_id
             })
         
-        today_lessons.sort(key=lambda x: x.get("period", 0))
+        today_lessons.sort(key=lambda x: x.get("period", 0) or 0)
     
     # Get pending attendance (classes where attendance not recorded today)
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
