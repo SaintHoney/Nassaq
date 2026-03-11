@@ -13008,6 +13008,427 @@ async def delete_school_subject(
     return {"message": "تم حذف المادة الدراسية"}
 
 
+# ============== TEACHER MODULE APIs ==============
+
+@api_router.get("/teacher/classes/{teacher_id}")
+async def get_teacher_classes(
+    teacher_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all classes assigned to a teacher
+    جلب جميع الفصول المسندة للمعلم
+    """
+    # Get teacher assignments
+    assignments = await db.teacher_assignments.find({
+        "teacher_id": teacher_id,
+        "is_active": True
+    }, {"_id": 0}).to_list(100)
+    
+    if not assignments:
+        return []
+    
+    class_ids = list(set(a.get("class_id") for a in assignments if a.get("class_id")))
+    
+    # Get class details
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(50)
+    
+    # Enrich with subject info and stats
+    enriched_classes = []
+    for cls in classes:
+        class_assignments = [a for a in assignments if a.get("class_id") == cls.get("id")]
+        
+        # Get student count
+        student_count = await db.students.count_documents({"class_id": cls.get("id")})
+        
+        # Get subject names
+        subject_ids = [a.get("subject_id") for a in class_assignments if a.get("subject_id")]
+        subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "name_ar": 1, "name_en": 1}).to_list(20)
+        subject_names = [s.get("name_ar") or s.get("name_en") or "مادة" for s in subjects]
+        
+        enriched_classes.append({
+            **cls,
+            "student_count": student_count,
+            "subjects": subject_names,
+            "weekly_periods": sum(a.get("weekly_sessions", 0) for a in class_assignments)
+        })
+    
+    return enriched_classes
+
+
+@api_router.get("/teacher/schedule/{teacher_id}")
+async def get_teacher_schedule(
+    teacher_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get teacher's schedule
+    جلب جدول المعلم
+    """
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "school_id": 1})
+    if not teacher:
+        return []
+    
+    school_id = teacher.get("school_id")
+    
+    # Find active schedule
+    schedule = await db.schedules.find_one({
+        "school_id": school_id,
+        "status": {"$in": ["draft", "published"]}
+    }, {"_id": 0, "id": 1})
+    
+    if not schedule:
+        return []
+    
+    # Get sessions
+    sessions = await db.schedule_sessions.find({
+        "schedule_id": schedule.get("id"),
+        "teacher_id": teacher_id,
+        "status": "scheduled"
+    }, {"_id": 0}).to_list(100)
+    
+    # Enrich with class and subject names
+    for session in sessions:
+        assignment = await db.teacher_assignments.find_one(
+            {"id": session.get("assignment_id")}, 
+            {"_id": 0, "class_id": 1, "subject_id": 1}
+        )
+        if assignment:
+            cls = await db.classes.find_one({"id": assignment.get("class_id")}, {"_id": 0, "name": 1})
+            subject = await db.subjects.find_one({"id": assignment.get("subject_id")}, {"_id": 0, "name_ar": 1, "name_en": 1})
+            session["class_name"] = cls.get("name") if cls else "غير محدد"
+            session["class_id"] = assignment.get("class_id")
+            session["subject_name"] = subject.get("name_ar") or subject.get("name_en") if subject else "غير محدد"
+        
+        # Get time slot info
+        slot = await db.time_slots.find_one({"id": session.get("time_slot_id")}, {"_id": 0, "slot_number": 1, "start_time": 1, "end_time": 1})
+        if slot:
+            session["slot_number"] = slot.get("slot_number")
+            session["start_time"] = slot.get("start_time")
+            session["end_time"] = slot.get("end_time")
+    
+    return sessions
+
+
+@api_router.get("/teacher/assessments/{teacher_id}")
+async def get_teacher_assessments(
+    teacher_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get assessments created by teacher
+    جلب تقييمات المعلم
+    """
+    assessments = await db.assessments.find({
+        "teacher_id": teacher_id
+    }, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Enrich with class names
+    for assessment in assessments:
+        if assessment.get("class_id"):
+            cls = await db.classes.find_one({"id": assessment.get("class_id")}, {"_id": 0, "name": 1})
+            assessment["class_name"] = cls.get("name") if cls else ""
+    
+    return assessments
+
+
+@api_router.post("/assessments")
+async def create_assessment(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create new assessment - إنشاء تقييم جديد"""
+    assessment = {
+        "id": str(uuid.uuid4()),
+        **data,
+        "status": data.get("status", "draft"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.assessments.insert_one(assessment)
+    assessment.pop("_id", None)
+    
+    return {"message": "تم إنشاء التقييم", "assessment": assessment}
+
+
+@api_router.get("/assessments/{assessment_id}/grades")
+async def get_assessment_grades(
+    assessment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get grades for an assessment"""
+    grades = await db.grades.find({"assessment_id": assessment_id}, {"_id": 0}).to_list(200)
+    return grades
+
+
+@api_router.post("/assessments/{assessment_id}/grades")
+async def save_assessment_grades(
+    assessment_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Save grades for assessment - حفظ درجات التقييم"""
+    grades = data.get("grades", [])
+    
+    for grade in grades:
+        grade_record = {
+            "id": str(uuid.uuid4()),
+            "assessment_id": assessment_id,
+            "student_id": grade.get("student_id"),
+            "score": grade.get("score"),
+            "notes": grade.get("notes"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "graded_by": current_user["id"]
+        }
+        
+        # Upsert grade
+        await db.grades.update_one(
+            {"assessment_id": assessment_id, "student_id": grade.get("student_id")},
+            {"$set": grade_record},
+            upsert=True
+        )
+    
+    # Update assessment status
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {"status": "graded", "graded_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم حفظ الدرجات"}
+
+
+@api_router.get("/students/{student_id}/grades")
+async def get_student_grades(
+    student_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all grades for a student"""
+    grades = await db.grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
+    
+    # Enrich with assessment info
+    for grade in grades:
+        assessment = await db.assessments.find_one(
+            {"id": grade.get("assessment_id")}, 
+            {"_id": 0, "name": 1, "type": 1, "max_score": 1}
+        )
+        if assessment:
+            grade["assessment_name"] = assessment.get("name")
+            grade["type"] = assessment.get("type")
+            grade["max_score"] = assessment.get("max_score", 100)
+    
+    return grades
+
+
+@api_router.get("/students/{student_id}/attendance-stats")
+async def get_student_attendance_stats(
+    student_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get attendance statistics for a student"""
+    total = await db.attendance.count_documents({"student_id": student_id})
+    present = await db.attendance.count_documents({"student_id": student_id, "status": "present"})
+    absent = await db.attendance.count_documents({"student_id": student_id, "status": "absent"})
+    late = await db.attendance.count_documents({"student_id": student_id, "status": "late"})
+    
+    rate = (present / total * 100) if total > 0 else 0
+    
+    return {
+        "total": total,
+        "present": present,
+        "absent": absent,
+        "late": late,
+        "rate": round(rate, 1)
+    }
+
+
+@api_router.get("/behavior")
+async def get_behavior_records(
+    class_id: str = Query(None),
+    student_id: str = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get behavior records"""
+    query = {}
+    if class_id:
+        query["class_id"] = class_id
+    if student_id:
+        query["student_id"] = student_id
+    
+    records = await db.behavior.find(query, {"_id": 0}).sort("date", -1).to_list(200)
+    return records
+
+
+@api_router.post("/behavior")
+async def create_behavior_record(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create behavior record - تسجيل ملاحظة سلوكية"""
+    record = {
+        "id": str(uuid.uuid4()),
+        **data,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.behavior.insert_one(record)
+    record.pop("_id", None)
+    
+    return {"message": "تم تسجيل الملاحظة السلوكية", "record": record}
+
+
+@api_router.get("/resources")
+async def get_resources(
+    teacher_id: str = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get educational resources"""
+    query = {}
+    if teacher_id:
+        query["teacher_id"] = teacher_id
+    
+    resources = await db.resources.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return resources
+
+
+@api_router.post("/resources")
+async def create_resource(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create educational resource - إضافة مصدر تعليمي"""
+    resource = {
+        "id": str(uuid.uuid4()),
+        **data,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.resources.insert_one(resource)
+    resource.pop("_id", None)
+    
+    return {"message": "تمت إضافة المصدر", "resource": resource}
+
+
+@api_router.delete("/resources/{resource_id}")
+async def delete_resource(
+    resource_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete resource"""
+    await db.resources.delete_one({"id": resource_id})
+    return {"message": "تم حذف المصدر"}
+
+
+@api_router.get("/messages")
+async def get_messages(
+    sender_id: str = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get messages"""
+    query = {}
+    if sender_id:
+        query["sender_id"] = sender_id
+    
+    messages = await db.messages.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return messages
+
+
+@api_router.post("/messages")
+async def send_message(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Send message to parents - إرسال رسالة لأولياء الأمور"""
+    message = {
+        "id": str(uuid.uuid4()),
+        **data,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "sent"
+    }
+    
+    await db.messages.insert_one(message)
+    message.pop("_id", None)
+    
+    # TODO: Send actual notifications (email/SMS) to parents
+    
+    return {"message": "تم إرسال الرسالة", "data": message}
+
+
+@api_router.get("/grades")
+async def get_grades(
+    class_id: str = Query(None),
+    student_id: str = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get grades with filters"""
+    query = {}
+    if class_id:
+        # Get assessments for this class first
+        assessments = await db.assessments.find({"class_id": class_id}, {"_id": 0, "id": 1}).to_list(100)
+        assessment_ids = [a.get("id") for a in assessments]
+        query["assessment_id"] = {"$in": assessment_ids}
+    if student_id:
+        query["student_id"] = student_id
+    
+    grades = await db.grades.find(query, {"_id": 0}).to_list(500)
+    return grades
+
+
+@api_router.get("/users/{user_id}/notifications/settings")
+async def get_notification_settings(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get user notification settings"""
+    settings = await db.notification_settings.find_one({"user_id": user_id}, {"_id": 0})
+    return settings or {}
+
+
+@api_router.put("/users/{user_id}/notifications/settings")
+async def update_notification_settings(
+    user_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user notification settings"""
+    await db.notification_settings.update_one(
+        {"user_id": user_id},
+        {"$set": {**data, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "تم حفظ الإعدادات"}
+
+
+@api_router.put("/users/{user_id}/password")
+async def change_user_password(
+    user_id: str,
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Change user password"""
+    if current_user["id"] != user_id and current_user.get("role") != "platform_admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify current password
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not pwd_context.verify(data.get("current_password"), user.get("password_hash")):
+        raise HTTPException(status_code=400, detail="كلمة المرور الحالية غير صحيحة")
+    
+    # Update password
+    new_hash = pwd_context.hash(data.get("new_password"))
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"password_hash": new_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم تغيير كلمة المرور"}
+
+
 # Re-include api_router to pick up school settings routes
 app.include_router(api_router)
 
