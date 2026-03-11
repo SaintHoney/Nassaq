@@ -921,123 +921,141 @@ export const SchedulePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="card-nassaq overflow-hidden w-full" data-testid="schedule-grid">
-              <div className="overflow-x-auto max-w-full">
-                <table className="w-full border-collapse">
-                  {/* Header */}
-                  <thead className="sticky top-0 z-10 bg-background">
-                    {/* Days Row */}
-                    <tr className="border-b">
-                      <th className="sticky start-0 z-20 bg-muted/50 p-2 text-start font-medium border-e min-w-[120px] max-w-[140px]">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-brand-navy" />
-                          {isRTL ? 'المعلم' : 'Teacher'}
-                        </div>
-                      </th>
-                      {displayedDays.map(day => (
-                        <th 
-                          key={day.key} 
-                          colSpan={timeSlots.length}
-                          className="p-3 text-center font-medium bg-brand-navy/5 dark:bg-brand-navy/20 border-b"
-                        >
-                          <span className="font-bold text-brand-navy dark:text-brand-turquoise">
-                            {isRTL ? day.ar : day.en}
-                          </span>
-                        </th>
-                      ))}
-                    </tr>
-                    {/* Periods Row */}
-                    <tr className="border-b bg-muted/30">
-                      <th className="sticky start-0 z-20 bg-muted/30 p-2 border-e">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {isRTL ? 'الحصص' : 'Periods'}
-                        </div>
-                      </th>
-                      {displayedDays.map(day => (
-                        timeSlots.map((slot, idx) => (
-                          <th key={`${day.key}-${slot.id}`} className="p-1 text-center border-e border-border/20 min-w-[40px] max-w-[50px]">
-                            <div className="text-[9px] font-medium">{idx + 1}</div>
-                            <div className="text-[8px] text-muted-foreground">{slot.start_time?.slice(0,5)}</div>
-                          </th>
-                        ))
-                      ))}
-                    </tr>
-                  </thead>
-                  
-                  {/* Body */}
-                  <tbody>
-                    {displayTeachers.map((teacher, teacherIdx) => (
-                      <tr key={teacher.id} className={`border-b hover:bg-muted/10 ${teacherIdx % 2 === 0 ? '' : 'bg-muted/5'}`}>
-                        {/* Teacher Cell - Sticky & Clickable */}
-                        <td className="sticky start-0 z-10 bg-background p-1 border-e min-w-[120px] max-w-[140px]">
-                          <div 
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded-lg p-1 transition-colors"
-                            onClick={() => {
-                              setSelectedTeacher(teacher);
-                              setTeacherDetailOpen(true);
-                            }}
-                            data-testid={`teacher-cell-${teacher.id}`}
-                          >
-                            <Avatar className="h-8 w-8 flex-shrink-0">
-                              <AvatarImage src={teacher.avatar_url} />
-                              <AvatarFallback className="bg-brand-navy text-white text-xs">
-                                {teacher.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-medium truncate text-brand-navy dark:text-brand-turquoise">
-                                {teacher.full_name}
-                              </p>
-                              <div className="flex items-center gap-1">
-                                <Badge variant="secondary" className="text-[9px] px-1 py-0">
-                                  {getTeacherWorkload(teacher.id)} {isRTL ? 'ح' : 'p'}
-                                </Badge>
-                              </div>
-                            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <Card className="card-nassaq overflow-hidden w-full" data-testid="schedule-grid">
+                {/* Drag Hint */}
+                {isDragging && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-brand-turquoise text-white px-4 py-2 rounded-full shadow-lg text-sm flex items-center gap-2">
+                    <Move className="h-4 w-4" />
+                    {isRTL ? 'اسحب وأفلت لنقل الحصة' : 'Drag and drop to move session'}
+                  </div>
+                )}
+                
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full border-collapse">
+                    {/* Header */}
+                    <thead className="sticky top-0 z-10 bg-background">
+                      {/* Days Row */}
+                      <tr className="border-b">
+                        <th className="sticky start-0 z-20 bg-muted/50 p-2 text-start font-medium border-e min-w-[120px] max-w-[140px]">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-brand-navy" />
+                            {isRTL ? 'المعلم' : 'Teacher'}
                           </div>
-                        </td>
-                        
-                        {/* Session Cells */}
+                        </th>
                         {displayedDays.map(day => (
-                          timeSlots.map(slot => {
-                            const cellSessions = getSessionsForCell(teacher.id, day.key, slot.id);
-                            
-                            return (
-                              <td 
-                                key={`${teacher.id}-${day.key}-${slot.id}`} 
-                                className="p-0.5 border-e border-border/20 min-w-[40px] max-w-[50px] align-top"
-                              >
-                                {cellSessions.length > 0 ? (
-                                  <div className="space-y-0.5">
-                                    {cellSessions.map(session => (
-                                      <div
-                                        key={session.id}
-                                        onClick={() => {
-                                          setSelectedSession(session);
-                                          setSessionDetailOpen(true);
-                                        }}
-                                        className={`p-0.5 rounded border cursor-pointer transition-all hover:shadow-sm text-[8px] ${getSubjectColor(session.subject_name)}`}
-                                        data-testid={`session-${session.id}`}
-                                      >
-                                        <p className="font-medium truncate leading-tight">{session.subject_name?.split(' ')[0]?.slice(0,4)}</p>
-                                        <p className="opacity-70 truncate leading-tight">{session.class_name?.slice(0,5)}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="h-8 border border-dashed border-muted-foreground/20 rounded" />
-                                )}
-                              </td>
-                            );
-                          })
+                          <th 
+                            key={day.key} 
+                            colSpan={timeSlots.length}
+                            className="p-3 text-center font-medium bg-brand-navy/5 dark:bg-brand-navy/20 border-b"
+                          >
+                            <span className="font-bold text-brand-navy dark:text-brand-turquoise">
+                              {isRTL ? day.ar : day.en}
+                            </span>
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+                      {/* Periods Row */}
+                      <tr className="border-b bg-muted/30">
+                        <th className="sticky start-0 z-20 bg-muted/30 p-2 border-e">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {isRTL ? 'الحصص' : 'Periods'}
+                          </div>
+                        </th>
+                        {displayedDays.map(day => (
+                          timeSlots.map((slot, idx) => (
+                            <th key={`${day.key}-${slot.id}`} className="p-1 text-center border-e border-border/20 min-w-[40px] max-w-[50px]">
+                              <div className="text-[9px] font-medium">{idx + 1}</div>
+                              <div className="text-[8px] text-muted-foreground">{slot.start_time?.slice(0,5)}</div>
+                            </th>
+                          ))
+                        ))}
+                      </tr>
+                    </thead>
+                    
+                    {/* Body */}
+                    <tbody>
+                      {displayTeachers.map((teacher, teacherIdx) => (
+                        <tr key={teacher.id} className={`border-b hover:bg-muted/10 ${teacherIdx % 2 === 0 ? '' : 'bg-muted/5'}`}>
+                          {/* Teacher Cell - Sticky & Clickable */}
+                          <td className="sticky start-0 z-10 bg-background p-1 border-e min-w-[120px] max-w-[140px]">
+                            <div 
+                              className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded-lg p-1 transition-colors"
+                              onClick={() => {
+                                setSelectedTeacher(teacher);
+                                setTeacherDetailOpen(true);
+                              }}
+                              data-testid={`teacher-cell-${teacher.id}`}
+                            >
+                              <Avatar className="h-8 w-8 flex-shrink-0">
+                                <AvatarImage src={teacher.avatar_url} />
+                                <AvatarFallback className="bg-brand-navy text-white text-xs">
+                                  {teacher.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium truncate text-brand-navy dark:text-brand-turquoise">
+                                  {teacher.full_name}
+                                </p>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                                    {getTeacherWorkload(teacher.id)} {isRTL ? 'ح' : 'p'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          
+                          {/* Session Cells - Droppable */}
+                          {displayedDays.map(day => (
+                            timeSlots.map(slot => {
+                              const cellSessions = getSessionsForCell(teacher.id, day.key, slot.id);
+                              const cellId = `${teacher.id}__${day.key}__${slot.id}`;
+                              
+                              return (
+                                <DroppableCell key={cellId} id={cellId}>
+                                  {cellSessions.length > 0 ? (
+                                    <div className="space-y-0.5">
+                                      {cellSessions.map(session => (
+                                        <DraggableSession
+                                          key={session.id}
+                                          session={session}
+                                          isRTL={isRTL}
+                                          onClick={() => {
+                                            setSelectedSession(session);
+                                            setSessionDetailOpen(true);
+                                          }}
+                                        />
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className={`h-8 border border-dashed rounded transition-colors ${
+                                      isDragging ? 'border-brand-turquoise/50 bg-brand-turquoise/5' : 'border-muted-foreground/20'
+                                    }`} />
+                                  )}
+                                </DroppableCell>
+                              );
+                            })
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+              
+              {/* Drag Overlay */}
+              <DragOverlay>
+                {activeSession && <SessionDragOverlay session={activeSession} isRTL={isRTL} />}
+              </DragOverlay>
+            </DndContext>
           )}
         </div>
 
