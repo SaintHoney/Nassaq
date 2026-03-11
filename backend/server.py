@@ -49,6 +49,30 @@ db = client[os.environ['DB_NAME']]
 # Initialize Audit Engine
 audit_engine = AuditLogEngine(db)
 
+# QR Code Generation Helper
+def generate_student_qr_code(student_id: str, student_name: str, student_number: str) -> str:
+    """Generate QR code for student containing their info"""
+    qr_data = f"NASSAQ|STUDENT|{student_id}|{student_number}|{student_name}"
+    
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    
+    return base64.b64encode(buffer.read()).decode('utf-8')
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET_KEY', 'nassaq-secret-key')
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
