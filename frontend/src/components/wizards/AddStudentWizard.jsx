@@ -193,7 +193,7 @@ export default function AddStudentWizard({
         link_to_parent_id: linkToExisting && existingParent ? existingParent.id : null,
       };
       
-      const response = await api.post('/api/student-wizard/create', requestData);
+      const response = await api.post('/student-wizard/create', requestData);
       
       if (response.data?.success) {
         setCreatedStudent(response.data.student);
