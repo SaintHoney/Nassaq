@@ -350,6 +350,34 @@ function AppRoutes() {
         }
       />
       
+      {/* Teacher Mobile-First Home Page */}
+      <Route
+        path="/teacher/home"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherHomePage />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Teacher Session Routes */}
+      <Route
+        path="/teacher/session/start"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <SessionStartPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/session/teach"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <SessionTeachPage />
+          </ProtectedRoute>
+        }
+      />
+      
       {/* Teacher Module Routes */}
       <Route
         path="/teacher/schedule"
