@@ -252,11 +252,12 @@ export default function UsersManagement() {
     }
   }, [api, searchQuery, selectedRole, selectedStatus, selectedAIStatus, selectedAccountType, isRTL]);
   
-  // Fetch teacher requests
+  // Fetch teacher requests (all statuses for filtering)
   const fetchTeacherRequests = useCallback(async () => {
     try {
+      // Fetch all teacher requests (without status filter to get all)
       const response = await api.get('/api/registration-requests', {
-        params: { status: 'pending', account_type: 'teacher' }
+        params: { account_type: 'teacher' }
       });
       // Handle new API response format
       const requests = response.data?.requests || response.data || [];
@@ -264,7 +265,9 @@ export default function UsersManagement() {
       // Update pending requests count in stats
       setStats(prev => ({
         ...prev,
-        pendingRequests: requests.filter(r => r.status === 'pending').length,
+        pendingRequests: requests.filter(r => r.status === 'pending' || r.status === 'info_required').length,
+        approvedRequests: requests.filter(r => r.status === 'approved').length,
+        rejectedRequests: requests.filter(r => r.status === 'rejected').length,
       }));
     } catch (error) {
       console.error('Error fetching teacher requests:', error);
@@ -273,9 +276,55 @@ export default function UsersManagement() {
       setStats(prev => ({
         ...prev,
         pendingRequests: 0,
+        approvedRequests: 0,
+        rejectedRequests: 0,
       }));
     }
   }, [api]);
+  
+  // Fetch schools and their users
+  const fetchSchoolUsers = useCallback(async () => {
+    try {
+      // First get all schools
+      const schoolsResponse = await api.get('/api/schools');
+      const schoolsList = schoolsResponse.data || [];
+      setSchools(schoolsList);
+      
+      // Then get users for each school
+      const schoolUsersMap = {};
+      for (const school of schoolsList) {
+        try {
+          const usersResponse = await api.get('/api/users', {
+            params: { tenant_id: school.id }
+          });
+          const schoolUsersList = usersResponse.data || [];
+          // Include school principals and other school users
+          schoolUsersMap[school.id] = {
+            school: school,
+            users: schoolUsersList.filter(u => 
+              u.role === 'school_principal' || 
+              u.role === 'school_sub_admin' || 
+              u.role === 'teacher' ||
+              u.role === 'school_manager'
+            )
+          };
+        } catch (e) {
+          schoolUsersMap[school.id] = { school: school, users: [] };
+        }
+      }
+      setSchoolUsers(schoolUsersMap);
+    } catch (error) {
+      console.error('Error fetching school users:', error);
+      setSchools([]);
+      setSchoolUsers({});
+    }
+  }, [api]);
+  
+  // Filter teacher requests based on selected status
+  const filteredTeacherRequests = useMemo(() => {
+    if (requestStatusFilter === 'all') return teacherRequests;
+    return teacherRequests.filter(r => r.status === requestStatusFilter);
+  }, [teacherRequests, requestStatusFilter]);
   
   // Initial fetch - only runs once
   useEffect(() => {
