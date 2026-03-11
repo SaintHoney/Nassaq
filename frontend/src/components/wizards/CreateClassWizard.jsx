@@ -390,7 +390,7 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="create-class-wizard">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 font-cairo text-xl">
@@ -425,7 +425,7 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
             {currentStep === 2 && <Step2Teacher data={data} onChange={(k, v) => setData(p => ({ ...p, [k]: v }))} options={options} isRTL={isRTL} />}
             {currentStep === 3 && <Step3Students data={data} onChange={(k, v) => setData(p => ({ ...p, [k]: v }))} options={options} isRTL={isRTL} />}
             {currentStep === 4 && <Step4Review data={data} options={options} isRTL={isRTL} />}
-            {currentStep === 5 && result && <SuccessStep result={result} isRTL={isRTL} onClose={handleClose} onAddAnother={handleReset} />}
+            {currentStep === 5 && result && <SuccessStep result={result} isRTL={isRTL} onClose={handleCloseDialog} onAddAnother={handleReset} />}
           </div>
         )}
 
@@ -433,7 +433,7 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
           <DialogFooter className="flex justify-between gap-3 mt-4">
             <div>{currentStep > 1 && <Button variant="outline" onClick={handleBack}>{isRTL ? 'السابق' : 'Back'}</Button>}</div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button variant="ghost" onClick={handleCloseDialog}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               {currentStep < 4 ? (
                 <Button onClick={handleNext} className="bg-purple-600 hover:bg-purple-700">{isRTL ? 'التالي' : 'Next'}</Button>
               ) : (
