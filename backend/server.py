@@ -477,7 +477,7 @@ async def login(credentials: UserLogin):
         )
         raise HTTPException(status_code=401, detail="الحساب معطل")
     
-    user_id = str(user["_id"])
+    user_id = user.get("id") or str(user["_id"])
     token = create_access_token({"sub": user_id, "role": user["role"]})
     
     # Log successful login
