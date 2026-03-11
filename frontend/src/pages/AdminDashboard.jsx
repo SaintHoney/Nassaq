@@ -17,7 +17,7 @@ import {
   FileText, Zap, Download, Shield, Clock, RefreshCw, Sparkles, Calendar, Settings, UserPlus,
   BookOpen, ChevronRight, Filter, SlidersHorizontal, Play, MessageSquare, Send, Gauge, Server,
   MapPin, Eye, Check, GripVertical, CheckCircle, LayoutGrid, LayoutList, Maximize2, ChevronUp, ChevronDown,
-  TrendingUp, TrendingDown, Minus, AlertTriangle, Bell, ExternalLink, User
+  TrendingUp, TrendingDown, Minus, AlertTriangle, Bell, ExternalLink, User, Plug
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
