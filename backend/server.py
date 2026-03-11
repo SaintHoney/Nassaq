@@ -393,16 +393,51 @@ async def register(user_data: UserCreate):
 async def login(credentials: UserLogin):
     user = await db.users.find_one({"email": credentials.email})
     if not user:
+        # Log failed login attempt
+        await audit_engine.log_auth_event(
+            action=AuditAction.LOGIN_FAILED.value,
+            user_id="unknown",
+            success=False,
+            email=credentials.email,
+            reason="user_not_found"
+        )
         raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
     
     if not verify_password(credentials.password, user["password_hash"]):
+        # Log failed login attempt
+        await audit_engine.log_auth_event(
+            action=AuditAction.LOGIN_FAILED.value,
+            user_id=str(user["_id"]),
+            tenant_id=user.get("tenant_id"),
+            success=False,
+            email=credentials.email,
+            reason="invalid_password"
+        )
         raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
     
     if not user.get("is_active", True):
+        # Log failed login attempt
+        await audit_engine.log_auth_event(
+            action=AuditAction.LOGIN_FAILED.value,
+            user_id=str(user["_id"]),
+            tenant_id=user.get("tenant_id"),
+            success=False,
+            email=credentials.email,
+            reason="account_disabled"
+        )
         raise HTTPException(status_code=401, detail="الحساب معطل")
     
     user_id = str(user["_id"])
     token = create_access_token({"sub": user_id, "role": user["role"]})
+    
+    # Log successful login
+    await audit_engine.log_auth_event(
+        action=AuditAction.LOGIN.value,
+        user_id=user_id,
+        tenant_id=user.get("tenant_id"),
+        success=True,
+        email=credentials.email
+    )
     
     user_response = UserResponse(
         id=user_id,
