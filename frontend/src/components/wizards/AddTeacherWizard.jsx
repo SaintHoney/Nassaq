@@ -753,7 +753,7 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="add-teacher-wizard">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 font-cairo text-xl">
@@ -789,7 +789,7 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
             {currentStep === 3 && <Step3Subjects data={subjectData} onChange={(k, v) => setSubjectData(p => ({ ...p, [k]: v }))} errors={errors} options={options} isRTL={isRTL} />}
             {currentStep === 4 && <Step4Schedule data={scheduleData} onChange={(k, v) => setScheduleData(p => ({ ...p, [k]: v }))} options={options} isRTL={isRTL} />}
             {currentStep === 5 && <Step5Review basicData={basicData} qualData={qualData} subjectData={subjectData} scheduleData={scheduleData} options={options} isRTL={isRTL} />}
-            {currentStep === 6 && result && <SuccessStep result={result} isRTL={isRTL} onClose={handleClose} onAddAnother={handleReset} />}
+            {currentStep === 6 && result && <SuccessStep result={result} isRTL={isRTL} onClose={handleCloseDialog} onAddAnother={handleReset} />}
           </div>
         )}
 
@@ -797,7 +797,7 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
           <DialogFooter className="flex justify-between gap-3 mt-4">
             <div>{currentStep > 1 && <Button variant="outline" onClick={handleBack} disabled={submitting}>{isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}{isRTL ? 'السابق' : 'Back'}</Button>}</div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleClose} disabled={submitting}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button variant="ghost" onClick={handleCloseDialog} disabled={submitting}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               {currentStep < 5 ? (
                 <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{isRTL ? 'التالي' : 'Next'}{isRTL ? <ArrowLeft className="h-4 w-4 ms-2" /> : <ArrowRight className="h-4 w-4 ms-2" />}</Button>
               ) : (
