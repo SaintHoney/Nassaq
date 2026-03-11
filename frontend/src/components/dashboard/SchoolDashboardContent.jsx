@@ -741,23 +741,23 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
       />
       <AddTeacherWizard 
         open={showAddTeacherWizard} 
-        onClose={() => setShowAddTeacherWizard(false)} 
+        onOpenChange={setShowAddTeacherWizard} 
       />
       <CreateClassWizard 
         open={showCreateClassWizard} 
-        onClose={() => setShowCreateClassWizard(false)} 
+        onOpenChange={setShowCreateClassWizard} 
       />
       <SendNotificationWizard 
         open={showSendNotificationWizard} 
-        onClose={() => setShowSendNotificationWizard(false)} 
+        onOpenChange={setShowSendNotificationWizard} 
       />
       <CreateScheduleWizard 
         open={showCreateScheduleWizard} 
-        onClose={() => setShowCreateScheduleWizard(false)} 
+        onOpenChange={setShowCreateScheduleWizard} 
       />
       <LiveSessionsMonitor 
         open={showLiveSessionsMonitor} 
-        onClose={() => setShowLiveSessionsMonitor(false)} 
+        onOpenChange={setShowLiveSessionsMonitor} 
       />
     </div>
   );
