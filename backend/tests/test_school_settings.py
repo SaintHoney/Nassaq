@@ -117,10 +117,10 @@ class TestSchoolSettingsAPIs:
     # ============== Section 3: Periods Per Day ==============
     def test_update_periods_per_day(self):
         """Test PUT /api/school/settings/periods-per-day - تحديث عدد الحصص"""
+        # API expects periods as query parameter
         response = requests.put(
-            f"{BASE_URL}/api/school/settings/periods-per-day",
-            headers=self.principal_headers,
-            json={"periods_per_day": 7}
+            f"{BASE_URL}/api/school/settings/periods-per-day?periods=7",
+            headers=self.principal_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
@@ -143,13 +143,14 @@ class TestSchoolSettingsAPIs:
     # ============== Section 5: Breaks ==============
     def test_update_breaks(self):
         """Test PUT /api/school/settings/breaks - تحديث فترات الاستراحة"""
+        # API expects a list directly, not wrapped in object
         breaks = [
             {"id": "break-1", "name": "استراحة الفطور", "start": "09:30", "end": "09:45"}
         ]
         response = requests.put(
             f"{BASE_URL}/api/school/settings/breaks",
             headers=self.principal_headers,
-            json={"breaks": breaks}
+            json=breaks  # Send list directly
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
@@ -228,16 +229,16 @@ class TestSchoolSettingsAPIs:
     # ============== Section 9: Teacher Availability ==============
     def test_update_teacher_availability(self):
         """Test PUT /api/school/settings/teacher-availability - تحديث توافر المعلمين"""
+        # API expects TeacherAvailability model with teacher_id, available_days, available_periods
         availability = {
-            "teacher-1": {
-                "sunday": ["1", "2", "3"],
-                "monday": ["1", "2", "3", "4"]
-            }
+            "teacher_id": "teacher-1",
+            "available_days": ["sunday", "monday", "tuesday"],
+            "available_periods": [1, 2, 3, 4]
         }
         response = requests.put(
             f"{BASE_URL}/api/school/settings/teacher-availability",
             headers=self.principal_headers,
-            json={"teacher_availability": availability}
+            json=availability
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
@@ -247,6 +248,7 @@ class TestSchoolSettingsAPIs:
     # ============== Section 10: Constraints ==============
     def test_update_constraints(self):
         """Test PUT /api/school/settings/constraints - تحديث القيود الإدارية"""
+        # API expects a list directly, not wrapped in object
         constraints = [
             {
                 "id": "constraint-1",
@@ -258,7 +260,7 @@ class TestSchoolSettingsAPIs:
         response = requests.put(
             f"{BASE_URL}/api/school/settings/constraints",
             headers=self.principal_headers,
-            json={"constraints": constraints}
+            json=constraints  # Send list directly
         )
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
