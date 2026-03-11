@@ -584,7 +584,8 @@ export default function CreateUserWizard({ open, onOpenChange, onSuccess, api, i
   // الانتقال للخطوة التالية
   const nextStep = () => {
     if (step < totalSteps) {
-      if (step === 4) {
+      // توليد كلمة المرور عند الانتقال إلى الخطوة 4 (من الخطوة 3)
+      if (step === 3) {
         setTempPassword(generateSecurePassword());
       }
       setStep(step + 1);
