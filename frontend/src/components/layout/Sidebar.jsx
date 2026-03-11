@@ -51,7 +51,7 @@ export const Sidebar = ({ children }) => {
   // Handle exit from school context (impersonation mode)
   const handleExitSchoolContext = () => {
     exitSchoolContext();
-    navigate('/admin/schools');
+    navigate('/admin/tenants');
   };
 
   const getMenuItems = () => {
