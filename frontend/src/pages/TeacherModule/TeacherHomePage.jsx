@@ -29,7 +29,7 @@ const getCurrentHijriDate = () => {
   }
 };
 
-// Get time until lesson
+// Get time until lesson - with smarter end detection
 const getTimeUntilLesson = (lessonTime) => {
   if (!lessonTime) return null;
   
@@ -38,11 +38,24 @@ const getTimeUntilLesson = (lessonTime) => {
   const lessonDate = new Date();
   lessonDate.setHours(hours, minutes, 0, 0);
   
+  // Calculate end time (assume 45 minute lesson)
+  const lessonEndDate = new Date(lessonDate);
+  lessonEndDate.setMinutes(lessonEndDate.getMinutes() + 45);
+  
   const diff = lessonDate - now;
+  const endDiff = lessonEndDate - now;
   const diffMinutes = Math.floor(diff / 60000);
   
-  if (diffMinutes < -45) return { status: 'ended', minutes: Math.abs(diffMinutes) };
-  if (diffMinutes < 0) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
+  // If lesson end time has passed by more than 4 hours, mark as ended
+  if (endDiff < -240 * 60000) return { status: 'ended', minutes: Math.abs(diffMinutes) };
+  
+  // If lesson is currently happening (started but not ended)
+  if (diff < 0 && endDiff > 0) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
+  
+  // If lesson recently ended (within 4 hours), still show as ready (teacher can still start)
+  if (endDiff < 0) return { status: 'ready', minutes: Math.abs(diffMinutes), recentlyEnded: true };
+  
+  // Lesson hasn't started yet
   if (diffMinutes <= 10) return { status: 'ready', minutes: diffMinutes };
   if (diffMinutes <= 30) return { status: 'soon', minutes: diffMinutes };
   return { status: 'upcoming', minutes: diffMinutes };
