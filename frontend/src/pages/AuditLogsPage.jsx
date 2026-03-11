@@ -33,7 +33,7 @@ import {
 } from "../components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/layout/Sidebar';
 import { toast } from 'sonner';
 
 const AuditLogsPage = () => {
