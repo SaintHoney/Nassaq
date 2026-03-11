@@ -281,7 +281,7 @@ const SuccessStep = ({ result, isRTL, onClose, onAddAnother }) => (
 );
 
 // Main Wizard
-export const CreateClassWizard = ({ open, onClose }) => {
+export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
   const { isRTL } = useTheme();
   const { token } = useAuth();
   
@@ -292,6 +292,14 @@ export const CreateClassWizard = ({ open, onClose }) => {
   const [result, setResult] = useState(null);
   const [data, setData] = useState({ capacity: 30, class_type: 'regular', student_ids: [] });
   const [options, setOptions] = useState({ grades: [], teachers: [], students: [], classTypes: [] });
+
+  // Handle close - supports onOpenChange pattern
+  const handleCloseDialog = () => {
+    handleReset();
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+  };
 
   useEffect(() => {
     if (open) fetchOptions();
