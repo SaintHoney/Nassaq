@@ -11628,7 +11628,7 @@ async def get_teacher_dashboard(
     # Get pending attendance (classes where attendance not recorded today)
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     recorded_attendance = await db.attendance.find({
-        "teacher_id": teacher_id,
+        "teacher_id": actual_teacher_id,
         "date": today_str
     }, {"_id": 0, "class_id": 1}).to_list(50)
     recorded_class_ids = [a.get("class_id") for a in recorded_attendance]
