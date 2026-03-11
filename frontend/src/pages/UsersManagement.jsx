@@ -264,12 +264,11 @@ export default function UsersManagement() {
       }));
     } catch (error) {
       console.error('Error fetching teacher requests:', error);
-      // Mock data for demo
-      const mockRequests = generateMockTeacherRequests();
-      setTeacherRequests(mockRequests);
+      // Don't use mock data - show empty state instead
+      setTeacherRequests([]);
       setStats(prev => ({
         ...prev,
-        pendingRequests: mockRequests.filter(r => r.status === 'pending').length,
+        pendingRequests: 0,
       }));
     }
   }, [api]);
