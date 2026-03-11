@@ -11567,9 +11567,9 @@ async def get_teacher_dashboard(
     actual_teacher_id = teacher.get("id")
     school_id = teacher.get("school_id")
     
-    # Get teacher assignments
+    # Get teacher assignments using actual_teacher_id
     assignments = await db.teacher_assignments.find({
-        "teacher_id": teacher_id,
+        "teacher_id": actual_teacher_id,
         "is_active": True
     }, {"_id": 0}).to_list(100)
     
