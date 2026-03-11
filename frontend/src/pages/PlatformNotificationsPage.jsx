@@ -58,59 +58,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ScrollArea } from '../components/ui/scroll-area';
 
-// Sample notifications data (in real app, this would come from API)
-const sampleNotifications = [
-  {
-    id: '1',
-    type: 'system',
-    title: 'تحديث النظام',
-    title_en: 'System Update',
-    message: 'تم تحديث النظام إلى الإصدار 2.1.0 بنجاح',
-    message_en: 'System successfully updated to version 2.1.0',
-    recipient: 'all',
-    status: 'sent',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    type: 'alert',
-    title: 'تنبيه أمني',
-    title_en: 'Security Alert',
-    message: 'تم اكتشاف محاولة دخول غير مصرح بها',
-    message_en: 'Unauthorized access attempt detected',
-    recipient: 'admins',
-    status: 'sent',
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'مدرسة جديدة',
-    title_en: 'New School',
-    message: 'تم إضافة مدرسة جديدة: مدارس النور',
-    message_en: 'New school added: Al-Noor Schools',
-    recipient: 'platform_admin',
-    status: 'sent',
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: '4',
-    type: 'reminder',
-    title: 'تذكير',
-    title_en: 'Reminder',
-    message: 'يوجد 5 طلبات تسجيل بانتظار المراجعة',
-    message_en: '5 registration requests pending review',
-    recipient: 'platform_admin',
-    status: 'pending',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
+// Sample notifications removed - will be fetched from API
+const sampleNotifications = [];
 
 export const PlatformNotificationsPage = () => {
   const { user, api } = useAuth();
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
-  const [notifications, setNotifications] = useState(sampleNotifications);
-  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -119,6 +74,25 @@ export const PlatformNotificationsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Fetch notifications from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/notifications');
+        if (response.data && Array.isArray(response.data)) {
+          setNotifications(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, [api]);
 
   const getTypeIcon = (type) => {
     switch (type) {
