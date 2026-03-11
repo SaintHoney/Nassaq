@@ -238,7 +238,7 @@ export default function TenantsManagement() {
   const fetchSchools = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/api/schools');
+      const response = await api.get('/schools');
       // API returns array directly or object with schools property
       const schoolsData = Array.isArray(response.data) ? response.data : (response.data.schools || []);
       
