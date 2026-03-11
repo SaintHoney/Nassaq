@@ -69,16 +69,15 @@ export default function SessionStartPage() {
     return () => clearTimeout(timeout);
   }, [location.state, navigate]);
 
-  // Start the session
+  // Start the session - only when lessonData is available
   const startSession = useCallback(async () => {
     if (!lessonData) {
-      toast.error('لم يتم تحديد الحصة');
-      navigate('/teacher');
-      return;
+      return; // Wait for lessonData to be set
     }
 
     setLoading(true);
     try {
+      console.log('Starting session with data:', lessonData);
       const response = await api.post('/session/start', {
         teacher_id: teacherId,
         schedule_session_id: lessonData.schedule_session_id || lessonData.id,
