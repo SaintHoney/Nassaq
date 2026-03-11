@@ -173,10 +173,9 @@ export default function UsersManagement() {
       
       let fetchedUsers = response.data.users || [];
       
-      // Show warning if API returned empty but use mock for demo
+      // Log empty response - don't use mock data
       if (fetchedUsers.length === 0) {
-        console.warn('API returned no users, using demo data');
-        fetchedUsers = generateMockUsers();
+        console.log('API returned no users for current filters');
       }
       
       // Apply frontend filters
