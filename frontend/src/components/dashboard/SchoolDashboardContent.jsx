@@ -591,29 +591,24 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
                   minute: '2-digit'
                 })}
               </span>
-              <span className="text-xs text-muted-foreground/60">
-                ({isRTL ? 'تحديث تلقائي كل 20 ثانية' : 'Auto-refresh every 20s'})
-              </span>
             </div>
           )}
           
-          {/* Manual Refresh Button */}
+          {/* Manual Refresh Button - Icon only */}
           <Button
-            size="sm"
+            size="icon"
             variant="outline"
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="rounded-xl border-brand-turquoise/30 hover:bg-brand-turquoise/10 hover:border-brand-turquoise"
+            className="rounded-xl border-brand-turquoise/30 hover:bg-brand-turquoise/10 hover:border-brand-turquoise h-9 w-9"
             data-testid="refresh-dashboard-btn"
+            title={isRTL ? 'تحديث البيانات' : 'Refresh Data'}
           >
-            <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing 
-              ? (isRTL ? 'جاري التحديث...' : 'Refreshing...') 
-              : (isRTL ? 'تحديث البيانات' : 'Refresh')}
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         
-        {/* Quick Actions - Compact inline buttons */}
+        {/* Quick Actions - Compact inline buttons (removed sessions and notifications) */}
         <div className="flex flex-wrap items-center gap-2" data-testid="quick-actions-inline">
           <Button
             size="sm"
@@ -649,31 +644,11 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             size="sm"
             variant="outline"
             className="rounded-xl border-emerald-400/30 hover:bg-emerald-50 hover:border-emerald-400 dark:hover:bg-emerald-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('create-schedule')}
-            data-testid="quick-action-create-schedule"
+            onClick={() => navigate('/school/schedule')}
+            data-testid="quick-action-view-schedule"
           >
             <CalendarDays className="h-3.5 w-3.5 me-1.5 text-emerald-500" />
-            {isRTL ? 'جدول' : 'Schedule'}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-xl border-amber-400/30 hover:bg-amber-50 hover:border-amber-400 dark:hover:bg-amber-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('view-sessions')}
-            data-testid="quick-action-live-sessions"
-          >
-            <PlayCircle className="h-3.5 w-3.5 me-1.5 text-amber-500" />
-            {isRTL ? 'الحصص' : 'Sessions'}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-xl border-rose-400/30 hover:bg-rose-50 hover:border-rose-400 dark:hover:bg-rose-900/20 text-xs h-8 px-3"
-            onClick={() => handleQuickAction('send-notification')}
-            data-testid="quick-action-send-notification"
-          >
-            <Bell className="h-3.5 w-3.5 me-1.5 text-rose-500" />
-            {isRTL ? 'إشعار' : 'Notify'}
+            {isRTL ? 'عرض الجدول' : 'View Schedule'}
           </Button>
         </div>
       </div>
