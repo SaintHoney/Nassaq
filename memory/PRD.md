@@ -1,129 +1,160 @@
-# نَسَّق | NASSAQ - School Management System PRD
+# نَسَّق | NASSAQ - Product Requirements Document
 
-## Original Problem Statement
-بناء نظام شامل ومتعدد المستأجرين لإدارة المدارس يعمل بالذكاء الاصطناعي، يسمى "نَسَّق | NASSAQ".
+## المشروع
+نظام إدارة مدرسي شامل ومتعدد المستأجرين مدعوم بالذكاء الاصطناعي.
 
----
-
-## Current Status: All User Interfaces COMPLETE ✅
-
-### What's Been Implemented (12 مارس 2026)
-
-#### 1. Student Interface ✅ COMPLETE (Mobile-First)
-- **StudentDashboard.jsx** - Complete redesign
-- Features:
-  - Green gradient header with student info
-  - Hijri date display
-  - Quick stats (attendance rate, average grade)
-  - Today's schedule with colored cards
-  - Recent grades with trend indicators
-  - Attendance summary with progress bar
-  - Notifications section
-  - Bottom navigation (الرئيسية، الجدول، الدرجات، حسابي)
-- API: `GET /api/student/dashboard/{student_id}`
-
-#### 2. Parent Interface ✅ COMPLETE (Mobile-First)
-- **ParentDashboard.jsx** - Complete redesign
-- Features:
-  - Purple gradient header with parent info
-  - Child selector (for multiple children)
-  - Selected child card with contact button
-  - Stats grid (attendance, grades, absences, lates)
-  - Tabbed content (Grades, Schedule, Behaviour)
-  - Notifications section
-  - Bottom navigation (الرئيسية، أبنائي، الإشعارات، حسابي)
-- API: `GET /api/parent/dashboard/{parent_id}`
-
-#### 3. Teacher Interface ✅ COMPLETE
-- Mobile-first dashboard
-- Session workflow (start → attendance → teach → end)
-- Random student selection with confetti
-
-#### 4. Backend Enhancements ✅
-- Added `student_id` and `parent_id` to UserResponse
-- Updated login and /auth/me endpoints
-- Auto-lookup for student/parent IDs in get_current_user
-- QR code generation for students
+## المستخدم المستهدف
+- مديرو المنصة (Platform Admins)
+- مديرو المدارس (School Principals)
+- المعلمون (Teachers)
+- الطلاب (Students)
+- أولياء الأمور (Parents)
 
 ---
 
-## Architecture
+## ما تم إنجازه
 
-```
-/app
-├── backend/
-│   └── server.py (13,840+ lines)
-└── frontend/src/pages/
-    ├── StudentDashboard.jsx   # Mobile-first student UI
-    ├── ParentDashboard.jsx    # Mobile-first parent UI
-    └── TeacherModule/
-        ├── TeacherHomePage.jsx
-        ├── SessionStartPage.jsx
-        └── SessionTeachPage.jsx
-```
+### المرحلة 1: مركز القيادة (Command Center) ✅ مكتمل
+**التاريخ:** 2026-03-12
 
----
+#### التغييرات المنفذة:
+1. **قسم المؤشرات العامة:**
+   - ✅ إظهار التاريخ الهجري والميلادي
+   - ✅ إلغاء زر "تصدير"
 
-## All User Roles & Dashboards
+2. **كروت العرض الأساسية:**
+   - ✅ المدارس المسجلة → إدارة المدارس
+   - ✅ الطلاب المسجلين → إدارة المدارس
+   - ✅ المعلمين في المدارس → إدارة المدارس
+   - ✅ المعلمين المستقلين → إدارة المستخدمين (جديد)
+   - ✅ نسبة حضور الطلاب % (غير قابل للنقر) (جديد)
+   - ✅ نسبة حضور المعلمين % (غير قابل للنقر) (جديد)
+   - ✅ حسابات المنصة → إدارة المستخدمين (جديد)
+   - ✅ طلبات معلقة → إدارة المستخدمين (جديد)
+   - ✅ مدارس تستخدم AI → إدارة المدارس (جديد)
+   - ✅ حركة LIVE متواصلة على جميع الكروت
 
-| Role | Dashboard | Status |
-|------|-----------|--------|
-| Platform Admin | AdminDashboard.jsx | ✅ Complete |
-| School Principal | SchoolDashboard.jsx | ✅ Complete |
-| Teacher | TeacherHomePage.jsx | ✅ Complete |
-| Student | StudentDashboard.jsx | ✅ Complete |
-| Parent | ParentDashboard.jsx | ✅ Complete |
+3. **الإجراءات السريعة:**
+   - ✅ نافذة "إضافة مدرسة" أكبر (max-w-5xl, 90vh)
+   - ✅ scroll-to-top عند الضغط على التقارير والتكاملات
 
----
+4. **لوحة العمليات الذكية:**
+   - ✅ إزالة زر "تشغيل" من الكروت
+   - ✅ الكارت نفسه قابل للنقر مع "اضغط للتشغيل"
 
-## Test Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@nassaq.com | Admin@123 |
-| Principal | principal1@nassaq.com | Principal@123 |
-| Teacher | teacher1@nor.edu.sa | Teacher@123 |
-| Student | student1@nor.edu.sa | Student@123 |
-| Parent | parent1@nor.edu.sa | Parent@123 |
+5. **Backend APIs:**
+   - ✅ `/api/admin/command-center/stats`
+   - ✅ `/api/admin/notifications/stats`
+   - ✅ `/api/admin/ai-operation/{type}`
 
 ---
 
-## Key APIs
+### المرحلة 2: إدارة المدارس ✅ مكتمل
+**التاريخ:** 2026-03-12
 
-### Student APIs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/student/dashboard/{id}` | Student dashboard data |
-| GET | `/api/student/schedule/{id}` | Full schedule |
-| GET | `/api/student/grades/{id}` | All grades |
-
-### Parent APIs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/parent/dashboard/{id}` | Parent dashboard with children |
-| GET | `/api/parent/child/{id}/grades` | Child's grades |
-| POST | `/api/parent/contact-teacher` | Contact teacher |
+#### التغييرات المنفذة:
+1. ✅ إضافة Grid View للمدارس ككروت
+2. ✅ زر التبديل بين Grid و Table view
+3. ✅ أزرار "تعليق" و "AI" واضحة وكبيرة على كل كارت
+4. ✅ زر "فتح لوحة التحكم" هو الزر الرئيسي الوحيد
+5. ✅ الكارت نفسه غير قابل للنقر
+6. ✅ مؤشر الحالة (خط ملون في الأعلى)
+7. ✅ دوال `handleToggleAI` و `handleToggleSuspend`
 
 ---
 
-## Tech Stack
-- **Backend**: FastAPI, MongoDB, Pydantic, qrcode
-- **Frontend**: React, TailwindCSS, Shadcn/UI, canvas-confetti
-- **Auth**: JWT with RBAC + role-specific IDs (teacher_id, student_id, parent_id)
-- **Languages**: Arabic (default), English
+### المرحلة 3: إدارة المستخدمين ✅ جزئياً مكتمل
+**التاريخ:** 2026-03-12
+
+#### التغييرات المنفذة:
+1. ✅ 9 كروت إحصائيات جديدة (غير قابلة للنقر):
+   - المدارس المسجلة، الطلاب المسجلين، معلمين المدارس
+   - معلمين مستقلين، حضور الطلاب، حضور المعلمين
+   - حسابات المنصة، طلبات معلقة، مدارس AI
+2. ✅ جلب الإحصائيات من Command Center API
+3. ✅ 3 تبويبات: المستخدمين، مستخدمو المدارس، طلبات المعلمين المستقلين
 
 ---
 
-## Remaining Work (Future Enhancements)
+### المرحلة 4: مركز الأمان ✅ Backend مكتمل
+**التاريخ:** 2026-03-12
 
-### Nice to Have
-- Bulk import (Excel/CSV) for students and teachers
-- Schedule export (PDF, CSV)
-- Advanced Hakim AI conversational assistant
-- Parent mobile app (standalone)
-- Push notifications
-- Student achievements/badges system
+#### Backend APIs المنفذة:
+- ✅ `/api/security/search-account` - البحث عن حساب
+- ✅ `/api/security/lock-account/{user_id}` - قفل حساب
+- ✅ `/api/security/unlock-account/{user_id}` - فتح حساب
+- ✅ `/api/security/end-all-sessions` - إنهاء جميع الجلسات
+- ✅ `/api/security/force-password-change` - فرض تغيير كلمة المرور
+- ✅ `/api/security/roles` - قائمة الأدوار
 
 ---
 
-*آخر تحديث: 12 مارس 2026*
+## المهام المعلقة (P0 - أولوية قصوى)
+
+### مركز الأمان - Frontend
+- [ ] تحديث واجهة SecurityCenterPage.jsx لاستخدام APIs الجديدة
+- [ ] إضافة dialogs للبحث عن الحسابات وقفلها/فتحها
+- [ ] إضافة dialog لفرض تغيير كلمة المرور (فردي/فئة/الكل)
+
+### سجلات التدقيق
+- [ ] عرض جميع العمليات والأنشطة في النظام
+- [ ] تسجيل الوقت والمستخدم والتفاصيل
+
+### التواصل والإشعارات
+- [ ] إحصائيات حقيقية عن الإشعارات
+- [ ] قسم الرسائل المجدولة
+
+### إعدادات النظام
+- [ ] إعدادات الحساب (صورة، لقب)
+- [ ] الإعدادات العامة (اسم المنصة، عنوان المتصفح، اللغة، التاريخ، المنطقة الزمنية)
+- [ ] وضع الصيانة والتسجيل المفتوح
+- [ ] الشروط والأحكام + سياسة الخصوصية (مع نظام الإصدارات)
+- [ ] بيانات التواصل
+- [ ] الأمان والجلسات + سياسة كلمات المرور
+
+### زر تبديل الأدوار + القائمة الجانبية
+- [ ] تبديل بين الأدوار بدون تسجيل خروج
+- [ ] تحديث القائمة الجانبية (شعار + اسم + دور + زر خروج فقط)
+
+---
+
+## المهام المستقبلية
+
+- استيراد جماعي (Excel/CSV) للطلاب والمعلمين
+- تصدير الجدول (PDF/CSV)
+- تطبيق مستقل للطالب/ولي الأمر
+
+---
+
+## الملفات المهمة
+
+### Backend
+- `/app/backend/server.py` - الخادم الرئيسي
+- `/app/backend/routes/admin_dashboard_routes.py` - مسارات مركز القيادة
+- `/app/backend/routes/security_routes.py` - مسارات مركز الأمان
+
+### Frontend
+- `/app/frontend/src/pages/AdminDashboard.jsx` - مركز القيادة
+- `/app/frontend/src/pages/PlatformSchoolsPage.jsx` - إدارة المدارس
+- `/app/frontend/src/pages/UsersManagement.jsx` - إدارة المستخدمين
+- `/app/frontend/src/pages/SecurityCenterPage.jsx` - مركز الأمان
+- `/app/frontend/src/pages/PlatformSettingsPage.jsx` - إعدادات النظام
+
+---
+
+## بيانات الاختبار
+
+- **مدير المنصة:** admin@nassaq.com / Admin@123
+- **مدير مدرسة:** principal1@nassaq.com / Principal@123
+- **معلم:** teacher1@nor.edu.sa / Teacher@123
+
+---
+
+## التكاملات
+
+- OpenAI (Emergent LLM Key) - مساعد حكيم
+- MongoDB (MONGO_URL)
+- Faker (بيانات تجريبية)
+- qrcode (QR للطلاب)
+- @dnd-kit (السحب والإفلات)
+- canvas-confetti (تأثيرات احتفالية)
