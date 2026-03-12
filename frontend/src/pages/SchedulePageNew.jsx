@@ -150,6 +150,8 @@ export default function SchedulePageNew() {
   const [generationStats, setGenerationStats] = useState(null);
   const [sessionDetailOpen, setSessionDetailOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [fullScheduleOpen, setFullScheduleOpen] = useState(false);
+  const [generationErrors, setGenerationErrors] = useState([]);
   
   const schoolId = user?.tenant_id;
 
