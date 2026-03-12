@@ -285,12 +285,12 @@ export const TeacherAttendancePage = () => {
             <div>
               <h1 className="font-cairo text-2xl font-bold text-foreground flex items-center gap-2">
                 <CalendarCheck className="h-7 w-7 text-brand-turquoise" />
-                {isRTL ? 'إدارة الحضور' : 'Attendance Management'}
+                {isRTL ? 'إدارة حضور المعلمين والاداريين' : 'Staff Attendance Management'}
               </h1>
               <p className="text-sm text-muted-foreground font-tajawal">
                 {isRTL 
-                  ? 'متابعة وتسجيل حضور المعلمين داخل المدرسة' 
-                  : 'Track and manage teacher attendance'}
+                  ? 'متابعة وتسجيل حضور المعلمين والاداريين داخل المدرسة' 
+                  : 'Track and manage staff attendance in the school'}
               </p>
             </div>
             
