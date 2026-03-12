@@ -834,95 +834,33 @@ const PeriodsPerDaySection = ({ periodsPerDay, periodDuration, isRTL }) => {
 // =============================================================
 // قسم بداية ونهاية اليوم الدراسي
 // =============================================================
-const SchoolTimingSection = ({ timing, onSave, isRTL }) => {
-  const [startTime, setStartTime] = useState(timing?.start || '07:00');
-  const [endTime, setEndTime] = useState(timing?.end || '14:00');
-  const [showDialog, setShowDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (timing) {
-      setStartTime(timing.start || '07:00');
-      setEndTime(timing.end || '14:00');
-    }
-  }, [timing]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave({ start: startTime, end: endTime });
-      setShowDialog(false);
-      toast.success(isRTL ? 'تم حفظ أوقات اليوم الدراسي' : 'School timing saved');
-    } catch (error) {
-      toast.error(isRTL ? 'خطأ في الحفظ' : 'Save error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
+const SchoolTimingSection = ({ timing, isRTL }) => {
   return (
     <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white" data-testid="timing-section">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-row-reverse">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div className="text-right">
-              <CardTitle className="font-cairo">{isRTL ? 'بداية ونهاية اليوم الدراسي' : 'School Day Timing'}</CardTitle>
-              <CardDescription>
-                {isRTL ? 'تحديد وقت بداية ونهاية الدوام المدرسي' : 'Set start and end times'}
-              </CardDescription>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+            <Clock className="h-5 w-5 text-indigo-600" />
           </div>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="px-4 py-2 bg-green-100 text-green-700">
-              <Sun className="h-3 w-3 me-1" />
-              {timing?.start || '07:00'}
-            </Badge>
-            <Badge variant="outline" className="px-4 py-2 bg-orange-100 text-orange-700">
-              <Moon className="h-3 w-3 me-1" />
-              {timing?.end || '14:00'}
-            </Badge>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'اليوم الدراسي' : 'School Day'}</CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
-          <Edit2 className="h-4 w-4 me-2" />
-          {isRTL ? 'تحديد/تعديل' : 'Set/Edit'}
-        </Button>
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'أوقات اليوم الدراسي' : 'School Day Timing'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-right block flex items-center gap-2 flex-row-reverse justify-end">
-                  <Sun className="h-4 w-4 text-green-600" />
-                  {isRTL ? 'وقت البداية' : 'Start Time'}
-                </Label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="text-center text-lg" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block flex items-center gap-2 flex-row-reverse justify-end">
-                  <Moon className="h-4 w-4 text-orange-600" />
-                  {isRTL ? 'وقت النهاية' : 'End Time'}
-                </Label>
-                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="text-center text-lg" />
-              </div>
-            </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
-                {isRTL ? 'حفظ' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <CardContent className="pt-0">
+        <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-xl">
+          <div className="flex-1 text-center p-3 bg-white rounded-lg border border-green-200">
+            <Sun className="h-5 w-5 mx-auto mb-1 text-green-600" />
+            <div className="text-xl font-bold text-green-700">{timing?.start || '07:00'}</div>
+            <div className="text-xs text-muted-foreground">{isRTL ? 'بداية' : 'Start'}</div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-indigo-400" />
+          <div className="flex-1 text-center p-3 bg-white rounded-lg border border-orange-200">
+            <Moon className="h-5 w-5 mx-auto mb-1 text-orange-600" />
+            <div className="text-xl font-bold text-orange-700">{timing?.end || '13:15'}</div>
+            <div className="text-xs text-muted-foreground">{isRTL ? 'نهاية' : 'End'}</div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
