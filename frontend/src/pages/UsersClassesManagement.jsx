@@ -1314,6 +1314,254 @@ export default function UsersClassesManagement() {
           api={api}
           isRTL={isRTL}
         />
+        
+        {/* View Dialog */}
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Eye className="h-5 w-5 text-brand-turquoise" />
+                {isRTL ? 'تفاصيل ' : 'Details: '}
+                {selectedItemType === 'student' ? (isRTL ? 'الطالب' : 'Student') 
+                 : selectedItemType === 'teacher' ? (isRTL ? 'المعلم' : 'Teacher') 
+                 : (isRTL ? 'الفصل' : 'Class')}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedItem && (
+              <div className="space-y-4 py-4">
+                {selectedItemType === 'student' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.full_name || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'رقم الطالب' : 'Student Number'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.student_number || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الصف' : 'Grade'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.grade || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الشعبة' : 'Section'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.section || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الجنس' : 'Gender'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.gender === 'male' ? (isRTL ? 'ذكر' : 'Male') : (isRTL ? 'أنثى' : 'Female')}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الحالة' : 'Status'}</Label>
+                      <Badge variant={selectedItem.is_active ? 'default' : 'secondary'}>
+                        {selectedItem.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'غير نشط' : 'Inactive')}
+                      </Badge>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg col-span-2">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.email || '-'}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedItemType === 'teacher' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.full_name || selectedItem.full_name_ar || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'التخصص' : 'Specialization'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.specialization || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الرتبة' : 'Rank'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.rank || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.phone || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg col-span-2">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.email || '-'}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedItemType === 'class' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'اسم الفصل' : 'Class Name'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.name || selectedItem.name_ar || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'الصف' : 'Grade'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.grade || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'السعة' : 'Capacity'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.capacity || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">{isRTL ? 'عدد الطلاب' : 'Students Count'}</Label>
+                      <p className="font-medium mt-1">{selectedItem.students_count || 0}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                {isRTL ? 'إغلاق' : 'Close'}
+              </Button>
+              <Button onClick={() => {
+                setViewDialogOpen(false);
+                handleEdit(selectedItem, selectedItemType);
+              }}>
+                <Edit className="h-4 w-4 me-2" />
+                {isRTL ? 'تعديل' : 'Edit'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Edit className="h-5 w-5 text-brand-turquoise" />
+                {isRTL ? 'تعديل ' : 'Edit '}
+                {selectedItemType === 'student' ? (isRTL ? 'الطالب' : 'Student') 
+                 : selectedItemType === 'teacher' ? (isRTL ? 'المعلم' : 'Teacher') 
+                 : (isRTL ? 'الفصل' : 'Class')}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedItem && (
+              <div className="space-y-4 py-4">
+                {selectedItemType === 'student' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                      <Input 
+                        value={editFormData.full_name || ''} 
+                        onChange={(e) => setEditFormData({...editFormData, full_name: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'الصف' : 'Grade'}</Label>
+                        <Input 
+                          value={editFormData.grade || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, grade: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'الشعبة' : 'Section'}</Label>
+                        <Input 
+                          value={editFormData.section || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, section: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="student-active"
+                        checked={editFormData.is_active || false}
+                        onChange={(e) => setEditFormData({...editFormData, is_active: e.target.checked})}
+                      />
+                      <Label htmlFor="student-active">{isRTL ? 'نشط' : 'Active'}</Label>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedItemType === 'teacher' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                      <Input 
+                        value={editFormData.full_name || editFormData.full_name_ar || ''} 
+                        onChange={(e) => setEditFormData({...editFormData, full_name_ar: e.target.value, full_name: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'التخصص' : 'Specialization'}</Label>
+                        <Input 
+                          value={editFormData.specialization || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, specialization: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+                        <Input 
+                          value={editFormData.phone || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                      <Input 
+                        type="email"
+                        value={editFormData.email || ''} 
+                        onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {selectedItemType === 'class' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'اسم الفصل' : 'Class Name'}</Label>
+                      <Input 
+                        value={editFormData.name || editFormData.name_ar || ''} 
+                        onChange={(e) => setEditFormData({...editFormData, name_ar: e.target.value, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'الصف' : 'Grade'}</Label>
+                        <Input 
+                          value={editFormData.grade || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, grade: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'السعة' : 'Capacity'}</Label>
+                        <Input 
+                          type="number"
+                          value={editFormData.capacity || ''} 
+                          onChange={(e) => setEditFormData({...editFormData, capacity: parseInt(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={editLoading}>
+                {editLoading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin me-2" />
+                ) : (
+                  <Save className="h-4 w-4 me-2" />
+                )}
+                {isRTL ? 'حفظ' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <HakimAssistant />
     </Sidebar>
