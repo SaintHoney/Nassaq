@@ -2116,6 +2116,211 @@ export default function SchoolSettingsPagePro() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog إضافة إسناد جديد */}
+        {/* ============================================ */}
+        <Dialog open={addAssignmentOpen} onOpenChange={setAddAssignmentOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Target className="h-5 w-5 text-indigo-600" />
+                إضافة إسناد جديد
+              </DialogTitle>
+              <DialogDescription>
+                ربط معلم بفصل ومادة دراسية
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="assignment-teacher">المعلم *</Label>
+                <Select 
+                  value={newAssignment.teacher_id} 
+                  onValueChange={(v) => setNewAssignment({...newAssignment, teacher_id: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المعلم" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.full_name_ar || t.full_name || t.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assignment-class">الفصل *</Label>
+                <Select 
+                  value={newAssignment.class_id} 
+                  onValueChange={(v) => setNewAssignment({...newAssignment, class_id: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الفصل" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name_ar || c.name || c.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assignment-subject">المادة *</Label>
+                <Select 
+                  value={newAssignment.subject_id} 
+                  onValueChange={(v) => setNewAssignment({...newAssignment, subject_id: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المادة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referenceSubjects.slice(0, 30).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name_ar || s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assignment-sessions">عدد الحصص الأسبوعية</Label>
+                <Select 
+                  value={String(newAssignment.weekly_sessions)} 
+                  onValueChange={(v) => setNewAssignment({...newAssignment, weekly_sessions: parseInt(v)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n} حصص</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddAssignmentOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddAssignment} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Plus className="h-4 w-4 ml-2" />}
+                إضافة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog تعديل إسناد */}
+        {/* ============================================ */}
+        <Dialog open={editAssignmentOpen} onOpenChange={setEditAssignmentOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-blue-600" />
+                تعديل الإسناد
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editAssignment && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>المعلم</Label>
+                  <Select 
+                    value={editAssignment.teacher_id} 
+                    onValueChange={(v) => setEditAssignment({...editAssignment, teacher_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.full_name_ar || t.full_name || t.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>الفصل</Label>
+                  <Select 
+                    value={editAssignment.class_id} 
+                    onValueChange={(v) => setEditAssignment({...editAssignment, class_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name_ar || c.name || c.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>المادة</Label>
+                  <Select 
+                    value={editAssignment.subject_id} 
+                    onValueChange={(v) => setEditAssignment({...editAssignment, subject_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {referenceSubjects.slice(0, 30).map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name_ar || s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>عدد الحصص الأسبوعية</Label>
+                  <Select 
+                    value={String(editAssignment.weekly_sessions || 4)} 
+                    onValueChange={(v) => setEditAssignment({...editAssignment, weekly_sessions: parseInt(v)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n} حصص</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditAssignmentOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateAssignment} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ التغييرات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
