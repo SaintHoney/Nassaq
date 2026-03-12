@@ -12260,7 +12260,6 @@ async def get_school_settings(
     x_school_context: str = Header(default=None, alias="X-School-Context")
 ):
     """Get all school settings - جلب جميع إعدادات المدرسة"""
-    db = await get_database()
     school_id = await get_school_id_from_context(current_user, x_school_context)
     
     if not school_id:
