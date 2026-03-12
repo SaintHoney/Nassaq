@@ -1825,7 +1825,7 @@ export default function SchoolSettingsPage() {
 
         {/* Wizards */}
         <AddTeacherWizard open={showAddTeacherWizard} onOpenChange={setShowAddTeacherWizard} onSuccess={fetchData} />
-        <AddStudentWizard open={showAddStudentWizard} onOpenChange={setShowAddStudentWizard} isRTL={isRTL} onSuccess={fetchData} />
+        <AddStudentWizard open={showAddStudentWizard} onOpenChange={setShowAddStudentWizard} isRTL={isRTL} api={api} grades={grades} classes={classes} onSuccess={fetchData} />
         <CreateClassWizard open={showCreateClassWizard} onOpenChange={setShowCreateClassWizard} onSuccess={fetchData} />
         
         {/* Hakim Assistant */}
