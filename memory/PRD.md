@@ -399,9 +399,15 @@
 - **قائمة الرتبة الوظيفية:** تعمل الآن (المعلم، المعلم الممارس، المتقدم، الخبير، إلخ)
 - **قائمة نوع العقد:** تعمل الآن
 
-#### 7. إصلاح نموذج إضافة طالب
-- تمرير `api`, `grades`, `classes` للمكون
-- تحسين logging للأخطاء
+#### 7. إصلاح نموذج إضافة طالب ✅ (مارس 2026 - P0 FIXED)
+- **المشكلة:** كان إنشاء طالب جديد يفشل مع رسالة خطأ عامة
+- **السبب:** props مفقودة (`api`, `grades`, `classes`) لم يتم تمريرها للـ wizard في صفحة UsersClassesManagement و SchoolSettingsPage
+- **الإصلاحات:**
+  1. إضافة `grades` state وجلبها من API في `UsersClassesManagement.jsx`
+  2. تمرير `api`, `grades`, `classes` إلى `AddStudentWizard` في كل الصفحات
+  3. إصلاح عرض أسماء الصفوف باستخدام `name_ar`/`name_en` بدلاً من `name` فقط
+- **نتائج الاختبار:** 100% Backend + 100% Frontend
+- تقرير الاختبار: `/app/test_reports/iteration_67.json`
 
 #### 8. إصلاح Dashboard حضور المعلمين
 - يجلب الحضور من `teacher_attendance` collection
@@ -410,25 +416,30 @@
 ### نتائج الاختبار:
 - **Backend APIs:** جميعها تعمل ✅
 - **Frontend:** جميع القوائم تعرض البيانات ✅
+- **Student Wizard:** 14/14 API tests passed ✅
 
 ### الملفات المُحدّثة:
 - `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - تبويب الإسنادات
 - `/app/frontend/src/components/wizards/AddTeacherWizard.jsx` - إصلاح القوائم
-- `/app/frontend/src/components/wizards/AddStudentWizard.jsx` - تحسين logging
+- `/app/frontend/src/components/wizards/AddStudentWizard.jsx` - إصلاح عرض الصفوف (name_ar/name_en)
 - `/app/frontend/src/pages/TeachersPage.jsx` - تمرير api و grades و classes
+- `/app/frontend/src/pages/UsersClassesManagement.jsx` - إضافة grades state + جلبها من API + تمريرها للـ wizard
+- `/app/frontend/src/pages/SchoolSettingsPage.jsx` - تمرير api, grades, classes للـ wizard
 - `/app/frontend/src/components/dashboard/SchoolDashboardContent.jsx` - جلب grades و classes
 - `/app/backend/server.py` - إصلاح APIs
+- `/app/backend/tests/test_student_wizard.py` - اختبارات جديدة للـ student wizard
 
 ---
 
 ## المهام القادمة (P1/P2):
 
 ### P1 - أولوية عالية:
-1. حساب نسبة الحضور اليومي من قاعدة البيانات
-2. تحديث صفحة التقارير (Dynamic Data)
-3. رفع صورة الملف الشخصي
+1. **تحسين نسبة نجاح توليد الجدول:** عرض تحليل السعة (Required vs Available slots) + اقتراحات عملية
+2. حساب نسبة الحضور اليومي من قاعدة البيانات
+3. تحديث صفحة التقارير (Dynamic Data)
 
 ### P2 - أولوية متوسطة:
-4. تحديث بيانات المستخدم (الاسم، الهاتف، اللغة)
-5. أيقونة المخ في صفحة رؤى الذكاء الاصطناعي
-6. القائمة الجانبية لمدير المنصة (الشعار، الاسم، الدور)
+4. رفع صورة الملف الشخصي
+5. تحديث بيانات المستخدم (الاسم، الهاتف، اللغة)
+6. أيقونة المخ في صفحة رؤى الذكاء الاصطناعي
+7. القائمة الجانبية لمدير المنصة (الشعار، الاسم، الدور)
