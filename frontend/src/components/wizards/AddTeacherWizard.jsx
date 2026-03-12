@@ -160,11 +160,11 @@ const Step2Qualifications = ({ data, onChange, errors, options, isRTL }) => (
         <Label>{isRTL ? 'الدرجة العلمية' : 'Academic Degree'} <span className="text-red-500">*</span></Label>
         <Select value={data.academic_degree || ''} onValueChange={(val) => onChange('academic_degree', val)}>
           <SelectTrigger className={errors.academic_degree ? 'border-red-500' : ''} data-testid="teacher-degree">
-            <SelectValue placeholder={isRTL ? 'اختر' : 'Select'} />
+            <SelectValue placeholder={isRTL ? 'اختر الدرجة' : 'Select degree'} />
           </SelectTrigger>
           <SelectContent>
             {options.degrees?.map((d) => (
-              <SelectItem key={d.code} value={d.code}>{isRTL ? d.name_ar : d.name_en}</SelectItem>
+              <SelectItem key={d.id || d.code} value={d.id || d.code}>{isRTL ? (d.name || d.name_ar) : (d.name_en || d.name)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
