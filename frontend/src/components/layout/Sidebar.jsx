@@ -86,7 +86,11 @@ export const Sidebar = ({ children }) => {
       setAvailableRoles(response.data.available_roles || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
-      toast.error(isRTL ? 'حدث خطأ في جلب الأدوار' : 'Error fetching roles');
+      // Only show error if it's not a token/auth issue (those are handled by logout)
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
+        // Don't show error toast - just log it silently
+        setAvailableRoles([]);
+      }
     } finally {
       setLoadingRoles(false);
     }
