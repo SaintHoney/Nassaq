@@ -11563,6 +11563,19 @@ settings_router = setup_settings_routes(db, get_current_user, require_roles, Use
 from routes.user_roles_routes import setup_user_roles_routes
 user_roles_router = setup_user_roles_routes(db, get_current_user, require_roles, UserRole, create_access_token)
 
+# Import and create WebSocket routes (Real-time Notifications)
+from routes.websocket_routes import create_websocket_routes, get_connection_manager, send_realtime_notification
+
+def decode_token_for_ws(token: str):
+    """Decode JWT token for WebSocket authentication"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except:
+        return None
+
+websocket_router, ws_manager = create_websocket_routes(db, decode_token_for_ws)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
@@ -11583,6 +11596,7 @@ api_router.include_router(security_router)
 api_router.include_router(audit_router)
 api_router.include_router(settings_router)
 api_router.include_router(user_roles_router)
+api_router.include_router(websocket_router)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
