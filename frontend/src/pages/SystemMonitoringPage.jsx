@@ -1040,10 +1040,10 @@ export const SystemMonitoringPage = () => {
                     const report = {
                       generated_at: new Date().toISOString(),
                       metrics: metrics,
-                      errors: SAMPLE_ERRORS,
-                      jobs: SAMPLE_JOBS,
-                      integrations: SAMPLE_INTEGRATIONS,
-                      alerts: SAMPLE_ALERTS,
+                      errors: errorLogs,
+                      jobs: jobs,
+                      integrations: integrations,
+                      alerts: alerts,
                     };
                     const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
                     const link = document.createElement('a');
