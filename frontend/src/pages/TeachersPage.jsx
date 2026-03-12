@@ -68,6 +68,8 @@ export const TeachersPage = () => {
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
   const [teachers, setTeachers] = useState([]);
   const [schools, setSchools] = useState([]);
+  const [grades, setGrades] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
