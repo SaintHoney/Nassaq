@@ -216,11 +216,11 @@ const Step2Qualifications = ({ data, onChange, errors, options, isRTL }) => (
         <Label>{isRTL ? 'الرتبة الوظيفية' : 'Teacher Rank'} <span className="text-red-500">*</span></Label>
         <Select value={data.teacher_rank || ''} onValueChange={(val) => onChange('teacher_rank', val)}>
           <SelectTrigger className={errors.teacher_rank ? 'border-red-500' : ''} data-testid="teacher-rank">
-            <SelectValue placeholder={isRTL ? 'اختر' : 'Select'} />
+            <SelectValue placeholder={isRTL ? 'اختر الرتبة' : 'Select rank'} />
           </SelectTrigger>
           <SelectContent>
             {options.ranks?.map((r) => (
-              <SelectItem key={r.code} value={r.code}>{isRTL ? r.name_ar : r.name_en}</SelectItem>
+              <SelectItem key={r.id || r.code} value={r.id || r.code}>{isRTL ? (r.name || r.name_ar) : (r.name_en || r.name)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
