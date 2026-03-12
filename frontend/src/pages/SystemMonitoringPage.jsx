@@ -462,9 +462,9 @@ export const SystemMonitoringPage = () => {
               <TabsTrigger value="details">{t.details}</TabsTrigger>
               <TabsTrigger value="alerts" className="relative">
                 {t.alerts}
-                {SAMPLE_ALERTS.filter(a => !a.resolved).length > 0 && (
+                {alerts.filter(a => !a.resolved).length > 0 && (
                   <span className="absolute -top-1 -end-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {SAMPLE_ALERTS.filter(a => !a.resolved).length}
+                    {alerts.filter(a => !a.resolved).length}
                   </span>
                 )}
               </TabsTrigger>
@@ -702,7 +702,7 @@ export const SystemMonitoringPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {SAMPLE_INTEGRATIONS.map((integration) => (
+                      {integrations.map((integration) => (
                         <div 
                           key={integration.id}
                           className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
@@ -782,7 +782,7 @@ export const SystemMonitoringPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {SAMPLE_ERRORS.map((error) => (
+                    {errorLogs.map((error) => (
                       <div 
                         key={error.id}
                         className={`flex items-center justify-between p-3 rounded-lg border ${
