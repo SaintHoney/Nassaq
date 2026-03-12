@@ -1030,7 +1030,7 @@ class SmartSchedulingEngine:
                         
                         # Update tracking
                         grid[best_candidate["day"]][best_candidate["period"]][class_id] = session
-                        teacher_grid[best_candidate["day"]][best_candidate["period"]] = best_candidate["teacher_id"]
+                        teacher_grid[best_candidate["day"]][best_candidate["period"]].add(best_candidate["teacher_id"])
                         resource_usage[best_candidate["teacher_id"]] = resource_usage.get(best_candidate["teacher_id"], 0) + 1
                         
                         scheduled_count += 1
