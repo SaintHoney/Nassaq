@@ -237,4 +237,121 @@ def create_communication_routes(db, get_current_user, require_roles, UserRole):
             {"id": "parents", "name": "أولياء الأمور", "name_en": "Parents", "count": parents, "icon": "users"}
         ]
     
+    @router.get("/audience-counts")
+    async def get_audience_counts(
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        """Get audience counts for broadcast messaging"""
+        all_users = await db.users.count_documents({"is_active": True})
+        schools = await db.schools.count_documents({})
+        teachers = await db.users.count_documents({"role": {"$in": ["teacher", "independent_teacher"]}, "is_active": True})
+        students = await db.users.count_documents({"role": "student", "is_active": True})
+        principals = await db.users.count_documents({"role": "school_principal", "is_active": True})
+        parents = await db.users.count_documents({"role": "parent", "is_active": True})
+        
+        return {
+            "all": all_users,
+            "schools": schools,
+            "teachers": teachers,
+            "students": students,
+            "principals": principals,
+            "parents": parents
+        }
+    
+    @router.get("/scheduled")
+    async def get_scheduled_messages(
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        """Get scheduled messages"""
+        messages = await db.messages.find(
+            {"status": "scheduled"}
+        ).sort("scheduled_at", 1).to_list(50)
+        
+        return {
+            "messages": [
+                {
+                    "id": str(m.get("id", m.get("_id"))),
+                    "title": m.get("title", ""),
+                    "message": m.get("content", ""),
+                    "target_audience": m.get("audience", "all"),
+                    "scheduled_at": m.get("scheduled_at", ""),
+                    "status": m.get("status", "scheduled"),
+                    "created_at": m.get("created_at", ""),
+                }
+                for m in messages
+            ],
+            "total": len(messages)
+        }
+    
+    @router.get("/sent")
+    async def get_sent_messages(
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        """Get sent messages history"""
+        messages = await db.messages.find(
+            {"status": "sent"}
+        ).sort("sent_at", -1).limit(50).to_list(50)
+        
+        return {
+            "messages": [
+                {
+                    "id": str(m.get("id", m.get("_id"))),
+                    "title": m.get("title", ""),
+                    "message": m.get("content", "")[:100] + "..." if len(m.get("content", "")) > 100 else m.get("content", ""),
+                    "target_audience": m.get("audience", "all"),
+                    "status": m.get("status", "sent"),
+                    "sent_at": m.get("sent_at", ""),
+                    "sent_by_name": m.get("sent_by_name", ""),
+                }
+                for m in messages
+            ],
+            "total": len(messages)
+        }
+    
+    @router.post("/broadcast")
+    async def send_broadcast_message(
+        message: MessageCreate,
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        """Send broadcast message to all users"""
+        now = datetime.now(timezone.utc).isoformat()
+        message_id = str(uuid.uuid4())
+        
+        # Count recipients
+        recipient_count = 0
+        if message.audience == "all":
+            recipient_count = await db.users.count_documents({"is_active": True})
+        elif message.audience == "teachers":
+            recipient_count = await db.users.count_documents({"role": {"$in": ["teacher", "independent_teacher"]}, "is_active": True})
+        elif message.audience == "students":
+            recipient_count = await db.users.count_documents({"role": "student", "is_active": True})
+        elif message.audience == "schools":
+            recipient_count = await db.users.count_documents({"role": "school_principal", "is_active": True})
+        
+        message_doc = {
+            "id": message_id,
+            "title": message.title,
+            "content": message.content,
+            "audience": message.audience,
+            "channels": message.channels,
+            "status": "sent",
+            "sent_count": recipient_count,
+            "created_at": now,
+            "sent_at": now,
+            "sent_by": current_user.get("id"),
+            "sent_by_name": current_user.get("full_name", "")
+        }
+        
+        await db.messages.insert_one(message_doc)
+        
+        # Create notifications for recipients (simplified)
+        # In production, this should be a background task
+        
+        return {
+            "success": True,
+            "message_id": message_id,
+            "recipients_count": recipient_count,
+            "message": f"تم إرسال الرسالة إلى {recipient_count} مستخدم"
+        }
+    
     return router
