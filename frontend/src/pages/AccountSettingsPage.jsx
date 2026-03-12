@@ -152,7 +152,7 @@ export const AccountSettingsPage = () => {
   useEffect(() => {
     if (user) {
       setProfile({
-        title: user.title || '',
+        title: user.title || 'none',
         full_name: user.full_name || '',
         full_name_en: user.full_name_en || '',
         email: user.email || '',
