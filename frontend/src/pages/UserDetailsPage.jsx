@@ -842,7 +842,7 @@ ${API_URL}/login
                           // تصدير سجل النشاط كملف CSV
                           const csvContent = [
                             'النشاط,الجهاز,العنوان IP,التاريخ',
-                            ...SAMPLE_ACTIVITIES.map(a => 
+                            ...INITIAL_ACTIVITIES.map(a => 
                               `"${a.action}","${a.device}","${a.ip}","${a.timestamp}"`
                             )
                           ].join('\n');
