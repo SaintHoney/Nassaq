@@ -253,3 +253,9 @@ def setup_audit_routes(db, get_current_user, require_roles, UserRole):
             }
     
     return router
+
+
+# Alias for backwards compatibility
+def create_audit_router(db, get_current_user, require_roles, UserRole):
+    """Backwards compatible alias"""
+    return setup_audit_routes(db, get_current_user, require_roles, UserRole)
