@@ -235,16 +235,11 @@ export default function UsersManagement() {
       
       setUsers(filtered);
       
-      // Calculate stats from API response or fetch from schools API
-      const schoolCount = await api.get('/api/schools').then(r => r.data?.length || 6).catch(() => 6);
+      // Calculate only totalUsers - other stats come from command-center/stats API
       const allUsers = fetchedUsers;
       setStats(prev => ({
         ...prev,
         totalUsers: allUsers.length,
-        totalSchools: schoolCount,
-        teachersInSchools: allUsers.filter(u => u.role === 'teacher' && u.school_name).length,
-        independentTeachers: allUsers.filter(u => u.role === 'independent_teacher').length,
-        platformAdmins: allUsers.filter(u => u.role?.startsWith('platform_')).length,
       }));
       
     } catch (error) {
