@@ -1175,7 +1175,8 @@ export const SystemMonitoringPage = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
           </SheetContent>
         </Sheet>
