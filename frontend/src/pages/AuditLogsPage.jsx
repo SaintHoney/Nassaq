@@ -61,26 +61,31 @@ const AuditLogsPage = () => {
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
+      const page = Math.floor(skip / limit) + 1;
       const params = new URLSearchParams({
-        skip: skip.toString(),
+        page: page.toString(),
         limit: limit.toString()
       });
       
       if (actionFilter) params.append('action', actionFilter);
-      if (severityFilter && severityFilter !== 'all') params.append('severity', severityFilter);
-      if (entityTypeFilter) params.append('entity_type', entityTypeFilter);
+      if (searchTerm) params.append('search', searchTerm);
       
       const response = await api.get(`/audit/logs?${params.toString()}`);
-      setLogs(response.data || []);
-      // For now, estimate total
-      setTotal(response.data?.length || 0);
+      // Handle new API response format
+      if (response.data?.logs) {
+        setLogs(response.data.logs);
+        setTotal(response.data.total || 0);
+      } else {
+        setLogs(response.data || []);
+        setTotal(response.data?.length || 0);
+      }
     } catch (error) {
       console.error('Error fetching audit logs:', error);
       toast.error(isRTL ? 'خطأ في تحميل السجلات' : 'Error loading logs');
     } finally {
       setLoading(false);
     }
-  }, [api, skip, limit, actionFilter, severityFilter, entityTypeFilter, isRTL]);
+  }, [api, skip, limit, actionFilter, searchTerm, isRTL]);
 
   // Fetch audit stats
   const fetchStats = useCallback(async () => {
