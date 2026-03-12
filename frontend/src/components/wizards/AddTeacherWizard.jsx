@@ -172,17 +172,6 @@ const Step2Qualifications = ({ data, onChange, errors, options, isRTL }) => (
       </div>
 
       <div className="space-y-2">
-        <Label>{isRTL ? 'التخصص' : 'Specialization'} <span className="text-red-500">*</span></Label>
-        <Input
-          value={data.specialization || ''}
-          onChange={(e) => onChange('specialization', e.target.value)}
-          className={errors.specialization ? 'border-red-500' : ''}
-          data-testid="teacher-specialization"
-        />
-        {errors.specialization && <p className="text-red-500 text-sm">{errors.specialization}</p>}
-      </div>
-
-      <div className="space-y-2">
         <Label>{isRTL ? 'الجامعة' : 'University'}</Label>
         <Input value={data.university || ''} onChange={(e) => onChange('university', e.target.value)} data-testid="teacher-university" />
       </div>
