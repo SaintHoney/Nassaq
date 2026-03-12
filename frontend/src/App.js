@@ -73,7 +73,6 @@ import UsersManagement from "./pages/UsersManagement";
 import UserDetailsPage from "./pages/UserDetailsPage";
 import { PlatformAnalyticsPage } from "./pages/PlatformAnalyticsPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
-import { BulkImportExportPage } from "./pages/BulkImportExportPage";
 
 // Student Portal Pages
 import {
@@ -327,14 +326,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['platform_admin', 'ministry_rep']}>
             <PlatformReportsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/bulk"
-        element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal']}>
-            <BulkImportExportPage />
           </ProtectedRoute>
         }
       />
