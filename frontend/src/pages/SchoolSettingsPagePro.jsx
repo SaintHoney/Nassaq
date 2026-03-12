@@ -894,9 +894,9 @@ export default function SchoolSettingsPagePro() {
                         <CardDescription>{teachers.length} معلم في المدرسة</CardDescription>
                       </div>
                     </div>
-                    <Button className="bg-violet-600 hover:bg-violet-700" data-testid="add-teacher-btn">
-                      <Plus className="h-4 w-4 ml-2" /> إضافة معلم
-                    </Button>
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      لإضافة معلم، انتقل إلى "إدارة المستخدمين والفصول"
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -910,9 +910,7 @@ export default function SchoolSettingsPagePro() {
                     <div className="text-center py-12 text-muted-foreground">
                       <Users className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد معلمون مسجلون</p>
-                      <Button variant="outline" className="mt-4">
-                        <Plus className="h-4 w-4 ml-2" /> إضافة معلم
-                      </Button>
+                      <p className="text-sm mt-2">انتقل إلى صفحة "إدارة المستخدمين والفصول" لإضافة معلمين</p>
                     </div>
                   )}
                 </CardContent>
