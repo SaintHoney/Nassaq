@@ -824,7 +824,7 @@ export const SystemMonitoringPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {SAMPLE_JOBS.map((job) => (
+                    {jobs.map((job) => (
                       <div key={job.id} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -855,7 +855,7 @@ export const SystemMonitoringPage = () => {
             
             {/* Alerts Tab */}
             <TabsContent value="alerts" className="space-y-6">
-              {SAMPLE_ALERTS.filter(a => !a.resolved).length === 0 ? (
+              {alerts.filter(a => !a.resolved).length === 0 ? (
                 <Card className="p-12 text-center">
                   <CheckCircle2 className="h-16 w-16 mx-auto text-green-500 mb-4" />
                   <h3 className="font-bold text-lg mb-2">{t.noAlerts}</h3>
@@ -863,7 +863,7 @@ export const SystemMonitoringPage = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {SAMPLE_ALERTS.map((alert) => (
+                  {alerts.map((alert) => (
                     <Card 
                       key={alert.id}
                       className={`card-nassaq ${
