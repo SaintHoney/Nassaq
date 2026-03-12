@@ -674,7 +674,8 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalStudents?.status}
             icon={Users}
             isRTL={isRTL}
-            onViewDetails={() => navigate('/school/students')}
+            clickable={true}
+            onClick={() => navigate('/admin/users-management?filter=students')}
           />
           <MetricCard
             title={isRTL ? 'عدد المعلمين' : 'Teachers'}
@@ -684,7 +685,8 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalTeachers?.status}
             icon={GraduationCap}
             isRTL={isRTL}
-            onViewDetails={() => navigate('/school/teachers')}
+            clickable={true}
+            onClick={() => navigate('/admin/users-management?filter=teachers')}
           />
           <MetricCard
             title={isRTL ? 'عدد الفصول' : 'Classes'}
@@ -694,7 +696,8 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalClasses?.status}
             icon={School}
             isRTL={isRTL}
-            onViewDetails={() => navigate('/school/classes')}
+            clickable={true}
+            onClick={() => navigate('/admin/users-management?filter=classes')}
           />
           <MetricCard
             title={isRTL ? 'حصص اليوم' : "Today's Sessions"}
@@ -704,16 +707,17 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.todaySessions?.status}
             icon={Calendar}
             isRTL={isRTL}
-            onViewDetails={() => navigate('/school/schedule')}
+            clickable={false}
           />
           <MetricCard
-            title={isRTL ? 'المستخدمين النشطين' : 'Active Users'}
+            title={isRTL ? 'المستخدمون النشطون' : 'Active Users'}
             value={dashboardData?.metrics?.activeUsers?.value || 0}
             change={dashboardData?.metrics?.activeUsers?.change}
             changeType={dashboardData?.metrics?.activeUsers?.changeType}
             status={dashboardData?.metrics?.activeUsers?.status}
             icon={Activity}
             isRTL={isRTL}
+            clickable={false}
           />
           <MetricCard
             title={isRTL ? 'حصص الانتظار' : 'Substitute Sessions'}
@@ -723,6 +727,7 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.waitingSubstitute?.status}
             icon={Clock}
             isRTL={isRTL}
+            clickable={false}
           />
         </div>
       </section>
