@@ -602,6 +602,158 @@ async def update_preferences(
     await db.users.update_one({"id": current_user["id"]}, {"$set": updates})
     return {"message": "تم تحديث الإعدادات"}
 
+
+# ============== ACTIVE ROLE CONTEXT ==============
+class ActiveRoleContextRequest(BaseModel):
+    role_id: str
+    school_id: Optional[str] = None
+    scope_id: Optional[str] = None
+
+class ActiveRoleContextResponse(BaseModel):
+    user_identity_id: str
+    role_id: str
+    role_name: str
+    school_id: Optional[str] = None
+    school_name: Optional[str] = None
+    scope_id: Optional[str] = None
+    is_active: bool = True
+    set_at: str
+
+@api_router.post("/auth/set-active-role", response_model=ActiveRoleContextResponse)
+async def set_active_role_context(
+    context: ActiveRoleContextRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Set the active role context for the current session.
+    تعيين سياق الدور النشط للجلسة الحالية
+    """
+    user_id = current_user["id"]
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Validate user has this role
+    user_roles = current_user.get("linked_roles", [])
+    valid_role = None
+    
+    # Check primary role first
+    if current_user.get("role") == context.role_id:
+        valid_role = {
+            "role": current_user.get("role"),
+            "tenant_id": current_user.get("tenant_id"),
+            "is_active": True
+        }
+    else:
+        # Check linked roles
+        for role in user_roles:
+            if role.get("role") == context.role_id and role.get("is_active", True):
+                if context.school_id:
+                    if role.get("tenant_id") == context.school_id:
+                        valid_role = role
+                        break
+                else:
+                    valid_role = role
+                    break
+    
+    if not valid_role:
+        raise HTTPException(status_code=400, detail="الدور غير متوفر للمستخدم")
+    
+    # Determine school_id
+    school_id = context.school_id or valid_role.get("tenant_id") or current_user.get("tenant_id")
+    
+    # Get school name if school_id provided
+    school_name = None
+    if school_id:
+        school = await db.schools.find_one({"id": school_id}, {"_id": 0, "name_ar": 1, "name_en": 1})
+        if school:
+            school_name = school.get("name_ar") or school.get("name_en")
+    
+    # Store active role context in user's session/document
+    active_context = {
+        "role_id": context.role_id,
+        "school_id": school_id,
+        "scope_id": context.scope_id,
+        "set_at": now,
+        "is_active": True
+    }
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "active_role_context": active_context,
+            "updated_at": now
+        }}
+    )
+    
+    return ActiveRoleContextResponse(
+        user_identity_id=user_id,
+        role_id=context.role_id,
+        role_name=get_role_display_name(context.role_id),
+        school_id=school_id,
+        school_name=school_name,
+        scope_id=context.scope_id,
+        is_active=True,
+        set_at=now
+    )
+
+@api_router.get("/auth/active-role", response_model=ActiveRoleContextResponse)
+async def get_active_role_context(current_user: dict = Depends(get_current_user)):
+    """
+    Get the current active role context.
+    جلب سياق الدور النشط الحالي
+    """
+    user_id = current_user["id"]
+    active_context = current_user.get("active_role_context")
+    
+    if not active_context:
+        # Return default based on primary role
+        school_id = current_user.get("tenant_id")
+        school_name = None
+        
+        if school_id:
+            school = await db.schools.find_one({"id": school_id}, {"_id": 0, "name_ar": 1})
+            if school:
+                school_name = school.get("name_ar")
+        
+        return ActiveRoleContextResponse(
+            user_identity_id=user_id,
+            role_id=current_user.get("role", ""),
+            role_name=get_role_display_name(current_user.get("role", "")),
+            school_id=school_id,
+            school_name=school_name,
+            is_active=True,
+            set_at=current_user.get("created_at", "")
+        )
+    
+    # Get school name
+    school_name = None
+    if active_context.get("school_id"):
+        school = await db.schools.find_one({"id": active_context["school_id"]}, {"_id": 0, "name_ar": 1})
+        if school:
+            school_name = school.get("name_ar")
+    
+    return ActiveRoleContextResponse(
+        user_identity_id=user_id,
+        role_id=active_context.get("role_id", current_user.get("role", "")),
+        role_name=get_role_display_name(active_context.get("role_id", current_user.get("role", ""))),
+        school_id=active_context.get("school_id"),
+        school_name=school_name,
+        scope_id=active_context.get("scope_id"),
+        is_active=active_context.get("is_active", True),
+        set_at=active_context.get("set_at", "")
+    )
+
+def get_role_display_name(role: str) -> str:
+    """Get Arabic display name for role"""
+    role_names = {
+        "platform_admin": "مدير المنصة",
+        "school_principal": "مدير المدرسة",
+        "school_sub_admin": "مشرف المدرسة",
+        "teacher": "معلم",
+        "student": "طالب",
+        "parent": "ولي أمر"
+    }
+    return role_names.get(role, role)
+
 # ============== PASSWORD CHANGE ROUTE ==============
 class PasswordChangeRequest(BaseModel):
     current_password: str
