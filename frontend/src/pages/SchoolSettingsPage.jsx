@@ -2014,10 +2014,11 @@ export default function SchoolSettingsPage() {
     setLoading(true);
     try {
       // Fetch from the new comprehensive school settings API
+      // Note: api already has baseURL with /api prefix
       const [teachersRes, classesRes, settingsRes] = await Promise.all([
-        api.get('/api/teachers').catch(() => ({ data: [] })),
-        api.get('/api/classes').catch(() => ({ data: [] })),
-        api.get('/api/school/settings').catch(() => ({ data: {} })),
+        api.get('/teachers').catch(() => ({ data: [] })),
+        api.get('/classes').catch(() => ({ data: [] })),
+        api.get('/school/settings').catch(() => ({ data: {} })),
       ]);
       
       setTeachers(teachersRes.data || []);
