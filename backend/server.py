@@ -364,6 +364,18 @@ async def get_current_user(
             if teacher:
                 user["teacher_id"] = teacher.get("id")
         
+        # Add student_id if user is a student
+        if user.get("role") == UserRole.STUDENT.value and not user.get("student_id"):
+            student = await db.students.find_one({"email": user.get("email")}, {"_id": 0, "id": 1})
+            if student:
+                user["student_id"] = student.get("id")
+        
+        # Add parent_id if user is a parent
+        if user.get("role") == UserRole.PARENT.value and not user.get("parent_id"):
+            parent = await db.parents.find_one({"email": user.get("email")}, {"_id": 0, "id": 1})
+            if parent:
+                user["parent_id"] = parent.get("id")
+        
         # Support School Context Switching for Platform Admin
         # When X-School-Context header is present, override tenant_id for data isolation
         if x_school_context and user.get("role") == UserRole.PLATFORM_ADMIN.value:
