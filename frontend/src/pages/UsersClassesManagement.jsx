@@ -366,6 +366,7 @@ export default function UsersClassesManagement() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [grades, setGrades] = useState([]);
   
   // Wizard states
   const [showStudentWizard, setShowStudentWizard] = useState(false);
