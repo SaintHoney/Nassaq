@@ -4003,13 +4003,15 @@ class TimeSlotResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     school_id: str
-    name: str
+    name: Optional[str] = None
+    name_ar: Optional[str] = None
     name_en: Optional[str] = None
     start_time: str
     end_time: str
-    slot_number: int
+    slot_number: Optional[int] = None
     duration_minutes: Optional[int] = 45
     is_break: bool = False
+    type: Optional[str] = "period"
     is_active: bool = True
     created_at: Optional[str] = None
 
