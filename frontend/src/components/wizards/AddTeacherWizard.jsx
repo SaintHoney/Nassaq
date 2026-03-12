@@ -713,7 +713,20 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
         toast.error(response.data.error || (isRTL ? 'حدث خطأ' : 'Error occurred'));
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ' : 'Error'));
+      // Handle validation errors properly - detail might be an object or array
+      const detail = error.response?.data?.detail;
+      let errorMessage = isRTL ? 'خطأ' : 'Error';
+      
+      if (typeof detail === 'string') {
+        errorMessage = detail;
+      } else if (Array.isArray(detail)) {
+        // Pydantic validation errors come as array
+        errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+      } else if (detail && typeof detail === 'object') {
+        errorMessage = detail.msg || detail.message || JSON.stringify(detail);
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
