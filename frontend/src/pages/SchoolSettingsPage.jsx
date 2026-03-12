@@ -2338,8 +2338,10 @@ export default function SchoolSettingsPage() {
                 <Settings className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="font-cairo text-2xl font-bold">{isRTL ? 'إعدادات المدرسة' : 'School Settings'}</h1>
-                <p className="text-sm text-muted-foreground font-tajawal">{isRTL ? 'المرجع الأساسي لمحرك الجدولة والنظام' : 'Main reference for scheduling engine'}</p>
+                <h1 className="font-cairo text-2xl font-bold">
+                  {isRTL ? `مرحباً، ${user?.full_name || 'المستخدم'}` : `Welcome, ${user?.full_name || 'User'}`}
+                </h1>
+                <p className="text-base text-muted-foreground font-tajawal">{isRTL ? 'إعدادات المدرسة' : 'School Settings'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
