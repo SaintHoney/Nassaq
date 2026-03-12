@@ -580,33 +580,16 @@ export const SchoolReportsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      { student: 'أحمد محمد', type: 'positive', note: 'مشاركة فعالة في الفصل', date: '2026-03-10' },
-                      { student: 'سارة علي', type: 'recognition', note: 'تفوق في مسابقة القراءة', date: '2026-03-09' },
-                      { student: 'خالد أحمد', type: 'warning', note: 'تأخر متكرر', date: '2026-03-08' },
-                      { student: 'نورة محمد', type: 'positive', note: 'مساعدة زملائها', date: '2026-03-08' },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-muted/50">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                          item.type === 'positive' ? 'bg-green-100 text-green-600' :
-                          item.type === 'recognition' ? 'bg-blue-100 text-blue-600' :
-                          'bg-yellow-100 text-yellow-600'
-                        }`}>
-                          {item.type === 'positive' && <CheckCircle className="h-5 w-5" />}
-                          {item.type === 'recognition' && <Award className="h-5 w-5" />}
-                          {item.type === 'warning' && <AlertTriangle className="h-5 w-5" />}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{item.student}</p>
-                          <p className="text-sm text-muted-foreground">{item.note}</p>
-                        </div>
-                        <Badge variant="secondary">{item.date}</Badge>
-                      </div>
-                    ))}
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                    <p className="text-muted-foreground">
+                      {isRTL ? 'لا توجد ملاحظات سلوك مسجلة' : 'No behavior notes recorded'}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
+                </>
+              )}
             </TabsContent>
           </Tabs>
         </div>
