@@ -415,43 +415,53 @@ export const SchoolReportsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{isRTL ? 'الفصل' : 'Class'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'حاضر' : 'Present'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'غائب' : 'Absent'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'متأخر' : 'Late'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'النسبة' : 'Rate'}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {attendanceData.map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {isRTL ? row.class : row.class_en}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="bg-green-100 text-green-700">{row.present}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="bg-red-100 text-red-700">{row.absent}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="bg-yellow-100 text-yellow-700">{row.late}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Progress value={row.rate} className="w-20 h-2" />
-                              <span className={`font-medium ${row.rate >= 90 ? 'text-green-600' : row.rate >= 80 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                {row.rate}%
-                              </span>
-                            </div>
-                          </TableCell>
+                  {attendanceData.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                      <p className="text-muted-foreground">{isRTL ? 'لا توجد بيانات حضور متاحة' : 'No attendance data available'}</p>
+                      <p className="text-sm text-muted-foreground/70 mt-2">
+                        {isRTL ? 'سيتم عرض البيانات عند تسجيل الحضور' : 'Data will appear when attendance is recorded'}
+                      </p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{isRTL ? 'الفصل' : 'Class'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'حاضر' : 'Present'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'غائب' : 'Absent'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'متأخر' : 'Late'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'النسبة' : 'Rate'}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {attendanceData.map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {isRTL ? row.class : row.class_en}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="bg-green-100 text-green-700">{row.present}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="bg-red-100 text-red-700">{row.absent}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="bg-yellow-100 text-yellow-700">{row.late}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Progress value={row.rate} className="w-20 h-2" />
+                                <span className={`font-medium ${row.rate >= 90 ? 'text-green-600' : row.rate >= 80 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                  {row.rate}%
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
