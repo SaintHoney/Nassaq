@@ -1372,6 +1372,113 @@ export default function SchoolSettingsPagePro() {
               </Card>
             </TabsContent>
             
+            {/* ================= TAB: إسنادات المعلمين ================= */}
+            <TabsContent value="assignments" className="space-y-4">
+              <Card className="border-2 border-indigo-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                        <Target className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle>إسنادات المعلمين والفصول</CardTitle>
+                        <CardDescription>{assignments.length} إسناد - ربط المعلمين بالفصول والمواد</CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => setAddAssignmentOpen(true)}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                      data-testid="add-assignment-btn"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة إسناد
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {assignments.length > 0 ? (
+                    <div className="space-y-3">
+                      {/* Group by teacher */}
+                      {Object.entries(
+                        assignments.reduce((acc, curr) => {
+                          const key = curr.teacher_name || curr.teacher_id || 'غير محدد';
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(curr);
+                          return acc;
+                        }, {})
+                      ).map(([teacherName, teacherAssignments]) => (
+                        <div key={teacherName} className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center">
+                              <Users className="h-5 w-5 text-indigo-700" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-indigo-800">{teacherName}</p>
+                              <p className="text-xs text-muted-foreground">{teacherAssignments.length} فصول/مواد</p>
+                            </div>
+                          </div>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2 mr-12">
+                            {teacherAssignments.map((assignment) => (
+                              <div 
+                                key={assignment.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-white border border-indigo-100 group hover:shadow-md transition-all"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <GraduationCap className="h-4 w-4 text-indigo-600" />
+                                  <div>
+                                    <p className="text-sm font-medium">{assignment.class_name || assignment.class_id}</p>
+                                    <p className="text-xs text-muted-foreground">{assignment.subject_name || assignment.subject_id}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-xs">{assignment.weekly_sessions} ح/أسبوع</Badge>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-blue-500"
+                                      onClick={() => {
+                                        setEditAssignment(assignment);
+                                        setEditAssignmentOpen(true);
+                                      }}
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-red-500"
+                                      onClick={() => handleDeleteAssignment(assignment.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Target className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                      <p className="text-lg font-medium">لا يوجد إسنادات مسجلة</p>
+                      <p className="text-sm mb-4">قم بإضافة إسنادات لربط المعلمين بالفصول والمواد</p>
+                      <Button 
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                        onClick={() => setAddAssignmentOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 ml-2" />
+                        إضافة أول إسناد
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
             {/* ================= TAB: المواد الدراسية ================= */}
             <TabsContent value="subjects" className="space-y-4">
               <Card className="border-2 border-emerald-200">
