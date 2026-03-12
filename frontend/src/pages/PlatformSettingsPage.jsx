@@ -349,6 +349,7 @@ export const PlatformSettingsPage = () => {
     phone: user?.phone || '+966500000000',
     language: user?.preferred_language || 'ar',
     profilePicture: user?.avatar_url || null,
+    title: user?.title || '',
   });
   
   // Password form
