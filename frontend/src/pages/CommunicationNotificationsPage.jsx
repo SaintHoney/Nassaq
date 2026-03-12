@@ -169,6 +169,46 @@ export const CommunicationNotificationsPage = () => {
     }
   }, [api, filterType, filterRead]);
 
+  // Fetch communication stats
+  const fetchCommunicationStats = useCallback(async () => {
+    try {
+      const response = await api.get('/communication/stats');
+      setCommStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch communication stats:', error);
+    }
+  }, [api]);
+
+  // Fetch scheduled messages
+  const fetchScheduledMessages = useCallback(async () => {
+    try {
+      const response = await api.get('/communication/scheduled');
+      setScheduledMessages(response.data.messages || []);
+    } catch (error) {
+      console.error('Failed to fetch scheduled messages:', error);
+    }
+  }, [api]);
+
+  // Fetch sent messages
+  const fetchSentMessages = useCallback(async () => {
+    try {
+      const response = await api.get('/communication/sent');
+      setSentMessages(response.data.messages || []);
+    } catch (error) {
+      console.error('Failed to fetch sent messages:', error);
+    }
+  }, [api]);
+
+  // Fetch audience counts
+  const fetchAudienceCounts = useCallback(async () => {
+    try {
+      const response = await api.get('/communication/audience-counts');
+      setAudienceCounts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch audience counts:', error);
+    }
+  }, [api]);
+
   const fetchAnalytics = async () => {
     try {
       const response = await api.get('/notifications/analytics');
