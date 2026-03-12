@@ -475,39 +475,49 @@ export const SchoolReportsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{isRTL ? 'المادة' : 'Subject'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'المتوسط' : 'Average'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'الأعلى' : 'Highest'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'الأدنى' : 'Lowest'}</TableHead>
-                        <TableHead className="text-center">{isRTL ? 'نسبة النجاح' : 'Pass Rate'}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {gradeData.map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {isRTL ? row.subject : row.subject_en}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className={`font-bold ${row.avg >= 80 ? 'text-green-600' : row.avg >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                              {row.avg}%
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center text-green-600 font-medium">{row.highest}</TableCell>
-                          <TableCell className="text-center text-red-600 font-medium">{row.lowest}</TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Progress value={row.pass_rate} className="w-20 h-2" />
-                              <span className="font-medium">{row.pass_rate}%</span>
-                            </div>
-                          </TableCell>
+                  {gradeData.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Award className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                      <p className="text-muted-foreground">{isRTL ? 'لا توجد بيانات درجات متاحة' : 'No grade data available'}</p>
+                      <p className="text-sm text-muted-foreground/70 mt-2">
+                        {isRTL ? 'سيتم عرض البيانات عند تسجيل الدرجات' : 'Data will appear when grades are recorded'}
+                      </p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{isRTL ? 'المادة' : 'Subject'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'المتوسط' : 'Average'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'الأعلى' : 'Highest'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'الأدنى' : 'Lowest'}</TableHead>
+                          <TableHead className="text-center">{isRTL ? 'نسبة النجاح' : 'Pass Rate'}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {gradeData.map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {isRTL ? row.subject : row.subject_en}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className={`font-bold ${row.avg >= 80 ? 'text-green-600' : row.avg >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                {row.avg}%
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center text-green-600 font-medium">{row.highest}</TableCell>
+                            <TableCell className="text-center text-red-600 font-medium">{row.lowest}</TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Progress value={row.pass_rate} className="w-20 h-2" />
+                                <span className="font-medium">{row.pass_rate}%</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
