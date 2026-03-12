@@ -368,41 +368,13 @@ export const AdminDashboard = () => {
       setActivityAlerts(alertsResponse.data?.alerts || []);
     } catch (error) {
       console.error('Error fetching activity data:', error);
-      // بيانات تجريبية افتراضية حسب نوع العرض
-      if (activityViewBy === 'type') {
-        setActivityData([
-          { name: 'الحصص', value: 202, color: '#22c55e' },
-          { name: 'الحضور', value: 437, color: '#3b82f6' },
-          { name: 'الدرجات', value: 94, color: '#8b5cf6' },
-          { name: 'المستخدمين', value: 4130, color: '#f97316' },
-        ]);
-      } else if (activityViewBy === 'school') {
-        setActivityData([
-          { school: 'مدرسة النور', lessons: 45, attendance: 120, grades: 30, users: 180 },
-          { school: 'مدرسة الأمل', lessons: 38, attendance: 95, grades: 25, users: 150 },
-          { school: 'مدرسة الفجر', lessons: 52, attendance: 140, grades: 35, users: 200 },
-          { school: 'مدرسة الهدى', lessons: 30, attendance: 85, grades: 20, users: 120 },
-          { school: 'مدرسة السلام', lessons: 42, attendance: 110, grades: 28, users: 165 },
-        ]);
-      } else {
-        setActivityData([
-          { hour: '07:00', lessons: 5, attendance: 45, grades: 3, users: 120 },
-          { hour: '08:00', lessons: 25, attendance: 180, grades: 8, users: 450 },
-          { hour: '09:00', lessons: 38, attendance: 95, grades: 15, users: 680 },
-          { hour: '10:00', lessons: 42, attendance: 40, grades: 22, users: 720 },
-          { hour: '11:00', lessons: 35, attendance: 25, grades: 18, users: 650 },
-          { hour: '12:00', lessons: 28, attendance: 20, grades: 12, users: 580 },
-          { hour: '13:00', lessons: 18, attendance: 15, grades: 8, users: 420 },
-          { hour: '14:00', lessons: 8, attendance: 10, grades: 5, users: 280 },
-          { hour: '15:00', lessons: 3, attendance: 5, grades: 2, users: 150 },
-          { hour: '16:00', lessons: 0, attendance: 2, grades: 1, users: 80 },
-        ]);
-      }
+      // Empty state - no mock data
+      setActivityData([]);
       setActivitySummary({
-        lessons: { count: 202, change: 12.5, status: 'high' },
-        attendance: { count: 437, change: -5.2, status: 'low' },
-        grades: { count: 94, change: 8.3, status: 'normal' },
-        users: { count: 4130, change: 15.7, status: 'high' }
+        lessons: { count: 0, change: 0, status: 'normal' },
+        attendance: { count: 0, change: 0, status: 'normal' },
+        grades: { count: 0, change: 0, status: 'normal' },
+        users: { count: 0, change: 0, status: 'normal' }
       });
     }
   }, [api, activityPeriod, activityViewBy]);
