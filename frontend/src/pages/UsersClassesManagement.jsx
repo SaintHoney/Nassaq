@@ -620,12 +620,11 @@ export default function UsersClassesManagement() {
         <header className="sticky top-0 z-30 glass border-b border-border/50 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-cairo text-2xl font-bold">{labels.pageTitle}</h1>
-              <p className="text-sm text-muted-foreground font-tajawal">
-                {isImpersonating && schoolContext 
-                  ? `${schoolContext.school_name} - ${labels.pageSubtitle}`
-                  : labels.pageSubtitle
-                }
+              <h1 className="font-cairo text-2xl font-bold">
+                {isRTL ? `مرحباً، ${user?.full_name || 'المستخدم'}` : `Welcome, ${user?.full_name || 'User'}`}
+              </h1>
+              <p className="text-base text-muted-foreground font-tajawal">
+                {labels.pageTitle}
               </p>
             </div>
             
