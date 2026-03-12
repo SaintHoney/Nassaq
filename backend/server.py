@@ -8901,11 +8901,19 @@ async def get_school_dashboard(
         "type": "student"
     }, {"_id": 0}).to_list(10000)
     
-    teacher_attendance = await db.attendance.find({
+    # Get teacher attendance from teacher_attendance collection (where it's actually stored)
+    teacher_attendance_records = await db.teacher_attendance.find({
         "school_id": school_id,
-        "date": today,
-        "type": "teacher"
+        "date": today
     }, {"_id": 0}).to_list(1000)
+    
+    # If no records in teacher_attendance, fallback to attendance collection
+    if not teacher_attendance_records:
+        teacher_attendance_records = await db.attendance.find({
+            "school_id": school_id,
+            "date": today,
+            "type": "teacher"
+        }, {"_id": 0}).to_list(1000)
     
     # Calculate attendance stats - REAL DATA
     student_present = len([a for a in student_attendance if a.get("status") == "present"])
@@ -8913,10 +8921,10 @@ async def get_school_dashboard(
     student_late = len([a for a in student_attendance if a.get("status") == "late"])
     student_excused = len([a for a in student_attendance if a.get("status") == "excused"])
     
-    teacher_present = len([a for a in teacher_attendance if a.get("status") == "present"])
-    teacher_absent = len([a for a in teacher_attendance if a.get("status") == "absent"])
-    teacher_late = len([a for a in teacher_attendance if a.get("status") == "late"])
-    teacher_excused = len([a for a in teacher_attendance if a.get("status") == "excused"])
+    teacher_present = len([a for a in teacher_attendance_records if a.get("status") == "present"])
+    teacher_absent = len([a for a in teacher_attendance_records if a.get("status") == "absent"])
+    teacher_late = len([a for a in teacher_attendance_records if a.get("status") == "late"])
+    teacher_excused = len([a for a in teacher_attendance_records if a.get("status") == "excused"])
     
     # Get today's sessions count
     today_day = datetime.now(timezone.utc).strftime("%A").lower()
