@@ -293,7 +293,7 @@ const TeachersSection = ({ teachers, loading, onRefresh, onAddTeacher, onEditTea
             data-testid="add-teacher-settings-btn"
           >
             <UserPlus className="h-4 w-4 me-2" />
-            {isRTL ? 'إضافة معلم' : 'Add Teacher'}
+            {isRTL ? 'معلم / معلمين' : 'Teacher(s)'}
           </Button>
           <Button variant="outline" onClick={onRefresh} size="icon">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
