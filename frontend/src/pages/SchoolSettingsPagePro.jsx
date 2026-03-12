@@ -347,9 +347,9 @@ const RankItem = ({ rank }) => (
 );
 
 // ============================================
-// مكون كارت القيد الإداري
+// مكون كارت القيد الإداري مع زر التفعيل
 // ============================================
-const ConstraintItem = ({ constraint, index }) => {
+const ConstraintItem = ({ constraint, index, onToggle }) => {
   const getPriorityStyle = (priority) => {
     switch(priority) {
       case 'critical': return 'bg-red-100 text-red-700 border-red-300';
@@ -380,11 +380,23 @@ const ConstraintItem = ({ constraint, index }) => {
             <Badge variant="outline" className={`text-xs ${getPriorityStyle(constraint.priority)}`}>
               {getPriorityLabel(constraint.priority)}
             </Badge>
-            {constraint.is_active && (
-              <Badge className="bg-green-100 text-green-700 text-xs">
-                <CheckCircle2 className="h-3 w-3 mr-1" /> مفعّل
-              </Badge>
-            )}
+            <Button
+              variant={constraint.is_active ? "default" : "outline"}
+              size="sm"
+              className={`text-xs h-7 ${constraint.is_active ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              onClick={() => onToggle?.(constraint)}
+              data-testid={`toggle-constraint-${constraint.id}`}
+            >
+              {constraint.is_active ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3 ml-1" /> مفعّل
+                </>
+              ) : (
+                <>
+                  <Ban className="h-3 w-3 ml-1" /> معطّل
+                </>
+              )}
+            </Button>
           </div>
         </div>
         <p className="text-sm text-rose-600 mt-2">{constraint.description_ar}</p>
