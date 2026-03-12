@@ -3811,6 +3811,60 @@ async def check_parent_exists(
     
     return {"found": False}
 
+
+@api_router.get("/student-wizard/search-parents")
+async def search_parents(
+    q: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Search for existing parents by name or phone"""
+    school_id = current_user.get("tenant_id")
+    
+    if not q or len(q) < 2:
+        return {"parents": []}
+    
+    # Search by name or phone
+    query = {
+        "school_id": school_id,
+        "$or": [
+            {"full_name": {"$regex": q, "$options": "i"}},
+            {"phone": {"$regex": q, "$options": "i"}},
+        ]
+    }
+    
+    parents = await db.parents.find(
+        query,
+        {"_id": 0, "id": 1, "full_name": 1, "phone": 1, "email": 1, "national_id": 1, "relationship": 1, "address": 1, "student_ids": 1}
+    ).limit(10).to_list(10)
+    
+    # Add children count and names
+    result = []
+    for parent in parents:
+        student_ids = parent.get("student_ids", [])
+        children_count = len(student_ids)
+        children = []
+        
+        if student_ids:
+            students = await db.students.find(
+                {"id": {"$in": student_ids}},
+                {"_id": 0, "full_name": 1}
+            ).to_list(10)
+            children = [{"name": s.get("full_name")} for s in students]
+        
+        result.append({
+            "id": parent.get("id"),
+            "full_name": parent.get("full_name"),
+            "phone": parent.get("phone"),
+            "email": parent.get("email"),
+            "national_id": parent.get("national_id"),
+            "relationship": parent.get("relationship", "father"),
+            "address": parent.get("address"),
+            "children_count": children_count,
+            "children": children
+        })
+    
+    return {"parents": result}
+
 @api_router.post("/student-wizard/create")
 async def create_student_with_wizard(
     data: StudentWizardCreate,
