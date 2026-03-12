@@ -547,7 +547,9 @@ async def login(credentials: UserLogin):
         preferred_language=user.get("preferred_language", "ar"),
         preferred_theme=user.get("preferred_theme", "light"),
         created_at=user.get("created_at", ""),
-        teacher_id=user.get("teacher_id")
+        teacher_id=user.get("teacher_id"),
+        student_id=user.get("student_id"),
+        parent_id=user.get("parent_id")
     )
     
     return TokenResponse(access_token=token, user=user_response)
