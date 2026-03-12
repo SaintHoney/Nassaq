@@ -1061,10 +1061,10 @@ export const AdminDashboard = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <h1 className="font-cairo text-base font-bold text-brand-navy truncate" data-testid="user-display-mobile">
-                      {isRTL ? 'مرحباً أستاذ أحمد زلط' : 'Welcome, Ahmed Zalt'}
+                    <h1 className="font-cairo text-lg font-bold text-brand-navy truncate" data-testid="user-display-mobile">
+                      {isRTL ? `مرحباً، ${user?.full_name || 'المستخدم'}` : `Welcome, ${user?.full_name || 'User'}`}
                     </h1>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {isRTL ? 'مركز القيادة' : 'Command Center'}
                     </p>
                   </div>
@@ -1096,10 +1096,10 @@ export const AdminDashboard = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h1 className="font-cairo text-xl font-bold text-brand-navy" data-testid="user-display">
-                      {isRTL ? 'مرحباً أستاذ أحمد زلط' : 'Welcome, Ahmed Zalt'}
+                    <h1 className="font-cairo text-2xl font-bold text-brand-navy" data-testid="user-display">
+                      {isRTL ? `مرحباً، ${user?.full_name || 'المستخدم'}` : `Welcome, ${user?.full_name || 'User'}`}
                     </h1>
-                    <p className="text-sm text-muted-foreground font-medium">
+                    <p className="text-base text-muted-foreground font-medium">
                       {isRTL ? 'مركز القيادة' : 'Command Center'}
                     </p>
                   </div>
