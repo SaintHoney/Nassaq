@@ -277,11 +277,11 @@ export const SchoolReportsPage = () => {
               color="bg-green-500"
             />
             <StatCard
-              title={isRTL ? 'متوسط الدرجات' : 'Avg Grade'}
-              value={`${stats.avg_grade}%`}
-              icon={Award}
-              change={-0.8}
-              changeType="negative"
+              title={isRTL ? 'السلوك الإيجابي' : 'Positive Behavior'}
+              value={behaviorData.find(b => b.type === 'positive')?.count || 0}
+              icon={Target}
+              change={behaviorData.find(b => b.type === 'positive')?.change || 0}
+              changeType="positive"
               color="bg-amber-500"
             />
           </div>
