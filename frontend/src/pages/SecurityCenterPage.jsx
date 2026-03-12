@@ -924,52 +924,32 @@ export default function SecurityCenterPage() {
             {/* Tools Tab */}
             <TabsContent value="tools" className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowLockAccountDialog(true)}>
+                <Card className="cursor-pointer hover:shadow-lg transition-all border-2 border-red-100 hover:border-red-300" onClick={openLockDialog}>
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center"><Lock className="h-7 w-7 text-red-600" /></div>
                     <h4 className="font-bold mb-1">{t.lockAccount}</h4>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'البحث وقفل حساب' : 'Search & lock account'}</p>
                   </CardContent>
                 </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Unlock Account')}>
+                <Card className="cursor-pointer hover:shadow-lg transition-all border-2 border-green-100 hover:border-green-300" onClick={openUnlockDialog}>
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-green-100 flex items-center justify-center"><Unlock className="h-7 w-7 text-green-600" /></div>
                     <h4 className="font-bold mb-1">{t.unlockAccount}</h4>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'البحث وفتح حساب' : 'Search & unlock account'}</p>
                   </CardContent>
                 </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('End All Sessions')}>
+                <Card className="cursor-pointer hover:shadow-lg transition-all border-2 border-orange-100 hover:border-orange-300" onClick={() => setShowEndSessionsDialog(true)}>
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-orange-100 flex items-center justify-center"><LogOut className="h-7 w-7 text-orange-600" /></div>
                     <h4 className="font-bold mb-1">{t.endAllSessions}</h4>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'إنهاء كل الجلسات' : 'End all sessions'}</p>
                   </CardContent>
                 </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Force Password Change')}>
+                <Card className="cursor-pointer hover:shadow-lg transition-all border-2 border-purple-100 hover:border-purple-300" onClick={openForcePasswordDialog}>
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-100 flex items-center justify-center"><KeyRound className="h-7 w-7 text-purple-600" /></div>
                     <h4 className="font-bold mb-1">{t.forcePasswordChange}</h4>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => handleQuickAction('Security Scan')}>
-                  <CardContent className="p-6 text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-100 flex items-center justify-center"><ShieldCheck className="h-7 w-7 text-blue-600" /></div>
-                    <h4 className="font-bold mb-1">{t.runSecurityScan}</h4>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={handleDownloadReport}>
-                  <CardContent className="p-6 text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-cyan-100 flex items-center justify-center"><Download className="h-7 w-7 text-cyan-600" /></div>
-                    <h4 className="font-bold mb-1">{t.downloadReport}</h4>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setActiveTab('alerts')}>
-                  <CardContent className="p-6 text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-yellow-100 flex items-center justify-center"><AlertTriangle className="h-7 w-7 text-yellow-600" /></div>
-                    <h4 className="font-bold mb-1">{t.reviewIncidents}</h4>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowAIReportDialog(true)}>
-                  <CardContent className="p-6 text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-pink-100 flex items-center justify-center"><Brain className="h-7 w-7 text-pink-600" /></div>
-                    <h4 className="font-bold mb-1">{t.aiAnalysis}</h4>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'فردي / فئة / الكل' : 'User / Role / All'}</p>
                   </CardContent>
                 </Card>
               </div>
