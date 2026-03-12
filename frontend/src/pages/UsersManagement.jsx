@@ -247,14 +247,10 @@ export default function UsersManagement() {
       toast.error(isRTL ? 'فشل في تحميل المستخدمين' : 'Failed to load users');
       // Don't use mock data - show empty state instead
       setUsers([]);
-      setStats({
+      setStats(prev => ({
+        ...prev,
         totalUsers: 0,
-        totalSchools: 0,
-        teachersInSchools: 0,
-        independentTeachers: 0,
-        platformAdmins: 0,
-        pendingRequests: 0,
-      });
+      }));
     } finally {
       setLoading(false);
     }
