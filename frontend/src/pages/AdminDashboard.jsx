@@ -2206,9 +2206,12 @@ export const AdminDashboard = () => {
                     { key: 'schools', label: isRTL ? 'المدارس' : 'Schools', icon: Building2, color: 'text-brand-navy' },
                     { key: 'students', label: isRTL ? 'الطلاب' : 'Students', icon: GraduationCap, color: 'text-brand-turquoise' },
                     { key: 'teachers', label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck, color: 'text-brand-purple' },
-                    { key: 'admins', label: isRTL ? 'المسؤولين' : 'Admins', icon: Users, color: 'text-orange-500' },
-                    { key: 'activeUsers', label: isRTL ? 'النشطين' : 'Active', icon: Activity, color: 'text-green-500' },
-                    { key: 'apiCalls', label: isRTL ? 'API' : 'API', icon: Server, color: 'text-teal-500' },
+                    { key: 'independentTeachers', label: isRTL ? 'المعلمين المستقلين' : 'Independent Teachers', icon: Users, color: 'text-orange-500' },
+                    { key: 'studentAttendance', label: isRTL ? 'حضور الطلاب' : 'Student Attendance', icon: Activity, color: 'text-green-500' },
+                    { key: 'teacherAttendance', label: isRTL ? 'حضور المعلمين' : 'Teacher Attendance', icon: Activity, color: 'text-blue-500' },
+                    { key: 'platformAccounts', label: isRTL ? 'حسابات المنصة' : 'Platform Accounts', icon: Shield, color: 'text-purple-500' },
+                    { key: 'pendingRequests', label: isRTL ? 'طلبات معلقة' : 'Pending Requests', icon: Clock, color: 'text-amber-500' },
+                    { key: 'aiSchools', label: isRTL ? 'مدارس AI' : 'AI Schools', icon: Sparkles, color: 'text-cyan-500' },
                   ].map((item) => (
                     <div 
                       key={item.key} 
