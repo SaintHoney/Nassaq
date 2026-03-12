@@ -358,29 +358,8 @@ const PREMIUM_INTEGRATIONS = [
   },
 ];
 
-// NASSAQ API Keys
-const NASSAQ_API_KEYS = [
-  {
-    id: '1',
-    name: 'Production API Key',
-    key: 'nsk_live_xxxxxxxxxxxxxxxxxxxxxxxx',
-    secret: 'nss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    permissions: 'full_access',
-    created_at: '2026-01-15T08:00:00Z',
-    last_used: '2026-03-09T10:30:00Z',
-    is_active: true,
-  },
-  {
-    id: '2',
-    name: 'Testing API Key',
-    key: 'nsk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
-    secret: 'nss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    permissions: 'read_write',
-    created_at: '2026-02-01T10:00:00Z',
-    last_used: '2026-03-08T14:00:00Z',
-    is_active: true,
-  },
-];
+// NASSAQ API Keys - Empty initial state, will be populated from API
+const INITIAL_API_KEYS = [];
 
 // NASSAQ API Endpoints
 const NASSAQ_ENDPOINTS = [
