@@ -441,7 +441,9 @@ export default function IntegrationsPage() {
         const response = await axios.get(`${API_URL}/api/integrations`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setIntegrations(response.data || []);
+        // API returns {integrations: [...]} not direct array
+        const data = response.data?.integrations || response.data || [];
+        setIntegrations(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch integrations:', error);
         // Don't use fallback mock data
