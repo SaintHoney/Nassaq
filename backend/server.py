@@ -2844,7 +2844,7 @@ class SubjectResponse(BaseModel):
 # Teacher Wizard Options
 @api_router.get("/teachers/options/subjects")
 async def get_teacher_subjects_options(current_user: dict = Depends(get_current_user)):
-    """Get available subjects from reference database"""
+    """Get available subjects from reference database - unique subjects only"""
     
     # Get subjects from reference_subjects collection first, then fallback to subjects
     subjects = await db.reference_subjects.find(
@@ -2858,19 +2858,23 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
             {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1, "code": 1, "color": 1}
         ).to_list(300)
     
-    # Format for backward compatibility
-    formatted_subjects = []
+    # Remove duplicates by name_ar (keep first occurrence)
+    seen_names = set()
+    unique_subjects = []
     for s in subjects:
-        formatted_subjects.append({
-            "id": s.get("id"),
-            "name": s.get("name_ar", s.get("name", "")),
-            "name_ar": s.get("name_ar", s.get("name", "")),
-            "name_en": s.get("name_en", ""),
-            "code": s.get("code", ""),
-            "color": s.get("color", "#3B82F6")
-        })
+        name = s.get("name_ar", s.get("name", ""))
+        if name and name not in seen_names:
+            seen_names.add(name)
+            unique_subjects.append({
+                "id": s.get("id"),
+                "name": name,
+                "name_ar": name,
+                "name_en": s.get("name_en", ""),
+                "code": s.get("code", ""),
+                "color": s.get("color", "#3B82F6")
+            })
     
-    return {"subjects": formatted_subjects}
+    return {"subjects": unique_subjects}
 
 # Reference Data APIs
 @api_router.get("/reference/academic-structure")
