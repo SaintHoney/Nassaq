@@ -228,6 +228,8 @@ export default function SchedulePageNew() {
   const handleGenerateSchedule = async () => {
     setGenerating(true);
     setGenerationErrors([]);
+    setGenerationStep('جاري التحقق من البيانات...');
+    setUnplacedSessions([]);
     
     try {
       // التحقق من البيانات المطلوبة
@@ -248,14 +250,18 @@ export default function SchedulePageNew() {
       if (errors.length > 0) {
         setGenerationErrors(errors);
         setGenerating(false);
+        setGenerationStep('');
         toast.error('يوجد مشاكل تمنع إنشاء الجدول');
         return;
       }
+      
+      setGenerationStep('جاري إنشاء الجدول...');
       
       let scheduleId = selectedSchedule;
       
       // Create schedule if none exists
       if (!scheduleId) {
+        setGenerationStep('جاري إنشاء جدول جديد...');
         const createRes = await api.post('/schedules', {
           name: 'الجدول المدرسي - تلقائي',
           academic_year: '2026-2027',
@@ -268,11 +274,19 @@ export default function SchedulePageNew() {
         setSelectedSchedule(scheduleId);
       }
       
+      setGenerationStep('جاري معالجة الجدول بالذكاء الاصطناعي...');
+      
       const response = await api.post(`/schedules/${scheduleId}/generate?respect_workload=true&balance_daily=true&avoid_consecutive=true`);
       
       setGenerationStats(response.data);
+      setGenerationStep('');
       setGenerateDialogOpen(false);
       setGenerationResultOpen(true);
+      
+      // تخزين الحصص الغير مجدولة
+      if (response.data.unplaced_details) {
+        setUnplacedSessions(response.data.unplaced_details);
+      }
       
       // التحقق من الأخطاء في الاستجابة
       if (response.data.errors && response.data.errors.length > 0) {
@@ -283,8 +297,10 @@ export default function SchedulePageNew() {
         setGenerationErrors(prev => [...prev, ...response.data.warnings]);
       }
       
-      if (response.data.success) {
-        toast.success(`تم إنشاء ${response.data.sessions_created} حصة بنجاح`);
+      if (response.data.success && parseFloat(response.data.success_rate) >= 100) {
+        toast.success(`تم إنشاء ${response.data.sessions_created} حصة بنجاح - نسبة النجاح 100%`);
+      } else if (response.data.success) {
+        toast.success(`تم إنشاء ${response.data.sessions_created} حصة - نسبة النجاح ${response.data.success_rate}%`);
       } else {
         const msg = response.data.message || `تم إنشاء ${response.data.sessions_created} حصة مع ${response.data.unplaced_sessions || 0} حصة غير مجدولة`;
         toast.warning(msg);
@@ -294,6 +310,7 @@ export default function SchedulePageNew() {
       fetchSessions();
     } catch (error) {
       console.error('Generate error:', error);
+      setGenerationStep('');
       
       // تحليل رسالة الخطأ بالتفصيل
       let errorMessage = 'فشل توليد الجدول';
