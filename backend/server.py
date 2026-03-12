@@ -3239,13 +3239,40 @@ async def get_school_constraints(
     """Get all constraints for the school - جلب جميع القيود للمدرسة"""
     school_id = await get_school_id_from_context(current_user, x_school_context)
     
-    # Get school-specific constraints and reference constraints
-    constraints = await db.admin_constraints.find(
-        {"is_active": True},
+    # Get school-specific constraints first
+    school_constraints = await db.school_constraints.find(
+        {"school_id": school_id},
         {"_id": 0}
     ).to_list(100)
     
-    return constraints
+    # If no school-specific constraints, get reference constraints as starting point
+    if not school_constraints:
+        ref_constraints = await db.admin_constraints.find(
+            {"is_active": True},
+            {"_id": 0}
+        ).to_list(100)
+        
+        # Copy reference constraints to school-specific collection
+        for c in ref_constraints:
+            school_constraint = {
+                "id": str(uuid.uuid4()),
+                "school_id": school_id,
+                "ref_id": c.get("id"),
+                "name_ar": c.get("name_ar", c.get("name", "")),
+                "name_en": c.get("name_en", ""),
+                "description_ar": c.get("description_ar", c.get("description", "")),
+                "description_en": c.get("description_en", ""),
+                "type": c.get("type", "hard"),
+                "priority": c.get("priority", "medium"),
+                "is_active": c.get("is_active", True),
+                "is_system": True,  # Mark as system-generated
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.school_constraints.insert_one(school_constraint)
+            school_constraint.pop("_id", None)
+            school_constraints.append(school_constraint)
+    
+    return school_constraints
 
 
 @api_router.get("/teachers/options/grades")
