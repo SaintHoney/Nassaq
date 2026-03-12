@@ -11576,6 +11576,10 @@ def decode_token_for_ws(token: str):
 
 websocket_router, ws_manager = create_websocket_routes(db, decode_token_for_ws)
 
+# Import and create bulk import/export routes
+from routes.bulk_import_export_routes import setup_bulk_routes
+bulk_routes = setup_bulk_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
