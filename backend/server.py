@@ -2786,6 +2786,286 @@ async def get_reference_default_settings(current_user: dict = Depends(get_curren
     return settings or {}
 
 
+# ============== SUBJECTS CRUD - إدارة المواد الدراسية ==============
+
+class SubjectCreate(BaseModel):
+    name_ar: str
+    name_en: Optional[str] = None
+    code: Optional[str] = None
+    category: Optional[str] = None
+    weekly_periods: int = 4
+    description: Optional[str] = None
+
+class SubjectUpdate(BaseModel):
+    name_ar: Optional[str] = None
+    name_en: Optional[str] = None
+    code: Optional[str] = None
+    category: Optional[str] = None
+    weekly_periods: Optional[int] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+@api_router.post("/school/subjects")
+async def create_school_subject(
+    subject_data: SubjectCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create a new subject for the school - إضافة مادة جديدة للمدرسة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    subject_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    subject_doc = {
+        "id": subject_id,
+        "school_id": school_id,
+        "name_ar": subject_data.name_ar,
+        "name_en": subject_data.name_en or subject_data.name_ar,
+        "code": subject_data.code or f"SUB-{subject_id[:8].upper()}",
+        "category": subject_data.category or "general",
+        "weekly_periods": subject_data.weekly_periods,
+        "description": subject_data.description,
+        "is_active": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user.get("id")
+    }
+    
+    await db.subjects.insert_one(subject_doc)
+    
+    return {"id": subject_id, "message": "تم إضافة المادة بنجاح", "subject": subject_doc}
+
+@api_router.put("/school/subjects/{subject_id}")
+async def update_school_subject(
+    subject_id: str,
+    subject_data: SubjectUpdate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update a subject - تعديل مادة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    # Check if subject exists for this school
+    subject = await db.subjects.find_one({"id": subject_id, "school_id": school_id}, {"_id": 0})
+    
+    if not subject:
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if subject_data.name_ar is not None:
+        update_data["name_ar"] = subject_data.name_ar
+    if subject_data.name_en is not None:
+        update_data["name_en"] = subject_data.name_en
+    if subject_data.code is not None:
+        update_data["code"] = subject_data.code
+    if subject_data.category is not None:
+        update_data["category"] = subject_data.category
+    if subject_data.weekly_periods is not None:
+        update_data["weekly_periods"] = subject_data.weekly_periods
+    if subject_data.description is not None:
+        update_data["description"] = subject_data.description
+    if subject_data.is_active is not None:
+        update_data["is_active"] = subject_data.is_active
+    
+    await db.subjects.update_one({"id": subject_id}, {"$set": update_data})
+    
+    return {"message": "تم تحديث المادة بنجاح"}
+
+@api_router.delete("/school/subjects/{subject_id}")
+async def delete_school_subject(
+    subject_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete (soft) a subject - حذف مادة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    # Check if subject exists for this school
+    subject = await db.subjects.find_one({"id": subject_id, "school_id": school_id}, {"_id": 0})
+    
+    if not subject:
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+    
+    # Soft delete
+    await db.subjects.update_one(
+        {"id": subject_id},
+        {"$set": {"is_active": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم حذف المادة بنجاح"}
+
+@api_router.get("/school/subjects")
+async def get_school_subjects(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get all subjects for the school - جلب جميع المواد للمدرسة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    subjects = await db.subjects.find(
+        {"school_id": school_id, "is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return subjects
+
+
+# ============== ADMIN CONSTRAINTS CRUD - إدارة القيود الإدارية ==============
+
+class ConstraintCreate(BaseModel):
+    name_ar: str
+    name_en: Optional[str] = None
+    description_ar: Optional[str] = None
+    description_en: Optional[str] = None
+    type: str = "hard"  # 'hard' or 'soft'
+    priority: str = "medium"  # 'critical', 'high', 'medium', 'low'
+    restricted_periods: Optional[List[int]] = None
+    max_consecutive_periods: Optional[int] = None
+
+class ConstraintUpdate(BaseModel):
+    name_ar: Optional[str] = None
+    name_en: Optional[str] = None
+    description_ar: Optional[str] = None
+    description_en: Optional[str] = None
+    type: Optional[str] = None
+    priority: Optional[str] = None
+    restricted_periods: Optional[List[int]] = None
+    max_consecutive_periods: Optional[int] = None
+    is_active: Optional[bool] = None
+
+@api_router.post("/school/constraints")
+async def create_school_constraint(
+    constraint_data: ConstraintCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Create a new admin constraint for the school - إضافة قيد إداري جديد"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    constraint_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    constraint_doc = {
+        "id": constraint_id,
+        "school_id": school_id,
+        "name_ar": constraint_data.name_ar,
+        "name_en": constraint_data.name_en or constraint_data.name_ar,
+        "description_ar": constraint_data.description_ar,
+        "description_en": constraint_data.description_en,
+        "type": constraint_data.type,
+        "priority": constraint_data.priority,
+        "restricted_periods": constraint_data.restricted_periods or [],
+        "max_consecutive_periods": constraint_data.max_consecutive_periods,
+        "is_active": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user.get("id")
+    }
+    
+    await db.admin_constraints.insert_one(constraint_doc)
+    
+    return {"id": constraint_id, "message": "تم إضافة القيد بنجاح", "constraint": constraint_doc}
+
+@api_router.put("/school/constraints/{constraint_id}")
+async def update_school_constraint(
+    constraint_id: str,
+    constraint_data: ConstraintUpdate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update an admin constraint - تعديل قيد إداري"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    # Check constraint exists - also check for constraints without school_id (reference constraints)
+    constraint = await db.admin_constraints.find_one(
+        {"id": constraint_id},
+        {"_id": 0}
+    )
+    
+    if not constraint:
+        raise HTTPException(status_code=404, detail="القيد غير موجود")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if constraint_data.name_ar is not None:
+        update_data["name_ar"] = constraint_data.name_ar
+    if constraint_data.name_en is not None:
+        update_data["name_en"] = constraint_data.name_en
+    if constraint_data.description_ar is not None:
+        update_data["description_ar"] = constraint_data.description_ar
+    if constraint_data.description_en is not None:
+        update_data["description_en"] = constraint_data.description_en
+    if constraint_data.type is not None:
+        update_data["type"] = constraint_data.type
+    if constraint_data.priority is not None:
+        update_data["priority"] = constraint_data.priority
+    if constraint_data.restricted_periods is not None:
+        update_data["restricted_periods"] = constraint_data.restricted_periods
+    if constraint_data.max_consecutive_periods is not None:
+        update_data["max_consecutive_periods"] = constraint_data.max_consecutive_periods
+    if constraint_data.is_active is not None:
+        update_data["is_active"] = constraint_data.is_active
+    
+    await db.admin_constraints.update_one({"id": constraint_id}, {"$set": update_data})
+    
+    return {"message": "تم تحديث القيد بنجاح"}
+
+@api_router.delete("/school/constraints/{constraint_id}")
+async def delete_school_constraint(
+    constraint_id: str,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Delete (soft) an admin constraint - حذف قيد إداري"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    # Check constraint exists
+    constraint = await db.admin_constraints.find_one({"id": constraint_id}, {"_id": 0})
+    
+    if not constraint:
+        raise HTTPException(status_code=404, detail="القيد غير موجود")
+    
+    # Soft delete
+    await db.admin_constraints.update_one(
+        {"id": constraint_id},
+        {"$set": {"is_active": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم حذف القيد بنجاح"}
+
+@api_router.get("/school/constraints")
+async def get_school_constraints(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get all constraints for the school - جلب جميع القيود للمدرسة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    # Get school-specific constraints and reference constraints
+    constraints = await db.admin_constraints.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return constraints
+
 
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
