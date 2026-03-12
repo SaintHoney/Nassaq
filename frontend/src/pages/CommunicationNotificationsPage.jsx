@@ -689,8 +689,13 @@ export const CommunicationNotificationsPage = () => {
                       <Button 
                         className="rounded-xl bg-brand-navy hover:bg-brand-navy/90"
                         onClick={handleSendMessage}
+                        disabled={sendingMessage}
                       >
-                        <Send className="h-4 w-4 me-2" />
+                        {sendingMessage ? (
+                          <RefreshCw className="h-4 w-4 me-2 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4 me-2" />
+                        )}
                         {isRTL ? 'إرسال الآن' : 'Send Now'}
                       </Button>
                     </div>
