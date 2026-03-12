@@ -547,8 +547,12 @@ export const TeachersPage = () => {
           open={studentWizardOpen}
           onOpenChange={setStudentWizardOpen}
           isRTL={isRTL}
+          api={api}
+          grades={grades}
+          classes={classes}
           onSuccess={() => {
             toast.success(isRTL ? 'تم إضافة الطالب بنجاح' : 'Student added successfully');
+            fetchData();
           }}
         />
       </div>
