@@ -997,6 +997,30 @@ async def create_school(
             }
         )
     
+    # Create default school settings from template
+    default_settings = await db.default_settings.find_one({"id": "default-school-settings"}, {"_id": 0})
+    if default_settings:
+        school_settings = {
+            "id": f"settings-{school_id}",
+            "school_id": school_id,
+            "working_days": default_settings.get("working_days"),
+            "working_days_ar": default_settings.get("working_days_ar"),
+            "working_days_en": default_settings.get("working_days_en"),
+            "weekend_days_ar": default_settings.get("weekend_days_ar"),
+            "weekend_days_en": default_settings.get("weekend_days_en"),
+            "periods_per_day": default_settings.get("periods_per_day"),
+            "period_duration_minutes": default_settings.get("period_duration_minutes"),
+            "break_duration_minutes": default_settings.get("break_duration_minutes"),
+            "prayer_duration_minutes": default_settings.get("prayer_duration_minutes"),
+            "school_day_start": default_settings.get("school_day_start"),
+            "school_day_end": default_settings.get("school_day_end"),
+            "time_slots": default_settings.get("time_slots"),
+            "education_track": "track-general",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.school_settings.insert_one(school_settings)
+    
     return SchoolResponse(
         id=school_id,
         name=school_data.name,
