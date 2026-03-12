@@ -4627,16 +4627,22 @@ async def create_teacher_assignment(
     }
     await db.teacher_assignments.insert_one(assignment_doc)
     
-    # Get names for response
-    teacher = await db.teachers.find_one({"id": assignment_data.teacher_id}, {"_id": 0, "full_name": 1})
-    class_doc = await db.classes.find_one({"id": assignment_data.class_id}, {"_id": 0, "name": 1})
-    subject = await db.subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1})
+    # Get names for response (support both naming conventions)
+    teacher = await db.teachers.find_one({"id": assignment_data.teacher_id}, {"_id": 0, "full_name": 1, "full_name_ar": 1})
+    class_doc = await db.classes.find_one({"id": assignment_data.class_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    subject = await db.subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    if not subject:
+        subject = await db.reference_subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    
+    # Remove _id from response
+    if "_id" in assignment_doc:
+        del assignment_doc["_id"]
     
     return TeacherAssignmentResponse(
         **assignment_doc,
-        teacher_name=teacher.get("full_name") if teacher else None,
-        class_name=class_doc.get("name") if class_doc else None,
-        subject_name=subject.get("name") if subject else None
+        teacher_name=teacher.get("full_name") or teacher.get("full_name_ar") if teacher else None,
+        class_name=class_doc.get("name") or class_doc.get("name_ar") if class_doc else None,
+        subject_name=subject.get("name") or subject.get("name_ar") if subject else None
     )
 
 @api_router.get("/teacher-assignments", response_model=List[TeacherAssignmentResponse])
