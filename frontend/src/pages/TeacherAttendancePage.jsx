@@ -627,25 +627,6 @@ export const TeacherAttendancePage = () => {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Note about student attendance */}
-                  <Card className="card-nassaq bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-amber-800 dark:text-amber-400">
-                            {isRTL ? 'ملاحظة مهمة' : 'Important Note'}
-                          </h4>
-                          <p className="text-sm text-amber-700 dark:text-amber-300">
-                            {isRTL 
-                              ? 'تسجيل حضور الطلاب يتم من قبل المعلمين داخل الحصة الدراسية، وليس من هذه الصفحة. هذه الصفحة مخصصة فقط لمتابعة حضور المعلمين.'
-                              : 'Student attendance is recorded by teachers within class sessions, not from this page. This page is dedicated to tracking teacher attendance only.'}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                 </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
