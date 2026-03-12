@@ -7,7 +7,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://multi-tenant-edu-10.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://academic-planner-57.preview.emergentagent.com')
 
 # Test credentials
 STUDENT_EMAIL = "student@nassaq.com"
