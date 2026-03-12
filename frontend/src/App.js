@@ -21,7 +21,7 @@ import UsersClassesManagement from "./pages/UsersClassesManagement";
 import { StudentsPage } from "./pages/StudentsPage";
 import { ClassesPage } from "./pages/ClassesPage";
 import { SubjectsPage } from "./pages/SubjectsPage";
-import { SchedulePage } from "./pages/SchedulePage";
+import SchedulePageNew from "./pages/SchedulePageNew";
 import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 import { AttendancePage } from "./pages/AttendancePage";
