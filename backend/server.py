@@ -5073,16 +5073,26 @@ async def generate_schedule_auto(
     if not time_slots:
         raise HTTPException(status_code=400, detail="لم يتم تعريف الفترات الزمنية")
     
-    # Get assignments
+    # Get assignments - try exact match first, then fallback to any active assignments
+    schedule_academic_year = schedule.get("academic_year")
+    schedule_semester = schedule.get("semester")
+    
     assignments = await db.teacher_assignments.find({
         "school_id": school_id,
         "is_active": True,
-        "academic_year": schedule.get("academic_year"),
-        "semester": schedule.get("semester")
+        "academic_year": schedule_academic_year,
+        "semester": schedule_semester
     }, {"_id": 0}).to_list(500)
     
+    # If no assignments found with exact match, try without year/semester filter
     if not assignments:
-        raise HTTPException(status_code=400, detail="لم يتم العثور على إسنادات للمعلمين")
+        assignments = await db.teacher_assignments.find({
+            "school_id": school_id,
+            "is_active": True
+        }, {"_id": 0}).to_list(500)
+    
+    if not assignments:
+        raise HTTPException(status_code=400, detail="لم يتم العثور على إسنادات للمعلمين. يرجى إضافة إسنادات من صفحة الإعدادات -> تبويب الإسنادات")
     
     # Get teacher info for workload calculation
     teacher_ids = list(set(a.get("teacher_id") for a in assignments if a.get("teacher_id")))
