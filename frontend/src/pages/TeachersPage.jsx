@@ -102,6 +102,19 @@ export const TeachersPage = () => {
       const teachersRes = await api.get('/teachers');
       setTeachers(teachersRes.data);
       
+      // Fetch grades and classes for student wizard
+      try {
+        const [gradesRes, classesRes] = await Promise.all([
+          api.get('/reference/grades').catch(() => ({ data: [] })),
+          api.get('/classes').catch(() => ({ data: [] })),
+        ]);
+        setGrades(gradesRes.data || []);
+        setClasses(classesRes.data || []);
+      } catch {
+        setGrades([]);
+        setClasses([]);
+      }
+      
       // Only fetch schools list for platform admins
       if (!isSchoolLevel) {
         try {
