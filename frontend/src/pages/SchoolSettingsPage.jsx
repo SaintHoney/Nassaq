@@ -1107,6 +1107,73 @@ const BreaksSection = ({ breaks, onSave, isRTL }) => {
 };
 
 // =============================================================
+// قسم التوزيع الزمني الكامل لليوم الدراسي
+// =============================================================
+const TimeSlotsSection = ({ timeSlots, periodsPerDay, isRTL }) => {
+  const slotTypeColors = {
+    period: 'bg-blue-100 border-blue-300 text-blue-700',
+    break: 'bg-orange-100 border-orange-300 text-orange-700',
+    prayer: 'bg-green-100 border-green-300 text-green-700',
+  };
+
+  const slotTypeLabels = {
+    period: isRTL ? 'حصة' : 'Period',
+    break: isRTL ? 'استراحة' : 'Break',
+    prayer: isRTL ? 'صلاة' : 'Prayer',
+  };
+
+  return (
+    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-white" data-testid="timeslots-section">
+      <CardHeader>
+        <div className="flex items-center justify-between flex-row-reverse">
+          <div className="flex items-center gap-3 flex-row-reverse">
+            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+              <Timer className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="text-right">
+              <CardTitle className="font-cairo">{isRTL ? 'التوزيع الزمني الكامل' : 'Complete Time Distribution'}</CardTitle>
+              <CardDescription>
+                {isRTL ? 'جدول الحصص والاستراحات وفترات الصلاة' : 'Schedule of periods, breaks, and prayer times'}
+              </CardDescription>
+            </div>
+          </div>
+          <Badge variant="outline" className="px-4 py-2 bg-purple-100 text-purple-700">
+            {timeSlots?.length || 0} {isRTL ? 'فترة' : 'Slots'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {timeSlots && timeSlots.length > 0 ? (
+          <div className="space-y-2">
+            {timeSlots.map((slot, index) => (
+              <div 
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg border-2 ${slotTypeColors[slot.type] || 'bg-gray-100 border-gray-300'}`}
+              >
+                <div className="flex items-center gap-3 flex-row-reverse">
+                  <Badge variant="secondary" className="font-mono">
+                    {slot.start_time} - {slot.end_time}
+                  </Badge>
+                  <span className="font-medium">{slot.name_ar || slot.name_en || slot.name}</span>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {slotTypeLabels[slot.type] || slot.type}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Timer className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>{isRTL ? 'لا يوجد توزيع زمني محدد' : 'No time slots defined'}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// =============================================================
 // قسم النصاب التدريسي للمعلمين
 // =============================================================
 const TeachingLoadSection = ({ teachers, teachingLoads, onSave, isRTL }) => {
