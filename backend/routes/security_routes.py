@@ -119,6 +119,34 @@ def setup_security_routes(db, get_current_user, require_roles, UserRole):
                 "details": {"reason": "Manual lock by admin"}
             })
             
+            # Send real-time security notification
+            try:
+                from routes.websocket_routes import get_connection_manager, send_realtime_notification
+                ws_manager = get_connection_manager()
+                # Notify the user whose account was locked
+                await send_realtime_notification(
+                    manager=ws_manager,
+                    db=db,
+                    notification_type="account_locked",
+                    message_ar="تم قفل حسابك. يرجى التواصل مع الدعم الفني.",
+                    message_en="Your account has been locked. Please contact support.",
+                    target_users=[user_id],
+                    save_to_db=True
+                )
+                # Notify other platform admins
+                await send_realtime_notification(
+                    manager=ws_manager,
+                    db=db,
+                    notification_type="security_alert",
+                    message_ar=f"تم قفل حساب المستخدم {user_id} بواسطة {current_user.get('name', 'مدير')}",
+                    message_en=f"User account {user_id} was locked by {current_user.get('name', 'Admin')}",
+                    target_roles=["platform_admin", "platform_security_officer"],
+                    extra_data={"target_user_id": user_id, "action": "account_locked"},
+                    save_to_db=True
+                )
+            except Exception as e:
+                print(f"Error sending security notification: {e}")
+            
             return {"success": True, "message": "تم قفل الحساب بنجاح"}
         except HTTPException:
             raise
