@@ -1458,6 +1458,8 @@ export default function SchoolSettingsPage() {
         educationalStages: academicData.stages || settingsData.educational_stages || [],
         educationTracks: academicData.tracks || [],
         teacherRanks: refData.teacher_ranks || [],
+        adminConstraints: refData.admin_constraints || [],
+        academicStructure: academicData,
         sections: settingsData.school_classes || settingsData.sections || [],
         academicTerms: settingsData.academic_terms || [],
       });
