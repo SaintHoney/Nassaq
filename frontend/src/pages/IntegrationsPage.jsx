@@ -394,13 +394,8 @@ const NASSAQ_ENDPOINTS = [
   { path: '/api/webhooks', method: 'POST', description_ar: 'Webhooks', description_en: 'Webhooks' },
 ];
 
-// Sample logs
-const SAMPLE_LOGS = [
-  { id: 1, action: 'sync', status: 'success', timestamp: '2026-03-09T10:30:00Z', details_ar: 'تمت مزامنة 150 سجل', details_en: '150 records synced' },
-  { id: 2, action: 'test', status: 'success', timestamp: '2026-03-09T10:00:00Z', details_ar: 'اتصال ناجح', details_en: 'Connection successful' },
-  { id: 3, action: 'sync', status: 'failed', timestamp: '2026-03-08T22:00:00Z', details_ar: 'خطأ في المصادقة', details_en: 'Authentication error' },
-  { id: 4, action: 'webhook', status: 'success', timestamp: '2026-03-08T18:30:00Z', details_ar: 'تم استلام حدث', details_en: 'Event received' },
-];
+// Empty initial state - logs will be fetched from API
+const INITIAL_LOGS = [];
 
 export default function IntegrationsPage() {
   const { isRTL = true, isDark } = useTheme();
