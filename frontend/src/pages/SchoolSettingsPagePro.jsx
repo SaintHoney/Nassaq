@@ -304,9 +304,14 @@ const SubjectItem = ({ subject, onEdit, onDelete }) => {
         </Badge>
         {(onEdit || onDelete) && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onEdit && (
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-500" onClick={onEdit}>
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            )}
             {onDelete && (
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => onDelete(subject)}>
-                <X className="h-3 w-3" />
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={onDelete}>
+                <Trash2 className="h-3 w-3" />
               </Button>
             )}
           </div>
