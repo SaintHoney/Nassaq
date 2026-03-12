@@ -374,97 +374,125 @@ export const PlatformSettingsPage = () => {
     maintenanceMode: false,
   });
   
-  // Load settings from API
+  // Load settings from API using new endpoints
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/settings/platform`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const data = response.data;
-        
-        // Update general settings
-        if (data.general) {
+        // Fetch general settings
+        const generalResponse = await api.get('/settings/general');
+        if (generalResponse.data) {
+          const data = generalResponse.data;
           setGeneralSettings({
-            platformNameAr: data.general.platform_name_ar || 'نَسَّق | NASSAQ',
-            platformNameEn: data.general.platform_name_en || 'NASSAQ',
-            browserTitle: data.general.browser_title || 'نَسَّق - منصة إدارة المدارس الذكية',
-            defaultLanguage: data.general.default_language || 'ar',
-            dateFormat: data.general.date_format || 'hijri',
-            timezone: data.general.timezone || 'Asia/Riyadh',
-            emailNotifications: data.general.email_notifications ?? true,
-            smsNotifications: data.general.sms_notifications ?? false,
-            pushNotifications: data.general.push_notifications ?? true,
-            aiFeatures: data.general.ai_features ?? true,
-            registrationOpen: data.general.registration_open ?? true,
-            maintenanceMode: data.general.maintenance_mode ?? false,
+            platformNameAr: data.platform_name || 'نَسَّق | NASSAQ',
+            platformNameEn: data.platform_name_en || 'NASSAQ',
+            browserTitle: data.browser_title || 'نَسَّق - منصة إدارة المدارس الذكية',
+            defaultLanguage: data.default_language || 'ar',
+            dateFormat: data.date_system || 'both',
+            timezone: data.timezone || 'Asia/Riyadh',
+            emailNotifications: true,
+            smsNotifications: false,
+            pushNotifications: true,
+            aiFeatures: true,
+            registrationOpen: true,
+            maintenanceMode: false,
           });
         }
         
-        // Update brand settings
-        if (data.brand) {
-          setBrandSettings({
-            logo: data.brand.logo,
-            favicon: data.brand.favicon,
-            primaryColor: data.brand.primary_color || '#1e3a5f',
-            secondaryColor: data.brand.secondary_color || '#3b82f6',
-            accentColor: data.brand.accent_color || '#10b981',
-          });
+        // Fetch maintenance settings
+        const maintenanceResponse = await api.get('/settings/maintenance');
+        if (maintenanceResponse.data) {
+          setGeneralSettings(prev => ({
+            ...prev,
+            maintenanceMode: maintenanceResponse.data.maintenance_mode || false,
+            registrationOpen: maintenanceResponse.data.registration_open ?? true,
+          }));
         }
         
-        // Update contact settings
-        if (data.contact) {
+        // Fetch contact info
+        const contactResponse = await api.get('/settings/contact');
+        if (contactResponse.data) {
+          const data = contactResponse.data;
           setContactInfo({
-            primaryEmail: data.contact.primary_email || 'info@nassaqapp.com',
-            supportEmail: data.contact.support_email || 'support@nassaqapp.com',
-            primaryPhone: data.contact.primary_phone || '+966 11 234 5678',
-            alternatePhone: data.contact.alternate_phone || '',
-            address: data.contact.address || 'الرياض، المملكة العربية السعودية',
-            workingHours: data.contact.working_hours || 'الأحد - الخميس: 8:00 ص - 4:00 م',
-            website: data.contact.website || 'https://nassaqapp.com',
-            ownerName: data.contact.owner_name || 'شركة نَسَّق للتقنية التعليمية',
+            primaryEmail: data.email || 'info@nassaqapp.com',
+            supportEmail: data.email || 'support@nassaqapp.com',
+            primaryPhone: data.phone || '+966 11 234 5678',
+            alternatePhone: '',
+            address: data.address_ar || 'الرياض، المملكة العربية السعودية',
+            workingHours: data.working_hours_ar || 'الأحد - الخميس: 8:00 ص - 4:00 م',
+            website: '',
+            ownerName: 'شركة نَسَّق للتقنية التعليمية',
             socialMedia: {
-              twitter: data.contact.social_media?.twitter || '',
-              facebook: data.contact.social_media?.facebook || '',
-              instagram: data.contact.social_media?.instagram || '',
-              linkedin: data.contact.social_media?.linkedin || '',
-              youtube: data.contact.social_media?.youtube || '',
+              twitter: data.social_twitter || '',
+              facebook: data.social_facebook || '',
+              instagram: data.social_instagram || '',
+              linkedin: data.social_linkedin || '',
+              youtube: data.social_youtube || '',
             },
           });
         }
         
-        // Update terms
-        if (data.terms) {
-          setTermsData({
-            content: data.terms.content || '',
-            version: data.terms.version || '1.0',
-            lastUpdated: data.updated_at,
-            effectiveDate: data.terms.effective_date,
-          });
-        }
-        
-        // Update privacy
-        if (data.privacy) {
-          setPrivacyData({
-            content: data.privacy.content || '',
-            version: data.privacy.version || '1.0',
-            lastUpdated: data.updated_at,
-            effectiveDate: data.privacy.effective_date,
-          });
-        }
-        
-        // Update security settings
-        if (data.security) {
+        // Fetch security settings
+        const securityResponse = await api.get('/settings/security');
+        if (securityResponse.data) {
+          const data = securityResponse.data;
           setSecuritySettings({
-            twoFactorEnabled: data.security.two_factor_enabled ?? false,
-            sessionTimeout: data.security.session_timeout || 30,
-            maxSessions: data.security.max_sessions || 5,
-            passwordMinLength: data.security.password_min_length || 8,
-            passwordRequireUppercase: data.security.password_require_uppercase ?? true,
-            passwordRequireNumbers: data.security.password_require_numbers ?? true,
-            passwordRequireSpecial: data.security.password_require_special ?? true,
+            twoFactorEnabled: false,
+            sessionTimeout: data.session_duration_minutes || 60,
+            maxSessions: data.max_concurrent_sessions || 3,
+            passwordMinLength: data.min_password_length || 8,
+            passwordRequireUppercase: (data.require_uppercase || 1) > 0,
+            passwordRequireNumbers: (data.require_numbers || 1) > 0,
+            passwordRequireSpecial: (data.require_special_chars || 1) > 0,
           });
+        }
+        
+        // Fetch account settings
+        const accountResponse = await api.get('/settings/account');
+        if (accountResponse.data) {
+          const data = accountResponse.data;
+          setAccountData(prev => ({
+            ...prev,
+            name: data.name || prev.name,
+            phone: data.phone || prev.phone,
+            language: data.language || prev.language,
+            profilePicture: data.profile_picture || prev.profilePicture,
+            title: data.title || '',
+          }));
+        }
+        
+        // Fetch titles
+        const titlesResponse = await api.get('/settings/titles');
+        if (titlesResponse.data) {
+          setAvailableTitles(titlesResponse.data);
+        }
+        
+        // Fetch terms versions
+        const termsResponse = await api.get('/settings/terms/versions');
+        if (termsResponse.data?.length > 0) {
+          const publishedVersion = termsResponse.data.find(v => v.is_published);
+          if (publishedVersion) {
+            setTermsData({
+              content: publishedVersion.content_ar || '',
+              version: `${publishedVersion.version_number}.0`,
+              lastUpdated: publishedVersion.created_at,
+              effectiveDate: publishedVersion.published_at,
+            });
+          }
+          setVersionHistory(termsResponse.data);
+        }
+        
+        // Fetch privacy versions
+        const privacyResponse = await api.get('/settings/privacy/versions');
+        if (privacyResponse.data?.length > 0) {
+          const publishedVersion = privacyResponse.data.find(v => v.is_published);
+          if (publishedVersion) {
+            setPrivacyData({
+              content: publishedVersion.content_ar || '',
+              version: `${publishedVersion.version_number}.0`,
+              lastUpdated: publishedVersion.created_at,
+              effectiveDate: publishedVersion.published_at,
+            });
+          }
         }
         
       } catch (error) {
@@ -474,10 +502,11 @@ export const PlatformSettingsPage = () => {
       }
     };
     
-    if (token) {
-      fetchSettings();
-    }
-  }, [token]);
+    fetchSettings();
+  }, [api]);
+  
+  // Available titles state
+  const [availableTitles, setAvailableTitles] = useState({ ar: [], en: [] });
   
   // Brand settings
   const [brandSettings, setBrandSettings] = useState({
