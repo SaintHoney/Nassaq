@@ -894,8 +894,8 @@ class SmartSchedulingEngine:
         # Initialize grid: day -> period -> {class_id: session}
         grid = {day: {p: {} for p in range(1, periods_per_day + 1)} for day in working_days}
         
-        # Track teacher assignments per slot
-        teacher_grid = {day: {p: None for p in range(1, periods_per_day + 1)} for day in working_days}
+        # Track teacher assignments per slot: day -> period -> set of teacher_ids
+        teacher_grid = {day: {p: set() for p in range(1, periods_per_day + 1)} for day in working_days}
         
         # Track resource usage
         resource_usage = {r.teacher_id: 0 for r in resources}
