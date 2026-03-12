@@ -9,8 +9,6 @@ from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 import uuid
 
-router = APIRouter(prefix="/api/admin", tags=["Admin Dashboard"])
-
 # Models
 class CommandCenterStats(BaseModel):
     """إحصائيات مركز القيادة"""
@@ -47,14 +45,10 @@ class NotificationStats(BaseModel):
     scheduled_messages: int = 0
 
 
-# Dependency for getting current user (will be imported from main server)
-async def get_current_admin_user():
-    """Placeholder - will be replaced with actual dependency"""
-    pass
-
-
 def setup_admin_routes(db, get_current_user, require_roles, UserRole):
     """Setup routes with database and auth dependencies"""
+    
+    router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
     
     @router.get("/command-center/stats", response_model=CommandCenterStats)
     async def get_command_center_stats(
