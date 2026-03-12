@@ -1356,16 +1356,38 @@ export default function SchoolSettingsPagePro() {
               <div className="grid lg:grid-cols-2 gap-6">
                 <Card className="border-2 border-green-200">
                   <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-green-600" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                          <Calendar className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">أيام العمل والعطلة</CardTitle>
+                          <CardDescription className="text-xs">
+                            {settings.workingDays?.length || 5} أيام دراسة • {settings.weekendDays?.length || 2} أيام عطلة
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-base">أيام العمل والعطلة</CardTitle>
-                        <CardDescription className="text-xs">
-                          {settings.workingDays?.length || 5} أيام دراسة • {settings.weekendDays?.length || 2} أيام عطلة
-                        </CardDescription>
-                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setEditedWorkDays({
+                            sunday: settings.workingDays?.includes('الأحد') ?? true,
+                            monday: settings.workingDays?.includes('الإثنين') ?? true,
+                            tuesday: settings.workingDays?.includes('الثلاثاء') ?? true,
+                            wednesday: settings.workingDays?.includes('الأربعاء') ?? true,
+                            thursday: settings.workingDays?.includes('الخميس') ?? true,
+                            friday: settings.weekendDays?.includes('الجمعة') ?? false,
+                            saturday: settings.weekendDays?.includes('السبت') ?? false,
+                          });
+                          setEditWorkDaysOpen(true);
+                        }}
+                        data-testid="edit-work-days-btn"
+                      >
+                        <Edit2 className="h-4 w-4 ml-1" />
+                        تعديل
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
