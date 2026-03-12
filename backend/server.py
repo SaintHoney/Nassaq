@@ -2501,23 +2501,25 @@ class SubjectResponse(BaseModel):
 # Teacher Wizard Options
 @api_router.get("/teachers/options/subjects")
 async def get_teacher_subjects_options(current_user: dict = Depends(get_current_user)):
-    """Get available subjects for teacher creation"""
-    school_id = current_user.get("tenant_id")
+    """Get available subjects from reference database"""
+    db = await get_database()
     
+    # Get subjects from the reference subjects collection
     subjects = await db.subjects.find(
-        {"school_id": school_id} if school_id else {},
-        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "code": 1}
+        {"is_active": True},
+        {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1, "code": 1, "color": 1}
     ).to_list(100)
     
-    # Default subjects if none exist
-    if not subjects:
-        subjects = [
-            {"id": "subj-1", "name": "اللغة العربية", "name_en": "Arabic Language", "code": "ARB"},
-            {"id": "subj-2", "name": "الرياضيات", "name_en": "Mathematics", "code": "MTH"},
-            {"id": "subj-3", "name": "العلوم", "name_en": "Science", "code": "SCI"},
-            {"id": "subj-4", "name": "اللغة الإنجليزية", "name_en": "English Language", "code": "ENG"},
-            {"id": "subj-5", "name": "الدراسات الإسلامية", "name_en": "Islamic Studies", "code": "ISL"},
-            {"id": "subj-6", "name": "الدراسات الاجتماعية", "name_en": "Social Studies", "code": "SOC"},
+    # Format for backward compatibility
+    formatted_subjects = []
+    for s in subjects:
+        formatted_subjects.append({
+            "id": s.get("id"),
+            "name": s.get("name_ar", s.get("name", "")),
+            "name_en": s.get("name_en", ""),
+            "code": s.get("code", ""),
+            "color": s.get("color", "#3B82F6")
+        })
             {"id": "subj-7", "name": "الحاسب الآلي", "name_en": "Computer Science", "code": "CMP"},
             {"id": "subj-8", "name": "التربية الفنية", "name_en": "Art Education", "code": "ART"},
             {"id": "subj-9", "name": "التربية البدنية", "name_en": "Physical Education", "code": "PHY"},
