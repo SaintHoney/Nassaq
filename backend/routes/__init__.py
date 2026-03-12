@@ -21,6 +21,7 @@ from .class_management_routes import create_class_management_routes
 from .notification_routes import create_notification_routes
 from .schedule_management_routes import create_schedule_management_routes
 from .admin_dashboard_routes import setup_admin_routes
+from .security_routes import setup_security_routes
 
 __all__ = [
     # New modular routes
