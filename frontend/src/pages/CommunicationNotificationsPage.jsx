@@ -222,8 +222,12 @@ export const CommunicationNotificationsPage = () => {
     fetchNotifications();
     if (user?.role === 'platform_admin' || user?.role === 'school_principal') {
       fetchAnalytics();
+      fetchCommunicationStats();
+      fetchScheduledMessages();
+      fetchSentMessages();
+      fetchAudienceCounts();
     }
-  }, [fetchNotifications, user?.role]);
+  }, [fetchNotifications, user?.role, fetchCommunicationStats, fetchScheduledMessages, fetchSentMessages, fetchAudienceCounts]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {
