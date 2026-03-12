@@ -4440,9 +4440,9 @@ async def get_schedule_sessions(
         classes = await db.classes.find({"id": {"$in": class_ids_list}}, {"_id": 0}).to_list(100)
         subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
         
-        teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
-        class_map = {c.get("id"): c.get("name") for c in classes}
-        subject_map = {s.get("id"): s.get("name") for s in subjects}
+        teacher_map = {t.get("id"): t.get("full_name") or t.get("full_name_ar") for t in teachers}
+        class_map = {c.get("id"): c.get("name") or c.get("name_ar") for c in classes}
+        subject_map = {s.get("id"): s.get("name") or s.get("name_ar") for s in subjects}
         
         result = []
         for s in sessions:
@@ -4455,6 +4455,11 @@ async def get_schedule_sessions(
             
             slot = slot_map.get(s.get("time_slot_id"), {})
             
+            # Get names from assignment or lookup tables
+            t_name = assignment.get("teacher_name") or teacher_map.get(assignment.get("teacher_id"))
+            c_name = assignment.get("class_name") or class_map.get(assignment.get("class_id"))
+            s_name = assignment.get("subject_name") or subject_map.get(assignment.get("subject_id"))
+            
             result.append(ScheduleSessionResponse(
                 id=s.get("id"),
                 school_id=s.get("school_id"),
@@ -4463,15 +4468,15 @@ async def get_schedule_sessions(
                 day_of_week=s.get("day_of_week") or s.get("day"),
                 day=s.get("day") or s.get("day_of_week"),
                 time_slot_id=s.get("time_slot_id"),
-                slot_number=s.get("slot_number"),
+                slot_number=s.get("slot_number") or slot.get("slot_number"),
                 status=s.get("status", "active"),
                 teacher_id=assignment.get("teacher_id"),
-                teacher_name=teacher_map.get(assignment.get("teacher_id")),
+                teacher_name=t_name,
                 class_id=assignment.get("class_id"),
-                class_name=class_map.get(assignment.get("class_id")),
+                class_name=c_name,
                 subject_id=assignment.get("subject_id"),
-                subject_name=subject_map.get(assignment.get("subject_id")),
-                time_slot_name=slot.get("name"),
+                subject_name=s_name,
+                time_slot_name=slot.get("name") or slot.get("name_ar"),
                 start_time=slot.get("start_time"),
                 end_time=slot.get("end_time")
             ))
