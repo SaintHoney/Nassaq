@@ -11547,6 +11547,10 @@ student_creation_router = create_student_creation_routes(db, get_current_user, r
 from routes.admin_dashboard_routes import setup_admin_routes
 admin_dashboard_router = setup_admin_routes(db, get_current_user, require_roles, UserRole)
 
+# Import and create security routes (Security Center)
+from routes.security_routes import setup_security_routes
+security_router = setup_security_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
