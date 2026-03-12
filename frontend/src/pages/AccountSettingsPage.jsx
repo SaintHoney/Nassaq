@@ -170,7 +170,12 @@ export const AccountSettingsPage = () => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      await api.put('/users/me', profile);
+      // Convert 'none' back to empty string for API
+      const profileToSave = {
+        ...profile,
+        title: profile.title === 'none' ? '' : profile.title
+      };
+      await api.put('/users/me', profileToSave);
       toast.success(isRTL ? 'تم حفظ الملف الشخصي' : 'Profile saved');
     } catch (error) {
       toast.error(error.response?.data?.detail || (isRTL ? 'فشل حفظ الملف الشخصي' : 'Failed to save profile'));
