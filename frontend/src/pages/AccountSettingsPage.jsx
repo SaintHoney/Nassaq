@@ -74,12 +74,43 @@ export const AccountSettingsPage = () => {
   
   // Profile
   const [profile, setProfile] = useState({
+    title: '',
     full_name: '',
     full_name_en: '',
     email: '',
     phone: '',
     avatar_url: '',
   });
+  
+  // Title options
+  const titleOptions = isRTL 
+    ? [
+        { value: '', label: 'بدون لقب' },
+        { value: 'السيد', label: 'السيد' },
+        { value: 'السيدة', label: 'السيدة' },
+        { value: 'الآنسة', label: 'الآنسة' },
+        { value: 'الأستاذة', label: 'الأستاذة / السيدة' },
+        { value: 'دكتور', label: 'دكتور' },
+        { value: 'أستاذ', label: 'أستاذ' },
+        { value: 'مهندس', label: 'مهندس' },
+        { value: 'مستشار', label: 'مستشار' },
+        { value: 'معالي', label: 'معالي' },
+        { value: 'سعادة', label: 'سعادة' },
+        { value: 'الشيخ', label: 'الشيخ' },
+      ]
+    : [
+        { value: '', label: 'No Title' },
+        { value: 'Mr.', label: 'Mr.' },
+        { value: 'Mrs.', label: 'Mrs.' },
+        { value: 'Miss', label: 'Miss' },
+        { value: 'Ms.', label: 'Ms.' },
+        { value: 'Dr.', label: 'Dr.' },
+        { value: 'Prof.', label: 'Prof.' },
+        { value: 'Eng.', label: 'Eng.' },
+        { value: 'Consultant', label: 'Consultant' },
+        { value: 'His/Her Excellency', label: 'His/Her Excellency' },
+        { value: 'Sheikh', label: 'Sheikh' },
+      ];
   
   // Password
   const [passwordData, setPasswordData] = useState({
