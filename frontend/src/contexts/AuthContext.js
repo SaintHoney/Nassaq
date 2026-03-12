@@ -78,7 +78,17 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: userData };
     } catch (error) {
-      const message = error.response?.data?.detail || 'فشل تسجيل الدخول';
+      console.error('Login error:', error);
+      let message = 'فشل تسجيل الدخول';
+      if (error.response?.data?.detail) {
+        message = error.response.data.detail;
+      } else if (error.response?.status === 401) {
+        message = 'بيانات الدخول غير صحيحة';
+      } else if (error.response?.status === 404) {
+        message = 'الحساب غير موجود';
+      } else if (!error.response) {
+        message = 'خطأ في الاتصال بالخادم';
+      }
       return { success: false, error: message };
     }
   };
