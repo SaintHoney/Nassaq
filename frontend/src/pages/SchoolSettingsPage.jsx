@@ -1275,99 +1275,103 @@ const AvailabilitySection = ({ teachers, isRTL }) => {
 };
 
 // =============================================================
-// قسم الهيكل الأكاديمي
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'تعديل توفر المعلم' : 'Edit Teacher Availability'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+// قسم الهيكل الأكاديمي - من البيانات المرجعية
+// =============================================================
+const AcademicStructureSection = ({ academicStructure, isRTL }) => {
+  const [activeTab, setActiveTab] = useState('stages');
+  
+  const stages = academicStructure?.stages || [];
+  const grades = academicStructure?.grades || [];
+  const tracks = academicStructure?.tracks || [];
+
+  return (
+    <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/50 to-white" data-testid="academic-structure-section">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+            <GraduationCap className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'الهيكل الأكاديمي' : 'Academic Structure'}</CardTitle>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="stages" className="text-xs">
+              {isRTL ? 'المراحل' : 'Stages'} ({stages.length})
+            </TabsTrigger>
+            <TabsTrigger value="grades" className="text-xs">
+              {isRTL ? 'الصفوف' : 'Grades'} ({grades.length})
+            </TabsTrigger>
+            <TabsTrigger value="tracks" className="text-xs">
+              {isRTL ? 'المسارات' : 'Tracks'} ({tracks.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* المراحل */}
+          <TabsContent value="stages">
+            {stages.length > 0 ? (
               <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'اختر المعلم' : 'Select Teacher'} <span className="text-red-500">*</span></Label>
-                <Select value={selectedTeacher} onValueChange={(v) => {
-                  setSelectedTeacher(v);
-                  setAvailableDays(availability[v]?.available_days || []);
-                }}>
-                  <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر معلم' : 'Select teacher'} /></SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>{teacher.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'الأيام المتاحة' : 'Available Days'}</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {dayOptions.map(day => (
-                    <div
-                      key={day.id}
-                      onClick={() => toggleDay(day.id)}
-                      className={`p-2 rounded-lg text-center cursor-pointer transition-all border text-sm ${
-                        availableDays.includes(day.id)
-                          ? 'bg-violet-100 border-violet-500 text-violet-700'
-                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
-                      }`}
-                    >
-                      {day.name}
+                {stages.map((stage, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-600">{stage.order || index + 1}</Badge>
+                      <span className="text-sm font-medium text-blue-800">{stage.name_ar || stage.name}</span>
                     </div>
-                  ))}
-                </div>
+                    <span className="text-xs text-muted-foreground">{stage.name_en}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleSave} disabled={saving} className="bg-violet-600 hover:bg-violet-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
-                {isRTL ? 'حفظ' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            ) : (
+              <div className="py-4 text-center text-muted-foreground text-sm">
+                {isRTL ? 'لا توجد مراحل محددة' : 'No stages defined'}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* الصفوف */}
+          <TabsContent value="grades">
+            {grades.length > 0 ? (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {grades.map((grade, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200">
+                    <span className="text-sm font-medium text-green-800">{grade.name_ar || grade.name}</span>
+                    <Badge variant="outline" className="text-xs">{grade.stage_name_ar || grade.stage_id}</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-muted-foreground text-sm">
+                {isRTL ? 'لا توجد صفوف محددة' : 'No grades defined'}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* المسارات */}
+          <TabsContent value="tracks">
+            {tracks.length > 0 ? (
+              <div className="space-y-2">
+                {tracks.map((track, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200">
+                    <span className="text-sm font-medium text-purple-800">{track.name_ar || track.name}</span>
+                    <span className="text-xs text-muted-foreground">{track.name_en}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-muted-foreground text-sm">
+                {isRTL ? 'لا توجد مسارات محددة' : 'No tracks defined'}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
 };
-
-// =============================================================
-// قسم الهيكل الأكاديمي (المراحل، الصفوف، الشعب، الفصول الدراسية)
-// =============================================================
-const AcademicStructureSection = ({ 
-  stages, grades, sections, terms,
-  onAddStage, onDeleteStage, onAddGrade, onDeleteGrade,
-  onAddSection, onDeleteSection, onAddTerm, onDeleteTerm,
-  isRTL 
-}) => {
-  const [activeTab, setActiveTab] = useState('stages');
-  const [showStageDialog, setShowStageDialog] = useState(false);
-  const [showGradeDialog, setShowGradeDialog] = useState(false);
-  const [showSectionDialog, setShowSectionDialog] = useState(false);
-  const [showTermDialog, setShowTermDialog] = useState(false);
-  
-  const [newStage, setNewStage] = useState({ name: '', name_en: '', order: 1 });
-  const [newGrade, setNewGrade] = useState({ name: '', name_en: '', stage_id: '' });
-  const [newSection, setNewSection] = useState({ name: '', grade_id: '' });
-  const [newTerm, setNewTerm] = useState({ name: '', name_en: '', start_date: '', end_date: '', is_active: true });
-
-  const handleAddStage = () => {
-    if (!newStage.name) { toast.error(isRTL ? 'يرجى إدخال اسم المرحلة' : 'Please enter stage name'); return; }
-    onAddStage(newStage);
-    setShowStageDialog(false);
-    setNewStage({ name: '', name_en: '', order: 1 });
-  };
-
-  const handleAddGrade = () => {
-    if (!newGrade.name) { toast.error(isRTL ? 'يرجى إدخال اسم الصف' : 'Please enter grade name'); return; }
-    onAddGrade(newGrade);
-    setShowGradeDialog(false);
-    setNewGrade({ name: '', name_en: '', stage_id: '' });
-  };
-
-  const handleAddSection = () => {
-    if (!newSection.name) { toast.error(isRTL ? 'يرجى إدخال اسم الشعبة' : 'Please enter section name'); return; }
-    onAddSection(newSection);
-    setShowSectionDialog(false);
-    setNewSection({ name: '', grade_id: '' });
-  };
 
   const handleAddTerm = () => {
     if (!newTerm.name || !newTerm.start_date || !newTerm.end_date) { 
