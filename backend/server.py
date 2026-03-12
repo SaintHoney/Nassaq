@@ -8945,18 +8945,30 @@ async def get_school_dashboard(
     total_student_today = len(student_attendance)
     student_attendance_rate = round((student_present / total_student_today) * 100, 1) if total_student_today > 0 else 0
     
-    total_teacher_today = len(teacher_attendance)
+    total_teacher_today = len(teacher_attendance_records)
     teacher_attendance_rate = round((teacher_present / total_teacher_today) * 100, 1) if total_teacher_today > 0 else 0
     
-    # Count teachers with frequent absences (>2 in last 30 days)
+    # Count teachers with frequent absences (>2 in last 30 days) - check both collections
     from datetime import timedelta
     thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%d")
+    
+    # Check teacher_attendance collection first
     frequent_absence_pipeline = [
-        {"$match": {"school_id": school_id, "type": "teacher", "status": "absent", "date": {"$gte": thirty_days_ago}}},
+        {"$match": {"school_id": school_id, "status": "absent", "date": {"$gte": thirty_days_ago}}},
         {"$group": {"_id": "$teacher_id", "count": {"$sum": 1}}},
         {"$match": {"count": {"$gt": 2}}}
     ]
-    frequent_absences = await db.attendance.aggregate(frequent_absence_pipeline).to_list(100)
+    frequent_absences = await db.teacher_attendance.aggregate(frequent_absence_pipeline).to_list(100)
+    
+    # Fallback to attendance collection if no data
+    if not frequent_absences:
+        frequent_absence_pipeline_old = [
+            {"$match": {"school_id": school_id, "type": "teacher", "status": "absent", "date": {"$gte": thirty_days_ago}}},
+            {"$group": {"_id": "$teacher_id", "count": {"$sum": 1}}},
+            {"$match": {"count": {"$gt": 2}}}
+        ]
+        frequent_absences = await db.attendance.aggregate(frequent_absence_pipeline_old).to_list(100)
+    
     teachers_frequent_absence = len(frequent_absences)
     
     # Count classes with low attendance (<80%)
