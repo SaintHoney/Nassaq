@@ -163,14 +163,8 @@ const PERMISSION_CATEGORIES = {
   ai: { name_ar: 'الذكاء الاصطناعي', name_en: 'AI', icon: Brain },
 };
 
-// Sample activity log
-const SAMPLE_ACTIVITIES = [
-  { id: 1, action: 'تسجيل دخول', action_en: 'Login', timestamp: '2026-03-09T10:30:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
-  { id: 2, action: 'تحديث الملف الشخصي', action_en: 'Profile Update', timestamp: '2026-03-08T14:20:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
-  { id: 3, action: 'تسجيل دخول', action_en: 'Login', timestamp: '2026-03-08T08:00:00Z', ip: '192.168.1.105', device: 'Safari / iOS' },
-  { id: 4, action: 'تغيير كلمة المرور', action_en: 'Password Change', timestamp: '2026-03-07T16:45:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
-  { id: 5, action: 'تسجيل دخول', action_en: 'Login', timestamp: '2026-03-07T09:15:00Z', ip: '192.168.1.100', device: 'Chrome / Windows' },
-];
+// Empty initial state - activities will be fetched from API
+const INITIAL_ACTIVITIES = [];
 
 // Generate random password
 const generatePassword = () => {
