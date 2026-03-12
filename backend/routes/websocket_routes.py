@@ -209,14 +209,26 @@ def create_websocket_routes(db, decode_token):
                         pass
                         
             except WebSocketDisconnect:
-                manager.disconnect(websocket, user_id, role, tenant_id)
+                # Clean up connection
+                if user_id in manager.active_connections:
+                    if websocket in manager.active_connections[user_id]:
+                        manager.active_connections[user_id].remove(websocket)
+                    if not manager.active_connections[user_id]:
+                        del manager.active_connections[user_id]
+                        if role in manager.role_connections:
+                            manager.role_connections[role].discard(user_id)
+                        if tenant_id and tenant_id in manager.tenant_connections:
+                            manager.tenant_connections[tenant_id].discard(user_id)
+                print(f"❌ WebSocket disconnected: user={user_id}")
             except Exception as e:
                 print(f"WebSocket error: {e}")
-                manager.disconnect(websocket, user_id, role, tenant_id)
                 
         except Exception as e:
             print(f"WebSocket connection error: {e}")
-            await websocket.close(code=4000, reason=str(e))
+            try:
+                await websocket.close(code=4000, reason=str(e))
+            except:
+                pass
     
     @router.get("/ws/stats")
     async def get_websocket_stats():
