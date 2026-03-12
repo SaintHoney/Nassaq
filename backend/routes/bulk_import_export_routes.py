@@ -72,60 +72,60 @@ def setup_bulk_routes(db, get_current_user, require_roles, UserRole):
                 }
                 filename = "قالب_استيراد_الطلاب.xlsx"
             else:
-            columns = {
-                'الاسم الكامل (مطلوب)': ['أحمد محمد السعيد', 'فاطمة علي الخالدي'],
-                'البريد الإلكتروني (مطلوب)': ['ahmed.teacher@school.com', 'fatima.teacher@school.com'],
-                'رقم الجوال (مطلوب)': ['0501234567', '0559876543'],
-                'رقم الهوية': ['1234567890', '0987654321'],
-                'الجنس (ذكر/أنثى)': ['ذكر', 'أنثى'],
-                'التخصص': ['رياضيات', 'علوم'],
-                'المؤهل العلمي': ['بكالوريوس', 'ماجستير'],
-                'سنوات الخبرة': ['5', '10'],
-                'المواد (مفصولة بفاصلة)': ['الرياضيات,الفيزياء', 'الكيمياء,الأحياء'],
-                'الصفوف (مفصولة بفاصلة)': ['الأول,الثاني', 'الثالث,الرابع'],
-                'تاريخ التعيين (YYYY-MM-DD)': ['2020-09-01', '2018-09-01'],
-                'ملاحظات': ['', 'معلم متميز']
-            }
-            filename = "قالب_استيراد_المعلمين.xlsx"
-        
-        # Create DataFrame
-        df = pd.DataFrame(columns)
-        
-        # Create Excel file in memory
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='البيانات')
+                columns = {
+                    'الاسم الكامل (مطلوب)': ['أحمد محمد السعيد', 'فاطمة علي الخالدي'],
+                    'البريد الإلكتروني (مطلوب)': ['ahmed.teacher@school.com', 'fatima.teacher@school.com'],
+                    'رقم الجوال (مطلوب)': ['0501234567', '0559876543'],
+                    'رقم الهوية': ['1234567890', '0987654321'],
+                    'الجنس (ذكر/أنثى)': ['ذكر', 'أنثى'],
+                    'التخصص': ['رياضيات', 'علوم'],
+                    'المؤهل العلمي': ['بكالوريوس', 'ماجستير'],
+                    'سنوات الخبرة': ['5', '10'],
+                    'المواد (مفصولة بفاصلة)': ['الرياضيات,الفيزياء', 'الكيمياء,الأحياء'],
+                    'الصفوف (مفصولة بفاصلة)': ['الأول,الثاني', 'الثالث,الرابع'],
+                    'تاريخ التعيين (YYYY-MM-DD)': ['2020-09-01', '2018-09-01'],
+                    'ملاحظات': ['', 'معلم متميز']
+                }
+                filename = "قالب_استيراد_المعلمين.xlsx"
             
-            # Get workbook and worksheet
-            workbook = writer.book
-            worksheet = writer.sheets['البيانات']
+            # Create DataFrame
+            df = pd.DataFrame(columns)
             
-            # Format header
-            header_format = workbook.add_format({
-                'bold': True,
-                'bg_color': '#1E3A5F',
-                'font_color': 'white',
-                'border': 1,
-                'align': 'center',
-                'valign': 'vcenter'
-            })
+            # Create Excel file in memory
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False, sheet_name='البيانات')
+                
+                # Get workbook and worksheet
+                workbook = writer.book
+                worksheet = writer.sheets['البيانات']
+                
+                # Format header
+                header_format = workbook.add_format({
+                    'bold': True,
+                    'bg_color': '#1E3A5F',
+                    'font_color': 'white',
+                    'border': 1,
+                    'align': 'center',
+                    'valign': 'vcenter'
+                })
+                
+                # Apply header format
+                for col_num, col_name in enumerate(df.columns):
+                    worksheet.write(0, col_num, col_name, header_format)
+                    worksheet.set_column(col_num, col_num, 25)
+                
+                # Add instructions sheet
+                instructions = writer.book.add_worksheet('تعليمات')
+                instructions.write(0, 0, 'تعليمات الاستيراد', workbook.add_format({'bold': True, 'font_size': 14}))
+                instructions.write(2, 0, '1. لا تقم بتغيير أسماء الأعمدة')
+                instructions.write(3, 0, '2. الأعمدة المطلوبة مُعلّمة بـ (مطلوب)')
+                instructions.write(4, 0, '3. احذف صفوف البيانات النموذجية قبل إضافة بياناتك')
+                instructions.write(5, 0, '4. تأكد من صحة تنسيق التواريخ (YYYY-MM-DD)')
+                instructions.write(6, 0, '5. رقم الهوية يجب أن يكون 10 أرقام')
             
-            # Apply header format
-            for col_num, col_name in enumerate(df.columns):
-                worksheet.write(0, col_num, col_name, header_format)
-                worksheet.set_column(col_num, col_num, 25)
+            output.seek(0)
             
-            # Add instructions sheet
-            instructions = writer.book.add_worksheet('تعليمات')
-            instructions.write(0, 0, 'تعليمات الاستيراد', workbook.add_format({'bold': True, 'font_size': 14}))
-            instructions.write(2, 0, '1. لا تقم بتغيير أسماء الأعمدة')
-            instructions.write(3, 0, '2. الأعمدة المطلوبة مُعلّمة بـ (مطلوب)')
-            instructions.write(4, 0, '3. احذف صفوف البيانات النموذجية قبل إضافة بياناتك')
-            instructions.write(5, 0, '4. تأكد من صحة تنسيق التواريخ (YYYY-MM-DD)')
-            instructions.write(6, 0, '5. رقم الهوية يجب أن يكون 10 أرقام')
-        
-        output.seek(0)
-        
             return StreamingResponse(
                 output,
                 media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
