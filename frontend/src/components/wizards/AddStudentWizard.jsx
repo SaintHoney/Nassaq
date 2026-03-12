@@ -193,19 +193,25 @@ export default function AddStudentWizard({
         link_to_parent_id: linkToExisting && existingParent ? existingParent.id : null,
       };
       
+      console.log('Submitting student data:', requestData);
       const response = await api.post('/student-wizard/create', requestData);
+      console.log('Response:', response.data);
       
       if (response.data?.success) {
         setCreatedStudent(response.data.student);
         setCreatedParent(response.data.parent);
         setSiblings(response.data.siblings?.list || []);
         setStep(5);
+        toast.success(isRTL ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully');
         if (onSuccess) {
           onSuccess(response.data);
         }
+      } else {
+        toast.error(isRTL ? 'فشل إنشاء الحساب' : 'Failed to create account');
       }
     } catch (error) {
       console.error('Error creating student:', error);
+      console.error('Error response:', error.response?.data);
       const errorMessage = error.response?.data?.detail || (isRTL ? 'حدث خطأ أثناء إنشاء الحساب' : 'Error creating account');
       toast.error(errorMessage);
     } finally {
