@@ -320,19 +320,11 @@ const SETTINGS_TABS = [
   { id: 'security', icon: Lock, label_ar: 'الأمان والجلسات', label_en: 'Security' },
 ];
 
-// Sample active sessions
-const ACTIVE_SESSIONS = [
-  { id: 1, device: 'Chrome / Windows', ip: '192.168.1.100', location: 'الرياض', lastActive: '2026-03-09T10:30:00Z', current: true },
-  { id: 2, device: 'Safari / macOS', ip: '192.168.1.105', location: 'جدة', lastActive: '2026-03-09T08:00:00Z', current: false },
-  { id: 3, device: 'Mobile / iOS', ip: '192.168.1.110', location: 'الرياض', lastActive: '2026-03-08T22:00:00Z', current: false },
-];
+// Active sessions - fetched from API (empty by default)
+const INITIAL_ACTIVE_SESSIONS = [];
 
-// Version history
-const VERSION_HISTORY = [
-  { version: '2.1', date: '2026-03-01', changes: 'تحديث الشروط والأحكام' },
-  { version: '2.0', date: '2026-02-01', changes: 'إضافة بنود جديدة' },
-  { version: '1.0', date: '2026-01-01', changes: 'النسخة الأولى' },
-];
+// Version history - fetched from API (empty by default)
+const INITIAL_VERSION_HISTORY = [];
 
 export const PlatformSettingsPage = () => {
   const { isRTL = true, isDark, toggleTheme, toggleLanguage } = useTheme();
