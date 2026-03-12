@@ -501,8 +501,8 @@ export default function SecurityCenterPage() {
       generated_at: new Date().toISOString(),
       security_score: metrics.securityScore,
       metrics: metrics,
-      alerts: SECURITY_ALERTS,
-      recent_events: SECURITY_EVENTS.slice(0, 20),
+      alerts: securityAlerts,
+      recent_events: securityEvents.slice(0, 20),
       recommendations: [
         'تفعيل المصادقة الثنائية لجميع المستخدمين',
         'مراجعة الحسابات غير النشطة',
@@ -551,13 +551,13 @@ export default function SecurityCenterPage() {
     }
   };
   
-  const filteredEvents = SECURITY_EVENTS.filter(event => {
+  const filteredEvents = securityEvents.filter(event => {
     if (filterType !== 'all' && event.type !== filterType) return false;
     if (searchQuery && !event.user.toLowerCase().includes(searchQuery.toLowerCase()) && !event.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
   
-  const filteredAlerts = SECURITY_ALERTS.filter(alert => filterPriority === 'all' || alert.type === filterPriority);
+  const filteredAlerts = securityAlerts.filter(alert => filterPriority === 'all' || alert.type === filterPriority);
   
   return (
     <Sidebar>
@@ -717,7 +717,7 @@ export default function SecurityCenterPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {SECURITY_ALERTS.slice(0, 3).map(alert => {
+                    {securityAlerts.slice(0, 3).map(alert => {
                       const priorityInfo = getAlertPriorityInfo(alert.type);
                       const PriorityIcon = priorityInfo.icon;
                       return (
@@ -746,7 +746,7 @@ export default function SecurityCenterPage() {
                 <CardHeader><CardTitle className="flex items-center gap-2"><Gauge className="h-5 w-5 text-brand-navy" />{t.scoreFactors}</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {SCORE_FACTORS.map(factor => (
+                    {scoreFactors.map(factor => (
                       <div key={factor.id} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">{isRTL ? factor.label_ar : factor.label_en}</span>
@@ -894,7 +894,7 @@ export default function SecurityCenterPage() {
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-brand-navy" />{t.aiRecommendations}</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {AI_RECOMMENDATIONS.map(rec => (
+                  {aiRecommendations.map(rec => (
                     <div key={rec.id} className="p-4 bg-muted/30 rounded-xl">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium">{isRTL ? rec.title_ar : rec.title_en}</h4>
@@ -915,7 +915,7 @@ export default function SecurityCenterPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle className="flex items-center gap-2"><Gauge className="h-5 w-5 text-brand-navy" />{t.scoreFactors}</DialogTitle></DialogHeader>
             <div className="py-4 space-y-4">
-              {SCORE_FACTORS.map(factor => (
+              {scoreFactors.map(factor => (
                 <div key={factor.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{isRTL ? factor.label_ar : factor.label_en}</span>
