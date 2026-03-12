@@ -1580,6 +1580,350 @@ export default function SchoolSettingsPagePro() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog إضافة مادة جديدة */}
+        {/* ============================================ */}
+        <Dialog open={addSubjectOpen} onOpenChange={setAddSubjectOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-emerald-600" />
+                إضافة مادة جديدة
+              </DialogTitle>
+              <DialogDescription>
+                أدخل بيانات المادة الدراسية الجديدة
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="subject-name-ar">اسم المادة (عربي) *</Label>
+                <Input
+                  id="subject-name-ar"
+                  value={newSubject.name_ar}
+                  onChange={(e) => setNewSubject({...newSubject, name_ar: e.target.value})}
+                  placeholder="مثال: الحاسب الآلي"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="subject-name-en">اسم المادة (إنجليزي)</Label>
+                <Input
+                  id="subject-name-en"
+                  value={newSubject.name_en}
+                  onChange={(e) => setNewSubject({...newSubject, name_en: e.target.value})}
+                  placeholder="مثال: Computer Science"
+                  dir="ltr"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="subject-periods">الحصص الأسبوعية</Label>
+                  <Select 
+                    value={String(newSubject.weekly_periods)} 
+                    onValueChange={(v) => setNewSubject({...newSubject, weekly_periods: parseInt(v)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n} حصص</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="subject-category">التصنيف</Label>
+                  <Select 
+                    value={newSubject.category} 
+                    onValueChange={(v) => setNewSubject({...newSubject, category: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="language">لغات</SelectItem>
+                      <SelectItem value="science">علوم</SelectItem>
+                      <SelectItem value="islamic">إسلامية</SelectItem>
+                      <SelectItem value="technology">تقنية</SelectItem>
+                      <SelectItem value="activity">أنشطة</SelectItem>
+                      <SelectItem value="social">اجتماعية</SelectItem>
+                      <SelectItem value="skills">مهارات</SelectItem>
+                      <SelectItem value="general">عام</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddSubjectOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddSubject} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Plus className="h-4 w-4 ml-2" />}
+                إضافة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog تعديل مادة */}
+        {/* ============================================ */}
+        <Dialog open={editSubjectOpen} onOpenChange={setEditSubjectOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-blue-600" />
+                تعديل المادة
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editSubject && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-subject-name-ar">اسم المادة (عربي) *</Label>
+                  <Input
+                    id="edit-subject-name-ar"
+                    value={editSubject.name_ar}
+                    onChange={(e) => setEditSubject({...editSubject, name_ar: e.target.value})}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-subject-name-en">اسم المادة (إنجليزي)</Label>
+                  <Input
+                    id="edit-subject-name-en"
+                    value={editSubject.name_en || ''}
+                    onChange={(e) => setEditSubject({...editSubject, name_en: e.target.value})}
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>الحصص الأسبوعية</Label>
+                    <Select 
+                      value={String(editSubject.weekly_periods || 4)} 
+                      onValueChange={(v) => setEditSubject({...editSubject, weekly_periods: parseInt(v)})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                          <SelectItem key={n} value={String(n)}>{n} حصص</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>التصنيف</Label>
+                    <Select 
+                      value={editSubject.category || 'general'} 
+                      onValueChange={(v) => setEditSubject({...editSubject, category: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="language">لغات</SelectItem>
+                        <SelectItem value="science">علوم</SelectItem>
+                        <SelectItem value="islamic">إسلامية</SelectItem>
+                        <SelectItem value="technology">تقنية</SelectItem>
+                        <SelectItem value="activity">أنشطة</SelectItem>
+                        <SelectItem value="social">اجتماعية</SelectItem>
+                        <SelectItem value="skills">مهارات</SelectItem>
+                        <SelectItem value="general">عام</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditSubjectOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateSubject} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ التغييرات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog إضافة قيد جديد */}
+        {/* ============================================ */}
+        <Dialog open={addConstraintOpen} onOpenChange={setAddConstraintOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Shield className="h-5 w-5 text-rose-600" />
+                إضافة قيد إداري جديد
+              </DialogTitle>
+              <DialogDescription>
+                أدخل بيانات القيد الإداري للجدولة
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="constraint-name-ar">اسم القيد *</Label>
+                <Input
+                  id="constraint-name-ar"
+                  value={newConstraint.name_ar}
+                  onChange={(e) => setNewConstraint({...newConstraint, name_ar: e.target.value})}
+                  placeholder="مثال: منع الحصص المتتالية"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="constraint-desc">وصف القيد</Label>
+                <Input
+                  id="constraint-desc"
+                  value={newConstraint.description_ar}
+                  onChange={(e) => setNewConstraint({...newConstraint, description_ar: e.target.value})}
+                  placeholder="شرح مختصر للقيد"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>الأولوية</Label>
+                  <Select 
+                    value={newConstraint.priority} 
+                    onValueChange={(v) => setNewConstraint({...newConstraint, priority: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="critical">حرج</SelectItem>
+                      <SelectItem value="high">عالي</SelectItem>
+                      <SelectItem value="medium">متوسط</SelectItem>
+                      <SelectItem value="low">منخفض</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>النوع</Label>
+                  <Select 
+                    value={newConstraint.type} 
+                    onValueChange={(v) => setNewConstraint({...newConstraint, type: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hard">صارم</SelectItem>
+                      <SelectItem value="soft">مرن</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddConstraintOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddConstraint} disabled={saving} className="bg-rose-600 hover:bg-rose-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Plus className="h-4 w-4 ml-2" />}
+                إضافة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ============================================ */}
+        {/* Dialog تعديل قيد */}
+        {/* ============================================ */}
+        <Dialog open={editConstraintOpen} onOpenChange={setEditConstraintOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-blue-600" />
+                تعديل القيد الإداري
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editConstraint && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>اسم القيد *</Label>
+                  <Input
+                    value={editConstraint.name_ar}
+                    onChange={(e) => setEditConstraint({...editConstraint, name_ar: e.target.value})}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>وصف القيد</Label>
+                  <Input
+                    value={editConstraint.description_ar || ''}
+                    onChange={(e) => setEditConstraint({...editConstraint, description_ar: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>الأولوية</Label>
+                    <Select 
+                      value={editConstraint.priority || 'medium'} 
+                      onValueChange={(v) => setEditConstraint({...editConstraint, priority: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="critical">حرج</SelectItem>
+                        <SelectItem value="high">عالي</SelectItem>
+                        <SelectItem value="medium">متوسط</SelectItem>
+                        <SelectItem value="low">منخفض</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>النوع</Label>
+                    <Select 
+                      value={editConstraint.type || 'hard'} 
+                      onValueChange={(v) => setEditConstraint({...editConstraint, type: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hard">صارم</SelectItem>
+                        <SelectItem value="soft">مرن</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditConstraintOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateConstraint} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ التغييرات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
