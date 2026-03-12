@@ -498,6 +498,30 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
   // Initial fetch
   useEffect(() => {
     fetchDashboardData();
+    
+    // Fetch grades and classes for wizards
+    const fetchWizardData = async () => {
+      try {
+        const token = localStorage.getItem('nassaq_token');
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        if (isImpersonating && schoolContext?.school_id) {
+          headers['X-School-Context'] = schoolContext.school_id;
+        }
+        
+        const [gradesRes, classesRes] = await Promise.all([
+          axios.get(`${API_URL}/api/reference/grades`, { headers }).catch(() => ({ data: [] })),
+          axios.get(`${API_URL}/api/classes`, { headers }).catch(() => ({ data: [] })),
+        ]);
+        
+        setGrades(gradesRes.data || []);
+        setClasses(classesRes.data || []);
+      } catch (err) {
+        console.error('Error fetching wizard data:', err);
+      }
+    };
+    
+    fetchWizardData();
   }, []);
 
   // Auto-refresh every 20 seconds
