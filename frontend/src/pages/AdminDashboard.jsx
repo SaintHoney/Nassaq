@@ -436,6 +436,32 @@ export const AdminDashboard = () => {
     fetchActivityData();
   }, [fetchActivityData]);
 
+  // جلب إحصائيات مركز القيادة - Fetch Command Center Stats
+  const fetchCommandCenterStats = useCallback(async () => {
+    try {
+      const response = await api.get('/admin/command-center/stats');
+      setCommandCenterStats(response.data);
+    } catch (error) {
+      console.error('Error fetching command center stats:', error);
+    }
+  }, [api]);
+
+  // جلب إحصائيات الإشعارات
+  const fetchNotificationStats = useCallback(async () => {
+    try {
+      const response = await api.get('/admin/notifications/stats');
+      setNotificationStats(response.data);
+    } catch (error) {
+      console.error('Error fetching notification stats:', error);
+    }
+  }, [api]);
+
+  // تحميل بيانات مركز القيادة عند التحميل الأول
+  useEffect(() => {
+    fetchCommandCenterStats();
+    fetchNotificationStats();
+  }, [fetchCommandCenterStats, fetchNotificationStats]);
+
   // تصدير البيانات - Export Data (PDF حقيقي باستخدام jsPDF)
   const handleExportData = (format) => {
     const data = {
