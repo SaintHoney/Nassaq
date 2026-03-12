@@ -677,6 +677,8 @@ export default function SchoolSettingsPagePro() {
       setDefaultSettings(defaultSettingsRes.data || {});
       setAssignments(assignmentsRes.data || []);
       setReferenceSubjects(refSubjectsRes.data || []);
+      setAuditLogs(auditLogsRes.data?.logs || []);
+      setLastSync(settingsData.last_sync || settingsData.settings?.updated_at || new Date().toISOString());
       
       // Get unique subjects for display
       const allSubjects = subjectsRes.data || [];
