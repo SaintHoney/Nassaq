@@ -683,14 +683,14 @@ export const AdminDashboard = () => {
       label: isRTL ? 'التقارير' : 'Reports', 
       desc: isRTL ? 'التقارير والتحليلات' : 'Reports & Analytics',
       color: 'bg-brand-purple', 
-      action: () => navigate('/admin/analytics') 
+      action: () => { navigate('/admin/analytics'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     },
     { 
       icon: Plug, 
       label: isRTL ? 'التكاملات' : 'Integrations', 
       desc: isRTL ? 'ربط الخدمات الخارجية' : 'External services',
       color: 'bg-green-600', 
-      action: () => navigate('/admin/integrations') 
+      action: () => { navigate('/admin/integrations'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     },
     { 
       icon: Settings, 
