@@ -998,6 +998,24 @@ export default function SchoolSettingsPagePro() {
                         </CardDescription>
                       </div>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditedDayTimes({
+                          dayStart: settings.dayStart || '07:00',
+                          dayEnd: settings.dayEnd || '13:15',
+                          periodsPerDay: settings.periodsPerDay || 7,
+                          periodDuration: settings.periodDuration || 45,
+                          breakDuration: settings.breakDuration || 20,
+                          prayerDuration: settings.prayerDuration || 20,
+                        });
+                        setEditDayTimesOpen(true);
+                      }}
+                      data-testid="edit-time-slots-btn"
+                    >
+                      <Edit2 className="h-4 w-4 ml-2" />
+                      تعديل التوزيع الزمني
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1012,6 +1030,23 @@ export default function SchoolSettingsPagePro() {
                       <Timer className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد توزيع زمني محدد</p>
                       <p className="text-sm">يتم استخدام الإعدادات الافتراضية</p>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => {
+                          setEditedDayTimes({
+                            dayStart: '07:00',
+                            dayEnd: '13:15',
+                            periodsPerDay: 7,
+                            periodDuration: 45,
+                            breakDuration: 20,
+                            prayerDuration: 20,
+                          });
+                          setEditDayTimesOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 ml-2" />
+                        إنشاء التوزيع الزمني
+                      </Button>
                     </div>
                   )}
                 </CardContent>
