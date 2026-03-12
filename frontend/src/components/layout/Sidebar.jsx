@@ -288,7 +288,7 @@ export const Sidebar = ({ children }) => {
       // 4. Attendance Management (Teachers Only)
       {
         icon: CalendarCheck,
-        label: isRTL ? 'إدارة الحضور' : 'Attendance Management',
+        label: isRTL ? 'إدارة حضور المعلمين والاداريين' : 'Staff Attendance',
         href: '/admin/teacher-attendance',
         roles: ['school_principal', 'school_sub_admin'],
       },
