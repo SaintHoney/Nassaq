@@ -337,19 +337,19 @@ const QuickActionsCard = ({ onAction, isRTL }) => {
   const actions = [
     { 
       id: 'add-student', 
-      label: isRTL ? 'إضافة طالب' : 'Add Student',
+      label: isRTL ? 'طالب / طلاب' : 'Student(s)',
       icon: UserPlus,
       color: 'bg-blue-500 hover:bg-blue-600',
     },
     { 
       id: 'add-teacher', 
-      label: isRTL ? 'إضافة معلم' : 'Add Teacher',
+      label: isRTL ? 'معلم / معلمين' : 'Teacher(s)',
       icon: GraduationCap,
       color: 'bg-green-500 hover:bg-green-600',
     },
     { 
       id: 'create-class', 
-      label: isRTL ? 'إنشاء فصل' : 'Create Class',
+      label: isRTL ? 'فصل / فصول' : 'Class(es)',
       icon: School,
       color: 'bg-purple-500 hover:bg-purple-600',
     },
