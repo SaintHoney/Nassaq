@@ -1062,112 +1062,55 @@ const TimeSlotsSection = ({ timeSlots, periodsPerDay, isRTL }) => {
 };
 
 // =============================================================
-// قسم النصاب التدريسي للمعلمين
+// قسم النصاب التدريسي للمعلمين - من البيانات المرجعية
 // =============================================================
-const TeachingLoadSection = ({ teachers, teachingLoads, onSave, isRTL }) => {
-  const [loads, setLoads] = useState(teachingLoads || {});
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [loadValue, setLoadValue] = useState(18);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (teachingLoads) setLoads(teachingLoads);
-  }, [teachingLoads]);
-
-  const handleSaveLoad = async () => {
-    if (!selectedTeacher) {
-      toast.error(isRTL ? 'يرجى اختيار معلم' : 'Please select a teacher');
-      return;
-    }
-    setSaving(true);
-    try {
-      const newLoads = { ...loads, [selectedTeacher]: loadValue };
-      setLoads(newLoads);
-      await onSave(newLoads);
-      setShowDialog(false);
-      setSelectedTeacher('');
-      toast.success(isRTL ? 'تم حفظ النصاب التدريسي' : 'Teaching load saved');
-    } catch (error) {
-      toast.error(isRTL ? 'خطأ في الحفظ' : 'Save error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const teachersWithLoad = Object.entries(loads).map(([teacherId, load]) => {
-    const teacher = teachers.find(t => t.id === teacherId);
-    return teacher ? { ...teacher, load } : null;
-  }).filter(Boolean);
-
+const TeachingLoadSection = ({ teachers, teacherRanks, isRTL }) => {
   return (
     <Card className="border-2 border-teal-200 bg-gradient-to-br from-teal-50/50 to-white" data-testid="teaching-load-section">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center gap-3 flex-row-reverse">
-          <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
-            <Target className="h-6 w-6 text-teal-600" />
+          <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
+            <Target className="h-5 w-5 text-teal-600" />
           </div>
           <div className="text-right flex-1">
-            <CardTitle className="font-cairo">{isRTL ? 'النصاب التدريسي للمعلمين' : 'Teaching Load'}</CardTitle>
-            <CardDescription>{isRTL ? 'تحديد عدد الحصص الأسبوعية لكل معلم - يستخدمه محرك الجدولة للتوزيع العادل' : 'Weekly periods per teacher - Used for fair distribution'}</CardDescription>
+            <CardTitle className="font-cairo text-base">{isRTL ? 'النصاب التدريسي حسب الرتبة' : 'Teaching Load by Rank'}</CardTitle>
           </div>
+          <Badge variant="outline" className="bg-teal-100 text-teal-700">
+            {teacherRanks?.length || 0} {isRTL ? 'رتبة' : 'ranks'}
+          </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-teal-600 hover:bg-teal-700 mb-4">
-          <Edit2 className="h-4 w-4 me-2" />
-          {isRTL ? 'إضافة/تعديل نصاب' : 'Add/Edit Load'}
-        </Button>
-
-        {teachersWithLoad.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-teal-200 rounded-xl">
-            <Target className="h-12 w-12 mx-auto mb-3 text-teal-200" />
-            <p className="text-muted-foreground">{isRTL ? 'لم يتم تحديد النصاب لأي معلم' : 'No teaching loads defined'}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {teachersWithLoad.map((teacher) => (
-              <div key={teacher.id} className="p-3 rounded-lg bg-white border flex items-center justify-between flex-row-reverse hover:border-teal-300 transition-colors">
-                <span className="text-sm font-medium truncate">{teacher.full_name}</span>
-                <Badge variant="outline" className="bg-teal-100 text-teal-700 font-bold">{teacher.load} {isRTL ? 'حصة' : 'periods'}</Badge>
+      <CardContent className="pt-0">
+        {teacherRanks && teacherRanks.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {teacherRanks.map((rank, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-teal-50 border border-teal-200">
+                <span className="text-sm font-medium text-teal-800">{rank.name_ar || rank.name}</span>
+                <Badge className="bg-teal-600 text-white">{rank.weekly_periods} {isRTL ? 'حصة' : 'periods'}</Badge>
               </div>
             ))}
           </div>
+        ) : (
+          <div className="py-6 text-center border-2 border-dashed border-teal-200 rounded-xl">
+            <Target className="h-10 w-10 mx-auto mb-2 text-teal-200" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'لم يتم تحديد رتب المعلمين' : 'No teacher ranks defined'}</p>
+          </div>
         )}
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'تحديد النصاب التدريسي' : 'Set Teaching Load'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'اختر المعلم' : 'Select Teacher'} <span className="text-red-500">*</span></Label>
-                <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isRTL ? 'اختر معلم' : 'Select teacher'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>{teacher.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'النصاب الأسبوعي (عدد الحصص)' : 'Weekly Load (Periods)'}</Label>
-                <Input type="number" min="1" max="30" value={loadValue} onChange={(e) => setLoadValue(parseInt(e.target.value) || 18)} className="text-center text-xl font-bold" />
-              </div>
+        
+        {/* عرض المعلمين مع نصابهم الفعلي */}
+        {teachers && teachers.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-semibold text-teal-700 mb-2">{isRTL ? 'المعلمون ونصابهم:' : 'Teachers & Load:'}</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {teachers.map((teacher) => (
+                <div key={teacher.id} className="p-2 rounded-lg bg-white border flex items-center justify-between flex-row-reverse">
+                  <span className="text-xs font-medium truncate">{teacher.full_name}</span>
+                  <Badge variant="outline" className="text-xs bg-teal-50">{teacher.weekly_periods || 24}</Badge>
+                </div>
+              ))}
             </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleSaveLoad} disabled={saving} className="bg-teal-600 hover:bg-teal-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
-                {isRTL ? 'حفظ' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
