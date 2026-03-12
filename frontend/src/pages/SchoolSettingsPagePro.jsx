@@ -527,6 +527,17 @@ export default function SchoolSettingsPagePro() {
   const [editConstraintOpen, setEditConstraintOpen] = useState(false);
   const [selectedConstraint, setSelectedConstraint] = useState(null);
   
+  // Subject CRUD States
+  const [addSubjectOpen, setAddSubjectOpen] = useState(false);
+  const [editSubjectOpen, setEditSubjectOpen] = useState(false);
+  const [editSubject, setEditSubject] = useState(null);
+  const [newSubject, setNewSubject] = useState({ name_ar: '', name_en: '', weekly_periods: 4, category: 'general' });
+  
+  // Constraint CRUD States
+  const [addConstraintOpen, setAddConstraintOpen] = useState(false);
+  const [editConstraint, setEditConstraint] = useState(null);
+  const [newConstraint, setNewConstraint] = useState({ name_ar: '', description_ar: '', priority: 'medium', type: 'hard' });
+  
   // Edit Form States
   const [editedDayTimes, setEditedDayTimes] = useState({
     dayStart: '07:00',
