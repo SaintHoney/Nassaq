@@ -2707,9 +2707,19 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
 @api_router.get("/reference/academic-structure")
 async def get_academic_structure(current_user: dict = Depends(get_current_user)):
     """Get complete academic structure (stages, grades, tracks)"""
-    stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
-    grades = await db.academic_grades.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(50)
-    tracks = await db.education_tracks.find({"is_active": True}, {"_id": 0}).to_list(10)
+    # Try reference_* collections first (new naming), fall back to old names
+    stages = await db.reference_stages.find({}, {"_id": 0}).sort("order", 1).to_list(10)
+    if not stages:
+        stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
+    
+    grades = await db.reference_grades.find({}, {"_id": 0}).sort("order", 1).to_list(50)
+    if not grades:
+        grades = await db.academic_grades.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(50)
+    
+    tracks = await db.reference_tracks.find({}, {"_id": 0}).to_list(10)
+    if not tracks:
+        tracks = await db.education_tracks.find({"is_active": True}, {"_id": 0}).to_list(10)
+    
     subject_mappings = await db.subject_mappings.find({}, {"_id": 0}).to_list(50)
     
     return {
@@ -2719,28 +2729,60 @@ async def get_academic_structure(current_user: dict = Depends(get_current_user))
         "subject_mappings": subject_mappings
     }
 
+@api_router.get("/reference/stages")
+async def get_reference_stages(current_user: dict = Depends(get_current_user)):
+    """Get all academic stages"""
+    stages = await db.reference_stages.find({}, {"_id": 0}).sort("order", 1).to_list(10)
+    if not stages:
+        stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
+    return stages
+
+@api_router.get("/reference/grades")
+async def get_reference_grades(current_user: dict = Depends(get_current_user)):
+    """Get all grades"""
+    grades = await db.reference_grades.find({}, {"_id": 0}).sort("order", 1).to_list(50)
+    if not grades:
+        grades = await db.academic_grades.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(50)
+    return grades
+
+@api_router.get("/reference/tracks")
+async def get_reference_tracks(current_user: dict = Depends(get_current_user)):
+    """Get all education tracks"""
+    tracks = await db.reference_tracks.find({}, {"_id": 0}).to_list(10)
+    if not tracks:
+        tracks = await db.education_tracks.find({"is_active": True}, {"_id": 0}).to_list(10)
+    return tracks
+
 @api_router.get("/reference/subjects")
 async def get_reference_subjects(current_user: dict = Depends(get_current_user)):
     """Get all reference subjects"""
-    subjects = await db.subjects.find({"is_active": True}, {"_id": 0}).to_list(100)
-    return {"subjects": subjects}
+    subjects = await db.reference_subjects.find({"is_active": True}, {"_id": 0}).to_list(500)
+    if not subjects:
+        subjects = await db.subjects.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return subjects
 
 @api_router.get("/reference/teacher-ranks")
 async def get_reference_teacher_ranks(current_user: dict = Depends(get_current_user)):
     """Get all teacher ranks with teaching loads"""
-    ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(20)
-    return {"ranks": ranks}
+    ranks = await db.reference_teacher_ranks.find({}, {"_id": 0}).sort("order", 1).to_list(20)
+    if not ranks:
+        ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(20)
+    return ranks
 
 @api_router.get("/reference/admin-constraints")
 async def get_reference_admin_constraints(current_user: dict = Depends(get_current_user)):
     """Get all administrative scheduling constraints"""
-    constraints = await db.admin_constraints.find({"is_active": True}, {"_id": 0}).to_list(50)
-    return {"constraints": constraints}
+    constraints = await db.reference_admin_constraints.find({"is_active": True}, {"_id": 0}).to_list(50)
+    if not constraints:
+        constraints = await db.admin_constraints.find({"is_active": True}, {"_id": 0}).to_list(50)
+    return constraints
 
 @api_router.get("/reference/default-settings")
 async def get_reference_default_settings(current_user: dict = Depends(get_current_user)):
     """Get default school settings template"""
-    settings = await db.default_settings.find_one({"id": "default-school-settings"}, {"_id": 0})
+    settings = await db.default_school_settings.find_one({}, {"_id": 0})
+    if not settings:
+        settings = await db.default_settings.find_one({"id": "default-school-settings"}, {"_id": 0})
     return settings or {}
 
 
