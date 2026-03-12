@@ -2593,6 +2593,410 @@ export default function SchoolSettingsPagePro() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* ================== DIALOG: Edit School Info ================== */}
+        <Dialog open={editSchoolInfoOpen} onOpenChange={setEditSchoolInfoOpen}>
+          <DialogContent className="max-w-lg" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-brand-navy" />
+                تعديل معلومات المدرسة
+              </DialogTitle>
+              <DialogDescription>
+                تحديث المعلومات الأساسية للمدرسة
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>اسم المدرسة (عربي) *</Label>
+                  <Input 
+                    value={editedSchoolInfo.name || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, name: e.target.value})}
+                    data-testid="school-name-ar"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم المدرسة (إنجليزي)</Label>
+                  <Input 
+                    value={editedSchoolInfo.name_en || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, name_en: e.target.value})}
+                    data-testid="school-name-en"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>المدينة</Label>
+                  <Input 
+                    value={editedSchoolInfo.city || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, city: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان</Label>
+                  <Input 
+                    value={editedSchoolInfo.address || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, address: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>رقم الهاتف</Label>
+                  <Input 
+                    value={editedSchoolInfo.phone || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, phone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>البريد الإلكتروني</Label>
+                  <Input 
+                    type="email"
+                    value={editedSchoolInfo.email || ''} 
+                    onChange={(e) => setEditedSchoolInfo({...editedSchoolInfo, email: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditSchoolInfoOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateSchoolInfo} disabled={saving} className="bg-brand-navy hover:bg-brand-navy/90">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ التغييرات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Edit Work Days ================== */}
+        <Dialog open={editWorkDaysOpen} onOpenChange={setEditWorkDaysOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-green-600" />
+                تعديل أيام العمل
+              </DialogTitle>
+              <DialogDescription>
+                حدد أيام الدراسة وأيام العطلة
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <div className="grid grid-cols-7 gap-2">
+                {[
+                  { key: 'sunday', name: 'الأحد' },
+                  { key: 'monday', name: 'الإثنين' },
+                  { key: 'tuesday', name: 'الثلاثاء' },
+                  { key: 'wednesday', name: 'الأربعاء' },
+                  { key: 'thursday', name: 'الخميس' },
+                  { key: 'friday', name: 'الجمعة' },
+                  { key: 'saturday', name: 'السبت' },
+                ].map((day) => (
+                  <div 
+                    key={day.key}
+                    onClick={() => toggleWorkDay(day.key)}
+                    className={`p-3 text-center rounded-xl cursor-pointer transition-all border-2 ${
+                      editedWorkDays[day.key] 
+                        ? 'bg-green-100 border-green-500 text-green-700' 
+                        : 'bg-red-50 border-red-200 text-red-600'
+                    }`}
+                  >
+                    <p className="font-bold text-xs">{day.name}</p>
+                    <p className="text-[10px] mt-1">
+                      {editedWorkDays[day.key] ? 'دراسة' : 'عطلة'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4 p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+                <p>أيام الدراسة: {Object.entries(editedWorkDays).filter(([, v]) => v).length}</p>
+                <p>أيام العطلة: {Object.entries(editedWorkDays).filter(([, v]) => !v).length}</p>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditWorkDaysOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveWorkDays} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ التغييرات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Add Stage ================== */}
+        <Dialog open={addStageOpen} onOpenChange={setAddStageOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-purple-600" />
+                إضافة مرحلة تعليمية
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>اسم المرحلة (عربي) *</Label>
+                <Input 
+                  value={newStage.name} 
+                  onChange={(e) => setNewStage({...newStage, name: e.target.value})}
+                  placeholder="مثال: المرحلة الابتدائية"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>اسم المرحلة (إنجليزي)</Label>
+                <Input 
+                  value={newStage.name_en} 
+                  onChange={(e) => setNewStage({...newStage, name_en: e.target.value})}
+                  placeholder="Example: Elementary Stage"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الترتيب</Label>
+                <Input 
+                  type="number"
+                  value={newStage.order} 
+                  onChange={(e) => setNewStage({...newStage, order: parseInt(e.target.value) || 1})}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddStageOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddStage} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Plus className="h-4 w-4 ml-2" />}
+                إضافة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Edit Stage ================== */}
+        <Dialog open={editStageOpen} onOpenChange={setEditStageOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-purple-600" />
+                تعديل مرحلة تعليمية
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editStage && (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>اسم المرحلة (عربي) *</Label>
+                  <Input 
+                    value={editStage.name || ''} 
+                    onChange={(e) => setEditStage({...editStage, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم المرحلة (إنجليزي)</Label>
+                  <Input 
+                    value={editStage.name_en || ''} 
+                    onChange={(e) => setEditStage({...editStage, name_en: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>الترتيب</Label>
+                  <Input 
+                    type="number"
+                    value={editStage.order || 1} 
+                    onChange={(e) => setEditStage({...editStage, order: parseInt(e.target.value) || 1})}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditStageOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateStage} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Add Grade ================== */}
+        <Dialog open={addGradeOpen} onOpenChange={setAddGradeOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-blue-600" />
+                إضافة صف دراسي
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>المرحلة التعليمية *</Label>
+                <Select 
+                  value={newGrade.stage_id} 
+                  onValueChange={(v) => setNewGrade({...newGrade, stage_id: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المرحلة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        {stage.name_ar || stage.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>اسم الصف (عربي) *</Label>
+                <Input 
+                  value={newGrade.name} 
+                  onChange={(e) => setNewGrade({...newGrade, name: e.target.value})}
+                  placeholder="مثال: الصف الأول الابتدائي"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>اسم الصف (إنجليزي)</Label>
+                <Input 
+                  value={newGrade.name_en} 
+                  onChange={(e) => setNewGrade({...newGrade, name_en: e.target.value})}
+                  placeholder="Example: Grade 1"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddGradeOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddGrade} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Plus className="h-4 w-4 ml-2" />}
+                إضافة
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Edit Grade ================== */}
+        <Dialog open={editGradeOpen} onOpenChange={setEditGradeOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-blue-600" />
+                تعديل صف دراسي
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editGrade && (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>المرحلة التعليمية *</Label>
+                  <Select 
+                    value={editGrade.stage_id} 
+                    onValueChange={(v) => setEditGrade({...editGrade, stage_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
+                          {stage.name_ar || stage.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم الصف (عربي) *</Label>
+                  <Input 
+                    value={editGrade.name || ''} 
+                    onChange={(e) => setEditGrade({...editGrade, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم الصف (إنجليزي)</Label>
+                  <Input 
+                    value={editGrade.name_en || ''} 
+                    onChange={(e) => setEditGrade({...editGrade, name_en: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditGradeOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateGrade} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
+                حفظ
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* ================== DIALOG: Delete Confirmation ================== */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent className="max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                تأكيد الحذف
+              </DialogTitle>
+              <DialogDescription>
+                هذا العنصر مرتبط بعناصر أخرى في النظام
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <p className="font-medium mb-2">"{deleteTarget.name}"</p>
+              {deleteTarget.dependencies && (
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-sm text-red-700">مرتبط بـ:</p>
+                  <ul className="list-disc list-inside text-sm text-red-600 mt-1">
+                    {deleteTarget.dependencies.teacher_assignments && (
+                      <li>{deleteTarget.dependencies.teacher_assignments} إسناد للمعلمين</li>
+                    )}
+                    {deleteTarget.dependencies.grades && (
+                      <li>{deleteTarget.dependencies.grades} صف دراسي</li>
+                    )}
+                    {deleteTarget.dependencies.classes && (
+                      <li>{deleteTarget.dependencies.classes} فصل</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground mt-3">
+                هل أنت متأكد من الحذف؟ هذا الإجراء لا يمكن التراجع عنه.
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={confirmDelete} variant="destructive">
+                <Trash2 className="h-4 w-4 ml-2" />
+                تأكيد الحذف
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
