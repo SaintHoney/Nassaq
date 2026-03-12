@@ -424,15 +424,17 @@ export default function UsersClassesManagement() {
       }
       
       // Fetch students, teachers, and classes in parallel
-      const [studentsRes, teachersRes, classesRes] = await Promise.all([
+      const [studentsRes, teachersRes, classesRes, gradesRes] = await Promise.all([
         api.get('/students', { headers }).catch(() => ({ data: [] })),
         api.get('/teachers', { headers }).catch(() => ({ data: [] })),
         api.get('/classes', { headers }).catch(() => ({ data: [] })),
+        api.get('/reference/grades', { headers }).catch(() => ({ data: [] })),
       ]);
       
       setStudents(Array.isArray(studentsRes.data) ? studentsRes.data : []);
       setTeachers(Array.isArray(teachersRes.data) ? teachersRes.data : []);
       setClasses(Array.isArray(classesRes.data) ? classesRes.data : []);
+      setGrades(Array.isArray(gradesRes.data) ? gradesRes.data : []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error(isRTL ? 'خطأ في تحميل البيانات' : 'Error loading data');
