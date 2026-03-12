@@ -2263,9 +2263,9 @@ export default function SchoolSettingsPage() {
         <div className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm font-medium text-muted-foreground">{isRTL ? 'إجراءات سريعة:' : 'Quick Actions:'}</span>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowAddStudentWizard(true)}><UserPlus className="h-4 w-4 me-2" />{isRTL ? 'طالب' : 'Student'}</Button>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowAddTeacherWizard(true)}><GraduationCap className="h-4 w-4 me-2" />{isRTL ? 'معلم' : 'Teacher'}</Button>
-            <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => setShowCreateClassWizard(true)}><School className="h-4 w-4 me-2" />{isRTL ? 'فصل' : 'Class'}</Button>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowAddStudentWizard(true)}><UserPlus className="h-4 w-4 me-2" />{isRTL ? 'طالب / طلاب' : 'Student(s)'}</Button>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowAddTeacherWizard(true)}><GraduationCap className="h-4 w-4 me-2" />{isRTL ? 'معلم / معلمين' : 'Teacher(s)'}</Button>
+            <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => setShowCreateClassWizard(true)}><School className="h-4 w-4 me-2" />{isRTL ? 'فصل / فصول' : 'Class(es)'}</Button>
           </div>
         </div>
 
