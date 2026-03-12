@@ -863,30 +863,34 @@ export const SchedulePage = () => {
                   </DialogContent>
                 </Dialog>
 
-                {/* Generate Schedule */}
+                {/* Generate Schedule with AI - Primary Action */}
                 <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
                   <Button 
-                    variant="outline" 
                     size="sm"
-                    className="rounded-xl h-9"
+                    className="rounded-xl h-9 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25"
                     onClick={() => setGenerateDialogOpen(true)}
                     data-testid="generate-schedule-btn"
                   >
-                    <Sparkles className="h-4 w-4 me-1" />
-                    {isRTL ? 'توليد' : 'Generate'}
+                    <Wand2 className="h-4 w-4 me-1" />
+                    {isRTL ? 'معالجة الجدول بالذكاء الاصطناعي' : 'AI Schedule Processing'}
                   </Button>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="font-cairo">{isRTL ? 'توليد الجدول تلقائياً' : 'Auto Generate Schedule'}</AlertDialogTitle>
+                      <AlertDialogTitle className="font-cairo flex items-center gap-2">
+                        <Wand2 className="h-5 w-5 text-violet-600" />
+                        {isRTL ? 'معالجة الجدول بالذكاء الاصطناعي' : 'AI Schedule Processing'}
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
-                        {isRTL ? 'سيقوم النظام بتوليد جدول تلقائي بناءً على إسنادات المعلمين' : 'The system will automatically generate a schedule'}
+                        {isRTL 
+                          ? 'سيقوم الذكاء الاصطناعي بتحليل إسنادات المعلمين والفصول وإنشاء جدول متوازن يراعي جميع القيود والأولويات.'
+                          : 'AI will analyze teacher assignments and classes to create a balanced schedule considering all constraints and priorities.'}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleGenerateSchedule} disabled={generating} className="bg-brand-turquoise rounded-xl">
-                        {generating ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Play className="h-4 w-4 me-2" />}
-                        {isRTL ? 'ابدأ' : 'Start'}
+                      <AlertDialogAction onClick={handleGenerateSchedule} disabled={generating} className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl">
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Wand2 className="h-4 w-4 me-2" />}
+                        {isRTL ? 'ابدأ المعالجة' : 'Start Processing'}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
