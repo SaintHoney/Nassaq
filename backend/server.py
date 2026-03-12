@@ -2914,6 +2914,11 @@ async def get_teacher(teacher_id: str, current_user: dict = Depends(get_current_
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
     if not teacher:
         raise HTTPException(status_code=404, detail="المعلم غير موجود")
+    # Normalize field names
+    if not teacher.get("full_name") and teacher.get("full_name_ar"):
+        teacher["full_name"] = teacher["full_name_ar"]
+    if not teacher.get("specialization") and teacher.get("subject_name"):
+        teacher["specialization"] = teacher["subject_name"]
     return TeacherResponse(**teacher)
 
 @api_router.put("/teachers/{teacher_id}")
