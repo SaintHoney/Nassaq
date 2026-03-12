@@ -1164,120 +1164,115 @@ const ConstraintsSection = ({ constraints, isRTL }) => {
 };
 
 // =============================================================
-// قسم أيام الأنشطة
+// قسم أيام الأنشطة - مبسط
 // =============================================================
-const ActivityDaysSection = ({ activityDays, onAddActivity, onDeleteActivity, isRTL }) => {
-  const [showDialog, setShowDialog] = useState(false);
-  const [newActivity, setNewActivity] = useState({ date: '', name: '', notes: '' });
-
-  const handleAdd = () => {
-    if (!newActivity.date) {
-      toast.error(isRTL ? 'يرجى تحديد التاريخ' : 'Please select a date');
-      return;
-    }
-    onAddActivity(newActivity);
-    setShowDialog(false);
-    setNewActivity({ date: '', name: '', notes: '' });
-  };
-
+const ActivityDaysSection = ({ activityDays, isRTL }) => {
   return (
     <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50/50 to-white" data-testid="activity-days-section">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-row-reverse">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
-              <Activity className="h-6 w-6 text-pink-600" />
-            </div>
-            <div className="text-right">
-              <CardTitle className="font-cairo">{isRTL ? 'أيام الأنشطة' : 'Activity Days'}</CardTitle>
-              <CardDescription>{isRTL ? 'أيام الأنشطة تستثنى من الجدول العادي' : 'Activity days are excluded from regular schedule'}</CardDescription>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center">
+            <Activity className="h-5 w-5 text-pink-600" />
           </div>
-          <Badge variant="outline" className="text-lg px-4 py-2 bg-pink-100 text-pink-700">
-            {activityDays.length} {isRTL ? 'يوم' : 'Days'}
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'أيام الأنشطة' : 'Activity Days'}</CardTitle>
+          </div>
+          <Badge variant="outline" className="bg-pink-100 text-pink-700">
+            {activityDays?.length || 0} {isRTL ? 'يوم' : 'days'}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-pink-600 hover:bg-pink-700 mb-4">
-          <Plus className="h-4 w-4 me-2" />
-          {isRTL ? 'إضافة يوم نشاط' : 'Add Activity Day'}
-        </Button>
-
-        {activityDays.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-pink-200 rounded-xl">
-            <Activity className="h-12 w-12 mx-auto mb-3 text-pink-200" />
-            <p className="text-muted-foreground">{isRTL ? 'لا توجد أيام أنشطة محددة (القيمة الافتراضية: صفر)' : 'No activity days defined (default: zero)'}</p>
-          </div>
-        ) : (
+      <CardContent className="pt-0">
+        {activityDays && activityDays.length > 0 ? (
           <div className="space-y-2">
-            {activityDays.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-pink-300 transition-colors">
-                <div className="flex items-center gap-3 flex-row-reverse">
-                  <Badge variant="outline" className="font-mono">{activity.date}</Badge>
-                  {activity.name && <span className="text-sm font-medium">{activity.name}</span>}
-                  {activity.notes && <span className="text-xs text-muted-foreground">({activity.notes})</span>}
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => onDeleteActivity(activity.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            {activityDays.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-pink-50 border border-pink-200">
+                <Badge variant="outline" className="font-mono">{activity.date}</Badge>
+                <span className="text-sm font-medium text-pink-800">{activity.name}</span>
               </div>
             ))}
           </div>
+        ) : (
+          <div className="py-6 text-center bg-pink-50/50 rounded-xl">
+            <Activity className="h-8 w-8 mx-auto mb-2 text-pink-300" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد أيام أنشطة محددة' : 'No activity days defined'}</p>
+            <p className="text-xs text-pink-500 mt-1">{isRTL ? '(الأيام العادية فقط)' : '(Regular days only)'}</p>
+          </div>
         )}
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة يوم نشاط' : 'Add Activity Day'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'التاريخ' : 'Date'} <span className="text-red-500">*</span></Label>
-                <Input type="date" value={newActivity.date} onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'اسم النشاط (اختياري)' : 'Activity Name (Optional)'}</Label>
-                <Input value={newActivity.name} onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })} placeholder={isRTL ? 'مثال: يوم رياضي' : 'e.g., Sports Day'} className="text-right" dir="rtl" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}</Label>
-                <Textarea value={newActivity.notes} onChange={(e) => setNewActivity({ ...newActivity, notes: e.target.value })} className="text-right" dir="rtl" rows={2} />
-              </div>
-            </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleAdd} className="bg-pink-600 hover:bg-pink-700">
-                <Plus className="h-4 w-4 me-2" />
-                {isRTL ? 'إضافة' : 'Add'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );
 };
 
 // =============================================================
-// قسم التوافر
+// قسم التوافر - يعرض توافر المعلمين
 // =============================================================
-const AvailabilitySection = ({ teachers, availability, onSave, isRTL }) => {
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [availableDays, setAvailableDays] = useState([]);
-  const [saving, setSaving] = useState(false);
+const AvailabilitySection = ({ teachers, isRTL }) => {
+  const dayNames = {
+    sunday: isRTL ? 'الأحد' : 'Sun',
+    monday: isRTL ? 'الإثنين' : 'Mon',
+    tuesday: isRTL ? 'الثلاثاء' : 'Tue',
+    wednesday: isRTL ? 'الأربعاء' : 'Wed',
+    thursday: isRTL ? 'الخميس' : 'Thu',
+  };
 
-  const dayOptions = [
-    { id: 'sunday', name: isRTL ? 'الأحد' : 'Sunday' },
-    { id: 'monday', name: isRTL ? 'الاثنين' : 'Monday' },
-    { id: 'tuesday', name: isRTL ? 'الثلاثاء' : 'Tuesday' },
-    { id: 'wednesday', name: isRTL ? 'الأربعاء' : 'Wednesday' },
-    { id: 'thursday', name: isRTL ? 'الخميس' : 'Thursday' },
-  ];
+  // Find teachers with availability exceptions
+  const teachersWithExceptions = teachers?.filter(t => {
+    const av = t.availability || {};
+    return Object.values(av).some(periods => periods && periods.length < 7);
+  }) || [];
 
-  const handleSave = async () => {
-    if (!selectedTeacher) {
+  return (
+    <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50/50 to-white" data-testid="availability-section">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+            <CalendarClock className="h-5 w-5 text-amber-600" />
+          </div>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'توافر المعلمين' : 'Teacher Availability'}</CardTitle>
+          </div>
+          <Badge variant="outline" className="bg-amber-100 text-amber-700">
+            {teachersWithExceptions.length} {isRTL ? 'استثناء' : 'exceptions'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {teachersWithExceptions.length > 0 ? (
+          <div className="space-y-2">
+            {teachersWithExceptions.map((teacher) => {
+              const av = teacher.availability || {};
+              const exceptions = Object.entries(av).filter(([day, periods]) => periods && periods.length < 7);
+              return (
+                <div key={teacher.id} className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                  <div className="flex items-center justify-between flex-row-reverse mb-2">
+                    <span className="text-sm font-medium text-amber-800">{teacher.full_name}</span>
+                    <Badge variant="secondary" className="text-xs">{teacher.subject_name || teacher.specialization}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {exceptions.map(([day, periods]) => {
+                      const missingPeriods = [1,2,3,4,5,6,7].filter(p => !periods.includes(p));
+                      return missingPeriods.map(p => (
+                        <Badge key={`${day}-${p}`} variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                          {dayNames[day]} - {isRTL ? `ح${p}` : `P${p}`}
+                        </Badge>
+                      ));
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-6 text-center bg-amber-50/50 rounded-xl">
+            <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-400" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'جميع المعلمين متاحون في كل الأوقات' : 'All teachers available at all times'}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
       toast.error(isRTL ? 'يرجى اختيار معلم' : 'Please select a teacher');
       return;
     }
