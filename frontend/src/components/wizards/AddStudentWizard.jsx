@@ -243,6 +243,14 @@ export default function AddStudentWizard({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Determine parent ID to link
+      let parentIdToLink = null;
+      if (parentMode === 'search' && selectedExistingParent) {
+        parentIdToLink = selectedExistingParent.id;
+      } else if (linkToExisting && existingParent) {
+        parentIdToLink = existingParent.id;
+      }
+      
       const requestData = {
         ...studentData,
         parent: {
@@ -256,7 +264,7 @@ export default function AddStudentWizard({
           special_needs: healthData.special_needs || null,
           notes: healthData.notes || null,
         } : null,
-        link_to_parent_id: linkToExisting && existingParent ? existingParent.id : null,
+        link_to_parent_id: parentIdToLink,
       };
       
       console.log('Submitting student data:', requestData);
