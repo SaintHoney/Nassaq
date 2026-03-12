@@ -1977,7 +1977,26 @@ export default function SchoolSettingsPagePro() {
             
             {/* ================= TAB: الهيكل الأكاديمي ================= */}
             <TabsContent value="structure" className="space-y-4">
-              <AcademicStructureView stages={stages} grades={grades} tracks={tracks} />
+              <AcademicStructureView 
+                stages={stages} 
+                grades={grades} 
+                tracks={tracks}
+                onAddStage={() => setAddStageOpen(true)}
+                onEditStage={(stage) => {
+                  setEditStage(stage);
+                  setEditStageOpen(true);
+                }}
+                onDeleteStage={handleDeleteStage}
+                onAddGrade={(stageId) => {
+                  setNewGrade({ name: '', name_en: '', stage_id: stageId });
+                  setAddGradeOpen(true);
+                }}
+                onEditGrade={(grade) => {
+                  setEditGrade(grade);
+                  setEditGradeOpen(true);
+                }}
+                onDeleteGrade={handleDeleteGrade}
+              />
             </TabsContent>
             
           </Tabs>
