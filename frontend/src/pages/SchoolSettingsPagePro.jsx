@@ -931,9 +931,9 @@ export default function SchoolSettingsPagePro() {
                         <CardDescription>{classes.length} فصل في المدرسة</CardDescription>
                       </div>
                     </div>
-                    <Button className="bg-cyan-600 hover:bg-cyan-700" data-testid="add-class-btn">
-                      <Plus className="h-4 w-4 ml-2" /> إضافة فصل
-                    </Button>
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      لإضافة فصل، انتقل إلى "إدارة المستخدمين والفصول"
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -947,9 +947,7 @@ export default function SchoolSettingsPagePro() {
                     <div className="text-center py-12 text-muted-foreground">
                       <GraduationCap className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد فصول مسجلة</p>
-                      <Button variant="outline" className="mt-4">
-                        <Plus className="h-4 w-4 ml-2" /> إضافة فصل
-                      </Button>
+                      <p className="text-sm mt-2">انتقل إلى صفحة "إدارة المستخدمين والفصول" لإضافة فصول</p>
                     </div>
                   )}
                 </CardContent>
