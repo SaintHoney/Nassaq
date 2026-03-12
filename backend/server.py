@@ -4456,7 +4456,15 @@ async def get_schedule_sessions(
             slot = slot_map.get(s.get("time_slot_id"), {})
             
             result.append(ScheduleSessionResponse(
-                **s,
+                id=s.get("id"),
+                school_id=s.get("school_id"),
+                schedule_id=s.get("schedule_id"),
+                assignment_id=s.get("assignment_id"),
+                day_of_week=s.get("day_of_week") or s.get("day"),
+                day=s.get("day") or s.get("day_of_week"),
+                time_slot_id=s.get("time_slot_id"),
+                slot_number=s.get("slot_number"),
+                status=s.get("status", "active"),
                 teacher_id=assignment.get("teacher_id"),
                 teacher_name=teacher_map.get(assignment.get("teacher_id")),
                 class_id=assignment.get("class_id"),
