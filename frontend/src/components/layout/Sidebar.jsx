@@ -51,11 +51,106 @@ const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-
 export const Sidebar = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout, isImpersonating, schoolContext, getEffectiveRole, exitSchoolContext } = useAuth();
+  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+  const [switchingRole, setSwitchingRole] = useState(false);
+  const { user, logout, isImpersonating, schoolContext, getEffectiveRole, exitSchoolContext, token, updateToken } = useAuth();
   const { isRTL } = useTheme();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Fetch available roles when modal opens
+  useEffect(() => {
+    if (showRoleSwitcher && token) {
+      fetchAvailableRoles();
+    }
+  }, [showRoleSwitcher, token]);
+
+  const fetchAvailableRoles = async () => {
+    setLoadingRoles(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/user-roles/my-roles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAvailableRoles(response.data.available_roles || []);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      toast.error(isRTL ? 'حدث خطأ في جلب الأدوار' : 'Error fetching roles');
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
+  const handleSwitchRole = async (role) => {
+    if (role.is_current) return;
+    
+    setSwitchingRole(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/user-roles/switch`, {
+        target_role: role.role,
+        target_tenant_id: role.tenant_id
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        // Update token in auth context
+        if (updateToken) {
+          updateToken(response.data.access_token);
+        } else {
+          // Fallback: store in localStorage and reload
+          localStorage.setItem('token', response.data.access_token);
+          window.location.reload();
+        }
+        
+        toast.success(response.data.message || (isRTL ? 'تم تبديل الدور بنجاح' : 'Role switched successfully'));
+        setShowRoleSwitcher(false);
+        
+        // Navigate to appropriate dashboard
+        if (role.role === 'platform_admin') {
+          navigate('/admin');
+        } else if (role.role === 'school_principal') {
+          navigate('/school/dashboard');
+        } else {
+          navigate('/');
+        }
+      }
+    } catch (error) {
+      console.error('Error switching role:', error);
+      toast.error(isRTL ? 'حدث خطأ في تبديل الدور' : 'Error switching role');
+    } finally {
+      setSwitchingRole(false);
+    }
+  };
+
+  const handleReturnToOriginal = async () => {
+    setSwitchingRole(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/user-roles/return-to-original`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        if (updateToken) {
+          updateToken(response.data.access_token);
+        } else {
+          localStorage.setItem('token', response.data.access_token);
+          window.location.reload();
+        }
+        
+        toast.success(response.data.message || (isRTL ? 'تمت العودة للدور الأصلي' : 'Returned to original role'));
+        setShowRoleSwitcher(false);
+        navigate('/admin');
+      }
+    } catch (error) {
+      console.error('Error returning to original role:', error);
+      toast.error(isRTL ? 'حدث خطأ في العودة للدور الأصلي' : 'Error returning to original role');
+    } finally {
+      setSwitchingRole(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
