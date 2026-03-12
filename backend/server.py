@@ -11551,6 +11551,10 @@ admin_dashboard_router = setup_admin_routes(db, get_current_user, require_roles,
 from routes.security_routes import setup_security_routes
 security_router = setup_security_routes(db, get_current_user, require_roles, UserRole)
 
+# Import and create audit routes (Audit Logs)
+from routes.audit_routes import setup_audit_routes
+audit_router = setup_audit_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
