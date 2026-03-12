@@ -604,13 +604,14 @@ export default function SchoolSettingsPagePro() {
         subjectsRes,
         defaultSettingsRes,
         assignmentsRes,
-        refSubjectsRes
+        refSubjectsRes,
+        auditLogsRes
       ] = await Promise.all([
         api.get('/school/settings').catch(() => ({ data: {} })),
         api.get('/teachers').catch(() => ({ data: [] })),
         api.get('/classes').catch(() => ({ data: [] })),
         api.get('/reference/teacher-ranks').catch(() => ({ data: [] })),
-        api.get('/reference/admin-constraints').catch(() => ({ data: [] })),
+        api.get('/school/constraints').catch(() => ({ data: [] })), // Changed to school-specific constraints
         api.get('/reference/stages').catch(() => ({ data: [] })),
         api.get('/reference/grades').catch(() => ({ data: [] })),
         api.get('/reference/tracks').catch(() => ({ data: [] })),
@@ -618,6 +619,7 @@ export default function SchoolSettingsPagePro() {
         api.get('/reference/default-settings').catch(() => ({ data: {} })),
         api.get('/teacher-assignments').catch(() => ({ data: [] })),
         api.get('/reference/subjects').catch(() => ({ data: [] })),
+        api.get('/school/settings/audit-logs?limit=10').catch(() => ({ data: { logs: [] } })),
       ]);
       
       const settingsData = settingsRes.data || {};
