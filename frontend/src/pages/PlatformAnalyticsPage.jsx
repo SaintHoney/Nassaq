@@ -273,34 +273,13 @@ const translations = {
   }
 };
 
-// City data for distribution chart
-const CITIES_DATA = [
-  { name: 'الرياض', name_en: 'Riyadh', value: 45, color: '#2563eb' },
-  { name: 'جدة', name_en: 'Jeddah', value: 28, color: '#16a34a' },
-  { name: 'مكة المكرمة', name_en: 'Makkah', value: 18, color: '#dc2626' },
-  { name: 'المدينة المنورة', name_en: 'Madinah', value: 15, color: '#9333ea' },
-  { name: 'الدمام', name_en: 'Dammam', value: 12, color: '#ea580c' },
-  { name: 'الطائف', name_en: 'Taif', value: 8, color: '#0891b2' },
-  { name: 'تبوك', name_en: 'Tabuk', value: 6, color: '#4f46e5' },
-  { name: 'أبها', name_en: 'Abha', value: 5, color: '#db2777' },
-];
-
-// Attendance data
-const ATTENDANCE_DATA = [
-  { name: 'حاضر', name_en: 'Present', value: 85, color: '#22c55e' },
-  { name: 'غائب', name_en: 'Absent', value: 10, color: '#ef4444' },
-  { name: 'متأخر', name_en: 'Late', value: 5, color: '#f59e0b' },
-];
-
-// Growth data
-const GROWTH_DATA = [
-  { month: 'يناير', schools: 85, students: 12000, teachers: 800 },
-  { month: 'فبراير', schools: 92, students: 13500, teachers: 850 },
-  { month: 'مارس', schools: 98, students: 14200, teachers: 890 },
-  { month: 'أبريل', schools: 105, students: 15000, teachers: 920 },
-  { month: 'مايو', schools: 112, students: 16200, teachers: 980 },
-  { month: 'يونيو', schools: 118, students: 17500, teachers: 1020 },
-];
+// Empty initial states - data will be fetched from API
+const INITIAL_CITIES_DATA = [];
+const INITIAL_ATTENDANCE_DATA = [];
+const INITIAL_GROWTH_DATA = [];
+const INITIAL_AI_INSIGHTS = [];
+const INITIAL_RECENT_REPORTS = [];
+const INITIAL_SCHEDULED_REPORTS = [];
 
 // Report types
 const REPORT_TYPES = [
