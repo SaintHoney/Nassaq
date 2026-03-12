@@ -3521,10 +3521,16 @@ async def create_teacher_wizard(
         "teacher": {
             "id": teacher_id,
             "full_name": full_name,
-            "email": data.email,
+            "email": email,
             "temp_password": temp_password,
-            "specialization": data.specialization,
-            "rank": data.teacher_rank,
+            "specialization": specialization,
+            "rank": teacher_rank,
+        },
+        "teacher_id": teacher_id,
+        "user_account": {
+            "created": True,
+            "email": email,
+            "temp_password": temp_password,
         },
         "message": "تم إنشاء حساب المعلم بنجاح"
     }
