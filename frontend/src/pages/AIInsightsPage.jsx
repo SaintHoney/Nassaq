@@ -289,12 +289,12 @@ export const AIInsightsPage = () => {
             <div className="bg-gradient-to-br from-brand-navy via-brand-navy/90 to-brand-purple p-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-brand-gold/80 text-sm font-medium mb-2">
+                  <p className="text-white text-sm font-medium mb-2">
                     {isRTL ? 'مؤشر الأداء الذكي' : 'Smart Performance Index'}
                   </p>
                   <div className="flex items-baseline gap-3">
                     <span className="text-6xl font-bold text-white">{insights.overall_score}</span>
-                    <span className="text-2xl text-brand-gold/60">/100</span>
+                    <span className="text-2xl text-white/70">/100</span>
                   </div>
                   <div className={`flex items-center gap-2 mt-4 ${
                     insights.trend === 'up' ? 'text-green-400' : 'text-red-400'
@@ -305,7 +305,7 @@ export const AIInsightsPage = () => {
                       <ArrowDownRight className="h-5 w-5" />
                     )}
                     <span className="font-medium">{insights.trend_value}%</span>
-                    <span className="text-white/60 text-sm">
+                    <span className="text-white/80 text-sm">
                       {isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month'}
                     </span>
                   </div>
