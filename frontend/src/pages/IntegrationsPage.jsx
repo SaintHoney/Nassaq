@@ -432,6 +432,44 @@ export default function IntegrationsPage() {
     });
   };
   
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  
+  // Fetch integrations from API
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_URL}/api/integrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIntegrations(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch integrations:', error);
+        // Don't use fallback mock data
+        setIntegrations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const fetchApiKeys = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/api-keys`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setApiKeys(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch API keys:', error);
+        setApiKeys([]);
+      }
+    };
+    
+    if (token) {
+      fetchIntegrations();
+      fetchApiKeys();
+    }
+  }, [token, API_URL]);
+  
   // Get status info
   const getStatusInfo = (status) => {
     switch (status) {
