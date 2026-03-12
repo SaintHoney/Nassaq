@@ -1181,10 +1181,23 @@ export const AdminDashboard = () => {
           {/* ============================================ */}
           <section data-testid="analytics-section">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-cairo text-base lg:text-lg font-bold flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 text-brand-turquoise" />
-                {isRTL ? 'المؤشرات العامة' : 'Platform Analytics'}
-              </h2>
+              <div className="flex items-center gap-4">
+                <h2 className="font-cairo text-base lg:text-lg font-bold flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 text-brand-turquoise" />
+                  {isRTL ? 'المؤشرات العامة' : 'Platform Analytics'}
+                </h2>
+                {/* التاريخ الهجري والميلادي */}
+                <div className="hidden md:flex items-center gap-2 bg-brand-navy/5 px-3 py-1.5 rounded-xl border border-brand-navy/10">
+                  <Calendar className="h-4 w-4 text-brand-navy" />
+                  <span className="text-xs font-bold text-brand-navy">
+                    {commandCenterStats?.hijri_date || getCurrentHijriDate().hijri}
+                  </span>
+                  <span className="text-xs text-muted-foreground">|</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {commandCenterStats?.gregorian_date || new Date().toLocaleDateString('en-US')}
+                  </span>
+                </div>
+              </div>
               {/* Mobile Quick Actions */}
               <div className="lg:hidden flex items-center gap-2">
                 <Button 
