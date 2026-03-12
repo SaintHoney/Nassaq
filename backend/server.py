@@ -6224,6 +6224,446 @@ async def seed_time_slots(
     
     return {"message": f"تم إنشاء {created} فترة زمنية", "count": created}
 
+
+# ============== SMART SCHEDULING ENGINE APIs ==============
+
+# --- Models for Smart Scheduling ---
+class SmartTimetableGenerateRequest(BaseModel):
+    """طلب توليد الجدول الذكي"""
+    academic_year_id: Optional[str] = None
+    term_id: Optional[str] = None
+
+
+class SmartValidationResponse(BaseModel):
+    """استجابة التحقق من جاهزية البيانات"""
+    is_valid: bool
+    can_proceed: bool
+    issues: List[dict] = []
+    summary: dict = {}
+
+
+class SmartTimetableResponse(BaseModel):
+    """استجابة الجدول"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    school_id: str
+    name: str
+    status: str
+    is_published: bool
+    version_number: int = 1
+    created_at: str
+    statistics: dict = {}
+
+
+class SmartTimetableSessionResponse(BaseModel):
+    """استجابة حصة في الجدول"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    timetable_id: str
+    class_id: str
+    grade_id: Optional[str] = None
+    subject_id: str
+    teacher_id: str
+    day_of_week: str
+    period_number: int
+    start_time: str
+    end_time: str
+    session_type: str = "class"
+    source_type: str = "ai_generated"
+    status: str = "scheduled"
+
+
+# --- Pre-Validation API ---
+@api_router.get("/smart-scheduling/validate/{school_id}")
+async def smart_validate_data_readiness(
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    التحقق من جاهزية البيانات قبل توليد الجدول
+    Phase 1: Validate data readiness before timetable generation
+    
+    يتحقق من:
+    - المدرسة والعام الدراسي
+    - المراحل والصفوف والفصول
+    - المواد الدراسية والإسنادات
+    - المعلمين والتوافر
+    - إعدادات اليوم الدراسي
+    - القيود الإدارية
+    """
+    result = await smart_scheduling_engine.validate_data_readiness(school_id)
+    
+    return {
+        "school_id": school_id,
+        "is_valid": result.is_valid,
+        "can_proceed": result.can_proceed,
+        "issues": [i.model_dump() for i in result.issues],
+        "summary": result.summary,
+        "message_ar": "البيانات جاهزة للجدولة" if result.is_valid else f"يوجد {len(result.issues)} مشكلة تحتاج للمعالجة",
+        "message_en": "Data is ready for scheduling" if result.is_valid else f"There are {len(result.issues)} issues that need attention"
+    }
+
+
+# --- Generate Timetable API ---
+@api_router.post("/smart-scheduling/generate/{school_id}")
+async def smart_generate_timetable(
+    school_id: str,
+    request: SmartTimetableGenerateRequest = None,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    توليد الجدول الدراسي بالذكاء الاصطناعي
+    Smart AI-Powered Timetable Generation
+    
+    المراحل:
+    1. التحقق من جاهزية البيانات
+    2. تحميل إعدادات المدرسة
+    3. بناء مصفوفة الطلب الأكاديمي
+    4. بناء مصفوفة الموارد المتاحة
+    5. التحقق المسبق من التعارضات
+    6. توليد مسودة الجدول
+    7. اكتشاف التعارضات
+    8. تحسين الجدول
+    """
+    request = request or SmartTimetableGenerateRequest()
+    
+    result = await smart_scheduling_engine.generate_timetable(
+        school_id=school_id,
+        academic_year_id=request.academic_year_id,
+        term_id=request.term_id,
+        created_by=current_user.get("id", "system")
+    )
+    
+    return result.model_dump()
+
+
+# --- Get School Timetables API ---
+@api_router.get("/smart-scheduling/timetables/{school_id}")
+async def smart_get_school_timetables(
+    school_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على جميع الجداول للمدرسة
+    Get all timetables for a school
+    """
+    timetables = await smart_scheduling_engine.get_school_timetables(school_id)
+    return {
+        "school_id": school_id,
+        "total": len(timetables),
+        "timetables": timetables
+    }
+
+
+# --- Get Timetable Details API ---
+@api_router.get("/smart-scheduling/timetable/{timetable_id}")
+async def smart_get_timetable(
+    timetable_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على تفاصيل جدول محدد
+    Get specific timetable details
+    """
+    timetable = await smart_scheduling_engine.get_timetable(timetable_id)
+    if not timetable:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    return timetable
+
+
+# --- Get Timetable Sessions API ---
+@api_router.get("/smart-scheduling/timetable/{timetable_id}/sessions")
+async def smart_get_timetable_sessions(
+    timetable_id: str,
+    class_id: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    day_of_week: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على حصص الجدول
+    Get timetable sessions with optional filters
+    """
+    sessions = await smart_scheduling_engine.get_timetable_sessions(
+        timetable_id=timetable_id,
+        class_id=class_id,
+        teacher_id=teacher_id,
+        day_of_week=day_of_week
+    )
+    
+    # Enrich with names
+    enriched_sessions = []
+    for session in sessions:
+        # Get teacher name
+        teacher = await db.teachers.find_one({"id": session.get("teacher_id")}, {"_id": 0, "full_name": 1, "full_name_ar": 1})
+        # Get class name
+        cls = await db.classes.find_one({"id": session.get("class_id")}, {"_id": 0, "name": 1, "name_ar": 1})
+        # Get subject name
+        subject = await db.subjects.find_one({"id": session.get("subject_id")}, {"_id": 0, "name_ar": 1, "name_en": 1})
+        if not subject:
+            subject = await db.reference_subjects.find_one({"id": session.get("subject_id")}, {"_id": 0, "name_ar": 1, "name_en": 1})
+        
+        session["teacher_name"] = teacher.get("full_name") or teacher.get("full_name_ar") if teacher else ""
+        session["class_name"] = cls.get("name") or cls.get("name_ar") if cls else ""
+        session["subject_name"] = subject.get("name_ar", "") if subject else ""
+        enriched_sessions.append(session)
+    
+    return {
+        "timetable_id": timetable_id,
+        "total": len(enriched_sessions),
+        "sessions": enriched_sessions
+    }
+
+
+# --- Get Timetable Conflicts API ---
+@api_router.get("/smart-scheduling/timetable/{timetable_id}/conflicts")
+async def smart_get_timetable_conflicts(
+    timetable_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على تعارضات الجدول
+    Get timetable conflicts
+    """
+    conflicts = await smart_scheduling_engine.get_timetable_conflicts(timetable_id)
+    
+    return {
+        "timetable_id": timetable_id,
+        "total": len(conflicts),
+        "critical_count": len([c for c in conflicts if c.get("severity") == "critical"]),
+        "high_count": len([c for c in conflicts if c.get("severity") == "high"]),
+        "conflicts": conflicts
+    }
+
+
+# --- Get Run Logs API ---
+@api_router.get("/smart-scheduling/run/{run_id}/logs")
+async def smart_get_run_logs(
+    run_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على سجلات تشغيل المحرك
+    Get scheduling engine run logs
+    """
+    logs = await smart_scheduling_engine.get_run_logs(run_id)
+    
+    return {
+        "run_id": run_id,
+        "total": len(logs),
+        "logs": logs
+    }
+
+
+# --- Publish Timetable API ---
+@api_router.post("/smart-scheduling/timetable/{timetable_id}/publish")
+async def smart_publish_timetable(
+    timetable_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    نشر الجدول
+    Publish the timetable (makes it visible to teachers and students)
+    """
+    success = await smart_scheduling_engine.publish_timetable(
+        timetable_id=timetable_id,
+        published_by=current_user.get("id", "system")
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=400,
+            detail="لا يمكن نشر الجدول - يوجد تعارضات حرجة غير محلولة"
+        )
+    
+    return {
+        "success": True,
+        "timetable_id": timetable_id,
+        "message_ar": "تم نشر الجدول بنجاح",
+        "message_en": "Timetable published successfully"
+    }
+
+
+# --- Archive Timetable API ---
+@api_router.post("/smart-scheduling/timetable/{timetable_id}/archive")
+async def smart_archive_timetable(
+    timetable_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    أرشفة الجدول
+    Archive the timetable
+    """
+    success = await smart_scheduling_engine.archive_timetable(
+        timetable_id=timetable_id,
+        archived_by=current_user.get("id", "system")
+    )
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    return {
+        "success": True,
+        "timetable_id": timetable_id,
+        "message_ar": "تم أرشفة الجدول",
+        "message_en": "Timetable archived"
+    }
+
+
+# --- Pre-Scheduling Check API ---
+@api_router.get("/smart-scheduling/pre-check/{school_id}")
+async def smart_pre_scheduling_check(
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    التحقق المسبق من إمكانية الجدولة
+    Pre-scheduling feasibility check
+    
+    يحسب:
+    - إجمالي الطلب الأكاديمي
+    - إجمالي سعة المعلمين
+    - المواد بدون معلمين
+    - نسبة الاستخدام المتوقعة
+    """
+    # Load settings
+    settings = await smart_scheduling_engine.load_school_settings(school_id)
+    
+    # Build demand and resources
+    demands = await smart_scheduling_engine.build_academic_demand(school_id)
+    resources = await smart_scheduling_engine.build_resource_availability(school_id, settings)
+    
+    # Run pre-check
+    result = await smart_scheduling_engine.pre_scheduling_check(school_id, demands, resources, settings)
+    
+    return {
+        "school_id": school_id,
+        "can_schedule": result["can_schedule"],
+        "warnings": result["warnings"],
+        "errors": result["errors"],
+        "statistics": result["statistics"],
+        "message_ar": "يمكن بدء الجدولة" if result["can_schedule"] else "يوجد مشاكل تمنع الجدولة",
+        "message_en": "Ready to schedule" if result["can_schedule"] else "Issues preventing scheduling"
+    }
+
+
+# --- Get Academic Demand Matrix API ---
+@api_router.get("/smart-scheduling/demand-matrix/{school_id}")
+async def smart_get_academic_demand(
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    الحصول على مصفوفة الطلب الأكاديمي
+    Get Academic Demand Matrix (classes with their subjects and periods)
+    """
+    demands = await smart_scheduling_engine.build_academic_demand(school_id)
+    
+    # Enrich with names
+    enriched = []
+    for demand in demands:
+        # Get subjects with names
+        subjects_with_names = []
+        for subj in demand.subjects:
+            subject_doc = await db.subjects.find_one({"id": subj.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            if not subject_doc:
+                subject_doc = await db.reference_subjects.find_one({"id": subj.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            
+            subjects_with_names.append({
+                **subj,
+                "subject_name": subject_doc.get("name_ar", "") if subject_doc else ""
+            })
+        
+        enriched.append({
+            "class_id": demand.class_id,
+            "class_name": demand.class_name,
+            "grade_id": demand.grade_id,
+            "subjects": subjects_with_names,
+            "total_periods_required": demand.total_periods_required
+        })
+    
+    return {
+        "school_id": school_id,
+        "total_classes": len(enriched),
+        "total_demand_periods": sum(d["total_periods_required"] for d in enriched),
+        "demands": enriched
+    }
+
+
+# --- Get Resource Availability Matrix API ---
+@api_router.get("/smart-scheduling/resource-matrix/{school_id}")
+async def smart_get_resource_availability(
+    school_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    الحصول على مصفوفة توافر الموارد
+    Get Resource Availability Matrix (teachers with their availability)
+    """
+    settings = await smart_scheduling_engine.load_school_settings(school_id)
+    resources = await smart_scheduling_engine.build_resource_availability(school_id, settings)
+    
+    # Convert to serializable format
+    resources_data = []
+    for r in resources:
+        resources_data.append({
+            "teacher_id": r.teacher_id,
+            "teacher_name": r.teacher_name,
+            "subject_ids": r.subject_ids,
+            "weekly_load": r.weekly_load,
+            "current_load": r.current_load,
+            "availability": r.availability
+        })
+    
+    return {
+        "school_id": school_id,
+        "total_teachers": len(resources_data),
+        "total_capacity": sum(r["weekly_load"] for r in resources_data),
+        "resources": resources_data
+    }
+
+
+# --- Delete Timetable API ---
+@api_router.delete("/smart-scheduling/timetable/{timetable_id}")
+async def smart_delete_timetable(
+    timetable_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    حذف الجدول
+    Delete timetable and all its sessions
+    """
+    # Get timetable first
+    timetable = await db.timetables.find_one({"id": timetable_id}, {"_id": 0})
+    if not timetable:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    # Don't delete published timetables
+    if timetable.get("status") == TimetableStatus.PUBLISHED.value:
+        raise HTTPException(status_code=400, detail="لا يمكن حذف جدول منشور - قم بأرشفته أولاً")
+    
+    # Delete sessions
+    await db.timetable_sessions.delete_many({"timetable_id": timetable_id})
+    
+    # Delete conflicts
+    await db.timetable_conflicts.delete_many({"timetable_id": timetable_id})
+    
+    # Delete unscheduled demands
+    await db.timetable_unscheduled_demands.delete_many({"timetable_id": timetable_id})
+    
+    # Delete timetable
+    await db.timetables.delete_one({"id": timetable_id})
+    
+    return {
+        "success": True,
+        "message_ar": "تم حذف الجدول بنجاح",
+        "message_en": "Timetable deleted successfully"
+    }
+
+
+# ============== END SMART SCHEDULING ENGINE APIs ==============
+
 # ============== LEGACY ROUTES ==============
 @api_router.get("/")
 async def root():
