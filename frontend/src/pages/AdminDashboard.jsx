@@ -852,26 +852,42 @@ export const AdminDashboard = () => {
     }
   };
 
-  // Render Enhanced Analytics Card - Mobile Optimized
+  // Render Enhanced Analytics Card - Mobile Optimized with Live Pulse Animation
   const renderAnalyticsCard = (cardKey) => {
     const card = cardsConfig[cardKey];
     if (!card || !visibleCards[cardKey]) return null;
     
     const healthConfig = getHealthConfig(card.health);
+    const isClickable = card.clickable !== false && card.navigateTo;
     
     return (
       <Card 
         key={cardKey} 
-        className="card-nassaq hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden" 
+        className={`card-nassaq transition-all group relative overflow-hidden ${
+          isClickable 
+            ? 'hover:shadow-xl cursor-pointer' 
+            : 'cursor-default'
+        }`}
         data-testid={`card-${cardKey}`}
-        onClick={() => navigate(card.navigateTo)}
+        onClick={() => isClickable && navigate(card.navigateTo)}
       >
+        {/* Live Pulse Animation Indicator - وميض حي */}
+        <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-[9px] text-green-600 font-medium hidden lg:inline">LIVE</span>
+        </div>
+
         <CardContent className="p-3 lg:p-5">
           {/* Header: Icon, Title, Health Tag */}
           <div className="flex items-start justify-between mb-2 lg:mb-3">
             <div className="flex items-center gap-2 lg:gap-3">
-              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl ${card.iconBg} flex items-center justify-center`}>
+              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl ${card.iconBg} flex items-center justify-center relative`}>
                 {card.icon}
+                {/* Subtle shimmer effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
               </div>
               <div>
                 <p className="text-xs lg:text-sm text-muted-foreground font-medium line-clamp-1">{card.title}</p>
@@ -882,34 +898,20 @@ export const AdminDashboard = () => {
               </div>
             </div>
             
-            {/* Actions Dropdown - Desktop Only */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:flex">
-                  <SlidersHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {card.actions?.map((action, idx) => (
-                  <DropdownMenuItem 
-                    key={idx} 
-                    onClick={(e) => { e.stopPropagation(); action.action(); }}
-                    className="cursor-pointer text-sm"
-                  >
-                    {idx === 0 && <Eye className="h-3.5 w-3.5 me-2" />}
-                    {idx === 1 && <FileText className="h-3.5 w-3.5 me-2" />}
-                    {idx === 2 && <Bell className="h-3.5 w-3.5 me-2" />}
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Non-clickable indicator */}
+            {!isClickable && (
+              <Badge variant="secondary" className="text-[10px] bg-gray-100 text-gray-500">
+                {isRTL ? 'إحصائية' : 'Stats'}
+              </Badge>
+            )}
           </div>
           
           {/* Main Value + Delta */}
           <div className="flex items-end justify-between mb-2 lg:mb-3">
             <div>
-              <p className="text-2xl lg:text-3xl font-bold">{card.mainValue?.toLocaleString() || 0}</p>
+              <p className="text-2xl lg:text-3xl font-bold">
+                {card.isPercentage ? card.mainValue : (card.mainValue?.toLocaleString() || 0)}
+              </p>
               {/* Delta Indicator */}
               <div className="flex items-center gap-1 lg:gap-1.5 mt-1">
                 {card.delta.type === 'up' && <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-500" />}
@@ -919,7 +921,7 @@ export const AdminDashboard = () => {
                   card.delta.type === 'up' ? 'text-green-600' : 
                   card.delta.type === 'down' ? 'text-red-600' : 'text-gray-500'
                 }`}>
-                  {card.delta.type === 'up' ? '+' : card.delta.type === 'down' ? '-' : ''}{card.delta.value}%
+                  {card.delta.type !== 'stable' && (card.delta.type === 'up' ? '+' : '-')}{card.delta.value}%
                 </span>
                 <span className="text-[10px] lg:text-xs text-muted-foreground hidden sm:inline">{card.delta.period}</span>
               </div>
@@ -932,23 +934,27 @@ export const AdminDashboard = () => {
           </div>
           
           {/* Secondary Data Badges - Simplified on Mobile */}
-          <div className="flex flex-wrap gap-1 lg:gap-2 pt-2 border-t border-border/50">
-            {card.secondaryData?.slice(0, 2).map((item, idx) => (
-              <Badge 
-                key={idx} 
-                variant="outline" 
-                className="text-[10px] lg:text-xs bg-muted/50"
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1`}></span>
-                <span className="hidden sm:inline">{item.label}: </span>{item.value ?? 0}
-              </Badge>
-            ))}
-          </div>
+          {card.secondaryData?.length > 0 && (
+            <div className="flex flex-wrap gap-1 lg:gap-2 pt-2 border-t border-border/50">
+              {card.secondaryData?.slice(0, 3).map((item, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-[10px] lg:text-xs bg-muted/50"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor || 'bg-gray-400'} me-1`}></span>
+                  <span className="hidden sm:inline">{item.label}: </span>{item.value ?? 0}
+                </Badge>
+              ))}
+            </div>
+          )}
           
-          {/* Hover Indicator - Desktop Only */}
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:block">
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-          </div>
+          {/* Hover Indicator - Desktop Only, Only for Clickable Cards */}
+          {isClickable && (
+            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:block">
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
         </CardContent>
       </Card>
     );
