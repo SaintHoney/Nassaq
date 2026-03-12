@@ -1162,60 +1162,6 @@ const ConstraintsSection = ({ constraints, isRTL }) => {
     </Card>
   );
 };
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'نوع القيد' : 'Constraint Type'} <span className="text-red-500">*</span></Label>
-                <Select value={newConstraint.type} onValueChange={(v) => setNewConstraint({ ...newConstraint, type: v })}>
-                  <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر نوع القيد' : 'Select type'} /></SelectTrigger>
-                  <SelectContent>
-                    {constraintTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'المعلم (اختياري)' : 'Teacher (Optional)'}</Label>
-                <Select value={newConstraint.teacher_id} onValueChange={(v) => setNewConstraint({ ...newConstraint, teacher_id: v })}>
-                  <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر المعلم' : 'Select teacher'} /></SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>{teacher.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(newConstraint.type === 'no_day') && (
-                <div className="space-y-2">
-                  <Label className="text-right block">{isRTL ? 'اليوم' : 'Day'}</Label>
-                  <Select value={newConstraint.day} onValueChange={(v) => setNewConstraint({ ...newConstraint, day: v })}>
-                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر اليوم' : 'Select day'} /></SelectTrigger>
-                    <SelectContent>
-                      {dayOptions.map((day) => (
-                        <SelectItem key={day.id} value={day.id}>{day.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}</Label>
-                <Textarea value={newConstraint.description} onChange={(e) => setNewConstraint({ ...newConstraint, description: e.target.value })} placeholder={isRTL ? 'أضف ملاحظات...' : 'Add notes...'} className="text-right" dir="rtl" rows={2} />
-              </div>
-            </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleAddConstraint} disabled={saving} className="bg-rose-600 hover:bg-rose-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Plus className="h-4 w-4 me-2" />}
-                {isRTL ? 'إضافة' : 'Add'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
-  );
-};
 
 // =============================================================
 // قسم أيام الأنشطة
