@@ -13364,8 +13364,34 @@ async def get_school_settings(
             "admin_constraints": admin_constraints
         },
         "school_classes": sections,
-        "academic_terms": terms
+        "academic_terms": terms,
+        "last_sync": settings.get("updated_at", datetime.now(timezone.utc).isoformat())
     }
+
+
+@api_router.get("/school/settings/audit-logs")
+async def get_school_audit_logs(
+    limit: int = 50,
+    entity_type: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school settings audit logs - سجل التدقيق لإعدادات المدرسة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    query = {"school_id": school_id}
+    if entity_type:
+        query["entity_type"] = entity_type
+    
+    logs = await db.audit_logs.find(
+        query, 
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs, "total": len(logs)}
 
 
 @api_router.put("/school/settings/info")
