@@ -557,6 +557,14 @@ export default function SchoolSettingsPagePro() {
   const [editConstraint, setEditConstraint] = useState(null);
   const [newConstraint, setNewConstraint] = useState({ name_ar: '', description_ar: '', priority: 'medium', type: 'hard' });
   
+  // Teacher Assignment CRUD States
+  const [assignments, setAssignments] = useState([]);
+  const [addAssignmentOpen, setAddAssignmentOpen] = useState(false);
+  const [editAssignmentOpen, setEditAssignmentOpen] = useState(false);
+  const [editAssignment, setEditAssignment] = useState(null);
+  const [newAssignment, setNewAssignment] = useState({ teacher_id: '', class_id: '', subject_id: '', weekly_sessions: 4 });
+  const [referenceSubjects, setReferenceSubjects] = useState([]);
+  
   // Edit Form States
   const [editedDayTimes, setEditedDayTimes] = useState({
     dayStart: '07:00',
