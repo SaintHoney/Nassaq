@@ -370,6 +370,14 @@ export const PlatformAnalyticsPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(null);
   
+  // Dynamic data states
+  const [citiesData, setCitiesData] = useState(INITIAL_CITIES_DATA);
+  const [attendanceData, setAttendanceData] = useState(INITIAL_ATTENDANCE_DATA);
+  const [growthData, setGrowthData] = useState(INITIAL_GROWTH_DATA);
+  const [aiInsights, setAiInsights] = useState(INITIAL_AI_INSIGHTS);
+  const [recentReports, setRecentReports] = useState(INITIAL_RECENT_REPORTS);
+  const [scheduledReports, setScheduledReports] = useState(INITIAL_SCHEDULED_REPORTS);
+  
   // Get auth token from localStorage
   const getAuthToken = () => {
     try {
