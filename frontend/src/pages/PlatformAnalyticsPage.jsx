@@ -281,7 +281,7 @@ const INITIAL_AI_INSIGHTS = [];
 const INITIAL_RECENT_REPORTS = [];
 const INITIAL_SCHEDULED_REPORTS = [];
 
-// Report types
+// Report types (configuration only - not mock data)
 const REPORT_TYPES = [
   { id: 'school', icon: Building2, label_ar: 'تقارير المدارس', label_en: 'School Reports' },
   { id: 'student', icon: GraduationCap, label_ar: 'تقارير الطلاب', label_en: 'Student Reports' },
@@ -293,73 +293,6 @@ const REPORT_TYPES = [
   { id: 'usage', icon: BarChart3, label_ar: 'استخدام المنصة', label_en: 'Platform Usage' },
   { id: 'ai', icon: Brain, label_ar: 'تقارير AI', label_en: 'AI Reports' },
   { id: 'hcd', icon: Target, label_ar: 'مؤشرات تنمية القدرات', label_en: 'HCD Indicators' },
-];
-
-// AI Insights data
-const AI_INSIGHTS = [
-  {
-    id: 1,
-    type: 'trend',
-    icon: TrendingUp,
-    color: 'text-green-600 bg-green-100',
-    title_ar: 'نمو إيجابي في التسجيل',
-    title_en: 'Positive Enrollment Growth',
-    description_ar: 'زيادة بنسبة 15% في تسجيل الطلاب الجدد مقارنة بالشهر الماضي',
-    description_en: '15% increase in new student enrollment compared to last month',
-    impact: 'positive',
-    priority: 'low'
-  },
-  {
-    id: 2,
-    type: 'alert',
-    icon: AlertTriangle,
-    color: 'text-orange-600 bg-orange-100',
-    title_ar: '5 مدارس تحتاج متابعة',
-    title_en: '5 Schools Need Attention',
-    description_ar: 'انخفاض في معدل الحضور خلال الأسبوعين الماضيين',
-    description_en: 'Attendance rate dropped in the last two weeks',
-    impact: 'negative',
-    priority: 'high'
-  },
-  {
-    id: 3,
-    type: 'recommendation',
-    icon: Lightbulb,
-    color: 'text-blue-600 bg-blue-100',
-    title_ar: 'فرصة لتحسين الأداء',
-    title_en: 'Performance Improvement Opportunity',
-    description_ar: '12 مدرسة يمكنها تفعيل ميزات AI لتحسين نتائج الطلاب',
-    description_en: '12 schools can activate AI features to improve student results',
-    impact: 'neutral',
-    priority: 'medium'
-  },
-  {
-    id: 4,
-    type: 'achievement',
-    icon: Award,
-    color: 'text-purple-600 bg-purple-100',
-    title_ar: 'إنجاز أكاديمي متميز',
-    title_en: 'Outstanding Academic Achievement',
-    description_ar: '3 مدارس حققت نسبة نجاح 100% هذا الفصل',
-    description_en: '3 schools achieved 100% success rate this semester',
-    impact: 'positive',
-    priority: 'low'
-  },
-];
-
-// Recent reports
-const RECENT_REPORTS = [
-  { id: 1, name: 'تقرير الحضور الشهري', name_en: 'Monthly Attendance Report', type: 'attendance', date: '2026-03-08', status: 'ready' },
-  { id: 2, name: 'أداء المدارس Q1', name_en: 'Schools Performance Q1', type: 'school', date: '2026-03-07', status: 'ready' },
-  { id: 3, name: 'تحليل نتائج الفصل', name_en: 'Semester Results Analysis', type: 'academic', date: '2026-03-05', status: 'ready' },
-  { id: 4, name: 'استخدام النظام', name_en: 'System Usage Report', type: 'usage', date: '2026-03-03', status: 'ready' },
-];
-
-// Scheduled reports
-const SCHEDULED_REPORTS = [
-  { id: 1, name: 'تقرير الحضور اليومي', name_en: 'Daily Attendance', frequency: 'daily', nextRun: '2026-03-10T08:00', recipients: 2 },
-  { id: 2, name: 'ملخص أسبوعي', name_en: 'Weekly Summary', frequency: 'weekly', nextRun: '2026-03-15T09:00', recipients: 5 },
-  { id: 3, name: 'تقرير شهري للإدارة', name_en: 'Monthly Management Report', frequency: 'monthly', nextRun: '2026-04-01T10:00', recipients: 3 },
 ];
 
 export const PlatformAnalyticsPage = () => {
