@@ -208,6 +208,15 @@ export default function AddStudentWizard({
                studentData.education_level && 
                studentData.grade_id;
       case 2:
+        // If linking to existing parent, just need selection
+        if (parentMode === 'search' && selectedExistingParent) {
+          return true;
+        }
+        // If auto-detected existing parent and chose to link
+        if (linkToExisting && existingParent) {
+          return true;
+        }
+        // Otherwise need full parent data
         return parentData.full_name && 
                parentData.phone && 
                parentData.relationship;
