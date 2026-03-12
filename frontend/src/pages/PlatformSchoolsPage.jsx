@@ -84,6 +84,7 @@ export const PlatformSchoolsPage = () => {
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
   const itemsPerPage = 10;
 
   const [newSchool, setNewSchool] = useState({
