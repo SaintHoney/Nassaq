@@ -520,8 +520,21 @@ export default function SchedulePageNew() {
                       onClick={() => setFullScheduleOpen(true)}
                       data-testid="view-full-schedule-btn"
                     >
-                      <Eye className="h-4 w-4 ml-2" />
-                      عرض الجدول الأسبوعي
+                      <Globe className="h-4 w-4 ml-2" />
+                      الجدول الكامل
+                    </Button>
+                  )}
+                  
+                  {/* Publish Button */}
+                  {sessions.length > 0 && currentSchedule?.status !== 'published' && (
+                    <Button 
+                      variant="outline"
+                      className="border-green-500 text-green-600 hover:bg-green-50"
+                      onClick={() => setPublishDialogOpen(true)}
+                      data-testid="publish-schedule-btn"
+                    >
+                      <Send className="h-4 w-4 ml-2" />
+                      نشر الجدول
                     </Button>
                   )}
                   
