@@ -766,6 +766,12 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
               ...(isImpersonating && schoolContext?.school_id ? { 'X-School-Context': schoolContext.school_id } : {})
             }
           }).then(r => r),
+          get: (url) => axios.get(`${API_URL}/api${url}`, {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('nassaq_token')}`,
+              ...(isImpersonating && schoolContext?.school_id ? { 'X-School-Context': schoolContext.school_id } : {})
+            }
+          }).then(r => r),
         }}
         grades={grades}
         classes={classes}
