@@ -61,12 +61,19 @@ export const Sidebar = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Fetch available roles on mount
+  useEffect(() => {
+    if (token) {
+      fetchAvailableRoles();
+    }
+  }, [token]);
+
   // Fetch available roles when modal opens
   useEffect(() => {
     if (showRoleSwitcher && token) {
       fetchAvailableRoles();
     }
-  }, [showRoleSwitcher, token]);
+  }, [showRoleSwitcher]);
 
   const fetchAvailableRoles = async () => {
     setLoadingRoles(true);
