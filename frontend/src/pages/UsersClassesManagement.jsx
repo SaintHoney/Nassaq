@@ -457,15 +457,58 @@ export default function UsersClassesManagement() {
   
   // Handlers
   const handleEdit = (item, type) => {
-    toast.info(isRTL ? 'جاري فتح نموذج التعديل...' : 'Opening edit form...');
+    setSelectedItem(item);
+    setSelectedItemType(type);
+    setEditFormData({ ...item });
+    setEditDialogOpen(true);
   };
   
-  const handleDelete = (item, type) => {
-    toast.info(isRTL ? 'جاري الحذف...' : 'Deleting...');
+  const handleDelete = async (item, type) => {
+    const confirmMessage = isRTL 
+      ? `هل أنت متأكد من حذف ${type === 'student' ? 'الطالب' : type === 'teacher' ? 'المعلم' : 'الفصل'}؟`
+      : `Are you sure you want to delete this ${type}?`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    try {
+      const endpoint = type === 'student' ? `/students/${item.id}` 
+                     : type === 'teacher' ? `/teachers/${item.id}` 
+                     : `/classes/${item.id}`;
+      await api.delete(endpoint);
+      toast.success(isRTL ? 'تم الحذف بنجاح' : 'Deleted successfully');
+      fetchAllData();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل الحذف' : 'Delete failed'));
+    }
   };
   
   const handleView = (item, type) => {
-    toast.info(isRTL ? 'جاري فتح التفاصيل...' : 'Opening details...');
+    setSelectedItem(item);
+    setSelectedItemType(type);
+    setViewDialogOpen(true);
+  };
+  
+  const handleSaveEdit = async () => {
+    if (!selectedItem || !selectedItemType) return;
+    
+    setEditLoading(true);
+    try {
+      const endpoint = selectedItemType === 'student' ? `/students/${selectedItem.id}` 
+                     : selectedItemType === 'teacher' ? `/teachers/${selectedItem.id}` 
+                     : `/classes/${selectedItem.id}`;
+      
+      await api.put(endpoint, editFormData);
+      toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
+      setEditDialogOpen(false);
+      setSelectedItem(null);
+      fetchAllData();
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+    } finally {
+      setEditLoading(false);
+    }
   };
   
   const handleRefresh = () => {
