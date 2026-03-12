@@ -85,7 +85,7 @@ export const AccountSettingsPage = () => {
   // Title options
   const titleOptions = isRTL 
     ? [
-        { value: '', label: 'بدون لقب' },
+        { value: 'none', label: 'بدون لقب' },
         { value: 'السيد', label: 'السيد' },
         { value: 'السيدة', label: 'السيدة' },
         { value: 'الآنسة', label: 'الآنسة' },
