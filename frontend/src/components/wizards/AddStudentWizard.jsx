@@ -501,7 +501,150 @@ ${loginUrl}
           
           {step === 2 && (
             <div className="space-y-6">
-              {existingParent && (
+              {/* Mode Selection - New Parent vs Search Existing */}
+              <div className="flex gap-3 p-1 bg-muted rounded-xl">
+                <Button
+                  type="button"
+                  variant={parentMode === 'new' ? 'default' : 'ghost'}
+                  className={`flex-1 rounded-lg gap-2 ${parentMode === 'new' ? 'bg-brand-navy text-white' : ''}`}
+                  onClick={() => {
+                    setParentMode('new');
+                    setSelectedExistingParent(null);
+                    setParentSearchResults([]);
+                    setParentSearchQuery('');
+                  }}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {isRTL ? 'إنشاء ولي أمر جديد' : 'Create New Parent'}
+                </Button>
+                <Button
+                  type="button"
+                  variant={parentMode === 'search' ? 'default' : 'ghost'}
+                  className={`flex-1 rounded-lg gap-2 ${parentMode === 'search' ? 'bg-brand-navy text-white' : ''}`}
+                  onClick={() => {
+                    setParentMode('search');
+                    setExistingParent(null);
+                    setLinkToExisting(false);
+                  }}
+                >
+                  <Link2 className="h-4 w-4" />
+                  {isRTL ? 'ربط ولي أمر حالي' : 'Link Existing Parent'}
+                </Button>
+              </div>
+              
+              {/* Search Mode - Find Existing Parent */}
+              {parentMode === 'search' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 dark:bg-blue-900/20">
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                      {isRTL ? 'ابحث عن ولي أمر موجود مسبقاً في النظام لربط الطالب به (مثال: للأخوة المسجلين)' : 'Search for an existing parent to link this student (e.g., for siblings)'}
+                    </p>
+                    <div className="relative">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={parentSearchQuery}
+                        onChange={(e) => handleParentSearch(e.target.value)}
+                        placeholder={isRTL ? 'ابحث بالاسم أو رقم الهاتف...' : 'Search by name or phone...'}
+                        className="rounded-xl pr-10"
+                        data-testid="parent-search-input"
+                      />
+                      {searchingParents && (
+                        <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Search Results */}
+                  {parentSearchResults.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">{isRTL ? 'نتائج البحث' : 'Search Results'}</Label>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {parentSearchResults.map((parent) => (
+                          <div
+                            key={parent.id}
+                            className="p-3 rounded-xl border hover:border-brand-navy hover:bg-blue-50/50 dark:hover:bg-blue-900/20 cursor-pointer transition-all"
+                            onClick={() => selectParentFromSearch(parent)}
+                            data-testid={`parent-result-${parent.id}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <User className="h-5 w-5 text-blue-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">{parent.full_name}</p>
+                                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <Phone className="h-3 w-3" /> {parent.phone}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-left">
+                                {parent.children_count > 0 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {parent.children_count} {isRTL ? 'أبناء' : 'children'}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* No Results */}
+                  {parentSearchQuery.length >= 2 && !searchingParents && parentSearchResults.length === 0 && (
+                    <div className="p-4 rounded-xl border border-dashed text-center text-muted-foreground">
+                      <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>{isRTL ? 'لم يتم العثور على نتائج' : 'No results found'}</p>
+                      <p className="text-sm mt-1">{isRTL ? 'جرب البحث باسم آخر أو رقم هاتف' : 'Try a different name or phone number'}</p>
+                    </div>
+                  )}
+                  
+                  {/* Selected Parent */}
+                  {selectedExistingParent && (
+                    <div className="p-4 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20">
+                      <div className="flex items-start gap-3">
+                        <UserCheck className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-green-800 dark:text-green-300">
+                            {isRTL ? 'تم اختيار ولي الأمر' : 'Parent Selected'}
+                          </p>
+                          <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                            {selectedExistingParent.full_name} - {selectedExistingParent.phone}
+                          </p>
+                          {siblings.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm text-green-700 dark:text-green-400">{isRTL ? 'الأبناء المسجلون:' : 'Registered children:'}</p>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {siblings.map((s, idx) => (
+                                  <Badge key={idx} variant="secondary">{s.name || s.full_name}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-3 rounded-lg"
+                            onClick={() => {
+                              setSelectedExistingParent(null);
+                              setParentData({ full_name: '', national_id: '', phone: '', email: '', relationship: 'father', address: '' });
+                              setSiblings([]);
+                              setLinkToExisting(false);
+                            }}
+                          >
+                            {isRTL ? 'إلغاء الاختيار' : 'Clear Selection'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* New Parent Mode - Auto Detection Alert */}
+              {parentMode === 'new' && existingParent && (
                 <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
@@ -523,35 +666,38 @@ ${loginUrl}
                 </div>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'اسم ولي الأمر *' : 'Parent Name *'}</Label>
-                  <Input value={parentData.full_name} onChange={(e) => setParentData({...parentData, full_name: e.target.value})} className="rounded-xl" />
+              {/* New Parent Form */}
+              {parentMode === 'new' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'اسم ولي الأمر *' : 'Parent Name *'}</Label>
+                    <Input value={parentData.full_name} onChange={(e) => setParentData({...parentData, full_name: e.target.value})} className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'صلة القرابة *' : 'Relationship *'}</Label>
+                    <Select value={parentData.relationship} onValueChange={(val) => setParentData({...parentData, relationship: val})}>
+                      <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>{RELATIONSHIPS.map(rel => (<SelectItem key={rel.id} value={rel.id}>{isRTL ? rel.name_ar : rel.name_en}</SelectItem>))}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'رقم الهاتف *' : 'Phone *'}</Label>
+                    <Input value={parentData.phone} onChange={(e) => setParentData({...parentData, phone: e.target.value})} onBlur={checkParentExists} placeholder="05xxxxxxxx" className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}</Label>
+                    <Input type="email" value={parentData.email} onChange={(e) => setParentData({...parentData, email: e.target.value})} onBlur={checkParentExists} className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'رقم الهوية (اختياري)' : 'National ID (optional)'}</Label>
+                    <Input value={parentData.national_id} onChange={(e) => setParentData({...parentData, national_id: e.target.value})} onBlur={checkParentExists} className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'العنوان (اختياري)' : 'Address (optional)'}</Label>
+                    <Input value={parentData.address} onChange={(e) => setParentData({...parentData, address: e.target.value})} className="rounded-xl" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'صلة القرابة *' : 'Relationship *'}</Label>
-                  <Select value={parentData.relationship} onValueChange={(val) => setParentData({...parentData, relationship: val})}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>{RELATIONSHIPS.map(rel => (<SelectItem key={rel.id} value={rel.id}>{isRTL ? rel.name_ar : rel.name_en}</SelectItem>))}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'رقم الهاتف *' : 'Phone *'}</Label>
-                  <Input value={parentData.phone} onChange={(e) => setParentData({...parentData, phone: e.target.value})} onBlur={checkParentExists} placeholder="05xxxxxxxx" className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}</Label>
-                  <Input type="email" value={parentData.email} onChange={(e) => setParentData({...parentData, email: e.target.value})} onBlur={checkParentExists} className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'رقم الهوية (اختياري)' : 'National ID (optional)'}</Label>
-                  <Input value={parentData.national_id} onChange={(e) => setParentData({...parentData, national_id: e.target.value})} onBlur={checkParentExists} className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'العنوان (اختياري)' : 'Address (optional)'}</Label>
-                  <Input value={parentData.address} onChange={(e) => setParentData({...parentData, address: e.target.value})} className="rounded-xl" />
-                </div>
-              </div>
+              )}
             </div>
           )}
           
