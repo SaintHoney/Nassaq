@@ -254,7 +254,7 @@ const TeacherItem = ({ teacher }) => (
 // ============================================
 // مكون كارت الفصل
 // ============================================
-const ClassItem = ({ classItem, onEdit, onDelete }) => (
+const ClassItem = ({ classItem }) => (
   <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-cyan-50 to-teal-50 border-2 border-cyan-200 hover:shadow-lg hover:border-cyan-300 transition-all group">
     <div className="flex items-center gap-4">
       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-lg">
@@ -279,20 +279,6 @@ const ClassItem = ({ classItem, onEdit, onDelete }) => (
         <p className="text-2xl font-bold text-cyan-600">{classItem.current_students || classItem.student_count || 0}</p>
         <p className="text-xs text-muted-foreground">طالب</p>
       </div>
-      {(onEdit || onDelete) && (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {onEdit && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(classItem)}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDelete(classItem)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )}
     </div>
   </div>
 );
