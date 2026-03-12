@@ -3342,23 +3342,33 @@ async def get_nationalities_options(current_user: dict = Depends(get_current_use
     return {"nationalities": nationalities}
 
 class TeacherWizardCreate(BaseModel):
-    """Teacher creation via wizard"""
-    full_name: str
+    """Teacher creation via wizard - supports both flat and nested structures"""
+    # Flat structure fields
+    full_name: Optional[str] = None
     full_name_en: Optional[str] = None
-    email: str
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     national_id: Optional[str] = None
-    gender: str = "male"
+    gender: Optional[str] = "male"
     nationality: Optional[str] = "sa"
     date_of_birth: Optional[str] = None
-    subject_ids: List[str] = []
-    grade_ids: List[str] = []
+    subject_ids: Optional[List[str]] = []
+    grade_ids: Optional[List[str]] = []
+    primary_subject_id: Optional[str] = None
     academic_degree: Optional[str] = None
     specialization: Optional[str] = None
     teacher_rank: Optional[str] = None
     contract_type: Optional[str] = "permanent"
     years_of_experience: Optional[int] = 0
     hire_date: Optional[str] = None
+    max_periods_per_week: Optional[int] = 24
+    available_days: Optional[List[str]] = []
+    
+    # Nested structure fields (from frontend wizard)
+    basic_info: Optional[dict] = None
+    qualifications: Optional[dict] = None
+    subjects: Optional[dict] = None
+    schedule: Optional[dict] = None
 
 @api_router.post("/teachers/create")
 async def create_teacher_wizard(
@@ -3371,8 +3381,67 @@ async def create_teacher_wizard(
     if not school_id:
         raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
     
+    # Handle nested structure from frontend wizard
+    if data.basic_info:
+        full_name = data.basic_info.get("full_name_ar") or data.basic_info.get("full_name") or data.full_name
+        full_name_en = data.basic_info.get("full_name_en") or data.full_name_en
+        email = data.basic_info.get("email") or data.email
+        phone = data.basic_info.get("phone") or data.phone
+        national_id = data.basic_info.get("national_id") or data.national_id
+        gender = data.basic_info.get("gender") or data.gender
+        nationality = data.basic_info.get("nationality") or data.nationality
+        date_of_birth = data.basic_info.get("date_of_birth") or data.date_of_birth
+    else:
+        full_name = data.full_name
+        full_name_en = data.full_name_en
+        email = data.email
+        phone = data.phone
+        national_id = data.national_id
+        gender = data.gender
+        nationality = data.nationality
+        date_of_birth = data.date_of_birth
+    
+    if data.qualifications:
+        academic_degree = data.qualifications.get("academic_degree") or data.academic_degree
+        specialization = data.qualifications.get("specialization") or data.specialization
+        teacher_rank = data.qualifications.get("teacher_rank") or data.teacher_rank
+        years_of_experience = data.qualifications.get("years_of_experience") or data.years_of_experience or 0
+    else:
+        academic_degree = data.academic_degree
+        specialization = data.specialization
+        teacher_rank = data.teacher_rank
+        years_of_experience = data.years_of_experience or 0
+    
+    if data.subjects:
+        subject_ids = data.subjects.get("subject_ids") or data.subject_ids or []
+        grade_ids = data.subjects.get("grade_ids") or data.grade_ids or []
+        primary_subject_id = data.subjects.get("primary_subject_id") or data.primary_subject_id
+        max_periods_per_week = data.subjects.get("max_periods_per_week") or data.max_periods_per_week or 24
+    else:
+        subject_ids = data.subject_ids or []
+        grade_ids = data.grade_ids or []
+        primary_subject_id = data.primary_subject_id
+        max_periods_per_week = data.max_periods_per_week or 24
+    
+    if data.schedule:
+        contract_type = data.schedule.get("contract_type") or data.contract_type or "permanent"
+        available_days = data.schedule.get("available_days") or data.available_days or []
+        hire_date = data.schedule.get("hire_date") or data.hire_date
+    else:
+        contract_type = data.contract_type or "permanent"
+        available_days = data.available_days or []
+        hire_date = data.hire_date
+    
+    # Validate required fields
+    if not full_name:
+        raise HTTPException(status_code=400, detail="الاسم مطلوب")
+    if not email:
+        raise HTTPException(status_code=400, detail="البريد الإلكتروني مطلوب")
+    if not phone:
+        raise HTTPException(status_code=400, detail="رقم الهاتف مطلوب")
+    
     # Check if email exists
-    existing = await db.users.find_one({"email": data.email})
+    existing = await db.users.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="البريد الإلكتروني مسجل مسبقاً")
     
