@@ -2609,7 +2609,6 @@ async def get_academic_degrees_options(current_user: dict = Depends(get_current_
 @api_router.get("/teachers/options/teacher-ranks")
 async def get_teacher_ranks_options(current_user: dict = Depends(get_current_user)):
     """Get available teacher ranks from database (Saudi system)"""
-    db = await get_database()
     ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(100)
     
     if not ranks:
