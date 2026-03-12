@@ -2523,6 +2523,54 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
     
     return {"subjects": formatted_subjects}
 
+# Reference Data APIs
+@api_router.get("/reference/academic-structure")
+async def get_academic_structure(current_user: dict = Depends(get_current_user)):
+    """Get complete academic structure (stages, grades, tracks)"""
+    db = await get_database()
+    
+    stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
+    grades = await db.academic_grades.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(50)
+    tracks = await db.education_tracks.find({"is_active": True}, {"_id": 0}).to_list(10)
+    subject_mappings = await db.subject_mappings.find({}, {"_id": 0}).to_list(50)
+    
+    return {
+        "stages": stages,
+        "grades": grades,
+        "tracks": tracks,
+        "subject_mappings": subject_mappings
+    }
+
+@api_router.get("/reference/subjects")
+async def get_reference_subjects(current_user: dict = Depends(get_current_user)):
+    """Get all reference subjects"""
+    db = await get_database()
+    subjects = await db.subjects.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return {"subjects": subjects}
+
+@api_router.get("/reference/teacher-ranks")
+async def get_reference_teacher_ranks(current_user: dict = Depends(get_current_user)):
+    """Get all teacher ranks with teaching loads"""
+    db = await get_database()
+    ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(20)
+    return {"ranks": ranks}
+
+@api_router.get("/reference/admin-constraints")
+async def get_reference_admin_constraints(current_user: dict = Depends(get_current_user)):
+    """Get all administrative scheduling constraints"""
+    db = await get_database()
+    constraints = await db.admin_constraints.find({"is_active": True}, {"_id": 0}).to_list(50)
+    return {"constraints": constraints}
+
+@api_router.get("/reference/default-settings")
+async def get_reference_default_settings(current_user: dict = Depends(get_current_user)):
+    """Get default school settings template"""
+    db = await get_database()
+    settings = await db.default_settings.find_one({"id": "default-school-settings"}, {"_id": 0})
+    return settings or {}
+
+
+
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
     """Get available grade levels from reference database"""
