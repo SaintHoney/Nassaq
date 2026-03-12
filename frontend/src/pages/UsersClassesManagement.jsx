@@ -371,6 +371,15 @@ export default function UsersClassesManagement() {
   const [showTeacherWizard, setShowTeacherWizard] = useState(false);
   const [showClassWizard, setShowClassWizard] = useState(false);
   
+  // Import/Export states
+  const [importType, setImportType] = useState('students');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [exportType, setExportType] = useState('students');
+  const [exportFormat, setExportFormat] = useState('xlsx');
+  const [exporting, setExporting] = useState(false);
+  
   // Stats
   const stats = {
     totalStudents: students.length,
