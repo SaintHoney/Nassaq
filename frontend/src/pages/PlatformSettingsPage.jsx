@@ -340,6 +340,9 @@ export const PlatformSettingsPage = () => {
   const navigate = useNavigate();
   const t = translations[isRTL ? 'ar' : 'en'];
   
+  // Create API instance with auth token
+  const api = React.useMemo(() => createApi(token), [token]);
+  
   // States
   const [activeTab, setActiveTab] = useState('account');
   const [loading, setLoading] = useState(false);
