@@ -99,7 +99,7 @@ export const AccountSettingsPage = () => {
         { value: 'الشيخ', label: 'الشيخ' },
       ]
     : [
-        { value: '', label: 'No Title' },
+        { value: 'none', label: 'No Title' },
         { value: 'Mr.', label: 'Mr.' },
         { value: 'Mrs.', label: 'Mrs.' },
         { value: 'Miss', label: 'Miss' },
