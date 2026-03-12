@@ -706,7 +706,7 @@ export default function SchedulePageNew() {
 
         {/* Generate Dialog */}
         <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-lg">
             <AlertDialogHeader>
               <AlertDialogTitle className="font-cairo flex items-center gap-2">
                 <Wand2 className="h-5 w-5 text-violet-600" />
@@ -716,15 +716,103 @@ export default function SchedulePageNew() {
                 سيقوم الذكاء الاصطناعي بتحليل إسنادات المعلمين والفصول وإنشاء جدول متوازن يراعي جميع القيود والأولويات.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            
+            {/* Generation Status */}
+            {generating && generationStep && (
+              <div className="p-4 bg-violet-50 rounded-lg border border-violet-200 my-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-violet-600" />
+                  <span className="text-violet-700 font-medium">{generationStep}</span>
+                </div>
+                <Progress className="mt-3 h-2" value={30} />
+              </div>
+            )}
+            
+            {/* What will happen */}
+            {!generating && (
+              <div className="space-y-3 my-4">
+                <p className="text-sm font-medium text-muted-foreground">سيتم تنفيذ الخطوات التالية:</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span>تحليل إسنادات المعلمين والفصول</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span>مراعاة القيود الإدارية المفعّلة</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span>توزيع الحصص بشكل متوازن</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span>الهدف: نسبة نجاح 100%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <AlertDialogFooter>
-              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogCancel disabled={generating}>إلغاء</AlertDialogCancel>
               <AlertDialogAction 
                 onClick={handleGenerateSchedule} 
                 disabled={generating}
                 className="bg-gradient-to-r from-violet-600 to-purple-600"
               >
                 {generating ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Wand2 className="h-4 w-4 ml-2" />}
-                ابدأ المعالجة
+                {generating ? 'جاري المعالجة...' : 'ابدأ المعالجة'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Publish Schedule Dialog */}
+        <AlertDialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-cairo flex items-center gap-2">
+                <Send className="h-5 w-5 text-green-600" />
+                نشر الجدول المدرسي
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                عند نشر الجدول، سيتمكن جميع المستخدمين من رؤية جداولهم:
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="space-y-3 my-4">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <User className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-blue-800">المعلمون</p>
+                  <p className="text-sm text-blue-600">سيرون جداولهم الشخصية مع الحصص المسندة إليهم</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                <GraduationCap className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800">الطلاب</p>
+                  <p className="text-sm text-green-600">سيرون جداول فصولهم مع المواد والمعلمين</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="font-medium text-purple-800">أولياء الأمور</p>
+                  <p className="text-sm text-purple-600">سيرون جداول أبنائهم الدراسية</p>
+                </div>
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={publishing}>إلغاء</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handlePublishSchedule} 
+                disabled={publishing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {publishing ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Send className="h-4 w-4 ml-2" />}
+                نشر الجدول
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
