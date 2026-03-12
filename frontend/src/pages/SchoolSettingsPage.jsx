@@ -802,80 +802,30 @@ const WorkDaysSection = ({ workDays, officialHolidays, onSaveWorkDays, onAddHoli
 // =============================================================
 // قسم عدد الحصص في اليوم
 // =============================================================
-const PeriodsPerDaySection = ({ periodsPerDay, onSave, isRTL }) => {
-  const [periods, setPeriods] = useState(periodsPerDay || 7);
-  const [showDialog, setShowDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave(periods);
-      setShowDialog(false);
-      toast.success(isRTL ? 'تم حفظ عدد الحصص' : 'Periods count saved');
-    } catch (error) {
-      toast.error(isRTL ? 'خطأ في الحفظ' : 'Save error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
+const PeriodsPerDaySection = ({ periodsPerDay, periodDuration, isRTL }) => {
   return (
     <Card className="border-2 border-cyan-200 bg-gradient-to-br from-cyan-50/50 to-white" data-testid="periods-section">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-row-reverse">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center">
-              <Grid3X3 className="h-6 w-6 text-cyan-600" />
-            </div>
-            <div className="text-right">
-              <CardTitle className="font-cairo">{isRTL ? 'عدد الحصص في اليوم' : 'Periods Per Day'}</CardTitle>
-              <CardDescription>
-                {isRTL ? 'عدد الحصص اليومية المعتمدة لبناء شبكة الجدول' : 'Daily periods for schedule grid'}
-              </CardDescription>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
+            <Grid3X3 className="h-5 w-5 text-cyan-600" />
           </div>
-          <Badge variant="outline" className="text-3xl px-6 py-3 bg-cyan-100 text-cyan-700 font-bold">
-            {periodsPerDay || 7}
-          </Badge>
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'عدد الحصص في اليوم' : 'Periods Per Day'}</CardTitle>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-cyan-600 hover:bg-cyan-700">
-          <Edit2 className="h-4 w-4 me-2" />
-          {isRTL ? 'تعديل' : 'Edit'}
-        </Button>
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'عدد الحصص في اليوم' : 'Periods Per Day'}</DialogTitle>
-              <DialogDescription className="text-right">
-                {isRTL ? 'حدد عدد الحصص اليومية المعتمدة في المدرسة' : 'Set the number of daily periods'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Label className="text-right block mb-2">{isRTL ? 'عدد الحصص' : 'Number of Periods'}</Label>
-              <Input 
-                type="number"
-                min="1"
-                max="12"
-                value={periods}
-                onChange={(e) => setPeriods(parseInt(e.target.value) || 7)}
-                className="text-center text-2xl font-bold"
-              />
-            </div>
-            <DialogFooter className="flex gap-2 flex-row-reverse">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {isRTL ? 'إلغاء' : 'Cancel'}
-              </Button>
-              <Button onClick={handleSave} disabled={saving} className="bg-cyan-600 hover:bg-cyan-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
-                {isRTL ? 'حفظ' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <CardContent className="pt-0">
+        <div className="flex items-center justify-between flex-row-reverse p-4 bg-cyan-50 rounded-xl">
+          <div className="text-right">
+            <div className="text-4xl font-bold text-cyan-700">{periodsPerDay || 7}</div>
+            <div className="text-sm text-cyan-600 mt-1">{isRTL ? 'حصة يومياً' : 'periods/day'}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-lg font-semibold text-cyan-600">{periodDuration || 45} {isRTL ? 'دقيقة' : 'min'}</div>
+            <div className="text-xs text-muted-foreground">{isRTL ? 'مدة الحصة' : 'per period'}</div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
