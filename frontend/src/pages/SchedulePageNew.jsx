@@ -344,6 +344,31 @@ export default function SchedulePageNew() {
     }
   };
 
+  // Publish schedule
+  const handlePublishSchedule = async () => {
+    if (!selectedSchedule) {
+      toast.error('لا يوجد جدول لنشره');
+      return;
+    }
+    
+    setPublishing(true);
+    try {
+      await api.put(`/schedules/${selectedSchedule}`, {
+        status: 'published',
+        published_at: new Date().toISOString()
+      });
+      
+      toast.success('تم نشر الجدول بنجاح! يمكن الآن لجميع المستخدمين رؤية جداولهم');
+      setPublishDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Publish error:', error);
+      toast.error(error.response?.data?.detail || 'فشل نشر الجدول');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   // Get sessions for a specific cell
   const getSessionForCell = (dayKey, slotId, filterType, filterId) => {
     return sessions.find(s => {
