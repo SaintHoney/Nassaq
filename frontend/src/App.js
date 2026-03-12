@@ -316,6 +316,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/bulk"
+        element={
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal']}>
+            <BulkImportExportPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/notifications"
         element={
           <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher']}>
