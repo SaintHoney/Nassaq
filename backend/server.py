@@ -11582,6 +11582,7 @@ api_router.include_router(admin_dashboard_router)
 api_router.include_router(security_router)
 api_router.include_router(audit_router)
 api_router.include_router(settings_router)
+api_router.include_router(user_roles_router)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
