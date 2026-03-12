@@ -3059,6 +3059,7 @@ async def update_school_subject(
 @api_router.delete("/school/subjects/{subject_id}")
 async def delete_school_subject(
     subject_id: str,
+    force: bool = False,
     current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
     x_school_context: str = Header(default=None, alias="X-School-Context")
 ):
@@ -3074,11 +3075,40 @@ async def delete_school_subject(
     if not subject:
         raise HTTPException(status_code=404, detail="المادة غير موجودة")
     
+    # Check for dependencies (teacher assignments)
+    assignments_count = await db.teacher_assignments.count_documents({"subject_id": subject_id, "school_id": school_id})
+    
+    if assignments_count > 0 and not force:
+        return {
+            "warning": True,
+            "message": f"هذه المادة مرتبطة بـ {assignments_count} إسناد للمعلمين. هل تريد الحذف؟",
+            "dependencies": {
+                "teacher_assignments": assignments_count
+            },
+            "requires_confirmation": True
+        }
+    
     # Soft delete
     await db.subjects.update_one(
         {"id": subject_id},
-        {"$set": {"is_active": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"is_active": False, "deleted_at": datetime.now(timezone.utc).isoformat(), "deleted_by": current_user["id"]}}
     )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "delete",
+        "entity_type": "subject",
+        "entity_id": subject_id,
+        "old_data": {"name_ar": subject.get("name_ar"), "is_active": True},
+        "new_data": {"is_active": False},
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_address": None
+    }
+    await db.audit_logs.insert_one(audit_log)
     
     return {"message": "تم حذف المادة بنجاح"}
 
