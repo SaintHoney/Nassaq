@@ -679,10 +679,12 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-          <Toaster position="top-center" richColors />
-        </BrowserRouter>
+        <WebSocketProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            <Toaster position="top-center" richColors />
+          </BrowserRouter>
+        </WebSocketProvider>
       </AuthProvider>
     </ThemeProvider>
   );
