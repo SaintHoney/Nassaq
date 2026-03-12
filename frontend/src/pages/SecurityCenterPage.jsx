@@ -240,81 +240,11 @@ const translations = {
 };
 
 // Security score factors
-const SCORE_FACTORS = [
-  { id: 'encryption', label_ar: 'تشفير البيانات', label_en: 'Data Encryption', value: 100, weight: 20 },
-  { id: 'passwords', label_ar: 'قوة كلمات المرور', label_en: 'Password Strength', value: 85, weight: 20 },
-  { id: 'mfa', label_ar: 'المصادقة الثنائية', label_en: 'Two-Factor Auth', value: 60, weight: 15 },
-  { id: 'backups', label_ar: 'النسخ الاحتياطية', label_en: 'Backups', value: 100, weight: 15 },
-  { id: 'logging', label_ar: 'تسجيل السجلات', label_en: 'Logging', value: 100, weight: 15 },
-  { id: 'incidents', label_ar: 'الحوادث المفتوحة', label_en: 'Open Incidents', value: 90, weight: 15 },
-];
-
-// Security alerts
-const SECURITY_ALERTS = [
-  {
-    id: 1,
-    type: 'high',
-    title_ar: 'محاولات دخول مشبوهة',
-    title_en: 'Suspicious Login Attempts',
-    description_ar: '15 محاولة دخول فاشلة من IP غير معروف خلال آخر ساعة',
-    description_en: '15 failed login attempts from unknown IP in the last hour',
-    timestamp: '2026-03-09T10:30:00Z',
-    status: 'open',
-  },
-  {
-    id: 2,
-    type: 'medium',
-    title_ar: 'حسابات تحتاج تحديث كلمة المرور',
-    title_en: 'Accounts Need Password Update',
-    description_ar: '23 حساب لم يغير كلمة المرور منذ أكثر من 90 يوم',
-    description_en: '23 accounts haven\'t changed password in over 90 days',
-    timestamp: '2026-03-09T09:00:00Z',
-    status: 'open',
-  },
-  {
-    id: 3,
-    type: 'low',
-    title_ar: 'جلسات طويلة نشطة',
-    title_en: 'Long Active Sessions',
-    description_ar: '8 جلسات نشطة لأكثر من 24 ساعة',
-    description_en: '8 sessions active for more than 24 hours',
-    timestamp: '2026-03-09T08:00:00Z',
-    status: 'open',
-  },
-];
-
-// Security events log
-const SECURITY_EVENTS = [
-  { id: 1, type: 'login', user: 'أحمد محمد', email: 'ahmed@school.edu', status: 'success', ip: '192.168.1.100', device: 'Chrome / Windows', timestamp: '2026-03-09T10:45:00Z' },
-  { id: 2, type: 'login_failed', user: 'Unknown', email: 'admin@nassaq.com', status: 'failed', ip: '45.33.32.156', device: 'Firefox / Linux', timestamp: '2026-03-09T10:42:00Z' },
-  { id: 3, type: 'password_change', user: 'سارة أحمد', email: 'sara@school.edu', status: 'success', ip: '192.168.1.105', device: 'Safari / macOS', timestamp: '2026-03-09T10:30:00Z' },
-  { id: 4, type: 'account_locked', user: 'محمد علي', email: 'mohammed@test.com', status: 'locked', ip: '192.168.1.50', device: 'System', timestamp: '2026-03-09T10:25:00Z' },
-  { id: 5, type: 'permission_change', user: 'فاطمة خالد', email: 'fatima@school.edu', status: 'success', ip: '192.168.1.1', device: 'Admin Panel', timestamp: '2026-03-09T10:15:00Z' },
-];
-
-// AI Recommendations
-const AI_RECOMMENDATIONS = [
-  {
-    id: 1,
-    type: 'security',
-    priority: 'high',
-    title_ar: 'تفعيل المصادقة الثنائية',
-    title_en: 'Enable Two-Factor Authentication',
-    description_ar: '65% من حسابات المسؤولين لم تفعل المصادقة الثنائية',
-    description_en: '65% of admin accounts haven\'t enabled 2FA',
-    impact: '+15% Security Score',
-  },
-  {
-    id: 2,
-    type: 'policy',
-    priority: 'medium',
-    title_ar: 'تحديث سياسة كلمات المرور',
-    title_en: 'Update Password Policy',
-    description_ar: 'السياسة الحالية تسمح بكلمات مرور أقل من 12 حرف',
-    description_en: 'Current policy allows passwords less than 12 characters',
-    impact: '+5% Security Score',
-  },
-];
+// Empty initial states - data will be fetched from API
+const INITIAL_SCORE_FACTORS = [];
+const INITIAL_SECURITY_ALERTS = [];
+const INITIAL_SECURITY_EVENTS = [];
+const INITIAL_AI_RECOMMENDATIONS = [];
 
 export default function SecurityCenterPage() {
   const { isRTL = true, isDark } = useTheme();
