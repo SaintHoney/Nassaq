@@ -379,10 +379,12 @@ const INITIAL_LOGS = [];
 export default function IntegrationsPage() {
   const { isRTL = true, isDark } = useTheme();
   const navigate = useNavigate();
+  const { token } = useAuth();
   const t = translations[isRTL ? 'ar' : 'en'];
   
-  // States
-  const [integrations, setIntegrations] = useState(PREMIUM_INTEGRATIONS);
+  // States - start with empty arrays, will be populated from API
+  const [integrations, setIntegrations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [apiKeys, setApiKeys] = useState(INITIAL_API_KEYS);
   const [activeMainTab, setActiveMainTab] = useState('integrations');
   const [selectedCategory, setSelectedCategory] = useState('all');
