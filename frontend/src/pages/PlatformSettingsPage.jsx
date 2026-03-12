@@ -787,6 +787,9 @@ export const PlatformSettingsPage = () => {
   // Save handler - based on active tab
   const handleSave = async () => {
     switch(activeTab) {
+      case 'account':
+        await handleSaveAccountSettings();
+        break;
       case 'general':
         await handleSaveGeneralSettings();
         break;
@@ -800,10 +803,10 @@ export const PlatformSettingsPage = () => {
         await handleSaveSecuritySettings();
         break;
       case 'terms':
-        await handlePublishVersion('terms');
+        await handleSaveTermsVersion();
         break;
       case 'privacy':
-        await handlePublishVersion('privacy');
+        await handleSavePrivacyVersion();
         break;
       default:
         toast.success(t.savedSuccessfully);
