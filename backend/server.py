@@ -4667,11 +4667,16 @@ async def get_teacher_assignments(
     
     teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
     classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
-    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
     
-    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
-    class_map = {c.get("id"): c.get("name") for c in classes}
-    subject_map = {s.get("id"): s.get("name") for s in subjects}
+    # Try both subjects collection and reference_subjects
+    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+    if not subjects:
+        subjects = await db.reference_subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+    
+    # Support both naming conventions
+    teacher_map = {t.get("id"): t.get("full_name") or t.get("full_name_ar") for t in teachers}
+    class_map = {c.get("id"): c.get("name") or c.get("name_ar") for c in classes}
+    subject_map = {s.get("id"): s.get("name") or s.get("name_ar") for s in subjects}
     
     result = []
     for a in assignments:
