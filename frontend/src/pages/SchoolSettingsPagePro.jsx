@@ -602,7 +602,9 @@ export default function SchoolSettingsPagePro() {
         gradesRes,
         tracksRes,
         subjectsRes,
-        defaultSettingsRes
+        defaultSettingsRes,
+        assignmentsRes,
+        refSubjectsRes
       ] = await Promise.all([
         api.get('/school/settings').catch(() => ({ data: {} })),
         api.get('/teachers').catch(() => ({ data: [] })),
@@ -614,6 +616,8 @@ export default function SchoolSettingsPagePro() {
         api.get('/reference/tracks').catch(() => ({ data: [] })),
         api.get('/reference/subjects').catch(() => ({ data: [] })),
         api.get('/reference/default-settings').catch(() => ({ data: {} })),
+        api.get('/teacher-assignments').catch(() => ({ data: [] })),
+        api.get('/reference/subjects').catch(() => ({ data: [] })),
       ]);
       
       const settingsData = settingsRes.data || {};
