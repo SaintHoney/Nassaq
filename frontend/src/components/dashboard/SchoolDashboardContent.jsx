@@ -759,6 +759,19 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
         open={showAddStudentWizard} 
         onOpenChange={setShowAddStudentWizard}
         isRTL={isRTL}
+        api={{ 
+          post: (url, data) => axios.post(`${API_URL}/api${url}`, data, {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('nassaq_token')}`,
+              ...(isImpersonating && schoolContext?.school_id ? { 'X-School-Context': schoolContext.school_id } : {})
+            }
+          }).then(r => r),
+        }}
+        grades={grades}
+        classes={classes}
+        onSuccess={() => {
+          fetchDashboardData(true);
+        }}
       />
       <AddTeacherWizard 
         open={showAddTeacherWizard} 
