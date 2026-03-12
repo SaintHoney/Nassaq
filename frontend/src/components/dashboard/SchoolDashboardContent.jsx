@@ -113,14 +113,6 @@ const MetricCard = ({
             )}
           </div>
         </div>
-        
-        {clickable && (
-          <div className="mt-3 pt-3 border-t border-border/50 text-center">
-            <span className="text-xs text-brand-turquoise font-tajawal">
-              {isRTL ? 'انقر للتفاصيل' : 'Click for details'}
-            </span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
