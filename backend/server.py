@@ -167,6 +167,8 @@ class UserResponse(BaseModel):
     preferred_theme: str = "light"
     created_at: str
     teacher_id: Optional[str] = None  # For teachers - links to teachers collection
+    student_id: Optional[str] = None  # For students - links to students collection
+    parent_id: Optional[str] = None   # For parents - links to parents collection
 
 class TokenResponse(BaseModel):
     access_token: str
