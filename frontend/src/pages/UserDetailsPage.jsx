@@ -861,7 +861,7 @@ ${API_URL}/login
                     </div>
                     
                     <div className="space-y-3">
-                      {SAMPLE_ACTIVITIES.map((activity) => (
+                      {INITIAL_ACTIVITIES.map((activity) => (
                         <div 
                           key={activity.id}
                           className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
