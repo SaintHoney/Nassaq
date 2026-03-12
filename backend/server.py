@@ -14092,9 +14092,73 @@ async def delete_school_grade(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
+    # Check for dependencies (classes in this grade)
+    classes_count = await db.classes.count_documents({"grade_id": grade_id, "school_id": school_id})
+    if classes_count > 0:
+        raise HTTPException(status_code=400, detail=f"لا يمكن حذف الصف لأنه يحتوي على {classes_count} فصل")
+    
     await db.school_grades.delete_one({"id": grade_id, "school_id": school_id})
     
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "delete",
+        "entity_type": "grade",
+        "entity_id": grade_id,
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
     return {"message": "تم حذف الصف الدراسي"}
+
+
+@api_router.put("/school/settings/grades/{grade_id}")
+async def update_school_grade(
+    grade_id: str,
+    data: GradeCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update grade - تحديث صف دراسي"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    update_data = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "stage_id": data.stage_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    result = await db.school_grades.update_one(
+        {"id": grade_id, "school_id": school_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="الصف غير موجود")
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "update",
+        "entity_type": "grade",
+        "entity_id": grade_id,
+        "new_data": update_data,
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث الصف الدراسي", "grade": update_data}
 
 
 # ============== SECTIONS ==============
