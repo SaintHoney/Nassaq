@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme, useTranslation } from '../../contexts/ThemeContext';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { NotificationBell } from '../notifications/NotificationBell';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
+import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
+import axios from 'axios';
 import {
   LayoutDashboard,
   Building2,
@@ -30,7 +39,12 @@ import {
   FileText,
   UserCog,
   Network,
+  RefreshCw,
+  Eye,
+  ArrowLeftRight,
 } from 'lucide-react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const LOGO_WHITE = 'https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png';
 
