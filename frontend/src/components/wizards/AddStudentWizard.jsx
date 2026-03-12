@@ -152,6 +152,52 @@ export default function AddStudentWizard({
     }
   }, [api, parentData.phone, parentData.email, parentData.national_id]);
   
+  // Search for existing parents
+  const searchParents = useCallback(async (query) => {
+    if (!query || query.length < 2) {
+      setParentSearchResults([]);
+      return;
+    }
+    
+    setSearchingParents(true);
+    try {
+      const response = await api.get(`/student-wizard/search-parents?q=${encodeURIComponent(query)}`);
+      setParentSearchResults(response.data?.parents || []);
+    } catch (error) {
+      console.error('Error searching parents:', error);
+      setParentSearchResults([]);
+    } finally {
+      setSearchingParents(false);
+    }
+  }, [api]);
+  
+  // Handle parent search with debounce
+  const handleParentSearch = (value) => {
+    setParentSearchQuery(value);
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      searchParents(value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  };
+  
+  // Select existing parent from search results
+  const selectParentFromSearch = (parent) => {
+    setSelectedExistingParent(parent);
+    setParentData({
+      full_name: parent.full_name || '',
+      national_id: parent.national_id || '',
+      phone: parent.phone || '',
+      email: parent.email || '',
+      relationship: parent.relationship || 'father',
+      address: parent.address || '',
+    });
+    setSiblings(parent.children || []);
+    setLinkToExisting(true);
+    setParentSearchResults([]);
+    setParentSearchQuery('');
+  };
+  
   // Validation
   const isStepValid = () => {
     switch (step) {
