@@ -1417,7 +1417,13 @@ ${baseUrl}/webhooks
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-4 py-6">
-              {SAMPLE_LOGS.map(log => (
+              {INITIAL_LOGS.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+                  <p>{isRTL ? 'لا توجد سجلات بعد' : 'No logs yet'}</p>
+                </div>
+              ) : (
+                INITIAL_LOGS.map(log => (
                 <div 
                   key={log.id}
                   className={`p-4 rounded-xl border ${
