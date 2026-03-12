@@ -643,6 +643,8 @@ export default function SchoolSettingsPagePro() {
       setGrades(gradesRes.data || []);
       setTracks(tracksRes.data || []);
       setDefaultSettings(defaultSettingsRes.data || {});
+      setAssignments(assignmentsRes.data || []);
+      setReferenceSubjects(refSubjectsRes.data || []);
       
       // Get unique subjects for display
       const allSubjects = subjectsRes.data || [];
