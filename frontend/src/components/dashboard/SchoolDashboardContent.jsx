@@ -408,6 +408,8 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [grades, setGrades] = useState([]);
+  const [classes, setClasses] = useState([]);
   
   // Wizard states
   const [showAddStudentWizard, setShowAddStudentWizard] = useState(false);
