@@ -2560,14 +2560,31 @@ async def get_academic_degrees_options(current_user: dict = Depends(get_current_
 
 @api_router.get("/teachers/options/teacher-ranks")
 async def get_teacher_ranks_options(current_user: dict = Depends(get_current_user)):
-    """Get available teacher ranks (Saudi system)"""
-    ranks = [
-        {"id": "trainee", "name": "معلم متدرب", "name_en": "Trainee Teacher"},
-        {"id": "practicing", "name": "معلم ممارس", "name_en": "Practicing Teacher"},
-        {"id": "advanced", "name": "معلم متقدم", "name_en": "Advanced Teacher"},
-        {"id": "expert", "name": "معلم خبير", "name_en": "Expert Teacher"},
-    ]
-    return {"ranks": ranks}
+    """Get available teacher ranks from database (Saudi system)"""
+    db = await get_database()
+    ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(100)
+    
+    if not ranks:
+        # Fallback to default ranks if none in DB
+        ranks = [
+            {"id": "rank-teacher", "name_ar": "المعلم", "name_en": "Teacher", "weekly_periods": 24},
+            {"id": "rank-practitioner", "name_ar": "المعلم الممارس", "name_en": "Practitioner Teacher", "weekly_periods": 24},
+            {"id": "rank-advanced", "name_ar": "المعلم المتقدم", "name_en": "Advanced Teacher", "weekly_periods": 22},
+            {"id": "rank-expert", "name_ar": "المعلم الخبير", "name_en": "Expert Teacher", "weekly_periods": 18},
+        ]
+    
+    # Map to expected format for backward compatibility
+    formatted_ranks = []
+    for r in ranks:
+        formatted_ranks.append({
+            "id": r.get("id") or r.get("code"),
+            "name": r.get("name_ar", r.get("name", "")),
+            "name_en": r.get("name_en", ""),
+            "weekly_periods": r.get("weekly_periods", 24),
+            "is_special_education": r.get("is_special_education", False)
+        })
+    
+    return {"ranks": formatted_ranks}
 
 @api_router.get("/teachers/options/contract-types")
 async def get_contract_types_options(current_user: dict = Depends(get_current_user)):
