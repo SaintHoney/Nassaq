@@ -5,6 +5,7 @@ import { useTheme, useTranslation } from '../../contexts/ThemeContext';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { RealtimeNotificationIndicator } from '../notifications/RealtimeNotificationIndicator';
 import {
   Dialog,
   DialogContent,
