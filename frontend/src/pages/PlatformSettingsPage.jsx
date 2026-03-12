@@ -347,6 +347,7 @@ export const PlatformSettingsPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const [versionHistory, setVersionHistory] = useState([]);
+  const [activeSessions, setActiveSessions] = useState([]);
   
   // Account settings - using user data only
   const [accountData, setAccountData] = useState({
