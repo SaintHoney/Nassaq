@@ -1246,7 +1246,28 @@ export default function SchoolSettingsPagePro() {
                     <Building2 className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-cairo text-2xl font-bold">{schoolInfo.name || 'اسم المدرسة'}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-cairo text-2xl font-bold">{schoolInfo.name || 'اسم المدرسة'}</h2>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setEditedSchoolInfo({
+                            name: schoolInfo.name || '',
+                            name_en: schoolInfo.name_en || '',
+                            city: schoolInfo.city || '',
+                            address: schoolInfo.address || '',
+                            phone: schoolInfo.phone || '',
+                            email: schoolInfo.email || '',
+                          });
+                          setEditSchoolInfoOpen(true);
+                        }}
+                        data-testid="edit-school-info-btn"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <p className="text-sm text-muted-foreground">{schoolInfo.name_en || 'School Name'}</p>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -1258,6 +1279,11 @@ export default function SchoolSettingsPagePro() {
                       <span className="flex items-center gap-1">
                         <Mail className="h-4 w-4" /> {schoolInfo.email || '---'}
                       </span>
+                    </div>
+                    {/* Last Sync Indicator */}
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      <span>آخر مزامنة: {lastSync ? new Date(lastSync).toLocaleString('ar-SA') : 'غير متاح'}</span>
                     </div>
                   </div>
                 </div>
