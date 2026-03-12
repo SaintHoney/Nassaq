@@ -418,8 +418,8 @@ const Step5Review = ({ basicData, qualData, subjectData, scheduleData, options, 
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <div><p className="text-muted-foreground">{isRTL ? 'الدرجة' : 'Degree'}</p><p className="font-medium">{qualData.academic_degree}</p></div>
-            <div><p className="text-muted-foreground">{isRTL ? 'التخصص' : 'Specialization'}</p><p className="font-medium">{qualData.specialization}</p></div>
             <div><p className="text-muted-foreground">{isRTL ? 'الخبرة' : 'Experience'}</p><p className="font-medium">{qualData.years_of_experience} {isRTL ? 'سنوات' : 'years'}</p></div>
+            <div><p className="text-muted-foreground">{isRTL ? 'الرتبة' : 'Rank'}</p><p className="font-medium">{qualData.teacher_rank}</p></div>
           </div>
         </CardContent>
       </Card>
