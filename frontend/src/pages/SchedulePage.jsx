@@ -829,40 +829,6 @@ export const SchedulePage = () => {
                   </Sheet>
                 )}
 
-                {/* New Schedule */}
-                <Dialog open={createScheduleOpen} onOpenChange={setCreateScheduleOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="rounded-xl h-9" data-testid="create-schedule-btn">
-                      <Plus className="h-4 w-4 me-1" />
-                      {isRTL ? 'جديد' : 'New'}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="font-cairo">{isRTL ? 'إنشاء جدول جديد' : 'Create New Schedule'}</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">{isRTL ? 'اسم الجدول' : 'Schedule Name'}</label>
-                        <input
-                          className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-                          value={newSchedule.name}
-                          onChange={(e) => setNewSchedule({ ...newSchedule, name: e.target.value })}
-                          placeholder={isRTL ? 'الجدول المدرسي - الفصل الأول' : 'Schedule - Semester 1'}
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setCreateScheduleOpen(false)} className="rounded-xl">
-                        {isRTL ? 'إلغاء' : 'Cancel'}
-                      </Button>
-                      <Button onClick={handleCreateSchedule} className="bg-brand-navy rounded-xl">
-                        {isRTL ? 'إنشاء' : 'Create'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-
                 {/* Generate Schedule with AI - Primary Action */}
                 <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
                   <Button 
