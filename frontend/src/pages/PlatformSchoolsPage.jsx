@@ -36,6 +36,12 @@ import {
   ChevronRight,
   LogIn,
   ExternalLink,
+  Sparkles,
+  PauseCircle,
+  PlayCircle,
+  LayoutGrid,
+  LayoutList,
+  Brain,
 } from 'lucide-react';
 import {
   DropdownMenu,
