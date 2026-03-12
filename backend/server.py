@@ -13366,18 +13366,50 @@ async def update_work_days(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
+    # Get old settings for audit log
+    old_settings = await db.school_settings.find_one({"school_id": school_id}, {"_id": 0})
+    old_work_days = old_settings.get("work_days", {}) if old_settings else {}
+    
+    # Convert to Arabic day names
+    day_names_ar = {
+        'sunday': 'الأحد', 'monday': 'الإثنين', 'tuesday': 'الثلاثاء',
+        'wednesday': 'الأربعاء', 'thursday': 'الخميس', 'friday': 'الجمعة', 'saturday': 'السبت'
+    }
+    
+    working_days_ar = [day_names_ar[day] for day, active in data.model_dump().items() if active]
+    weekend_days_ar = [day_names_ar[day] for day, active in data.model_dump().items() if not active]
+    
     await db.school_settings.update_one(
         {"school_id": school_id},
         {
             "$set": {
                 "work_days": data.model_dump(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "working_days_ar": working_days_ar,
+                "weekend_days_ar": weekend_days_ar,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": current_user["id"]
             }
         },
         upsert=True
     )
     
-    return {"message": "تم تحديث أيام العمل بنجاح", "work_days": data.model_dump()}
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "update",
+        "entity_type": "work_days",
+        "entity_id": school_id,
+        "old_data": old_work_days,
+        "new_data": data.model_dump(),
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_address": None
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث أيام العمل بنجاح", "work_days": data.model_dump(), "working_days_ar": working_days_ar}
 
 
 @api_router.post("/school/settings/holidays")
