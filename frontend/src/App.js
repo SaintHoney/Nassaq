@@ -493,22 +493,62 @@ function AppRoutes() {
         }
       />
       
-      {/* Student Dashboard Route */}
+      {/* Student Portal Routes */}
       <Route
         path="/student"
         element={
           <ProtectedRoute allowedRoles={['student']}>
-            <StudentDashboard />
+            <StudentPortalDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/schedule"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentSchedulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/grades"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentGradesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/attendance"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/homework"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentHomeworkPage />
           </ProtectedRoute>
         }
       />
       
-      {/* Parent Dashboard Route */}
+      {/* Parent Portal Routes */}
       <Route
         path="/parent"
         element={
           <ProtectedRoute allowedRoles={['parent']}>
-            <ParentDashboard />
+            <ParentPortalDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/parent/child/:childId"
+        element={
+          <ProtectedRoute allowedRoles={['parent']}>
+            <ChildDetailsPage />
           </ProtectedRoute>
         }
       />
