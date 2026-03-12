@@ -410,6 +410,26 @@ export const PlatformSchoolsPage = () => {
                     </SelectContent>
                   </Select>
                   
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center border rounded-xl overflow-hidden">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                      className={`rounded-none ${viewMode === 'grid' ? 'bg-brand-navy' : ''}`}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('table')}
+                      className={`rounded-none ${viewMode === 'table' ? 'bg-brand-navy' : ''}`}
+                    >
+                      <LayoutList className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
                   <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl" data-testid="add-school-btn">
