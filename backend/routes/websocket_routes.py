@@ -134,7 +134,11 @@ def create_websocket_routes(db, decode_token):
     async def websocket_notifications(websocket: WebSocket, token: str = None):
         """WebSocket endpoint للإشعارات الفورية"""
         
+        # First accept the connection
+        await websocket.accept()
+        
         if not token:
+            await websocket.send_json({"type": "error", "message": "Token required"})
             await websocket.close(code=4001, reason="Token required")
             return
         
@@ -142,6 +146,7 @@ def create_websocket_routes(db, decode_token):
             # Decode and validate token
             payload = decode_token(token)
             if not payload:
+                await websocket.send_json({"type": "error", "message": "Invalid token"})
                 await websocket.close(code=4001, reason="Invalid token")
                 return
             
@@ -150,11 +155,27 @@ def create_websocket_routes(db, decode_token):
             tenant_id = payload.get("tenant_id")
             
             if not user_id or not role:
+                await websocket.send_json({"type": "error", "message": "Invalid token payload"})
                 await websocket.close(code=4001, reason="Invalid token payload")
                 return
             
-            # Connect
-            await manager.connect(websocket, user_id, role, tenant_id)
+            # Register connection
+            if user_id not in manager.active_connections:
+                manager.active_connections[user_id] = []
+            manager.active_connections[user_id].append(websocket)
+            
+            # Add to role connections
+            if role not in manager.role_connections:
+                manager.role_connections[role] = set()
+            manager.role_connections[role].add(user_id)
+            
+            # Add to tenant connections
+            if tenant_id:
+                if tenant_id not in manager.tenant_connections:
+                    manager.tenant_connections[tenant_id] = set()
+                manager.tenant_connections[tenant_id].add(user_id)
+            
+            print(f"✅ WebSocket connected: user={user_id}, role={role}")
             
             # Send welcome message
             await websocket.send_json({
