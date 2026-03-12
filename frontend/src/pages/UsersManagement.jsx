@@ -96,10 +96,14 @@ export default function UsersManagement() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalSchools: 0,
+    totalStudents: 0,
     teachersInSchools: 0,
     independentTeachers: 0,
     platformAdmins: 0,
     pendingRequests: 0,
+    studentAttendanceRate: 92.5,
+    teacherAttendanceRate: 96.0,
+    aiEnabledSchools: 0,
   });
   
   // Filters
