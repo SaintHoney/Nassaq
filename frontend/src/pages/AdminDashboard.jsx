@@ -78,19 +78,6 @@ const SCHOOL_STAGES = [
   { value: 'high', label: 'ثانوي', label_en: 'High School' },
 ];
 
-// Sample chart data for daily activity
-const sampleChartData = [
-  { time: '6:00', students: 120, teachers: 45 },
-  { time: '7:00', students: 450, teachers: 180 },
-  { time: '8:00', students: 2800, teachers: 520 },
-  { time: '9:00', students: 3500, teachers: 680 },
-  { time: '10:00', students: 3200, teachers: 650 },
-  { time: '11:00', students: 2900, teachers: 600 },
-  { time: '12:00', students: 2100, teachers: 480 },
-  { time: '13:00', students: 1500, teachers: 350 },
-  { time: '14:00', students: 800, teachers: 200 },
-];
-
 // Sparkline data generator for cards - Enhanced for clarity
 const generateSparklineData = (baseValue, trend) => {
   const data = [];
