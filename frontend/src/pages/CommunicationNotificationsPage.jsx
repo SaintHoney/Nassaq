@@ -270,14 +270,40 @@ export const CommunicationNotificationsPage = () => {
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageTitle.trim() || !newMessage.trim()) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
       return;
     }
-    toast.success(isRTL ? 'تم إرسال الرسالة بنجاح' : 'Message sent successfully');
-    setMessageTitle('');
-    setNewMessage('');
+    
+    setSendingMessage(true);
+    try {
+      const response = await api.post('/communication/broadcast', {
+        title: messageTitle,
+        message: newMessage,
+        target_audience: selectedAudience,
+        send_channels: ['system'],
+        priority: 'medium'
+      });
+      
+      if (response.data.success) {
+        toast.success(
+          isRTL 
+            ? `تم إرسال الرسالة إلى ${response.data.recipients_count} مستخدم` 
+            : `Message sent to ${response.data.recipients_count} users`
+        );
+        setMessageTitle('');
+        setNewMessage('');
+        // Refresh stats and messages
+        fetchCommunicationStats();
+        fetchSentMessages();
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message');
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const formatTimeAgo = (dateString) => {
