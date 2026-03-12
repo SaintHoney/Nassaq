@@ -184,7 +184,6 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
           alertsLink: '/admin/audit',
           items: [], // Empty - will be populated from API
         };
-        };
       default:
         return {
           title: isRTL ? 'نتائج العملية' : 'Operation Results',
