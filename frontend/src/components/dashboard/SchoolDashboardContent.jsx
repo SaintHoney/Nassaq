@@ -666,8 +666,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalStudents?.status}
             icon={Users}
             isRTL={isRTL}
-            clickable={true}
-            onClick={() => navigate('/admin/users-management?filter=students')}
           />
           <MetricCard
             title={isRTL ? 'عدد المعلمين' : 'Teachers'}
@@ -677,8 +675,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalTeachers?.status}
             icon={GraduationCap}
             isRTL={isRTL}
-            clickable={true}
-            onClick={() => navigate('/admin/users-management?filter=teachers')}
           />
           <MetricCard
             title={isRTL ? 'عدد الفصول' : 'Classes'}
@@ -688,8 +684,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.totalClasses?.status}
             icon={School}
             isRTL={isRTL}
-            clickable={true}
-            onClick={() => navigate('/admin/users-management?filter=classes')}
           />
           <MetricCard
             title={isRTL ? 'حصص اليوم' : "Today's Sessions"}
@@ -699,7 +693,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.todaySessions?.status}
             icon={Calendar}
             isRTL={isRTL}
-            clickable={false}
           />
           <MetricCard
             title={isRTL ? 'المستخدمون النشطون' : 'Active Users'}
@@ -709,7 +702,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.activeUsers?.status}
             icon={Activity}
             isRTL={isRTL}
-            clickable={false}
           />
           <MetricCard
             title={isRTL ? 'حصص الانتظار' : 'Substitute Sessions'}
@@ -719,7 +711,6 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             status={dashboardData?.metrics?.waitingSubstitute?.status}
             icon={Clock}
             isRTL={isRTL}
-            clickable={false}
           />
         </div>
       </section>
