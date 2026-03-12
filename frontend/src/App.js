@@ -64,7 +64,7 @@ import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
 import TenantsManagement from "./pages/TenantsManagement";
 
 // School Principal Pages
-import { SchoolSettingsPage } from "./pages/SchoolSettingsPage";
+import SchoolSettingsPagePro from "./pages/SchoolSettingsPagePro";
 import { SchoolReportsPage } from "./pages/SchoolReportsPage";
 import { AIInsightsPage } from "./pages/AIInsightsPage";
 import { AccountSettingsPage } from "./pages/AccountSettingsPage";
