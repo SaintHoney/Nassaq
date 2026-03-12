@@ -12220,6 +12220,7 @@ async def get_school_settings(
     x_school_context: str = Header(default=None, alias="X-School-Context")
 ):
     """Get all school settings - جلب جميع إعدادات المدرسة"""
+    db = await get_database()
     school_id = await get_school_id_from_context(current_user, x_school_context)
     
     if not school_id:
@@ -12228,57 +12229,77 @@ async def get_school_settings(
     # Get school info
     school = await db.schools.find_one({"id": school_id}, {"_id": 0})
     
-    # Get settings collection
+    # Get school-specific settings
     settings = await db.school_settings.find_one({"school_id": school_id}, {"_id": 0})
     
     if not settings:
-        # Create default settings
-        settings = {
-            "school_id": school_id,
-            "work_days": {
-                "sunday": True, "monday": True, "tuesday": True,
-                "wednesday": True, "thursday": True, "friday": False, "saturday": False
-            },
-            "official_holidays": [],
-            "exception_days": [],
-            "periods_per_day": 7,
-            "timing": {"start": "07:00", "end": "14:00"},
-            "breaks": [],
-            "activity_days": [],
-            "teaching_loads": {},
-            "teacher_availability": {},
-            "constraints": [],
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
+        # Get default settings template and create school-specific settings
+        default_settings = await db.default_settings.find_one({"id": "default-school-settings"}, {"_id": 0})
+        
+        if default_settings:
+            settings = {
+                "school_id": school_id,
+                "working_days": default_settings.get("working_days"),
+                "working_days_ar": default_settings.get("working_days_ar"),
+                "working_days_en": default_settings.get("working_days_en"),
+                "weekend_days_ar": default_settings.get("weekend_days_ar"),
+                "weekend_days_en": default_settings.get("weekend_days_en"),
+                "periods_per_day": default_settings.get("periods_per_day"),
+                "period_duration_minutes": default_settings.get("period_duration_minutes"),
+                "break_duration_minutes": default_settings.get("break_duration_minutes"),
+                "prayer_duration_minutes": default_settings.get("prayer_duration_minutes"),
+                "school_day_start": default_settings.get("school_day_start"),
+                "school_day_end": default_settings.get("school_day_end"),
+                "time_slots": default_settings.get("time_slots"),
+                "education_track": "track-general",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            # Fallback if no default settings exist
+            settings = {
+                "school_id": school_id,
+                "working_days": {
+                    "sunday": True, "monday": True, "tuesday": True,
+                    "wednesday": True, "thursday": True, "friday": False, "saturday": False
+                },
+                "periods_per_day": 7,
+                "school_day_start": "07:00",
+                "school_day_end": "13:15",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
         await db.school_settings.insert_one(settings)
     
-    # Get educational stages
-    stages = await db.school_stages.find({"school_id": school_id}, {"_id": 0}).to_list(50)
+    # Get reference data from academic structure
+    academic_stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
+    academic_grades = await db.academic_grades.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(50)
+    education_tracks = await db.education_tracks.find({"is_active": True}, {"_id": 0}).to_list(10)
+    subjects = await db.subjects.find({"is_active": True}, {"_id": 0}).to_list(50)
+    teacher_ranks = await db.teacher_ranks.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(20)
+    admin_constraints = await db.admin_constraints.find({"is_active": True}, {"_id": 0}).to_list(50)
     
-    # Get grades
-    grades = await db.school_grades.find({"school_id": school_id}, {"_id": 0}).to_list(100)
-    
-    # Get sections
-    sections = await db.school_sections.find({"school_id": school_id}, {"_id": 0}).to_list(200)
-    
-    # Get academic terms
+    # Get school-specific data
+    sections = await db.classes.find({"school_id": school_id}, {"_id": 0}).to_list(200)
     terms = await db.academic_terms.find({"school_id": school_id}, {"_id": 0}).to_list(10)
     
     return {
         "school_info": school or {},
-        "work_days": settings.get("work_days", {}),
-        "official_holidays": settings.get("official_holidays", []),
-        "exception_days": settings.get("exception_days", []),
+        "settings": settings,
+        "working_days": settings.get("working_days", {}),
         "periods_per_day": settings.get("periods_per_day", 7),
-        "timing": settings.get("timing", {"start": "07:00", "end": "14:00"}),
-        "breaks": settings.get("breaks", []),
-        "activity_days": settings.get("activity_days", []),
-        "teaching_loads": settings.get("teaching_loads", {}),
-        "teacher_availability": settings.get("teacher_availability", {}),
-        "constraints": settings.get("constraints", []),
-        "educational_stages": stages,
-        "grades": grades,
-        "sections": sections,
+        "time_slots": settings.get("time_slots", []),
+        "school_day_start": settings.get("school_day_start", "07:00"),
+        "school_day_end": settings.get("school_day_end", "13:15"),
+        "academic_structure": {
+            "stages": academic_stages,
+            "grades": academic_grades,
+            "tracks": education_tracks
+        },
+        "reference_data": {
+            "subjects": subjects,
+            "teacher_ranks": teacher_ranks,
+            "admin_constraints": admin_constraints
+        },
+        "school_classes": sections,
         "academic_terms": terms
     }
 
