@@ -288,7 +288,7 @@ const Step3Subjects = ({ data, onChange, errors, options, isRTL }) => {
               {(data.subject_ids || []).map((id) => {
                 const subject = options.subjects?.find(s => s.id === id);
                 return subject ? (
-                  <SelectItem key={id} value={id}>{isRTL ? subject.name_ar : subject.name_en}</SelectItem>
+                  <SelectItem key={id} value={id}>{isRTL ? (subject.name_ar || subject.name) : (subject.name_en || subject.name_ar || subject.name)}</SelectItem>
                 ) : null;
               })}
             </SelectContent>
