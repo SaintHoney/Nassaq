@@ -392,13 +392,10 @@ export const BulkTeacherImport = ({ open, onClose }) => {
       setErrors(response.data.errors || []);
       setStep(2);
     } catch (error) {
-      // Mock data for demo if API not available
-      const mockData = [
-        { full_name: 'أحمد محمد', national_id: '1234567890', email: 'ahmed@school.com', phone: '0500000001', gender: 'male', subject: 'الرياضيات', education_level: 'ابتدائي', grades: 'الرابع;الخامس', rank: 'معلم متقدم' },
-        { full_name: 'سارة أحمد', national_id: '1234567891', email: 'sara@school.com', phone: '0500000002', gender: 'female', subject: 'اللغة العربية', education_level: 'ابتدائي', grades: 'الثالث;الرابع', rank: 'معلم ممارس' },
-      ];
-      setParsedData(mockData);
-      setErrors([]);
+      // Show error - no mock data
+      console.error('Error parsing file:', error);
+      setParsedData([]);
+      setErrors([{ row: 0, field: 'file', message: isRTL ? 'فشل في قراءة الملف. يرجى التحقق من صيغة الملف.' : 'Failed to parse file. Please check file format.' }]);
       setStep(2);
     }
   };
