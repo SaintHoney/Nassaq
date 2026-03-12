@@ -74,7 +74,7 @@ export const AccountSettingsPage = () => {
   
   // Profile
   const [profile, setProfile] = useState({
-    title: '',
+    title: 'none',
     full_name: '',
     full_name_en: '',
     email: '',
