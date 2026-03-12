@@ -118,49 +118,34 @@ export const CommunicationNotificationsPage = () => {
   const [messageTitle, setMessageTitle] = useState('');
   const [selectedAudience, setSelectedAudience] = useState('all');
   const [activeTab, setActiveTab] = useState('notifications');
-
-  // Mock messages for communication
-  const [messages] = useState([
-    {
-      id: 1,
-      type: 'broadcast',
-      title: isRTL ? 'إشعار بداية الفصل الدراسي' : 'Semester Start Notification',
-      recipients: isRTL ? 'جميع المدارس' : 'All Schools',
-      date: '2026-03-09',
-      status: 'sent',
-      preview: isRTL ? 'نود إبلاغكم ببداية الفصل الدراسي الجديد...' : 'We would like to inform you about the new semester...'
-    },
-    {
-      id: 2,
-      type: 'targeted',
-      title: isRTL ? 'تحديث نظام الحضور' : 'Attendance System Update',
-      recipients: isRTL ? 'مديري المدارس' : 'School Principals',
-      date: '2026-03-08',
-      status: 'sent',
-      preview: isRTL ? 'تم تحديث نظام الحضور بميزات جديدة...' : 'The attendance system has been updated with new features...'
-    },
-    {
-      id: 3,
-      type: 'scheduled',
-      title: isRTL ? 'تذكير بموعد الاختبارات' : 'Exam Schedule Reminder',
-      recipients: isRTL ? 'المعلمين والطلاب' : 'Teachers & Students',
-      date: '2026-03-15',
-      status: 'scheduled',
-      preview: isRTL ? 'تذكير: موعد الاختبارات النهائية...' : 'Reminder: Final exam schedule...'
-    },
-  ]);
+  
+  // Communication Stats & Data
+  const [commStats, setCommStats] = useState({
+    total_notifications: 0,
+    unread_notifications: 0,
+    sent_messages: 0,
+    received_messages: 0,
+    scheduled_messages: 0,
+    failed_messages: 0,
+  });
+  const [scheduledMessages, setScheduledMessages] = useState([]);
+  const [sentMessages, setSentMessages] = useState([]);
+  const [audienceCounts, setAudienceCounts] = useState({
+    all: 0, schools: 0, teachers: 0, students: 0, principals: 0, parents: 0
+  });
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const messageStats = {
-    sent: 1250,
-    received: 890,
-    pending: 45,
+    sent: commStats.sent_messages || 0,
+    received: commStats.received_messages || 0,
+    pending: commStats.scheduled_messages || 0,
   };
 
   const audienceGroups = [
-    { id: 'all', name: isRTL ? 'الجميع' : 'Everyone', count: 53000, icon: Users },
-    { id: 'schools', name: isRTL ? 'المدارس' : 'Schools', count: 200, icon: Building2 },
-    { id: 'teachers', name: isRTL ? 'المعلمين' : 'Teachers', count: 3000, icon: UserCheck },
-    { id: 'students', name: isRTL ? 'الطلاب' : 'Students', count: 50000, icon: GraduationCap },
+    { id: 'all', name: isRTL ? 'الجميع' : 'Everyone', count: audienceCounts.all, icon: Users },
+    { id: 'schools', name: isRTL ? 'المدارس' : 'Schools', count: audienceCounts.schools, icon: Building2 },
+    { id: 'teachers', name: isRTL ? 'المعلمين' : 'Teachers', count: audienceCounts.teachers, icon: UserCheck },
+    { id: 'students', name: isRTL ? 'الطلاب' : 'Students', count: audienceCounts.students, icon: GraduationCap },
   ];
 
   // Fetch notifications
