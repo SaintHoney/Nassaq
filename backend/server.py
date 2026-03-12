@@ -4675,8 +4675,10 @@ async def get_teacher_assignments(
     
     result = []
     for a in assignments:
+        # Remove computed fields to avoid duplicates
+        assignment_data = {k: v for k, v in a.items() if k not in ['teacher_name', 'class_name', 'subject_name']}
         result.append(TeacherAssignmentResponse(
-            **a,
+            **assignment_data,
             teacher_name=teacher_map.get(a.get("teacher_id")),
             class_name=class_map.get(a.get("class_id")),
             subject_name=subject_map.get(a.get("subject_id"))
