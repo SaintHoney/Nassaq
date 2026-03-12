@@ -76,13 +76,13 @@ export default function PrincipalDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-cairo text-2xl font-bold">
-                {isRTL ? 'مركز القيادة' : 'Command Center'}
-              </h1>
-              <p className="text-sm text-muted-foreground font-tajawal">
                 {isImpersonating && schoolContext 
                   ? (isRTL ? `معاينة: ${schoolContext.school_name}` : `Previewing: ${schoolContext.school_name}`)
                   : (isRTL ? `مرحباً، ${user?.full_name}` : `Welcome, ${user?.full_name}`)
                 }
+              </h1>
+              <p className="text-base text-muted-foreground font-tajawal">
+                {isRTL ? 'مركز القيادة' : 'Command Center'}
               </p>
             </div>
             
