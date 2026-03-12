@@ -75,6 +75,21 @@ import { PlatformAnalyticsPage } from "./pages/PlatformAnalyticsPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import { BulkImportExportPage } from "./pages/BulkImportExportPage";
 
+// Student Portal Pages
+import {
+  StudentPortalDashboard,
+  StudentSchedulePage,
+  StudentGradesPage,
+  StudentAttendancePage,
+  StudentHomeworkPage
+} from "./pages/StudentPortal";
+
+// Parent Portal Pages
+import {
+  ParentPortalDashboard,
+  ChildDetailsPage
+} from "./pages/ParentPortal";
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) => {
   const { user, loading, isAuthenticated, isImpersonating, getEffectiveRole } = useAuth();
