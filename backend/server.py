@@ -11580,6 +11580,14 @@ websocket_router, ws_manager = create_websocket_routes(db, decode_token_for_ws)
 from routes.bulk_import_export_routes import setup_bulk_routes
 bulk_routes = setup_bulk_routes(db, get_current_user, require_roles, UserRole)
 
+# Import and create student portal routes
+from routes.student_portal_routes import setup_student_portal_routes
+student_portal_routes = setup_student_portal_routes(db, get_current_user, require_roles, UserRole)
+
+# Import and create parent portal routes
+from routes.parent_portal_routes import setup_parent_portal_routes
+parent_portal_routes = setup_parent_portal_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
