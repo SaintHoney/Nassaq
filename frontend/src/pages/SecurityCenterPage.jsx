@@ -1001,24 +1001,305 @@ export default function SecurityCenterPage() {
           </DialogContent>
         </Dialog>
         
-        {/* Lock Account Dialog */}
+        {/* Lock Account Dialog - Enhanced with Search */}
         <Dialog open={showLockAccountDialog} onOpenChange={setShowLockAccountDialog}>
-          <DialogContent>
-            <DialogHeader><DialogTitle className="flex items-center gap-2"><Lock className="h-5 w-5 text-red-600" />{t.lockAccount}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Lock className="h-5 w-5 text-red-600" />{t.lockAccount}</DialogTitle>
+              <DialogDescription>{isRTL ? 'ابحث عن الحساب بالبريد أو رقم الهاتف' : 'Search for account by email or phone'}</DialogDescription>
+            </DialogHeader>
             <div className="py-4 space-y-4">
-              <div className="space-y-2"><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input placeholder={isRTL ? 'أدخل البريد الإلكتروني' : 'Enter email address'} /></div>
-              <div className="space-y-2"><Label>{isRTL ? 'السبب' : 'Reason'}</Label>
-                <Select><SelectTrigger><SelectValue placeholder={isRTL ? 'اختر السبب' : 'Select reason'} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="suspicious">{isRTL ? 'نشاط مشبوه' : 'Suspicious Activity'}</SelectItem>
-                    <SelectItem value="violation">{isRTL ? 'مخالفة' : 'Policy Violation'}</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex gap-2">
+                <Input 
+                  placeholder={isRTL ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email or phone number'} 
+                  value={accountSearchQuery}
+                  onChange={(e) => setAccountSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchAccount()}
+                />
+                <Button onClick={handleSearchAccount} disabled={searchLoading} className="bg-brand-navy">
+                  {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
               </div>
+              
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {searchResults.map((account) => (
+                    <div 
+                      key={account.id}
+                      onClick={() => setSelectedAccount(account)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                        selectedAccount?.id === account.id 
+                          ? 'border-red-500 bg-red-50' 
+                          : 'hover:border-gray-300 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{account.name}</p>
+                          <p className="text-sm text-muted-foreground">{account.email}</p>
+                          {account.phone && <p className="text-xs text-muted-foreground">{account.phone}</p>}
+                        </div>
+                        <div className="text-end">
+                          <Badge variant="outline">{account.role}</Badge>
+                          {account.is_locked && <Badge className="bg-red-500 text-white ms-2">{isRTL ? 'مقفل' : 'Locked'}</Badge>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {selectedAccount && (
+                <div className="space-y-2">
+                  <Label>{isRTL ? 'السبب' : 'Reason'}</Label>
+                  <Select value={lockReason} onValueChange={setLockReason}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="suspicious">{isRTL ? 'نشاط مشبوه' : 'Suspicious Activity'}</SelectItem>
+                      <SelectItem value="violation">{isRTL ? 'مخالفة السياسات' : 'Policy Violation'}</SelectItem>
+                      <SelectItem value="security">{isRTL ? 'أمان' : 'Security Concern'}</SelectItem>
+                      <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setShowLockAccountDialog(false)}>{t.cancel}</Button>
-              <Button variant="destructive" onClick={() => { handleQuickAction('Lock Account'); setShowLockAccountDialog(false); }}><Lock className="h-4 w-4 me-2" />{t.lockAccount}</Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleLockAccount} 
+                disabled={!selectedAccount || actionLoading}
+              >
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Lock className="h-4 w-4 me-2" />}
+                {t.lockAccount}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Unlock Account Dialog - Enhanced with Search */}
+        <Dialog open={showUnlockAccountDialog} onOpenChange={setShowUnlockAccountDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Unlock className="h-5 w-5 text-green-600" />{t.unlockAccount}</DialogTitle>
+              <DialogDescription>{isRTL ? 'ابحث عن الحساب المقفل لفتحه' : 'Search for locked account to unlock'}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="flex gap-2">
+                <Input 
+                  placeholder={isRTL ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email or phone number'} 
+                  value={accountSearchQuery}
+                  onChange={(e) => setAccountSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchAccount()}
+                />
+                <Button onClick={handleSearchAccount} disabled={searchLoading} className="bg-brand-navy">
+                  {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
+              </div>
+              
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {searchResults.map((account) => (
+                    <div 
+                      key={account.id}
+                      onClick={() => setSelectedAccount(account)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                        selectedAccount?.id === account.id 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'hover:border-gray-300 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{account.name}</p>
+                          <p className="text-sm text-muted-foreground">{account.email}</p>
+                        </div>
+                        <div className="text-end">
+                          <Badge variant="outline">{account.role}</Badge>
+                          {account.is_locked && <Badge className="bg-red-500 text-white ms-2">{isRTL ? 'مقفل' : 'Locked'}</Badge>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowUnlockAccountDialog(false)}>{t.cancel}</Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleUnlockAccount} 
+                disabled={!selectedAccount || actionLoading}
+              >
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Unlock className="h-4 w-4 me-2" />}
+                {t.unlockAccount}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* End All Sessions Dialog */}
+        <Dialog open={showEndSessionsDialog} onOpenChange={setShowEndSessionsDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><LogOut className="h-5 w-5 text-orange-600" />{t.endAllSessions}</DialogTitle>
+              <DialogDescription>{isRTL ? 'هذا الإجراء سينهي جميع الجلسات النشطة لجميع المستخدمين' : 'This will end all active sessions for all users'}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-6 w-6 text-orange-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-orange-800">{isRTL ? 'تحذير هام' : 'Important Warning'}</p>
+                    <p className="text-sm text-orange-700 mt-1">
+                      {isRTL 
+                        ? 'سيتم تسجيل خروج جميع المستخدمين من النظام (باستثنائك). استخدم هذا فقط في حالات الطوارئ.'
+                        : 'All users will be logged out (except you). Use this only in emergencies.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowEndSessionsDialog(false)}>{t.cancel}</Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleEndAllSessions} 
+                disabled={actionLoading}
+              >
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <LogOut className="h-4 w-4 me-2" />}
+                {isRTL ? 'إنهاء جميع الجلسات' : 'End All Sessions'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Force Password Change Dialog - Enhanced with Options */}
+        <Dialog open={showForcePasswordDialog} onOpenChange={setShowForcePasswordDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-purple-600" />{t.forcePasswordChange}</DialogTitle>
+              <DialogDescription>{isRTL ? 'فرض تغيير كلمة المرور على مستخدم، فئة، أو الجميع' : 'Force password change for user, role, or everyone'}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              {/* Option Selection */}
+              <div className="grid grid-cols-3 gap-2">
+                <Button 
+                  variant={forcePasswordType === 'user' ? 'default' : 'outline'}
+                  onClick={() => setForcePasswordType('user')}
+                  className={forcePasswordType === 'user' ? 'bg-purple-600' : ''}
+                >
+                  {isRTL ? 'مستخدم محدد' : 'Specific User'}
+                </Button>
+                <Button 
+                  variant={forcePasswordType === 'role' ? 'default' : 'outline'}
+                  onClick={() => setForcePasswordType('role')}
+                  className={forcePasswordType === 'role' ? 'bg-purple-600' : ''}
+                >
+                  {isRTL ? 'فئة معينة' : 'By Role'}
+                </Button>
+                <Button 
+                  variant={forcePasswordType === 'all' ? 'default' : 'outline'}
+                  onClick={() => setForcePasswordType('all')}
+                  className={forcePasswordType === 'all' ? 'bg-red-600' : ''}
+                >
+                  {isRTL ? 'الجميع' : 'Everyone'}
+                </Button>
+              </div>
+              
+              {/* User Search */}
+              {forcePasswordType === 'user' && (
+                <>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder={isRTL ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email or phone number'} 
+                      value={accountSearchQuery}
+                      onChange={(e) => setAccountSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchAccount()}
+                    />
+                    <Button onClick={handleSearchAccount} disabled={searchLoading} className="bg-brand-navy">
+                      {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  
+                  {searchResults.length > 0 && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {searchResults.map((account) => (
+                        <div 
+                          key={account.id}
+                          onClick={() => setSelectedAccount(account)}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                            selectedAccount?.id === account.id 
+                              ? 'border-purple-500 bg-purple-50' 
+                              : 'hover:border-gray-300 hover:bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{account.name}</p>
+                              <p className="text-sm text-muted-foreground">{account.email}</p>
+                            </div>
+                            <Badge variant="outline">{account.role}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Role Selection */}
+              {forcePasswordType === 'role' && (
+                <div className="space-y-2">
+                  <Label>{isRTL ? 'اختر الفئة' : 'Select Role'}</Label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر الفئة...' : 'Select role...'} /></SelectTrigger>
+                    <SelectContent>
+                      {availableRoles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>
+                          {isRTL ? role.name_ar : role.name_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* All Users Warning */}
+              {forcePasswordType === 'all' && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-6 w-6 text-red-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-800">{isRTL ? 'تحذير خطير!' : 'Critical Warning!'}</p>
+                      <p className="text-sm text-red-700 mt-1">
+                        {isRTL 
+                          ? 'سيتم تسجيل خروج جميع المستخدمين وإجبارهم على تغيير كلمة المرور. استخدم هذا فقط في حالات الاختراق!'
+                          : 'All users will be logged out and forced to change password. Use only in case of breach!'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setShowForcePasswordDialog(false)}>{t.cancel}</Button>
+              <Button 
+                variant={forcePasswordType === 'all' ? 'destructive' : 'default'}
+                className={forcePasswordType !== 'all' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                onClick={handleForcePasswordChange} 
+                disabled={
+                  actionLoading || 
+                  (forcePasswordType === 'user' && !selectedAccount) ||
+                  (forcePasswordType === 'role' && !selectedRole)
+                }
+              >
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <KeyRound className="h-4 w-4 me-2" />}
+                {t.forcePasswordChange}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
