@@ -886,6 +886,73 @@ export default function SchoolSettingsPagePro() {
     }
   };
   
+  // =============== TEACHER ASSIGNMENTS CRUD ===============
+  // Add Assignment
+  const handleAddAssignment = async () => {
+    if (!newAssignment.teacher_id || !newAssignment.class_id || !newAssignment.subject_id) {
+      toast.error('يرجى تعبئة جميع الحقول المطلوبة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const schoolId = user?.tenant_id || schoolInfo?.id || 'SCH-001';
+      await api.post('/teacher-assignments', {
+        ...newAssignment,
+        school_id: schoolId,
+        academic_year: '2026-2027',
+        semester: 1
+      });
+      toast.success('تم إضافة الإسناد بنجاح');
+      setAddAssignmentOpen(false);
+      setNewAssignment({ teacher_id: '', class_id: '', subject_id: '', weekly_sessions: 4 });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding assignment:', error);
+      toast.error(error.response?.data?.detail || 'فشل إضافة الإسناد');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Update Assignment
+  const handleUpdateAssignment = async () => {
+    if (!editAssignment) return;
+    
+    setSaving(true);
+    try {
+      await api.put(`/teacher-assignments/${editAssignment.id}`, {
+        teacher_id: editAssignment.teacher_id,
+        class_id: editAssignment.class_id,
+        subject_id: editAssignment.subject_id,
+        weekly_sessions: editAssignment.weekly_sessions
+      });
+      toast.success('تم تحديث الإسناد بنجاح');
+      setEditAssignmentOpen(false);
+      setEditAssignment(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث الإسناد');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Delete Assignment
+  const handleDeleteAssignment = async (assignmentId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الإسناد؟')) return;
+    
+    try {
+      await api.delete(`/teacher-assignments/${assignmentId}`);
+      toast.success('تم حذف الإسناد بنجاح');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف الإسناد');
+    }
+  };
+  
   // Loading state
   if (loading) {
     return (
