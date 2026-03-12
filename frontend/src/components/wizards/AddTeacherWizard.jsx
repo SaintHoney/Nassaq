@@ -364,11 +364,11 @@ const Step4Schedule = ({ data, onChange, options, isRTL }) => {
           <Label>{isRTL ? 'نوع التعاقد' : 'Contract Type'}</Label>
           <Select value={data.contract_type || 'permanent'} onValueChange={(val) => onChange('contract_type', val)}>
             <SelectTrigger data-testid="teacher-contract">
-              <SelectValue />
+              <SelectValue placeholder={isRTL ? 'اختر نوع العقد' : 'Select contract type'} />
             </SelectTrigger>
             <SelectContent>
               {options.contractTypes?.map((c) => (
-                <SelectItem key={c.code} value={c.code}>{isRTL ? c.name_ar : c.name_en}</SelectItem>
+                <SelectItem key={c.id || c.code} value={c.id || c.code}>{isRTL ? (c.name || c.name_ar) : (c.name_en || c.name)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
