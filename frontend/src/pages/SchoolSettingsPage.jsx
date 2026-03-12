@@ -1273,71 +1273,9 @@ const AvailabilitySection = ({ teachers, isRTL }) => {
     </Card>
   );
 };
-      toast.error(isRTL ? 'يرجى اختيار معلم' : 'Please select a teacher');
-      return;
-    }
-    setSaving(true);
-    try {
-      await onSave({ teacher_id: selectedTeacher, available_days: availableDays });
-      setShowDialog(false);
-      setSelectedTeacher('');
-      setAvailableDays([]);
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const toggleDay = (dayId) => {
-    setAvailableDays(prev => 
-      prev.includes(dayId) ? prev.filter(d => d !== dayId) : [...prev, dayId]
-    );
-  };
-
-  const teachersWithAvailability = Object.entries(availability).map(([teacherId, data]) => {
-    const teacher = teachers.find(t => t.id === teacherId);
-    return teacher ? { ...teacher, availability: data } : null;
-  }).filter(Boolean);
-
-  return (
-    <Card className="border-2 border-violet-200 bg-gradient-to-br from-violet-50/50 to-white" data-testid="availability-section">
-      <CardHeader>
-        <div className="flex items-center gap-3 flex-row-reverse">
-          <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center">
-            <CalendarClock className="h-6 w-6 text-violet-600" />
-          </div>
-          <div className="text-right flex-1">
-            <CardTitle className="font-cairo">{isRTL ? 'التوافر' : 'Availability'}</CardTitle>
-            <CardDescription>{isRTL ? 'تحديد مدى توفر المعلمين - يستخدم للتحقق أثناء الجدولة' : 'Teacher availability - Used for validation during scheduling'}</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-violet-600 hover:bg-violet-700 mb-4">
-          <Edit2 className="h-4 w-4 me-2" />
-          {isRTL ? 'تعديل التوافر' : 'Edit Availability'}
-        </Button>
-
-        {teachersWithAvailability.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-violet-200 rounded-xl">
-            <CalendarClock className="h-12 w-12 mx-auto mb-3 text-violet-200" />
-            <p className="text-muted-foreground">{isRTL ? 'لم يتم تحديد توفر لأي معلم (الافتراضي: متوفر دائماً)' : 'No availability set (default: always available)'}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {teachersWithAvailability.map((teacher) => (
-              <div key={teacher.id} className="p-3 rounded-lg bg-white border hover:border-violet-300 transition-colors">
-                <p className="font-medium text-sm truncate mb-2">{teacher.full_name}</p>
-                <div className="flex flex-wrap gap-1">
-                  {(teacher.availability?.available_days || []).map(day => (
-                    <Badge key={day} variant="secondary" className="text-xs">{dayOptions.find(d => d.id === day)?.name || day}</Badge>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+// =============================================================
+// قسم الهيكل الأكاديمي
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-right font-cairo">{isRTL ? 'تعديل توفر المعلم' : 'Edit Teacher Availability'}</DialogTitle>
