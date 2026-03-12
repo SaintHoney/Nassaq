@@ -201,6 +201,24 @@
 .animate-delay-400 { animation-delay: 400ms; }
 .animate-delay-500 { animation-delay: 500ms; }
 
+/* Shimmer Animation for Live Cards */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Pulse Glow for Live Indicators */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); }
+  50% { opacity: 1; box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* Debug Wrapper */
 @layer base {
     [data-debug-wrapper="true"] {
