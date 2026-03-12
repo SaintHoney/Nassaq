@@ -1122,7 +1122,8 @@ export const SystemMonitoringPage = () => {
                       Service: {error.service}
                     </p>
                   </div>
-                ))}
+                ))
+                )}
               </div>
             </ScrollArea>
           </SheetContent>
