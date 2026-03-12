@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nassaq-admin.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://school-mgmt-hub-6.preview.emergentagent.com').rstrip('/')
 
 class TestScheduleAPIs:
     """Schedule Page Backend API Tests"""
