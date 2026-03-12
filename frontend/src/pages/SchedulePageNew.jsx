@@ -353,10 +353,7 @@ export default function SchedulePageNew() {
     
     setPublishing(true);
     try {
-      await api.put(`/schedules/${selectedSchedule}`, {
-        status: 'published',
-        published_at: new Date().toISOString()
-      });
+      await api.put(`/schedules/${selectedSchedule}/publish`);
       
       toast.success('تم نشر الجدول بنجاح! يمكن الآن لجميع المستخدمين رؤية جداولهم');
       setPublishDialogOpen(false);
