@@ -11562,6 +11562,7 @@ api_router.include_router(teacher_attendance_router)
 api_router.include_router(communication_router)
 api_router.include_router(bulk_teacher_router)
 api_router.include_router(student_creation_router)
+api_router.include_router(admin_dashboard_router)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
