@@ -549,10 +549,10 @@ export const SchedulePage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-cairo text-2xl font-bold text-foreground">
-                  {isRTL ? 'الجدول المدرسي' : 'School Schedule'}
+                  {isRTL ? `مرحباً، ${user?.full_name || 'المستخدم'}` : `Welcome, ${user?.full_name || 'User'}`}
                 </h1>
-                <p className="text-sm text-muted-foreground font-tajawal">
-                  {isRTL ? 'إدارة وعرض الجداول الدراسية' : 'Manage and view class schedules'}
+                <p className="text-base text-muted-foreground font-tajawal">
+                  {isRTL ? 'الجدول المدرسي' : 'School Schedule'}
                 </p>
               </div>
               
