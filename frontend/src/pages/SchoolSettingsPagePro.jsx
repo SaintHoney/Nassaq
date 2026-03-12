@@ -1230,14 +1230,24 @@ export default function SchoolSettingsPagePro() {
             <TabsContent value="constraints" className="space-y-4">
               <Card className="border-2 border-rose-200">
                 <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
-                      <Shield className="h-6 w-6 text-white" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
+                        <Shield className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle>القيود الإدارية</CardTitle>
+                        <CardDescription>{constraints.length} قيد إداري للجدولة</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle>القيود الإدارية</CardTitle>
-                      <CardDescription>{constraints.length} قيد إداري للجدولة</CardDescription>
-                    </div>
+                    <Button 
+                      onClick={() => setAddConstraintOpen(true)}
+                      className="bg-rose-600 hover:bg-rose-700"
+                      data-testid="add-constraint-btn"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة قيد
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1249,6 +1259,11 @@ export default function SchoolSettingsPagePro() {
                           constraint={constraint} 
                           index={index}
                           onToggle={toggleConstraint}
+                          onEdit={() => {
+                            setEditConstraint(constraint);
+                            setEditConstraintOpen(true);
+                          }}
+                          onDelete={() => handleDeleteConstraint(constraint.id)}
                         />
                       ))}
                     </div>
@@ -1256,6 +1271,13 @@ export default function SchoolSettingsPagePro() {
                     <div className="text-center py-12 text-muted-foreground">
                       <Shield className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد قيود إدارية</p>
+                      <Button 
+                        className="mt-4 bg-rose-600 hover:bg-rose-700"
+                        onClick={() => setAddConstraintOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 ml-2" />
+                        إضافة قيد جديد
+                      </Button>
                     </div>
                   )}
                 </CardContent>
