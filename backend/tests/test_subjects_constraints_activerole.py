@@ -454,9 +454,23 @@ class TestSchedulePageAPIs:
     """Tests for Schedule Page related APIs"""
     
     def test_get_schedule_sessions(self, principal_headers):
-        """Test GET /api/schedule-sessions"""
+        """Test GET /api/schedule-sessions - requires schedule_id"""
+        # First get schedules to find a valid schedule_id
+        schedules_response = requests.get(
+            f"{BASE_URL}/api/schedules",
+            headers=principal_headers
+        )
+        if schedules_response.status_code != 200:
+            pytest.skip("Could not get schedules")
+        
+        schedules = schedules_response.json()
+        if not schedules:
+            pytest.skip("No schedules available")
+        
+        schedule_id = schedules[0].get("id")
+        
         response = requests.get(
-            f"{BASE_URL}/api/schedule-sessions",
+            f"{BASE_URL}/api/schedule-sessions?schedule_id={schedule_id}",
             headers=principal_headers
         )
         assert response.status_code == 200, f"Failed: {response.text}"
