@@ -133,13 +133,18 @@
 - يوسف عادل: غير متاح الحصة الأولى يوم الإثنين
 - آلاء كمال: غير متاحة الحصتين الأولى والثانية يوم الثلاثاء
 
-#### 4. APIs الجديدة:
+#### 5. APIs الجديدة:
 - `GET /api/reference/academic-structure` - الهيكل الأكاديمي الكامل
 - `GET /api/reference/subjects` - المواد المرجعية
 - `GET /api/reference/teacher-ranks` - رتب المعلمين
 - `GET /api/reference/admin-constraints` - القيود الإدارية
 - `GET /api/reference/default-settings` - الإعدادات الافتراضية
 - `GET /api/school/settings` - إعدادات المدرسة (محدث)
+
+### إصلاحات API (مارس 2026):
+- تحويل أسماء الحقول (full_name_ar → full_name) في APIs المعلمين والطلاب
+- تحويل أسماء الفصول (name_ar → name) في API الفصول
+- إصلاح مسارات API المزدوجة في SchoolSettingsPage.jsx
 
 ---
 
