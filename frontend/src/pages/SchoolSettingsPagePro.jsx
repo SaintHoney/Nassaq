@@ -44,7 +44,7 @@ import {
   CalendarDays, Timer, Loader2, FileText, Copy, Check, School, Layers,
   AlertCircle, Ban, Star, Award, Bookmark, ArrowRight, ArrowUpDown, Filter
 } from 'lucide-react';
-import NotificationBell from '../components/notifications/NotificationBell';
+import { NotificationBell } from '../components/notifications/NotificationBell';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
