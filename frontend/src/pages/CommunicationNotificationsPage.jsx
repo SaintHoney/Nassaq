@@ -708,23 +708,67 @@ export const CommunicationNotificationsPage = () => {
                   <CardContent>
                     <ScrollArea className="h-[400px]">
                       <div className="space-y-3">
-                        {messages.map((msg) => (
-                          <div key={msg.id} className="p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-sm font-medium line-clamp-1">{msg.title}</p>
-                              <Badge variant={msg.status === 'sent' ? 'default' : 'secondary'} className="text-xs">
-                                {msg.status === 'sent' 
-                                  ? (isRTL ? 'مرسلة' : 'Sent')
-                                  : (isRTL ? 'مجدولة' : 'Scheduled')}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{msg.preview}</p>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{msg.recipients}</span>
-                              <span>{msg.date}</span>
-                            </div>
+                        {/* Scheduled Messages */}
+                        {scheduledMessages.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-xs text-muted-foreground mb-2 font-semibold">
+                              {isRTL ? 'الرسائل المجدولة' : 'Scheduled Messages'}
+                            </p>
+                            {scheduledMessages.map((msg) => (
+                              <div key={msg.id} className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-2">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-sm font-medium line-clamp-1">{msg.title}</p>
+                                  <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-600">
+                                    <Clock className="h-3 w-3 me-1" />
+                                    {isRTL ? 'مجدولة' : 'Scheduled'}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                                  {msg.message?.substring(0, 100)}...
+                                </p>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                  <span>
+                                    {msg.target_audience === 'all' ? (isRTL ? 'الجميع' : 'Everyone') :
+                                     msg.target_audience === 'teachers' ? (isRTL ? 'المعلمين' : 'Teachers') :
+                                     msg.target_audience === 'students' ? (isRTL ? 'الطلاب' : 'Students') :
+                                     msg.target_audience}
+                                  </span>
+                                  <span>{new Date(msg.scheduled_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+                        
+                        {/* Sent Messages */}
+                        {sentMessages.length > 0 ? (
+                          sentMessages.map((msg) => (
+                            <div key={msg.id} className="p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium line-clamp-1">{msg.title}</p>
+                                <Badge variant="default" className="text-xs bg-green-500/20 text-green-600">
+                                  <Check className="h-3 w-3 me-1" />
+                                  {isRTL ? 'مرسلة' : 'Sent'}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{msg.message}</p>
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {msg.target_audience === 'all' ? (isRTL ? 'الجميع' : 'Everyone') :
+                                   msg.target_audience === 'teachers' ? (isRTL ? 'المعلمين' : 'Teachers') :
+                                   msg.target_audience === 'students' ? (isRTL ? 'الطلاب' : 'Students') :
+                                   msg.target_audience}
+                                </span>
+                                <span>{msg.sent_at ? new Date(msg.sent_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US') : ''}</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Mail className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                            <p className="text-sm">{isRTL ? 'لا توجد رسائل مرسلة' : 'No sent messages'}</p>
+                          </div>
+                        )}
                       </div>
                     </ScrollArea>
                   </CardContent>
