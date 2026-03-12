@@ -37,6 +37,17 @@ from engines.audit_engine import AuditLogEngine, AuditAction, AuditSeverity
 # Import Teacher Session Engine
 from engines.session_engine import TeacherSessionEngine, session_router
 
+# Import Smart Scheduling Engine
+from engines.smart_scheduling_engine import (
+    SmartSchedulingEngine,
+    TimetableRunStatus,
+    TimetableStatus,
+    ConflictType,
+    ConflictSeverity,
+    PreValidationResult,
+    GenerationResult
+)
+
 # ============== INITIALIZATION ==============
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
