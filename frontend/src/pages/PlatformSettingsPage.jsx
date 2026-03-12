@@ -98,6 +98,17 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Create axios instance with auth headers
+const createApi = (token) => {
+  return axios.create({
+    baseURL: `${API_URL}/api`,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` })
+    }
+  });
+};
+
 // Translations
 const translations = {
   ar: {
