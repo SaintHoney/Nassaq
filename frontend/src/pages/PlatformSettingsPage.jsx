@@ -1229,6 +1229,7 @@ export const PlatformSettingsPage = () => {
                             <SelectContent>
                               <SelectItem value="hijri">{t.hijri}</SelectItem>
                               <SelectItem value="gregorian">{t.gregorian}</SelectItem>
+                              <SelectItem value="both">{isRTL ? 'هجري وميلادي' : 'Both'}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
