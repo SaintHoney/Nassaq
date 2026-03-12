@@ -612,6 +612,106 @@ export default function SchoolSettingsPagePro() {
     fetchData();
   }, [fetchData]);
   
+  // Save day times settings
+  const saveDayTimes = async () => {
+    setSaving(true);
+    try {
+      // Generate new time slots based on settings
+      const newTimeSlots = [];
+      let currentTime = editedDayTimes.dayStart;
+      
+      const addMinutes = (time, minutes) => {
+        const [h, m] = time.split(':').map(Number);
+        const totalMinutes = h * 60 + m + minutes;
+        const newH = Math.floor(totalMinutes / 60);
+        const newM = totalMinutes % 60;
+        return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+      };
+      
+      for (let i = 1; i <= editedDayTimes.periodsPerDay; i++) {
+        const endTime = addMinutes(currentTime, editedDayTimes.periodDuration);
+        newTimeSlots.push({
+          slot_number: i,
+          name_ar: `الحصة ${['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة', 'السابعة', 'الثامنة'][i-1] || i}`,
+          name: `Period ${i}`,
+          start_time: currentTime,
+          end_time: endTime,
+          duration_minutes: editedDayTimes.periodDuration,
+          type: 'period',
+          is_break: false,
+        });
+        currentTime = endTime;
+        
+        // Add break after 3rd period
+        if (i === 3) {
+          const breakEnd = addMinutes(currentTime, editedDayTimes.breakDuration);
+          newTimeSlots.push({
+            slot_number: null,
+            name_ar: 'الاستراحة',
+            name: 'Break',
+            start_time: currentTime,
+            end_time: breakEnd,
+            duration_minutes: editedDayTimes.breakDuration,
+            type: 'break',
+            is_break: true,
+          });
+          currentTime = breakEnd;
+        }
+        
+        // Add prayer after 5th period
+        if (i === 5) {
+          const prayerEnd = addMinutes(currentTime, editedDayTimes.prayerDuration);
+          newTimeSlots.push({
+            slot_number: null,
+            name_ar: 'فترة الصلاة',
+            name: 'Prayer',
+            start_time: currentTime,
+            end_time: prayerEnd,
+            duration_minutes: editedDayTimes.prayerDuration,
+            type: 'prayer',
+            is_break: true,
+          });
+          currentTime = prayerEnd;
+        }
+      }
+      
+      await api.put('/school/settings', {
+        settings: {
+          school_day_start: editedDayTimes.dayStart,
+          school_day_end: editedDayTimes.dayEnd,
+          periods_per_day: editedDayTimes.periodsPerDay,
+          period_duration_minutes: editedDayTimes.periodDuration,
+          break_duration_minutes: editedDayTimes.breakDuration,
+          prayer_duration_minutes: editedDayTimes.prayerDuration,
+          time_slots: newTimeSlots,
+        }
+      });
+      
+      toast.success('تم حفظ مواعيد اليوم الدراسي بنجاح');
+      setEditDayTimesOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error saving:', error);
+      toast.error(error.response?.data?.detail || 'فشل حفظ الإعدادات');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Toggle constraint active status
+  const toggleConstraint = async (constraint) => {
+    try {
+      await api.put(`/school/constraints/${constraint.id}`, {
+        is_active: !constraint.is_active
+      });
+      toast.success(`تم ${constraint.is_active ? 'تعطيل' : 'تفعيل'} القيد بنجاح`);
+      fetchData();
+    } catch (error) {
+      console.error('Error toggling constraint:', error);
+      toast.error('فشل تحديث القيد');
+    }
+  };
+  
   // Loading state
   if (loading) {
     return (
