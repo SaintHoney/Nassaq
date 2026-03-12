@@ -310,15 +310,23 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
         </CardContent>
       </Card>
       
-      {/* بطاقات العمليات الذكية - 4 عمليات فقط */}
+      {/* بطاقات العمليات الذكية - 4 عمليات فقط - الكارت كله قابل للنقر */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {AI_OPERATIONS.map((op) => (
           <Card 
             key={op.id}
-            className="card-nassaq hover:shadow-lg hover:border-brand-purple/30 transition-all cursor-pointer group"
+            className="card-nassaq hover:shadow-lg hover:border-brand-purple/30 transition-all cursor-pointer group relative overflow-hidden"
             onClick={() => runOperation(op.id)}
             data-testid={`ai-op-${op.id}`}
           >
+            {/* Live indicator */}
+            <div className="absolute top-2 right-2 flex items-center gap-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+            </div>
+            
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
               <div className="relative">
                 <div className={`w-14 h-14 rounded-2xl ${op.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
@@ -335,13 +343,11 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
                 <p className="font-cairo font-bold text-sm">{isRTL ? op.title : op.title_en}</p>
                 <p className="text-xs text-muted-foreground">{isRTL ? op.desc : op.desc_en}</p>
               </div>
-              <Button 
-                size="sm" 
-                className={`w-full ${op.color} hover:opacity-90 rounded-lg text-white`}
-              >
-                <Play className="h-3 w-3 me-1" />
-                {isRTL ? 'تشغيل' : 'Run'}
-              </Button>
+              {/* Click hint instead of button */}
+              <div className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-brand-purple transition-colors">
+                <Play className="h-3 w-3" />
+                <span>{isRTL ? 'اضغط للتشغيل' : 'Click to run'}</span>
+              </div>
             </CardContent>
           </Card>
         ))}
