@@ -107,13 +107,8 @@ export const CommunicationCenterPage = () => {
       
     } catch (error) {
       console.error('Failed to fetch communication data:', error);
-      // Use fallback data
-      setAudienceGroups([
-        { id: 'all', name: 'الجميع', name_en: 'Everyone', count: 500, icon: 'users' },
-        { id: 'teachers', name: 'المعلمين', name_en: 'Teachers', count: 50, icon: 'user-check' },
-        { id: 'students', name: 'الطلاب', name_en: 'Students', count: 400, icon: 'graduation-cap' },
-        { id: 'parents', name: 'أولياء الأمور', name_en: 'Parents', count: 600, icon: 'users' },
-      ]);
+      // Empty state - no fallback mock data
+      setAudienceGroups([]);
     } finally {
       setLoading(false);
     }
