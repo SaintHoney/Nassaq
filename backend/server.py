@@ -4697,6 +4697,40 @@ async def get_teacher_assignments(
     
     return result
 
+class TeacherAssignmentUpdate(BaseModel):
+    teacher_id: Optional[str] = None
+    class_id: Optional[str] = None
+    subject_id: Optional[str] = None
+    weekly_sessions: Optional[int] = None
+    is_active: Optional[bool] = None
+
+@api_router.put("/teacher-assignments/{assignment_id}")
+async def update_teacher_assignment(
+    assignment_id: str,
+    update_data: TeacherAssignmentUpdate,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """تحديث إسناد معلم"""
+    assignment = await db.teacher_assignments.find_one({"id": assignment_id}, {"_id": 0})
+    if not assignment:
+        raise HTTPException(status_code=404, detail="الإسناد غير موجود")
+    
+    update_dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if update_data.teacher_id is not None:
+        update_dict["teacher_id"] = update_data.teacher_id
+    if update_data.class_id is not None:
+        update_dict["class_id"] = update_data.class_id
+    if update_data.subject_id is not None:
+        update_dict["subject_id"] = update_data.subject_id
+    if update_data.weekly_sessions is not None:
+        update_dict["weekly_sessions"] = update_data.weekly_sessions
+    if update_data.is_active is not None:
+        update_dict["is_active"] = update_data.is_active
+    
+    await db.teacher_assignments.update_one({"id": assignment_id}, {"$set": update_dict})
+    
+    return {"message": "تم تحديث الإسناد بنجاح"}
+
 @api_router.delete("/teacher-assignments/{assignment_id}")
 async def delete_teacher_assignment(
     assignment_id: str,
