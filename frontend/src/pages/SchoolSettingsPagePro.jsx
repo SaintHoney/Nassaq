@@ -222,7 +222,7 @@ const TimeSlotItem = ({ slot, index, onEdit, onDelete }) => {
 // ============================================
 // مكون كارت المعلم
 // ============================================
-const TeacherItem = ({ teacher, onEdit, onDelete }) => (
+const TeacherItem = ({ teacher }) => (
   <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 hover:shadow-lg hover:border-violet-300 transition-all group">
     <div className="flex items-center gap-4">
       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
@@ -247,20 +247,6 @@ const TeacherItem = ({ teacher, onEdit, onDelete }) => (
         <p className="text-2xl font-bold text-violet-600">{teacher.weekly_periods || 24}</p>
         <p className="text-xs text-muted-foreground">حصة/أسبوع</p>
       </div>
-      {(onEdit || onDelete) && (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {onEdit && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(teacher)}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDelete(teacher)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )}
     </div>
   </div>
 );
