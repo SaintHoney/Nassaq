@@ -52,7 +52,8 @@ const MetricCard = ({
   changeType, 
   status, 
   icon: Icon, 
-  onViewDetails,
+  onClick,
+  clickable = false,
   isRTL,
 }) => {
   const getChangeIndicator = () => {
@@ -74,8 +75,18 @@ const MetricCard = ({
     }
   };
 
+  const handleClick = () => {
+    if (clickable && onClick) {
+      onClick();
+    }
+  };
+
   return (
-    <Card className="card-nassaq hover:shadow-lg transition-shadow cursor-pointer group" data-testid={`metric-card-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Card 
+      className={`card-nassaq hover:shadow-lg transition-shadow group ${clickable ? 'cursor-pointer' : ''}`} 
+      data-testid={`metric-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      onClick={handleClick}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="w-12 h-12 rounded-2xl bg-brand-turquoise/10 flex items-center justify-center group-hover:bg-brand-turquoise/20 transition-colors">
@@ -103,16 +114,12 @@ const MetricCard = ({
           </div>
         </div>
         
-        {onViewDetails && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onViewDetails}
-            className="w-full mt-3 text-brand-turquoise hover:text-brand-turquoise/80 hover:bg-brand-turquoise/5 rounded-xl font-tajawal"
-          >
-            {isRTL ? 'عرض التفاصيل' : 'View Details'}
-            {isRTL ? <ChevronLeft className="h-4 w-4 ms-1" /> : <ChevronRight className="h-4 w-4 ms-1" />}
-          </Button>
+        {clickable && (
+          <div className="mt-3 pt-3 border-t border-border/50 text-center">
+            <span className="text-xs text-brand-turquoise font-tajawal">
+              {isRTL ? 'انقر للتفاصيل' : 'Click for details'}
+            </span>
+          </div>
         )}
       </CardContent>
     </Card>
