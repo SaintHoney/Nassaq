@@ -820,15 +820,17 @@ export default function SchedulePageNew() {
 
         {/* Generation Result Dialog */}
         <Dialog open={generationResultOpen} onOpenChange={setGenerationResultOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-cairo flex items-center gap-2">
-                {generationStats?.success ? (
+                {generationStats?.success && parseFloat(generationStats.success_rate) >= 100 ? (
                   <CheckCircle2 className="h-6 w-6 text-green-600" />
-                ) : (
+                ) : generationStats?.success ? (
                   <AlertTriangle className="h-6 w-6 text-amber-600" />
+                ) : (
+                  <XCircle className="h-6 w-6 text-red-600" />
                 )}
-                نتيجة التوليد
+                نتيجة معالجة الجدول
               </DialogTitle>
             </DialogHeader>
             
@@ -837,28 +839,99 @@ export default function SchedulePageNew() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
                     <p className="text-3xl font-bold text-green-700">{generationStats.sessions_created || 0}</p>
-                    <p className="text-sm text-green-600">حصة تم إنشاؤها</p>
+                    <p className="text-sm text-green-600">حصة تم جدولتها</p>
                   </div>
-                  <div className="text-center p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <p className="text-3xl font-bold text-amber-700">{generationStats.unplaced_sessions || 0}</p>
-                    <p className="text-sm text-amber-600">حصة غير مجدولة</p>
+                  <div className={`text-center p-4 rounded-xl border ${(generationStats.unplaced_sessions || 0) > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+                    <p className={`text-3xl font-bold ${(generationStats.unplaced_sessions || 0) > 0 ? 'text-amber-700' : 'text-green-700'}`}>
+                      {generationStats.unplaced_sessions || 0}
+                    </p>
+                    <p className={`text-sm ${(generationStats.unplaced_sessions || 0) > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                      حصة غير مجدولة
+                    </p>
                   </div>
                 </div>
                 
+                {/* Success Rate */}
                 <div className="p-4 bg-muted rounded-xl">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">نسبة النجاح</span>
-                    <span className="text-sm font-bold">{generationStats.success_rate || 0}%</span>
+                    <span className={`text-sm font-bold ${parseFloat(generationStats.success_rate) >= 100 ? 'text-green-600' : 'text-amber-600'}`}>
+                      {generationStats.success_rate || 0}%
+                    </span>
                   </div>
-                  <Progress value={parseFloat(generationStats.success_rate) || 0} className="h-2" />
+                  <Progress 
+                    value={parseFloat(generationStats.success_rate) || 0} 
+                    className={`h-3 ${parseFloat(generationStats.success_rate) >= 100 ? '[&>div]:bg-green-600' : '[&>div]:bg-amber-600'}`}
+                  />
                 </div>
+                
+                {/* Actions for unplaced sessions */}
+                {(generationStats.unplaced_sessions || 0) > 0 && (
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <p className="font-medium text-amber-800 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      إجراءات مقترحة
+                    </p>
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start border-amber-300 text-amber-700 hover:bg-amber-100"
+                        onClick={() => {
+                          setGenerationResultOpen(false);
+                          handleGenerateSchedule();
+                        }}
+                      >
+                        <Wand2 className="h-4 w-4 ml-2" />
+                        إعادة جدولة الحصص الغير مجدولة
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start border-amber-300 text-amber-700 hover:bg-amber-100"
+                        onClick={() => {
+                          setGenerationResultOpen(false);
+                        }}
+                      >
+                        <List className="h-4 w-4 ml-2" />
+                        عرض الحصص الغير مجدولة
+                      </Button>
+                    </div>
+                    <p className="text-xs text-amber-600 mt-3">
+                      قد تكون هناك قيود تمنع جدولة بعض الحصص. تحقق من إعدادات القيود الإدارية.
+                    </p>
+                  </div>
+                )}
+                
+                {/* Success Message */}
+                {parseFloat(generationStats.success_rate) >= 100 && (
+                  <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                    <p className="font-medium text-green-800 flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      تم جدولة جميع الحصص بنجاح!
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">
+                      يمكنك الآن نشر الجدول ليتمكن جميع المستخدمين من رؤيته.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
-            <DialogFooter>
-              <Button onClick={() => setGenerationResultOpen(false)}>
-                حسناً
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setGenerationResultOpen(false)}>
+                إغلاق
               </Button>
+              {parseFloat(generationStats?.success_rate) >= 100 && (
+                <Button 
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    setGenerationResultOpen(false);
+                    setPublishDialogOpen(true);
+                  }}
+                >
+                  <Send className="h-4 w-4 ml-2" />
+                  نشر الجدول
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
