@@ -179,9 +179,9 @@ export const AdminDashboard = () => {
   });
   const [showDisplaySettings, setShowDisplaySettings] = useState(false);
   const [visibleCards, setVisibleCards] = useState({
-    schools: true, students: true, teachers: true, admins: true, activeUsers: true, apiCalls: true
+    schools: true, students: true, teachers: true, independentTeachers: true, studentAttendance: true, teacherAttendance: true, platformAccounts: true, pendingRequests: true, aiSchools: true
   });
-  const [cardsOrder, setCardsOrder] = useState(['schools', 'students', 'teachers', 'admins', 'activeUsers', 'apiCalls']);
+  const [cardsOrder, setCardsOrder] = useState(['schools', 'students', 'teachers', 'independentTeachers', 'studentAttendance', 'teacherAttendance', 'platformAccounts', 'pendingRequests', 'aiSchools']);
   const [schools, setSchools] = useState([]);
   const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
 
