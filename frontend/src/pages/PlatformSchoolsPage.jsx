@@ -201,6 +201,41 @@ export const PlatformSchoolsPage = () => {
 
   const totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
 
+  // Toggle AI feature for a school
+  const handleToggleAI = async (schoolId, currentAIStatus) => {
+    try {
+      await api.patch(`/schools/${schoolId}`, {
+        ai_enabled: !currentAIStatus
+      });
+      toast.success(
+        isRTL 
+          ? (!currentAIStatus ? 'تم تفعيل الذكاء الاصطناعي' : 'تم إيقاف الذكاء الاصطناعي')
+          : (!currentAIStatus ? 'AI enabled successfully' : 'AI disabled successfully')
+      );
+      fetchSchools();
+    } catch (error) {
+      console.error('Failed to toggle AI:', error);
+      toast.error(isRTL ? 'فشل تعديل حالة الذكاء الاصطناعي' : 'Failed to toggle AI status');
+    }
+  };
+
+  // Toggle suspend status for a school
+  const handleToggleSuspend = async (schoolId, currentStatus) => {
+    const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+    try {
+      await api.patch(`/schools/${schoolId}`, { status: newStatus });
+      toast.success(
+        isRTL 
+          ? (newStatus === 'suspended' ? 'تم تعليق المدرسة' : 'تم تفعيل المدرسة')
+          : (newStatus === 'suspended' ? 'School suspended' : 'School activated')
+      );
+      fetchSchools();
+    } catch (error) {
+      console.error('Failed to toggle status:', error);
+      toast.error(isRTL ? 'فشل تعديل حالة المدرسة' : 'Failed to toggle school status');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'active':
