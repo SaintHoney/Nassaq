@@ -1221,7 +1221,12 @@ export default function SchoolSettingsPagePro() {
                   {constraints.length > 0 ? (
                     <div className="space-y-3">
                       {constraints.map((constraint, index) => (
-                        <ConstraintItem key={constraint.id} constraint={constraint} index={index} />
+                        <ConstraintItem 
+                          key={constraint.id} 
+                          constraint={constraint} 
+                          index={index}
+                          onToggle={toggleConstraint}
+                        />
                       ))}
                     </div>
                   ) : (
