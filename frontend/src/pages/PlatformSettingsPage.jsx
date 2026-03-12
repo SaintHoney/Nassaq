@@ -517,8 +517,10 @@ export const PlatformSettingsPage = () => {
       }
     };
     
-    fetchSettings();
-  }, [api]);
+    if (token) {
+      fetchSettings();
+    }
+  }, [api, token]);
   
   // Available titles state
   const [availableTitles, setAvailableTitles] = useState({ ar: [], en: [] });
