@@ -108,6 +108,21 @@ export const AuthProvider = ({ children }) => {
     setSchoolContext(null);
     setIsImpersonating(false);
   };
+
+  // Update token (for role switching)
+  const updateToken = async (newToken) => {
+    localStorage.setItem('nassaq_token', newToken);
+    setToken(newToken);
+    // Re-fetch user with new token
+    try {
+      const response = await axios.get(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${newToken}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user after token update:', error);
+    }
+  };
   
   // Enter School Context (Platform Admin simulation of School Manager)
   const enterSchoolContext = (school) => {
