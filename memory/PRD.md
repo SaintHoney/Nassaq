@@ -10,11 +10,10 @@
 ### ✅ مركز القيادة (Command Center) - مكتمل
 - التاريخ الهجري والميلادي
 - 9 كروت إحصائية مع حركة LIVE
-- نافذة "إضافة مدرسة" محسّنة
 
 ### ✅ إدارة المدارس - مكتمل
-- Grid View جديد للمدارس
-- أزرار "تعليق" و "AI" واضحة
+- Grid View للمدارس
+- أزرار "تعليق" و "AI"
 
 ### ✅ إدارة المستخدمين - مكتمل
 - 9 كروت إحصائيات
@@ -27,49 +26,56 @@
 - إشعارات أمنية فورية
 
 ### ✅ سجلات التدقيق - مكتمل
-- جلب السجلات مع الترحيل والفلترة
 
-### ✅ إعدادات النظام - مكتمل بالكامل
-- 7 تبويبات تعمل (الحساب، العامة، الشروط، الخصوصية، التواصل، الأمان)
+### ✅ إعدادات النظام - مكتمل (7 tabs)
 
 ### ✅ زر تبديل الأدوار - مكتمل
-- 4 APIs (my-roles, switch, return-to-original, switch-history)
+- 4 APIs
 - مودال في الشريط الجانبي
 - معاينة كمدير مدرسة
 
 ### ✅ التواصل والإشعارات - مكتمل
-- إحصائيات حقيقية من API
+- إحصائيات حقيقية
 - الرسائل المجدولة والمرسلة
 - إرسال رسائل بث جماعية
 
-### ✅ الإشعارات الفورية (Real-time) - مكتمل (جديد!)
-**Backend:**
+### ✅ الإشعارات الفورية (WebSocket) - مكتمل
 - `/api/ws/notifications` - WebSocket endpoint
-- `/api/ws/stats` - إحصائيات المتصلين
-- إرسال إشعارات فورية عند:
-  - طلب تسجيل معلم جديد
-  - قفل/فتح الحساب
-  - تنبيهات أمنية
-  - رسائل البث الجماعية
+- صوت الإشعارات
+- إشعارات المتصفح (Browser Push)
 
-**Frontend:**
-- `WebSocketProvider` - سياق الاتصال
-- `RealtimeNotificationIndicator` - مكون عرض الإشعارات
-- مؤشر الاتصال (نقطة خضراء/حمراء)
-- عداد الإشعارات غير المقروءة
-- صوت الإشعارات (قابل للتعطيل)
-- إشعارات المتصفح (Browser Push Notifications)
+### ✅ الاستيراد والتصدير الجماعي - مكتمل (جديد!)
+
+**Backend APIs:**
+- `/api/bulk/template/students` - قالب استيراد الطلاب
+- `/api/bulk/template/teachers` - قالب استيراد المعلمين
+- `/api/bulk/import/students` - استيراد الطلاب من Excel/CSV
+- `/api/bulk/import/teachers` - استيراد المعلمين من Excel/CSV
+- `/api/bulk/export/students` - تصدير الطلاب
+- `/api/bulk/export/teachers` - تصدير المعلمين
+- `/api/bulk/export/schedule` - تصدير الجدول الدراسي
+- `/api/bulk/export/attendance` - تصدير سجل الحضور
+- `/api/bulk/export/grades` - تصدير الدرجات
+
+**Frontend (`/admin/bulk`):**
+- تبويب الاستيراد:
+  - اختيار نوع البيانات (طلاب/معلمين)
+  - تحميل القالب
+  - رفع الملف
+  - عرض نتيجة الاستيراد (نجاح/فشل/أخطاء/تحذيرات)
+- تبويب التصدير:
+  - 5 أنواع بيانات (طلاب، معلمين، جدول، حضور، درجات)
+  - صيغتين (Excel/CSV)
 
 ---
 
-## المهام المستقبلية (P2/P3)
+## المهام المستقبلية (P3)
 
-### 🟢 استيراد/تصدير البيانات
-- استيراد جماعي (Excel/CSV) للطلاب والمعلمين
-- تصدير الجدول (PDF/CSV)
-
-### 🟢 تطبيق مستقل
-- تطبيق للطالب/ولي الأمر
+### 🟢 تطبيق مستقل للطالب/ولي الأمر
+- واجهة مخصصة للطالب
+- واجهة مخصصة لولي الأمر
+- عرض الدرجات والحضور
+- التواصل مع المعلمين
 
 ---
 
@@ -82,21 +88,19 @@
 - `/app/backend/routes/settings_routes.py`
 - `/app/backend/routes/user_roles_routes.py`
 - `/app/backend/routes/communication_routes.py`
-- `/app/backend/routes/websocket_routes.py` (جديد)
+- `/app/backend/routes/websocket_routes.py`
+- `/app/backend/routes/bulk_import_export_routes.py` (جديد)
 
-### Frontend
-- `/app/frontend/src/contexts/WebSocketContext.jsx` (جديد)
-- `/app/frontend/src/components/notifications/RealtimeNotificationIndicator.jsx` (جديد)
-- `/app/frontend/src/components/layout/Sidebar.jsx` (محدث)
-- `/app/frontend/src/pages/CommunicationNotificationsPage.jsx`
-- `/app/frontend/src/pages/PlatformSettingsPage.jsx`
+### Frontend Pages
+- `/app/frontend/src/pages/BulkImportExportPage.jsx` (جديد)
+- `/app/frontend/src/contexts/WebSocketContext.jsx`
+- `/app/frontend/src/components/notifications/RealtimeNotificationIndicator.jsx`
 
 ---
 
 ## بيانات الاختبار
 - **مدير المنصة:** admin@nassaq.com / Admin@123
 - **مدير مدرسة:** principal1@nassaq.com / Principal@123
-- **معلم:** teacher1@nor.edu.sa / Teacher@123
 
 ---
 
@@ -104,7 +108,7 @@
 - OpenAI (Emergent LLM Key) - مساعد حكيم
 - MongoDB (MONGO_URL)
 - WebSocket (Real-time Notifications)
-- Faker, qrcode, @dnd-kit, canvas-confetti
+- pandas, openpyxl, xlsxwriter (Excel Import/Export)
 
 ---
 
@@ -112,12 +116,13 @@
 - **Iteration 56:** Settings 100% (18/18 ✅)
 - **Iteration 57:** Role Switcher + Communication 100% (16/16 ✅)
 - **Iteration 58:** WebSocket Real-time 100% (8/8 ✅)
+- **Iteration 59:** Bulk Import/Export 100% (16/16 ✅)
 
 ---
 
 ## الميزات المكتملة في هذه الجلسة:
-1. ✅ إعدادات النظام - واجهة مستخدم كاملة
-2. ✅ زر تبديل الأدوار - Backend + Frontend
-3. ✅ التواصل والإشعارات - بيانات حقيقية
-4. ✅ طلبات تسجيل المعلمين - موجود مسبقاً
-5. ✅ الإشعارات الفورية (WebSocket) - Backend + Frontend + Sound + Browser Push
+1. ✅ إعدادات النظام (7 tabs)
+2. ✅ زر تبديل الأدوار
+3. ✅ التواصل والإشعارات (بيانات حقيقية)
+4. ✅ الإشعارات الفورية (WebSocket + Sound + Browser Push)
+5. ✅ الاستيراد والتصدير الجماعي (Excel/CSV)
