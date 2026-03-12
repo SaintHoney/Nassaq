@@ -2246,11 +2246,15 @@ export const AdminDashboard = () => {
                     const cardInfo = {
                       schools: { label: isRTL ? 'المدارس المسجلة' : 'Registered Schools', icon: Building2 },
                       students: { label: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students', icon: GraduationCap },
-                      teachers: { label: isRTL ? 'المعلمين' : 'Teachers', icon: UserCheck },
-                      admins: { label: isRTL ? 'المسؤولين' : 'Administrators', icon: Users },
-                      activeUsers: { label: isRTL ? 'المستخدمين النشطين' : 'Active Users', icon: Activity },
-                      apiCalls: { label: isRTL ? 'طلبات API' : 'API Requests', icon: Server },
+                      teachers: { label: isRTL ? 'المعلمين في المدارس' : 'Teachers in Schools', icon: UserCheck },
+                      independentTeachers: { label: isRTL ? 'المعلمين المستقلين' : 'Independent Teachers', icon: Users },
+                      studentAttendance: { label: isRTL ? 'نسبة حضور الطلاب' : 'Student Attendance', icon: Activity },
+                      teacherAttendance: { label: isRTL ? 'نسبة حضور المعلمين' : 'Teacher Attendance', icon: Activity },
+                      platformAccounts: { label: isRTL ? 'حسابات المنصة' : 'Platform Accounts', icon: Shield },
+                      pendingRequests: { label: isRTL ? 'طلبات معلقة' : 'Pending Requests', icon: Clock },
+                      aiSchools: { label: isRTL ? 'مدارس تستخدم AI' : 'AI Schools', icon: Sparkles },
                     }[cardKey];
+                    if (!cardInfo) return null;
                     const IconComp = cardInfo.icon;
                     
                     return (
