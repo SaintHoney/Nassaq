@@ -1,44 +1,44 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Progress } from '../components/ui/progress';
 import { toast } from 'sonner';
 import {
-  BookOpen, Calendar, ClipboardCheck, Bell, GraduationCap,
-  Clock, CheckCircle2, AlertCircle, TrendingUp, Award,
-  FileText, Target, BarChart3, CalendarDays
+  BookOpen, Calendar, Bell, GraduationCap, Clock, CheckCircle2,
+  AlertCircle, TrendingUp, Award, FileText, BarChart3, CalendarDays,
+  Home, User, Settings, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
-import { Sidebar } from '../components/layout/Sidebar';
 
-// Helper functions
+// Helper function for Hijri date
 const getCurrentHijriDate = () => {
   const today = new Date();
   try {
     const hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+      weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-    return { hijri: hijriFormatter.format(today), gregorian: today.toLocaleDateString('en-GB') };
+    return hijriFormatter.format(today);
   } catch (e) {
-    return { hijri: 'التاريخ الهجري', gregorian: today.toLocaleDateString() };
+    return today.toLocaleDateString('ar-SA');
   }
 };
 
 export default function StudentDashboard() {
-  const { user, api, isRTL } = useAuth();
+  const { user, api, isRTL = true } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [studentData, setStudentData] = useState(null);
   const [stats, setStats] = useState({
-    attendanceRate: 95,
-    averageGrade: 88,
-    completedAssignments: 12,
-    pendingAssignments: 3,
+    attendanceRate: 0,
+    averageGrade: 0,
+    presentDays: 0,
+    absentDays: 0,
     todayLessons: []
   });
   const [grades, setGrades] = useState([]);
@@ -47,21 +47,33 @@ export default function StudentDashboard() {
   const fetchStudentData = useCallback(async () => {
     setLoading(true);
     try {
-      // Get student ID from user
       const studentId = user?.student_id || user?.id;
       
-      // Fetch student dashboard data from API
-      const dashboardRes = await api.get(`/student/dashboard/${studentId}`).catch(() => null);
+      if (!studentId) {
+        console.log('No student ID found');
+        setLoading(false);
+        return;
+      }
       
-      if (dashboardRes?.data) {
-        const data = dashboardRes.data;
+      const response = await api.get(`/student/dashboard/${studentId}`);
+      
+      if (response?.data) {
+        const data = response.data;
+        
+        setStudentData({
+          name: data.student?.name || user?.full_name,
+          className: data.student?.class_name || 'غير محدد',
+          schoolId: data.student?.school_id
+        });
+        
         setStats({
-          attendanceRate: data.stats.attendance_rate || 0,
-          averageGrade: data.stats.average_grade || 0,
-          completedAssignments: 12,
-          pendingAssignments: 3,
+          attendanceRate: data.stats?.attendance_rate || 0,
+          averageGrade: data.stats?.average_grade || 0,
+          presentDays: data.stats?.present_days || 0,
+          absentDays: data.stats?.absent_days || 0,
           todayLessons: data.today_schedule?.map(lesson => ({
             time: lesson.time,
+            period: lesson.period,
             subject: lesson.subject,
             teacher: lesson.teacher,
             room: lesson.room || ''
@@ -71,7 +83,7 @@ export default function StudentDashboard() {
         setGrades(data.recent_grades?.map(g => ({
           subject: g.subject,
           grade: g.grade,
-          trend: 'up'
+          date: g.date
         })) || []);
         
         setNotifications(data.notifications?.map(n => ({
@@ -79,49 +91,14 @@ export default function StudentDashboard() {
           time: n.time ? new Date(n.time).toLocaleDateString('ar-SA') : 'مؤخراً',
           type: n.type || 'info'
         })) || []);
-      } else {
-        // Fallback to mock data
-        const [attendanceRes, notificationsRes] = await Promise.all([
-          api.get(`/attendance/summary/student/${user?.id}`).catch(() => ({ data: {} })),
-          api.get('/notifications?limit=5').catch(() => ({ data: [] }))
-        ]);
-
-        const attendanceSummary = attendanceRes.data || {};
-        
-        setStats({
-          attendanceRate: attendanceSummary.attendance_rate || 95,
-          averageGrade: 88,
-          completedAssignments: 12,
-          pendingAssignments: 3,
-          todayLessons: [
-            { time: '07:00', subject: 'الرياضيات', teacher: 'أ. محمد', room: 'غرفة 101' },
-            { time: '08:00', subject: 'اللغة العربية', teacher: 'أ. فاطمة', room: 'غرفة 102' },
-            { time: '09:00', subject: 'العلوم', teacher: 'أ. خالد', room: 'المختبر' },
-            { time: '10:30', subject: 'اللغة الإنجليزية', teacher: 'أ. سارة', room: 'غرفة 103' },
-            { time: '11:30', subject: 'التربية الإسلامية', teacher: 'أ. أحمد', room: 'غرفة 104' },
-          ]
-        });
-
-        setGrades([
-          { subject: 'الرياضيات', grade: 92, trend: 'up' },
-          { subject: 'اللغة العربية', grade: 88, trend: 'up' },
-          { subject: 'العلوم', grade: 85, trend: 'same' },
-          { subject: 'اللغة الإنجليزية', grade: 90, trend: 'up' },
-        ]);
-
-        setNotifications(notificationsRes.data?.slice?.(0, 5) || [
-          { title: 'اختبار الرياضيات غداً', time: 'منذ ساعة', type: 'exam' },
-          { title: 'تم رصد درجة اللغة العربية', time: 'منذ 3 ساعات', type: 'grade' },
-          { title: 'اجتماع أولياء الأمور', time: 'أمس', type: 'meeting' },
-        ]);
       }
-
     } catch (error) {
       console.error('Error fetching student data:', error);
+      toast.error('خطأ في جلب البيانات');
     } finally {
       setLoading(false);
     }
-  }, [api, user?.id, user?.student_id]);
+  }, [api, user?.id, user?.student_id, user?.full_name]);
 
   useEffect(() => {
     fetchStudentData();
@@ -141,217 +118,247 @@ export default function StudentDashboard() {
     return 'bg-red-100';
   };
 
-  return (
-    <div className={`flex min-h-screen bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`} data-testid="student-dashboard">
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-emerald-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">جارٍ التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? (isRTL ? 'mr-64' : 'ml-64') : (isRTL ? 'mr-20' : 'ml-20')}`}>
-        <div className="p-6 space-y-6">
+  return (
+    <div className="min-h-screen bg-gray-50 pb-24" dir="rtl" data-testid="student-dashboard">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-emerald-600 to-teal-500 text-white">
+        <div className="px-4 py-6 space-y-4">
+          {/* Date */}
+          <p className="text-emerald-100 text-sm text-center">{getCurrentHijriDate()}</p>
           
-          {/* Welcome Card */}
-          <Card className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-emerald-500/20">
-            <CardContent className="py-5 px-6">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 border-2 border-emerald-500 shadow-lg">
-                    <AvatarImage src={user?.avatar_url} alt={user?.full_name} />
-                    <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-teal-500 text-white text-xl font-bold">
-                      {user?.full_name?.charAt(0) || 'ط'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h1 className="font-cairo text-xl font-bold text-gray-900">
-                      {isRTL ? `مرحباً ${user?.full_name || 'الطالب'}` : `Welcome, ${user?.full_name || 'Student'}`}
-                    </h1>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      {isRTL ? 'الصف الثالث المتوسط - شعبة أ' : 'Grade 9 - Section A'}
+          {/* Student Info */}
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 border-2 border-white/30 shadow-lg">
+              <AvatarImage src={user?.avatar_url} alt={studentData?.name} />
+              <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                {studentData?.name?.charAt(0) || 'ط'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="font-cairo text-xl font-bold">
+                مرحباً {studentData?.name || 'الطالب'}
+              </h1>
+              <p className="text-emerald-100 text-sm flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                {studentData?.className || 'غير محدد'}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+              <p className="text-emerald-100 text-xs">نسبة الحضور</p>
+              <p className="text-2xl font-bold">{stats.attendanceRate}%</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+              <p className="text-emerald-100 text-xs">المعدل العام</p>
+              <p className="text-2xl font-bold">{stats.averageGrade}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-4 space-y-4 -mt-4">
+        
+        {/* Today's Schedule Card */}
+        <Card className="rounded-2xl shadow-sm border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarDays className="h-5 w-5 text-emerald-600" />
+              جدول اليوم
+              <Badge variant="secondary" className="ms-auto">
+                {stats.todayLessons.length} حصص
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {stats.todayLessons.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <CalendarDays className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>لا توجد حصص اليوم</p>
+              </div>
+            ) : (
+              stats.todayLessons.map((lesson, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                    index === 0 
+                      ? 'bg-gradient-to-l from-emerald-500 to-emerald-600 text-white' 
+                      : 'bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-14 h-12 rounded-xl flex flex-col items-center justify-center ${
+                    index === 0 ? 'bg-white/20' : 'bg-white border'
+                  }`}>
+                    <span className={`font-bold text-sm ${index === 0 ? 'text-white' : 'text-emerald-600'}`}>
+                      {lesson.time}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-bold text-sm ${index === 0 ? 'text-white' : 'text-gray-900'}`}>
+                      {lesson.subject}
+                    </p>
+                    <p className={`text-xs ${index === 0 ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                      {lesson.teacher} {lesson.room && `• ${lesson.room}`}
                     </p>
                   </div>
+                  {index === 0 && (
+                    <Badge className="bg-white/20 text-white border-0">الآن</Badge>
+                  )}
                 </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-center px-4 py-2 bg-emerald-500/10 rounded-xl">
-                    <p className="text-xs text-muted-foreground">{isRTL ? 'المعدل العام' : 'GPA'}</p>
-                    <p className="font-cairo font-bold text-emerald-600 text-2xl">{stats.averageGrade}%</p>
-                  </div>
-                  <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl">
-                    <Calendar className="h-5 w-5 text-gray-600" />
-                    <div className="text-end">
-                      <p className="font-cairo text-sm font-bold">{getCurrentHijriDate().hijri}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{getCurrentHijriDate().gregorian}</p>
+        {/* Grades Card */}
+        <Card className="rounded-2xl shadow-sm border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              درجاتي
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {grades.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Award className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>لا توجد درجات مسجلة</p>
+              </div>
+            ) : (
+              grades.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${getGradeBg(item.grade)}`}>
+                      <BookOpen className={`h-4 w-4 ${getGradeColor(item.grade)}`} />
+                    </div>
+                    <div>
+                      <span className="font-medium text-sm">{item.subject}</span>
+                      <p className="text-xs text-muted-foreground">{item.date}</p>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold text-lg ${getGradeColor(item.grade)}`}>
+                      {item.grade}%
+                    </span>
+                    {item.grade >= 85 && <TrendingUp className="h-4 w-4 text-green-500" />}
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Attendance Summary */}
+        <Card className="rounded-2xl shadow-sm border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              ملخص الحضور
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">نسبة الحضور</span>
+                <span className="font-bold text-green-600">{stats.attendanceRate}%</span>
+              </div>
+              <Progress value={stats.attendanceRate} className="h-2" />
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-green-50 rounded-xl p-3 text-center">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-green-600">{stats.presentDays}</p>
+                  <p className="text-xs text-muted-foreground">أيام الحضور</p>
+                </div>
+                <div className="bg-red-50 rounded-xl p-3 text-center">
+                  <AlertCircle className="h-6 w-6 text-red-600 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-red-600">{stats.absentDays}</p>
+                  <p className="text-xs text-muted-foreground">أيام الغياب</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'نسبة الحضور' : 'Attendance'}</p>
-                    <p className="text-3xl font-bold text-green-600">{stats.attendanceRate}%</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-green-100">
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <Progress value={stats.attendanceRate} className="mt-3 h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'المعدل العام' : 'Average Grade'}</p>
-                    <p className="text-3xl font-bold text-blue-600">{stats.averageGrade}%</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-blue-100">
-                    <Award className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-                <Progress value={stats.averageGrade} className="mt-3 h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'واجبات مكتملة' : 'Completed'}</p>
-                    <p className="text-3xl font-bold text-purple-600">{stats.completedAssignments}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-purple-100">
-                    <FileText className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'واجبات معلقة' : 'Pending'}</p>
-                    <p className="text-3xl font-bold text-orange-600">{stats.pendingAssignments}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-orange-100">
-                    <AlertCircle className="h-6 w-6 text-orange-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Today's Schedule */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CalendarDays className="h-5 w-5 text-emerald-600" />
-                  {isRTL ? 'جدول اليوم' : "Today's Schedule"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {stats.todayLessons.map((lesson, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      index === 0 ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-14 h-10 rounded-lg flex items-center justify-center ${
-                        index === 0 ? 'bg-emerald-500 text-white' : 'bg-gray-200'
-                      }`}>
-                        <span className="font-bold text-xs">{lesson.time}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{lesson.subject}</p>
-                        <p className="text-xs text-muted-foreground">{lesson.teacher} • {lesson.room}</p>
-                      </div>
-                    </div>
-                    {index === 0 && (
-                      <Badge className="bg-emerald-500 text-xs">{isRTL ? 'الآن' : 'Now'}</Badge>
+        {/* Notifications */}
+        <Card className="rounded-2xl shadow-sm border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-5 w-5 text-orange-500" />
+              الإشعارات
+              {notifications.length > 0 && (
+                <Badge variant="destructive" className="ms-auto text-xs">
+                  {notifications.length}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {notifications.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Bell className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>لا توجد إشعارات</p>
+              </div>
+            ) : (
+              notifications.slice(0, 3).map((notif, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
+                  <div className={`p-2 rounded-full ${
+                    notif.type === 'exam' ? 'bg-red-100' :
+                    notif.type === 'grade' ? 'bg-green-100' : 'bg-blue-100'
+                  }`}>
+                    {notif.type === 'exam' ? (
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                    ) : notif.type === 'grade' ? (
+                      <Award className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Calendar className="h-4 w-4 text-blue-600" />
                     )}
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Grades Overview */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                  {isRTL ? 'درجاتي' : 'My Grades'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {grades.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <BookOpen className="h-5 w-5 text-gray-500" />
-                      <span className="font-medium">{item.subject}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold text-lg ${getGradeColor(item.grade)}`}>{item.grade}%</span>
-                      {item.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
-                    </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{notif.title}</p>
+                    <p className="text-xs text-muted-foreground">{notif.time}</p>
                   </div>
-                ))}
-                <Button variant="outline" className="w-full mt-2">
-                  {isRTL ? 'عرض جميع الدرجات' : 'View All Grades'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Notifications */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Bell className="h-5 w-5 text-orange-500" />
-                {isRTL ? 'الإشعارات والتنبيهات' : 'Notifications'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {notifications.map((notif, index) => (
-                  <div key={index} className="p-4 rounded-lg bg-gray-50 border">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full ${
-                        notif.type === 'exam' ? 'bg-red-100' :
-                        notif.type === 'grade' ? 'bg-green-100' : 'bg-blue-100'
-                      }`}>
-                        {notif.type === 'exam' ? (
-                          <AlertCircle className="h-4 w-4 text-red-600" />
-                        ) : notif.type === 'grade' ? (
-                          <Award className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Calendar className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{notif.title}</p>
-                        <p className="text-xs text-muted-foreground">{notif.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+        <div className="flex items-center justify-around py-2">
+          <button className="flex flex-col items-center gap-1 p-2 text-emerald-600">
+            <Home className="h-6 w-6" />
+            <span className="text-xs font-medium">الرئيسية</span>
+          </button>
+          <button className="flex flex-col items-center gap-1 p-2 text-gray-400">
+            <CalendarDays className="h-6 w-6" />
+            <span className="text-xs">الجدول</span>
+          </button>
+          <button className="flex flex-col items-center gap-1 p-2 text-gray-400">
+            <BookOpen className="h-6 w-6" />
+            <span className="text-xs">الدرجات</span>
+          </button>
+          <button className="flex flex-col items-center gap-1 p-2 text-gray-400">
+            <User className="h-6 w-6" />
+            <span className="text-xs">حسابي</span>
+          </button>
         </div>
-      </main>
+      </nav>
     </div>
   );
 }
