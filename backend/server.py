@@ -2984,6 +2984,10 @@ async def create_school_constraint(
     
     await db.admin_constraints.insert_one(constraint_doc)
     
+    # Remove _id from response
+    if "_id" in constraint_doc:
+        del constraint_doc["_id"]
+    
     return {"id": constraint_id, "message": "تم إضافة القيد بنجاح", "constraint": constraint_doc}
 
 @api_router.put("/school/constraints/{constraint_id}")
