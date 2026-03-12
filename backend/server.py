@@ -11613,6 +11613,43 @@ api_router.include_router(bulk_routes)
 api_router.include_router(student_portal_routes)
 api_router.include_router(parent_portal_routes)
 
+# ============== TEST ACCOUNTS CREATION ENDPOINT ==============
+@api_router.post("/test-accounts/create")
+async def create_test_accounts(
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+):
+    """
+    Create test student and parent accounts for testing the portal
+    إنشاء حسابات تجريبية للطالب وولي الأمر
+    """
+    from routes.student_portal_routes import create_test_student_account, create_test_parent_account
+    
+    try:
+        student = await create_test_student_account(db)
+        parent = await create_test_parent_account(db)
+        
+        return {
+            "success": True,
+            "message": "تم إنشاء الحسابات التجريبية بنجاح",
+            "accounts": {
+                "student": {
+                    "email": "student@nassaq.com",
+                    "password": "Student@123",
+                    "name": student.get("full_name") if student else "طالب تجريبي"
+                },
+                "parent": {
+                    "email": "parent@nassaq.com", 
+                    "password": "Parent@123",
+                    "name": parent.get("full_name") if parent else "ولي أمر تجريبي"
+                }
+            }
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"حدث خطأ: {str(e)}"
+        }
+
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
 
