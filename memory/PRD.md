@@ -149,10 +149,11 @@
 |-------|------------------|-------------|
 | مدير المنصة | admin@nassaq.com | Admin@123 |
 | مدير مدرسة النور | principal1@nassaq.com | Principal@123 |
-| مدير مدرسة الأمل | principal2@nassaq.com | Principal@123 |
-| معلم (النور) | ahmed.otaibi@nor.edu.sa | Teacher@123 |
-| معلم (الأمل) | sara.harbi@aml.edu.sa | Teacher@123 |
-| طالب | student1@nor.edu.sa | Student@123 |
+| مدير مدرسة الأحساء | principal4@nassaq.com | Principal@123 |
+| معلم (النور) | teacher1@nor.edu.sa | Teacher@123 |
+| معلم (الأحساء) | teacher1@ahsa.edu.sa | Teacher@123 |
+| طالب (النور) | student1@nor.edu.sa | Student@123 |
+| طالب (الأحساء) | student1@ahsa.edu.sa | Student@123 |
 
 ---
 
