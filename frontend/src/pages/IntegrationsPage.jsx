@@ -383,7 +383,7 @@ export default function IntegrationsPage() {
   
   // States
   const [integrations, setIntegrations] = useState(PREMIUM_INTEGRATIONS);
-  const [apiKeys, setApiKeys] = useState(NASSAQ_API_KEYS);
+  const [apiKeys, setApiKeys] = useState(INITIAL_API_KEYS);
   const [activeMainTab, setActiveMainTab] = useState('integrations');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
