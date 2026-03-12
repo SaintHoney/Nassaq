@@ -1300,6 +1300,7 @@ export default function UsersClassesManagement() {
           onSuccess={handleStudentCreated}
           api={api}
           isRTL={isRTL}
+          grades={grades}
           classes={classes}
         />
         
