@@ -80,20 +80,13 @@ export const AIInsightsPage = () => {
           api.get('/ai/insights/at-risk-students').catch(() => ({ data: [] })),
         ]);
         
-        // Set overview data
+        // Set overview data - only from API, no fallback mock data
         if (overviewRes.data) {
           setInsights({
-            overall_score: overviewRes.data.overall_score || 87,
-            trend: overviewRes.data.trend || 'up',
-            trend_value: overviewRes.data.trend_value || 3.2,
+            overall_score: overviewRes.data.overall_score || 0,
+            trend: overviewRes.data.trend || 'stable',
+            trend_value: overviewRes.data.trend_value || 0,
             last_updated: overviewRes.data.last_updated || new Date().toISOString(),
-          });
-        } else {
-          setInsights({
-            overall_score: 87,
-            trend: 'up',
-            trend_value: 3.2,
-            last_updated: new Date().toISOString(),
           });
         }
         
