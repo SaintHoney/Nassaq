@@ -254,6 +254,7 @@ export const PlatformSchoolsPage = () => {
     active: schools.filter(s => s.status === 'active').length,
     pending: schools.filter(s => s.status === 'pending').length,
     suspended: schools.filter(s => s.status === 'suspended').length,
+    aiEnabled: schools.filter(s => s.ai_enabled).length,
     totalStudents: schools.reduce((sum, s) => sum + (s.current_students || 0), 0),
     totalTeachers: schools.reduce((sum, s) => sum + (s.current_teachers || 0), 0),
   };
