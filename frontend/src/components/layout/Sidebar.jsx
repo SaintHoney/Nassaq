@@ -507,6 +507,19 @@ export const Sidebar = ({ children }) => {
             </div>
           </div>
           
+          {/* Role Switcher Button */}
+          {availableRoles.length > 1 && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowRoleSwitcher(true)}
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10 mb-2"
+              data-testid="role-switcher-btn"
+            >
+              <ArrowLeftRight className="h-4 w-4 me-2" />
+              {isRTL ? 'تبديل الدور' : 'Switch Role'}
+            </Button>
+          )}
+          
           {/* Logout Button */}
           <Button
             variant="ghost"
@@ -535,6 +548,93 @@ export const Sidebar = ({ children }) => {
           </Button>
         </div>
       )}
+
+      {/* Role Switcher Modal */}
+      <Dialog open={showRoleSwitcher} onOpenChange={setShowRoleSwitcher}>
+        <DialogContent className="max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowLeftRight className="h-5 w-5 text-brand-turquoise" />
+              {isRTL ? 'تبديل الدور' : 'Switch Role'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {loadingRoles ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-brand-turquoise" />
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {availableRoles.map((role, index) => (
+                <button
+                  key={`${role.role}-${role.tenant_id || index}`}
+                  onClick={() => handleSwitchRole(role)}
+                  disabled={role.is_current || switchingRole}
+                  className={`w-full p-3 rounded-lg border transition-all text-start ${
+                    role.is_current
+                      ? 'bg-brand-turquoise/10 border-brand-turquoise'
+                      : 'bg-background border-border hover:border-brand-turquoise hover:bg-muted'
+                  } ${switchingRole ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  data-testid={`switch-role-${role.role}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        role.is_current ? 'bg-brand-turquoise text-white' : 'bg-muted'
+                      }`}>
+                        {role.is_preview ? (
+                          <Eye className="h-5 w-5" />
+                        ) : role.role === 'platform_admin' ? (
+                          <Shield className="h-5 w-5" />
+                        ) : role.role === 'school_principal' ? (
+                          <Building2 className="h-5 w-5" />
+                        ) : (
+                          <Users className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {isRTL ? role.role_name_ar : role.role_name_en}
+                        </p>
+                        {role.tenant_name && (
+                          <p className="text-xs text-muted-foreground">
+                            {role.tenant_name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {role.is_current && (
+                        <Badge variant="secondary" className="bg-brand-turquoise/20 text-brand-turquoise">
+                          {isRTL ? 'الحالي' : 'Current'}
+                        </Badge>
+                      )}
+                      {role.is_preview && (
+                        <Badge variant="outline" className="text-amber-500 border-amber-500">
+                          {isRTL ? 'معاينة' : 'Preview'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Return to Original Role Button */}
+          {user?.is_switched && (
+            <Button
+              variant="outline"
+              onClick={handleReturnToOriginal}
+              disabled={switchingRole}
+              className="w-full mt-4"
+            >
+              <RefreshCw className={`h-4 w-4 me-2 ${switchingRole ? 'animate-spin' : ''}`} />
+              {isRTL ? 'العودة للدور الأصلي' : 'Return to Original Role'}
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
