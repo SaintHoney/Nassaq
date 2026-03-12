@@ -625,7 +625,7 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             data-testid="quick-action-add-student"
           >
             <UserPlus className="h-3.5 w-3.5 me-1.5 text-brand-turquoise" />
-            {isRTL ? 'طالب' : 'Student'}
+            {isRTL ? 'طالب / طلاب' : 'Student(s)'}
           </Button>
           <Button
             size="sm"
@@ -635,7 +635,7 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             data-testid="quick-action-add-teacher"
           >
             <GraduationCap className="h-3.5 w-3.5 me-1.5 text-brand-navy" />
-            {isRTL ? 'معلم' : 'Teacher'}
+            {isRTL ? 'معلم / معلمين' : 'Teacher(s)'}
           </Button>
           <Button
             size="sm"
@@ -645,7 +645,7 @@ export const SchoolDashboardContent = ({ schoolContext, isImpersonating }) => {
             data-testid="quick-action-create-class"
           >
             <School className="h-3.5 w-3.5 me-1.5 text-purple-500" />
-            {isRTL ? 'فصل' : 'Class'}
+            {isRTL ? 'فصل / فصول' : 'Class(es)'}
           </Button>
           <Button
             size="sm"
