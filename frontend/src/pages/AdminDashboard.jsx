@@ -210,6 +210,28 @@ export const AdminDashboard = () => {
     showUsers: true
   });
 
+  // Command Center Stats - إحصائيات مركز القيادة
+  const [commandCenterStats, setCommandCenterStats] = useState({
+    registered_schools: 0,
+    registered_students: 0,
+    teachers_in_schools: 0,
+    independent_teachers: 0,
+    student_attendance_rate: 0,
+    teacher_attendance_rate: 0,
+    platform_accounts: 0,
+    pending_requests: 0,
+    ai_enabled_schools: 0,
+    hijri_date: '',
+    gregorian_date: '',
+  });
+  const [notificationStats, setNotificationStats] = useState({
+    total_notifications: 0,
+    unread_notifications: 0,
+    sent_messages: 0,
+    received_messages: 0,
+    scheduled_messages: 0,
+  });
+
   // Get current Hijri date - تحويل حقيقي للتاريخ الهجري
   const getCurrentHijriDate = useCallback(() => {
     const today = new Date();
