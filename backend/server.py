@@ -2520,12 +2520,8 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
             "code": s.get("code", ""),
             "color": s.get("color", "#3B82F6")
         })
-            {"id": "subj-7", "name": "الحاسب الآلي", "name_en": "Computer Science", "code": "CMP"},
-            {"id": "subj-8", "name": "التربية الفنية", "name_en": "Art Education", "code": "ART"},
-            {"id": "subj-9", "name": "التربية البدنية", "name_en": "Physical Education", "code": "PHY"},
-        ]
     
-    return {"subjects": subjects}
+    return {"subjects": formatted_subjects}
 
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
