@@ -896,11 +896,11 @@ export default function UsersClassesManagement() {
                 <section>
                   <Tabs defaultValue="import" className="space-y-6">
                     <TabsList className="grid w-full max-w-md grid-cols-2">
-                      <TabsTrigger value="import" className="flex items-center gap-2">
+                      <TabsTrigger value="import" className="flex items-center gap-2" data-testid="inner-tab-import">
                         <FileUp className="h-4 w-4" />
                         {labels.import}
                       </TabsTrigger>
-                      <TabsTrigger value="export" className="flex items-center gap-2">
+                      <TabsTrigger value="export" className="flex items-center gap-2" data-testid="inner-tab-export">
                         <FileDown className="h-4 w-4" />
                         {labels.export}
                       </TabsTrigger>
