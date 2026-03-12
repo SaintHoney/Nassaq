@@ -114,6 +114,13 @@ export default function AddStudentWizard({
   const [checkingParent, setCheckingParent] = useState(false);
   const [linkToExisting, setLinkToExisting] = useState(false);
   
+  // Parent search mode
+  const [parentMode, setParentMode] = useState('new'); // 'new' or 'search'
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+  const [parentSearchResults, setParentSearchResults] = useState([]);
+  const [searchingParents, setSearchingParents] = useState(false);
+  const [selectedExistingParent, setSelectedExistingParent] = useState(null);
+  
   // Result
   const [createdStudent, setCreatedStudent] = useState(null);
   const [createdParent, setCreatedParent] = useState(null);
