@@ -769,6 +769,146 @@ export default function SchedulePageNew() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Full Schedule Dialog */}
+        <Dialog open={fullScheduleOpen} onOpenChange={setFullScheduleOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-brand-navy" />
+                الجدول الأسبوعي الكامل
+              </DialogTitle>
+              <DialogDescription>
+                عرض شامل لجميع الحصص في الأسبوع
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[1200px]" dir="rtl">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="p-2 text-center font-medium border border-border w-[120px]">الحصة / اليوم</th>
+                    {DAYS.map(day => (
+                      <th key={day.key} className="p-2 text-center font-medium border border-border">
+                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r ${day.color} text-white text-sm`}>
+                          {day.ar}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {timeSlots.map((slot, idx) => {
+                    const isBreak = slot.is_break || slot.type === 'break' || slot.type === 'prayer';
+                    
+                    return (
+                      <tr key={slot.id} className={idx % 2 === 0 ? '' : 'bg-muted/5'}>
+                        <td className="p-2 border border-border bg-muted/20 text-center">
+                          <p className="font-bold text-sm">
+                            {isBreak ? (slot.name_ar || 'استراحة') : `الحصة ${slot.slot_number || idx + 1}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {slot.start_time?.substring(0, 5)} - {slot.end_time?.substring(0, 5)}
+                          </p>
+                        </td>
+                        
+                        {DAYS.map(day => {
+                          if (isBreak) {
+                            return (
+                              <td key={`${day.key}-${slot.id}`} className="p-1 border border-border">
+                                <div className={`p-2 rounded-lg text-center ${slot.type === 'prayer' ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+                                  <p className={`text-xs font-medium ${slot.type === 'prayer' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                    {slot.name_ar || (slot.type === 'prayer' ? 'صلاة' : 'استراحة')}
+                                  </p>
+                                </div>
+                              </td>
+                            );
+                          }
+                          
+                          // Get all sessions for this day and slot (for all classes)
+                          const daySessions = sessions.filter(s => {
+                            const dayMatch = s.day_of_week === day.key || s.day === day.key;
+                            const slotMatch = s.time_slot_id === slot.id;
+                            return dayMatch && slotMatch;
+                          });
+                          
+                          return (
+                            <td key={`${day.key}-${slot.id}`} className="p-1 border border-border align-top">
+                              <div className="space-y-1 max-h-[100px] overflow-y-auto">
+                                {daySessions.length > 0 ? daySessions.slice(0, 3).map((session, i) => {
+                                  const colors = getSubjectColor(session.subject_name);
+                                  return (
+                                    <div key={i} className={`p-1 rounded text-xs ${colors.bg} ${colors.border} border`}>
+                                      <p className={`font-bold ${colors.text} truncate`}>
+                                        {session.subject_name?.split('/')[0]?.substring(0, 10)}
+                                      </p>
+                                      <p className="text-muted-foreground truncate text-[10px]">
+                                        {session.class_name?.replace('الصف ', '')?.substring(0, 12)}
+                                      </p>
+                                    </div>
+                                  );
+                                }) : (
+                                  <div className="p-2 text-center text-muted-foreground/30 text-xs">-</div>
+                                )}
+                                {daySessions.length > 3 && (
+                                  <p className="text-xs text-muted-foreground text-center">+{daySessions.length - 3} أخرى</p>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFullScheduleOpen(false)}>
+                إغلاق
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Generation Errors Dialog */}
+        {generationErrors.length > 0 && (
+          <Dialog open={generationErrors.length > 0} onOpenChange={() => setGenerationErrors([])}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="font-cairo flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  مشاكل في إنشاء الجدول
+                </DialogTitle>
+                <DialogDescription>
+                  يرجى حل هذه المشاكل قبل إعادة المحاولة
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-2 py-4">
+                {generationErrors.map((error, index) => (
+                  <div key={index} className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                    <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                ))}
+              </div>
+              
+              <DialogFooter>
+                <Link to="/principal/settings">
+                  <Button variant="outline">
+                    <Settings className="h-4 w-4 ml-2" />
+                    الذهاب للإعدادات
+                  </Button>
+                </Link>
+                <Button onClick={() => setGenerationErrors([])}>
+                  فهمت
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </Sidebar>
   );
