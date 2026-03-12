@@ -11601,6 +11601,7 @@ api_router.include_router(audit_router)
 api_router.include_router(settings_router)
 api_router.include_router(user_roles_router)
 api_router.include_router(websocket_router)
+api_router.include_router(bulk_routes)
 
 # Re-include the main api_router to pick up nested routers
 app.include_router(api_router)
