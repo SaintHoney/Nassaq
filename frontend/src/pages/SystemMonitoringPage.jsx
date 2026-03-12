@@ -233,37 +233,11 @@ const generatePerformanceData = () => {
   return data;
 };
 
-// Sample error logs
-const SAMPLE_ERRORS = [
-  { id: 1, type: 'API Error', message: 'Timeout connecting to external service', time: '10:45', severity: 'warning', service: 'Integration Service' },
-  { id: 2, type: 'Database Error', message: 'Slow query detected (>5s)', time: '10:30', severity: 'low', service: 'Database' },
-  { id: 3, type: 'Auth Error', message: 'Multiple failed login attempts', time: '10:15', severity: 'warning', service: 'Auth Service' },
-  { id: 4, type: 'System Error', message: 'Memory usage exceeded 80%', time: '09:45', severity: 'warning', service: 'Server' },
-];
-
-// Sample jobs
-const SAMPLE_JOBS = [
-  { id: 1, name: 'إرسال الإشعارات', name_en: 'Send Notifications', status: 'running', progress: 67, started: '10:30' },
-  { id: 2, name: 'مزامنة البيانات', name_en: 'Data Sync', status: 'pending', progress: 0, started: '-' },
-  { id: 3, name: 'إنشاء التقارير', name_en: 'Generate Reports', status: 'completed', progress: 100, started: '10:00' },
-  { id: 4, name: 'تحليل AI', name_en: 'AI Analysis', status: 'running', progress: 45, started: '10:35' },
-  { id: 5, name: 'النسخ الاحتياطي', name_en: 'Backup', status: 'pending', progress: 0, started: '-' },
-];
-
-// Sample integrations
-const SAMPLE_INTEGRATIONS = [
-  { id: 1, name: 'نظام نور', name_en: 'Noor System', status: 'connected', lastSync: '2026-03-09 10:30', health: 98 },
-  { id: 2, name: 'خدمات الرسائل', name_en: 'SMS Service', status: 'connected', lastSync: '2026-03-09 10:45', health: 100 },
-  { id: 3, name: 'خدمات البريد', name_en: 'Email Service', status: 'connected', lastSync: '2026-03-09 10:40', health: 95 },
-  { id: 4, name: 'بوابة الدفع', name_en: 'Payment Gateway', status: 'disconnected', lastSync: '2026-03-09 09:00', health: 0 },
-  { id: 5, name: 'التخزين السحابي', name_en: 'Cloud Storage', status: 'connected', lastSync: '2026-03-09 10:35', health: 92 },
-];
-
-// Sample alerts
-const SAMPLE_ALERTS = [
-  { id: 1, title: 'بوابة الدفع غير متصلة', title_en: 'Payment Gateway Disconnected', severity: 'critical', time: '09:15', resolved: false },
-  { id: 2, title: 'استهلاك الذاكرة مرتفع', title_en: 'High Memory Usage', severity: 'warning', time: '09:45', resolved: true },
-];
+// Empty initial states - data will be fetched from API
+const INITIAL_ERRORS = [];
+const INITIAL_JOBS = [];
+const INITIAL_INTEGRATIONS = [];
+const INITIAL_ALERTS = [];
 
 export const SystemMonitoringPage = () => {
   const { isRTL = true, isDark } = useTheme();
