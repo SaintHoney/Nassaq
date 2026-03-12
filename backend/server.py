@@ -2838,7 +2838,8 @@ async def create_school_subject(
     await db.subjects.insert_one(subject_doc)
     
     # Remove _id from response
-    del subject_doc["_id"] if "_id" in subject_doc else None
+    if "_id" in subject_doc:
+        del subject_doc["_id"]
     
     return {"id": subject_id, "message": "تم إضافة المادة بنجاح", "subject": subject_doc}
 
