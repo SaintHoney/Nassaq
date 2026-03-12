@@ -11559,6 +11559,10 @@ audit_router = setup_audit_routes(db, get_current_user, require_roles, UserRole)
 from routes.settings_routes import setup_settings_routes
 settings_router = setup_settings_routes(db, get_current_user, require_roles, UserRole)
 
+# Import and create user roles routes (Role Switching)
+from routes.user_roles_routes import setup_user_roles_routes
+user_roles_router = setup_user_roles_routes(db, get_current_user, require_roles, UserRole, create_access_token)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
