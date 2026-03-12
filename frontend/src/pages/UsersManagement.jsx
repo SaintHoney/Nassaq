@@ -29,7 +29,7 @@ import {
   LayoutGrid, Download, Settings, Activity, Bell, Send, Key, Archive,
   GraduationCap, Briefcase, HeadphonesIcon, BarChart3, TestTube, Megaphone,
   CheckCircle2, XCircle, AlertTriangle, FileText, QrCode, Copy, Check,
-  MessageSquare, Info, School, Globe, Sparkles
+  MessageSquare, Info, School, Globe, Sparkles, TrendingUp
 } from 'lucide-react';
 import CreateUserWizard from '../components/wizards/CreateUserWizard';
 
