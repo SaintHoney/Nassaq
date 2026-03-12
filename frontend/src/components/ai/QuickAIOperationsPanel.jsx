@@ -147,55 +147,34 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
     setOperationsToday(prev => prev + 1);
   };
   
-  // Generate operation results
+  // Generate operation results - Empty states when no data
   const generateOperationResults = (operationId) => {
     switch (operationId) {
       case 'system_diagnosis':
         return {
           title: isRTL ? 'نتائج تشخيص النظام' : 'System Diagnosis Results',
-          summary: isRTL ? 'تم تحليل 200 مدرسة و 4,320 مستخدمًا نشطًا' : 'Analyzed 200 schools and 4,320 active users',
-          items: [
-            { label: isRTL ? 'مدارس تحتاج متابعة عاجلة' : 'Schools need urgent follow-up', value: 3, type: 'critical' },
-            { label: isRTL ? 'مدارس بانخفاض نشاط ملحوظ' : 'Schools with low activity', value: 2, type: 'warning' },
-            { label: isRTL ? 'مدارس بتأخر في الإدخال' : 'Schools with delayed input', value: 1, type: 'warning' },
-            { label: isRTL ? 'عمليات استيراد تحتاج مراجعة' : 'Imports need review', value: 5, type: 'info' },
-          ],
-          recommendations: [
-            isRTL ? 'التواصل مع المدارس المتأخرة' : 'Contact delayed schools',
-            isRTL ? 'مراجعة ملفات الاستيراد المعلقة' : 'Review pending imports',
-            isRTL ? 'تفعيل التذكيرات التلقائية' : 'Enable automatic reminders',
-          ]
+          summary: isRTL ? 'يتم تحليل البيانات...' : 'Analyzing data...',
+          items: [], // Empty - will be populated from API
+          recommendations: []
         };
       case 'data_quality':
         return {
           title: isRTL ? 'نتائج فحص جودة البيانات' : 'Data Quality Results',
-          summary: isRTL ? 'متوسط جودة البيانات: 86%' : 'Average data quality: 86%',
-          qualityScore: 86,
-          items: [
-            { label: isRTL ? 'سجلات ناقصة' : 'Missing records', value: 42, type: 'warning' },
-            { label: isRTL ? 'سجلات مكررة' : 'Duplicate records', value: 9, type: 'warning' },
-            { label: isRTL ? 'فصول بدون معلم' : 'Classes without teacher', value: 6, type: 'critical' },
-            { label: isRTL ? 'أولياء أمور غير مرتبطين' : 'Unlinked parents', value: 11, type: 'info' },
-          ],
+          summary: isRTL ? 'جاري الفحص...' : 'Checking...',
+          qualityScore: 0,
+          items: [], // Empty - will be populated from API
         };
       case 'import_analyzer':
         return {
           title: isRTL ? 'نتائج ملفات الاستيراد اليوم' : 'Today\'s Import Files Results',
-          summary: isRTL ? 'تم استيراد 8 ملفات اليوم' : '8 files imported today',
+          summary: isRTL ? 'لا توجد عمليات استيراد اليوم' : 'No imports today',
           importStats: {
-            total: 8,
-            success: 5,
-            failed: 2,
-            pending: 1
+            total: 0,
+            success: 0,
+            failed: 0,
+            pending: 0
           },
-          items: [
-            { label: isRTL ? 'طلاب_مدرسة_النور.xlsx' : 'students_alnoor.xlsx', value: 'ناجح', type: 'success', records: 245 },
-            { label: isRTL ? 'معلمين_المنطقة_الشرقية.xlsx' : 'teachers_eastern.xlsx', value: 'ناجح', type: 'success', records: 87 },
-            { label: isRTL ? 'جداول_الابتدائية.xlsx' : 'primary_schedules.xlsx', value: 'فشل', type: 'critical', error: 'تنسيق غير صحيح' },
-            { label: isRTL ? 'اولياء_امور.xlsx' : 'parents.xlsx', value: 'ناجح', type: 'success', records: 312 },
-            { label: isRTL ? 'فصول_الثانوية.xlsx' : 'secondary_classes.xlsx', value: 'فشل', type: 'critical', error: 'بيانات مكررة' },
-            { label: isRTL ? 'طلاب_جدد.xlsx' : 'new_students.xlsx', value: 'معلق', type: 'warning', records: 56 },
-          ],
+          items: [], // Empty - will be populated from API
         };
       case 'alerts_review':
         return {
@@ -203,11 +182,8 @@ export default function QuickAIOperationsPanel({ api, isRTL = true }) {
           summary: isRTL ? `لديك ${openAlerts} تنبيهات غير مقروءة` : `You have ${openAlerts} unread alerts`,
           unreadCount: openAlerts,
           alertsLink: '/admin/audit',
-          items: [
-            { label: isRTL ? 'مدرسة الأمل - نشاط منخفض' : 'Al-Amal School - Low activity', type: 'warning', time: '10:30' },
-            { label: isRTL ? 'فشل استيراد ملف الطلاب' : 'Student import failed', type: 'critical', time: '09:45' },
-            { label: isRTL ? 'معلم جديد بدون تعيين فصل' : 'New teacher without class', type: 'info', time: '09:15' },
-          ],
+          items: [], // Empty - will be populated from API
+        };
         };
       default:
         return {
