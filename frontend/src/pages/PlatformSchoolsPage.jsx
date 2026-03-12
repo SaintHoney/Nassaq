@@ -558,7 +558,126 @@ export const PlatformSchoolsPage = () => {
             </CardHeader>
             
             <CardContent>
-              <div className="rounded-xl border overflow-hidden">
+              {/* Grid View - Cards */}
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {loading ? (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                    </div>
+                  ) : paginatedSchools.length === 0 ? (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      {isRTL ? 'لا توجد مدارس' : 'No schools found'}
+                    </div>
+                  ) : (
+                    paginatedSchools.map((school) => (
+                      <Card 
+                        key={school.id} 
+                        className="card-nassaq relative overflow-hidden group"
+                        data-testid={`school-card-${school.id}`}
+                      >
+                        {/* Status indicator */}
+                        <div className={`absolute top-0 left-0 right-0 h-1 ${
+                          school.status === 'active' ? 'bg-green-500' :
+                          school.status === 'suspended' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`} />
+                        
+                        <CardContent className="p-5">
+                          {/* Header - School Info */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
+                                <Building2 className="h-6 w-6 text-brand-navy" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-base line-clamp-1">{school.name}</h3>
+                                <p className="text-xs text-muted-foreground font-mono">{school.code}</p>
+                              </div>
+                            </div>
+                            {getStatusBadge(school.status)}
+                          </div>
+                          
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div className="flex items-center gap-2 text-sm">
+                              <GraduationCap className="h-4 w-4 text-brand-turquoise" />
+                              <span>{school.current_students || 0} {isRTL ? 'طالب' : 'Students'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <UserCheck className="h-4 w-4 text-brand-purple" />
+                              <span>{school.current_teachers || 0} {isRTL ? 'معلم' : 'Teachers'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm col-span-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground truncate">{school.city || '-'}, {school.region || '-'}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Action Toggles - Suspend & AI - Large and Clear */}
+                          <div className="flex items-center gap-2 mb-4 p-3 bg-muted/30 rounded-xl border">
+                            {/* Suspend Toggle */}
+                            <Button
+                              variant={school.status === 'suspended' ? 'destructive' : 'outline'}
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handleToggleSuspend(school.id, school.status); }}
+                              className={`flex-1 rounded-lg h-10 font-bold ${
+                                school.status === 'suspended' 
+                                  ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                  : 'border-red-300 text-red-600 hover:bg-red-50'
+                              }`}
+                              data-testid={`toggle-suspend-${school.id}`}
+                            >
+                              {school.status === 'suspended' ? (
+                                <>
+                                  <PlayCircle className="h-4 w-4 me-2" />
+                                  {isRTL ? 'إلغاء التعليق' : 'Activate'}
+                                </>
+                              ) : (
+                                <>
+                                  <PauseCircle className="h-4 w-4 me-2" />
+                                  {isRTL ? 'تعليق' : 'Suspend'}
+                                </>
+                              )}
+                            </Button>
+                            
+                            {/* AI Toggle */}
+                            <Button
+                              variant={school.ai_enabled ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handleToggleAI(school.id, school.ai_enabled); }}
+                              className={`flex-1 rounded-lg h-10 font-bold ${
+                                school.ai_enabled 
+                                  ? 'bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white' 
+                                  : 'border-purple-300 text-purple-600 hover:bg-purple-50'
+                              }`}
+                              data-testid={`toggle-ai-${school.id}`}
+                            >
+                              <Brain className="h-4 w-4 me-2" />
+                              {school.ai_enabled ? (
+                                <>{isRTL ? 'AI مفعّل' : 'AI On'}</>
+                              ) : (
+                                <>{isRTL ? 'تفعيل AI' : 'Enable AI'}</>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {/* Primary Action - Open Dashboard */}
+                          <Button 
+                            className="w-full bg-brand-turquoise hover:bg-brand-turquoise-light rounded-xl h-11 font-bold"
+                            onClick={() => handleEnterSchoolDashboard(school)}
+                            data-testid={`open-dashboard-${school.id}`}
+                          >
+                            <LogIn className="h-5 w-5 me-2" />
+                            {isRTL ? 'فتح لوحة التحكم' : 'Open Dashboard'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              ) : (
+                /* Table View */
+                <div className="rounded-xl border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
