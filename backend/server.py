@@ -3062,7 +3062,11 @@ async def get_student(student_id: str, current_user: dict = Depends(get_current_
     if student.get("class_id"):
         class_doc = await db.classes.find_one({"id": student.get("class_id")}, {"_id": 0})
         if class_doc:
-            class_name = class_doc.get("name")
+            class_name = class_doc.get("name") or class_doc.get("name_ar")
+    
+    # Normalize field names
+    if not student.get("full_name") and student.get("full_name_ar"):
+        student["full_name"] = student["full_name_ar"]
     
     return StudentResponse(**student, class_name=class_name)
 
