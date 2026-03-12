@@ -42,4 +42,5 @@ __all__ = [
     "create_notification_routes",
     "create_schedule_management_routes",
     "setup_admin_routes",
+    "setup_security_routes",
 ]
