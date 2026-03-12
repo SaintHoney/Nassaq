@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { HakimAssistant } from '../components/hakim/HakimAssistant';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Label } from '../components/ui/label';
+import { Progress } from '../components/ui/progress';
 import { toast } from 'sonner';
 import { ScrollArea } from '../components/ui/scroll-area';
+import axios from 'axios';
 import {
   Users,
   UserPlus,
@@ -35,6 +38,15 @@ import {
   Calendar,
   Hash,
   Building2,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  FileUp,
+  FileDown,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  CalendarRange,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,10 +56,21 @@ import {
   DropdownMenuSeparator,
 } from '../components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 import AddStudentWizard from '../components/wizards/AddStudentWizard';
 import { AddTeacherWizard } from '../components/wizards/AddTeacherWizard';
 import CreateClassWizard from '../components/wizards/CreateClassWizard';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Translations
 const t = {
