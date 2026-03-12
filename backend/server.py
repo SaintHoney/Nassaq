@@ -2525,25 +2525,34 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
 
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
-    """Get available grade levels for teacher assignment"""
-    school_id = current_user.get("tenant_id")
+    """Get available grade levels from reference database"""
+    db = await get_database()
     
-    grades = await db.grade_levels.find(
-        {"school_id": school_id} if school_id else {},
-        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "grade": 1, "stage": 1}
-    ).to_list(100)
+    # Get grades from the reference academic_grades collection
+    grades = await db.academic_grades.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
     
-    if not grades:
-        grades = [
-            {"id": "grade-1", "name": "الصف الأول", "name_en": "Grade 1", "grade": 1, "stage": "ابتدائي"},
-            {"id": "grade-2", "name": "الصف الثاني", "name_en": "Grade 2", "grade": 2, "stage": "ابتدائي"},
-            {"id": "grade-3", "name": "الصف الثالث", "name_en": "Grade 3", "grade": 3, "stage": "ابتدائي"},
-            {"id": "grade-4", "name": "الصف الرابع", "name_en": "Grade 4", "grade": 4, "stage": "ابتدائي"},
-            {"id": "grade-5", "name": "الصف الخامس", "name_en": "Grade 5", "grade": 5, "stage": "ابتدائي"},
-            {"id": "grade-6", "name": "الصف السادس", "name_en": "Grade 6", "grade": 6, "stage": "ابتدائي"},
-        ]
+    # Get stages for grouping
+    stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
+    stages_map = {s["id"]: s for s in stages}
     
-    return {"grades": grades}
+    # Format for backward compatibility
+    formatted_grades = []
+    for g in grades:
+        stage = stages_map.get(g.get("stage_id"), {})
+        formatted_grades.append({
+            "id": g.get("id"),
+            "name": g.get("name_ar", ""),
+            "name_en": g.get("name_en", ""),
+            "grade": g.get("order", g.get("grade_level", 1)),
+            "stage": stage.get("name_ar", ""),
+            "stage_en": stage.get("name_en", ""),
+            "stage_id": g.get("stage_id")
+        })
+    
+    return {"grades": formatted_grades}
 
 @api_router.get("/teachers/options/academic-degrees")
 async def get_academic_degrees_options(current_user: dict = Depends(get_current_user)):
