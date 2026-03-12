@@ -1455,7 +1455,8 @@ ${baseUrl}/webhooks
                     {isRTL ? log.details_ar : log.details_en}
                   </p>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </SheetContent>
         </Sheet>
