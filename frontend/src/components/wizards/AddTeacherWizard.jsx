@@ -100,13 +100,13 @@ const Step1BasicInfo = ({ data, onChange, errors, options, isRTL }) => (
 
       <div className="space-y-2">
         <Label>{isRTL ? 'الجنسية' : 'Nationality'}</Label>
-        <Select value={data.nationality || 'SA'} onValueChange={(val) => onChange('nationality', val)}>
+        <Select value={data.nationality || 'sa'} onValueChange={(val) => onChange('nationality', val)}>
           <SelectTrigger data-testid="teacher-nationality">
-            <SelectValue />
+            <SelectValue placeholder={isRTL ? 'اختر الجنسية' : 'Select nationality'} />
           </SelectTrigger>
           <SelectContent>
             {options.nationalities?.map((n) => (
-              <SelectItem key={n.code} value={n.code}>{isRTL ? n.name_ar : n.name_en}</SelectItem>
+              <SelectItem key={n.id || n.code} value={n.id || n.code}>{isRTL ? (n.name || n.name_ar) : (n.name_en || n.name)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
