@@ -354,7 +354,7 @@ const RankItem = ({ rank }) => (
 // ============================================
 // مكون كارت القيد الإداري مع زر التفعيل
 // ============================================
-const ConstraintItem = ({ constraint, index, onToggle }) => {
+const ConstraintItem = ({ constraint, index, onToggle, onEdit, onDelete }) => {
   const getPriorityStyle = (priority) => {
     switch(priority) {
       case 'critical': return 'bg-red-100 text-red-700 border-red-300';
@@ -374,7 +374,7 @@ const ConstraintItem = ({ constraint, index, onToggle }) => {
   };
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 border-2 border-rose-200 hover:shadow-md transition-all">
+    <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 border-2 border-rose-200 hover:shadow-md transition-all group">
       <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center flex-shrink-0">
         <span className="text-sm font-bold text-rose-700">{index + 1}</span>
       </div>
@@ -402,10 +402,24 @@ const ConstraintItem = ({ constraint, index, onToggle }) => {
                 </>
               )}
             </Button>
+            {(onEdit || onDelete) && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {onEdit && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500" onClick={onEdit}>
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={onDelete}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <p className="text-sm text-rose-600 mt-2">{constraint.description_ar}</p>
-        {constraint.restricted_periods && (
+        {constraint.restricted_periods && constraint.restricted_periods.length > 0 && (
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs text-muted-foreground">الحصص المقيدة:</span>
             {constraint.restricted_periods.map(p => (
