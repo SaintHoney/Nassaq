@@ -306,8 +306,44 @@ export const SystemMonitoringPage = () => {
     return () => clearInterval(interval);
   }, [autoRefresh]);
   
+  // Fetch system monitoring data from API
+  const fetchMonitoringData = useCallback(async () => {
+    try {
+      setLoadingData(true);
+      const [errorsRes, jobsRes, integrationsRes, alertsRes] = await Promise.allSettled([
+        api.get('/system/errors'),
+        api.get('/system/jobs'),
+        api.get('/integrations'),
+        api.get('/system/alerts'),
+      ]);
+      
+      if (errorsRes.status === 'fulfilled') setErrorLogs(errorsRes.value.data || []);
+      if (jobsRes.status === 'fulfilled') setJobs(jobsRes.value.data || []);
+      if (integrationsRes.status === 'fulfilled') {
+        const intData = integrationsRes.value.data || [];
+        setIntegrations(intData.map(i => ({
+          ...i,
+          name: i.name_ar || i.name,
+          name_en: i.name_en || i.name,
+          lastSync: i.last_sync || i.updated_at,
+          health: i.health || (i.status === 'connected' ? 100 : 0)
+        })));
+      }
+      if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value.data || []);
+    } catch (error) {
+      console.error('Error fetching monitoring data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  }, [api]);
+  
+  useEffect(() => {
+    fetchMonitoringData();
+  }, [fetchMonitoringData]);
+  
   // Manual refresh
   const handleRefresh = () => {
+    fetchMonitoringData();
     setPerformanceData(generatePerformanceData());
     setLastUpdate(new Date());
     toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed');
