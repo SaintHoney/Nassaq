@@ -3039,11 +3039,14 @@ async def get_students(
     # Get class names
     class_ids = list(set([s.get("class_id") for s in students if s.get("class_id")]))
     classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
-    class_map = {c.get("id"): c.get("name") for c in classes}
+    class_map = {c.get("id"): c.get("name") or c.get("name_ar") for c in classes}
     
     result = []
     for s in students:
         s["class_name"] = class_map.get(s.get("class_id"))
+        # Normalize field names - map full_name_ar to full_name if needed
+        if not s.get("full_name") and s.get("full_name_ar"):
+            s["full_name"] = s["full_name_ar"]
         result.append(StudentResponse(**s))
     
     return result
