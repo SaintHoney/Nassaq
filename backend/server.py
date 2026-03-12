@@ -13323,6 +13323,9 @@ async def update_school_info(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
+    # Get old data for audit log
+    old_school = await db.schools.find_one({"id": school_id}, {"_id": 0})
+    
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     update_data["updated_by"] = current_user["id"]
@@ -13331,6 +13334,22 @@ async def update_school_info(
         {"id": school_id},
         {"$set": update_data}
     )
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "update",
+        "entity_type": "school_info",
+        "entity_id": school_id,
+        "old_data": {k: old_school.get(k) for k in update_data.keys() if k not in ["updated_at", "updated_by"]},
+        "new_data": update_data,
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_address": None
+    }
+    await db.audit_logs.insert_one(audit_log)
     
     return {"message": "تم تحديث معلومات المدرسة بنجاح", "updated": update_data}
 
