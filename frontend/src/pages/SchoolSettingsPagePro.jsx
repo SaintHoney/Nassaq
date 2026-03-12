@@ -884,16 +884,37 @@ export default function SchoolSettingsPagePro() {
                 {/* اليوم الدراسي */}
                 <Card className="border-2 border-blue-200">
                   <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-blue-600" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">اليوم الدراسي</CardTitle>
+                          <CardDescription className="text-xs">
+                            {settings.periodsPerDay} حصص • {settings.periodDuration} دقيقة للحصة
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-base">اليوم الدراسي</CardTitle>
-                        <CardDescription className="text-xs">
-                          {settings.periodsPerDay} حصص • {settings.periodDuration} دقيقة للحصة
-                        </CardDescription>
-                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setEditedDayTimes({
+                            dayStart: settings.dayStart || '07:00',
+                            dayEnd: settings.dayEnd || '13:15',
+                            periodsPerDay: settings.periodsPerDay || 7,
+                            periodDuration: settings.periodDuration || 45,
+                            breakDuration: settings.breakDuration || 20,
+                            prayerDuration: settings.prayerDuration || 20,
+                          });
+                          setEditDayTimesOpen(true);
+                        }}
+                        data-testid="edit-day-times-btn"
+                      >
+                        <Edit2 className="h-4 w-4 ml-1" />
+                        تعديل
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
