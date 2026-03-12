@@ -1150,22 +1150,45 @@ export default function SchoolSettingsPagePro() {
                       </div>
                       <div>
                         <CardTitle>المواد الدراسية</CardTitle>
-                        <CardDescription>{subjects.length} مادة دراسية مرجعية</CardDescription>
+                        <CardDescription>{subjects.length} مادة دراسية</CardDescription>
                       </div>
                     </div>
+                    <Button 
+                      onClick={() => setAddSubjectOpen(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      data-testid="add-subject-btn"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة مادة
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {subjects.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {subjects.map((subject, index) => (
-                        <SubjectItem key={subject.id || index} subject={subject} />
+                        <SubjectItem 
+                          key={subject.id || index} 
+                          subject={subject} 
+                          onEdit={() => {
+                            setEditSubject(subject);
+                            setEditSubjectOpen(true);
+                          }}
+                          onDelete={() => handleDeleteSubject(subject.id)}
+                        />
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
                       <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد مواد مسجلة</p>
+                      <Button 
+                        className="mt-4 bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => setAddSubjectOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 ml-2" />
+                        إضافة مادة جديدة
+                      </Button>
                     </div>
                   )}
                 </CardContent>
