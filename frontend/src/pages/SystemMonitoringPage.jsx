@@ -1139,7 +1139,13 @@ export const SystemMonitoringPage = () => {
               </SheetTitle>
             </SheetHeader>
             <div className="mt-6 space-y-4">
-              {SAMPLE_JOBS.map((job) => (
+              {jobs.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p>{isRTL ? 'لا توجد مهام نشطة' : 'No active jobs'}</p>
+                </div>
+              ) : (
+                jobs.map((job) => (
                 <Card key={job.id}>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
