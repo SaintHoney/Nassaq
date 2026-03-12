@@ -484,6 +484,135 @@ export default function UsersClassesManagement() {
     toast.success(isRTL ? 'تم إنشاء الفصل بنجاح' : 'Class created successfully');
   };
 
+  // Import/Export handlers
+  const downloadTemplate = async (type) => {
+    try {
+      const response = await api.get(`/bulk/template/${type}`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', type === 'students' ? 'قالب_استيراد_الطلاب.xlsx' : 'قالب_استيراد_المعلمين.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success(isRTL ? 'تم تحميل القالب بنجاح' : 'Template downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      toast.error(isRTL ? 'فشل تحميل القالب' : 'Failed to download template');
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const validTypes = ['.xlsx', '.xls', '.csv'];
+      const isValid = validTypes.some(type => file.name.toLowerCase().endsWith(type));
+      
+      if (!isValid) {
+        toast.error(isRTL ? 'يجب أن يكون الملف بصيغة Excel أو CSV' : 'File must be Excel or CSV format');
+        return;
+      }
+      
+      setSelectedFile(file);
+      setImportResult(null);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast.error(isRTL ? 'يرجى اختيار ملف' : 'Please select a file');
+      return;
+    }
+    
+    setImporting(true);
+    setImportResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const response = await api.post(`/bulk/import/${importType}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setImportResult(response.data);
+      
+      if (response.data.success) {
+        toast.success(
+          isRTL 
+            ? `تم استيراد ${response.data.imported} سجل بنجاح` 
+            : `Successfully imported ${response.data.imported} records`
+        );
+        // Refresh data after successful import
+        fetchAllData();
+      } else {
+        toast.warning(
+          isRTL 
+            ? `تم استيراد ${response.data.imported} من ${response.data.total_rows} سجل` 
+            : `Imported ${response.data.imported} of ${response.data.total_rows} records`
+        );
+      }
+    } catch (error) {
+      console.error('Error importing:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل الاستيراد' : 'Import failed'));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    
+    try {
+      const response = await api.get(`/bulk/export/${exportType}?format=${exportFormat}`, {
+        responseType: 'blob'
+      });
+      
+      const filename = {
+        students: 'تصدير_الطلاب',
+        teachers: 'تصدير_المعلمين',
+        schedule: 'تصدير_الجدول',
+        attendance: 'تصدير_الحضور',
+        grades: 'تصدير_الدرجات'
+      }[exportType] || 'تصدير';
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${filename}.${exportFormat}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully');
+    } catch (error) {
+      console.error('Error exporting:', error);
+      const message = error.response?.status === 404 
+        ? (isRTL ? 'لا توجد بيانات للتصدير' : 'No data to export')
+        : (isRTL ? 'فشل التصدير' : 'Export failed');
+      toast.error(message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const importTypeOptions = [
+    { value: 'students', label: labels.students, icon: GraduationCap },
+    { value: 'teachers', label: labels.teachers, icon: Users },
+  ];
+  
+  const exportTypeOptions = [
+    { value: 'students', label: labels.students, icon: GraduationCap },
+    { value: 'teachers', label: labels.teachers, icon: Users },
+    { value: 'schedule', label: labels.schedule, icon: Calendar },
+    { value: 'attendance', label: labels.attendance, icon: ClipboardList },
+    { value: 'grades', label: labels.grades, icon: Award },
+  ];
+
   return (
     <Sidebar>
       <div className="min-h-screen" data-testid="users-classes-management">
