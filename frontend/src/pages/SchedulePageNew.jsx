@@ -467,6 +467,18 @@ export default function SchedulePageNew() {
                     {sessions.length} حصة
                   </Badge>
                   
+                  {/* Full Schedule View Button */}
+                  {sessions.length > 0 && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setFullScheduleOpen(true)}
+                      data-testid="view-full-schedule-btn"
+                    >
+                      <Eye className="h-4 w-4 ml-2" />
+                      عرض الجدول الأسبوعي
+                    </Button>
+                  )}
+                  
                   {/* Generate Button */}
                   <Button 
                     className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg"
