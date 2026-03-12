@@ -546,6 +546,36 @@ export default function SchoolSettingsPagePro() {
   const [editConstraintOpen, setEditConstraintOpen] = useState(false);
   const [selectedConstraint, setSelectedConstraint] = useState(null);
   
+  // School Info Edit State
+  const [editSchoolInfoOpen, setEditSchoolInfoOpen] = useState(false);
+  const [editedSchoolInfo, setEditedSchoolInfo] = useState({});
+  
+  // Work Days Edit State
+  const [editWorkDaysOpen, setEditWorkDaysOpen] = useState(false);
+  const [editedWorkDays, setEditedWorkDays] = useState({
+    sunday: true, monday: true, tuesday: true, wednesday: true, thursday: true, friday: false, saturday: false
+  });
+  
+  // Stage CRUD States
+  const [addStageOpen, setAddStageOpen] = useState(false);
+  const [editStageOpen, setEditStageOpen] = useState(false);
+  const [editStage, setEditStage] = useState(null);
+  const [newStage, setNewStage] = useState({ name: '', name_en: '', order: 1 });
+  
+  // Grade CRUD States
+  const [addGradeOpen, setAddGradeOpen] = useState(false);
+  const [editGradeOpen, setEditGradeOpen] = useState(false);
+  const [editGrade, setEditGrade] = useState(null);
+  const [newGrade, setNewGrade] = useState({ name: '', name_en: '', stage_id: '' });
+  
+  // Delete Confirmation States
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState({ type: '', id: '', name: '', dependencies: null });
+  
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [lastSync, setLastSync] = useState(null);
+  
   // Subject CRUD States
   const [addSubjectOpen, setAddSubjectOpen] = useState(false);
   const [editSubjectOpen, setEditSubjectOpen] = useState(false);
