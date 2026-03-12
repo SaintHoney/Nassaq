@@ -373,36 +373,6 @@ export const LoginPage = () => {
                     <p className="text-[10px] text-muted-foreground font-mono truncate">principal1@nassaq.com</p>
                   </div>
                   
-                  {/* School Principal - مدرسة العلي */}
-                  <div 
-                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
-                    onClick={() => {
-                      setEmail('principal2@nassaq.com');
-                      setPassword('Principal@123');
-                    }}
-                    data-testid="test-principal2-credentials"
-                  >
-                    <p className="text-xs font-medium text-brand-turquoise">
-                      {isRTL ? 'مدير مدرسة العلي' : 'Al-Ali Principal'}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal2@nassaq.com</p>
-                  </div>
-                  
-                  {/* School Principal - مدرسة المنارة */}
-                  <div 
-                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
-                    onClick={() => {
-                      setEmail('principal3@nassaq.com');
-                      setPassword('Principal@123');
-                    }}
-                    data-testid="test-principal3-credentials"
-                  >
-                    <p className="text-xs font-medium text-brand-turquoise">
-                      {isRTL ? 'مدير مدرسة المنارة' : 'Al-Manara Principal'}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal3@nassaq.com</p>
-                  </div>
-                  
                   {/* School Principal - مدرسة الاحساء */}
                   <div 
                     className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
@@ -416,21 +386,6 @@ export const LoginPage = () => {
                       {isRTL ? 'مدير مدرسة الاحساء' : 'Al-Ahsa Principal'}
                     </p>
                     <p className="text-[10px] text-muted-foreground font-mono truncate">principal4@nassaq.com</p>
-                  </div>
-                  
-                  {/* School Principal - مدرسة الحديثة */}
-                  <div 
-                    className="p-2.5 rounded-xl bg-brand-turquoise/5 border border-brand-turquoise/20 cursor-pointer hover:bg-brand-turquoise/10 transition-colors"
-                    onClick={() => {
-                      setEmail('principal5@nassaq.com');
-                      setPassword('Principal@123');
-                    }}
-                    data-testid="test-principal5-credentials"
-                  >
-                    <p className="text-xs font-medium text-brand-turquoise">
-                      {isRTL ? 'مدير مدرسة الحديثة' : 'Al-Haditha Principal'}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">principal5@nassaq.com</p>
                   </div>
                   
                   {/* Teacher */}
