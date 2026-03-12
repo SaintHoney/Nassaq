@@ -524,8 +524,18 @@ class SmartSchedulingEngine:
                 settings.get("prayer_duration_minutes", 20)
             )
         
+        # Process working_days - handle both dict and list formats
+        working_days_raw = settings.get("working_days", ["sunday", "monday", "tuesday", "wednesday", "thursday"])
+        if isinstance(working_days_raw, dict):
+            # Convert dict format to list
+            working_days = [day for day, active in working_days_raw.items() if active]
+        elif isinstance(working_days_raw, list):
+            working_days = working_days_raw
+        else:
+            working_days = ["sunday", "monday", "tuesday", "wednesday", "thursday"]
+        
         return {
-            "working_days": settings.get("working_days", ["sunday", "monday", "tuesday", "wednesday", "thursday"]),
+            "working_days": working_days,
             "periods_per_day": settings.get("periods_per_day", 7),
             "period_duration_minutes": settings.get("period_duration_minutes", 45),
             "break_duration_minutes": settings.get("break_duration_minutes", 20),
