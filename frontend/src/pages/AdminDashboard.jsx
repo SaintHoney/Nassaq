@@ -1539,7 +1539,7 @@ export const AdminDashboard = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => fetchStats(true)}
+                      onClick={() => { fetchStats(true); fetchCommandCenterStats(); }}
                       className="rounded-xl h-9 px-4 border-green-500/30 hover:bg-green-500/10 hover:border-green-500"
                       disabled={refreshing}
                       data-testid="refresh-btn"
@@ -1547,26 +1547,6 @@ export const AdminDashboard = () => {
                       <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''} text-green-600`} />
                       <span className="font-medium">{isRTL ? 'تحديث الآن' : 'Refresh'}</span>
                     </Button>
-
-                    {/* تصدير البيانات - Export (ينزل ملف فعلي) */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500" data-testid="export-btn">
-                          <Download className="h-4 w-4 me-2 text-blue-600" />
-                          <span className="font-medium">{isRTL ? 'تصدير' : 'Export'}</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => handleExportData('pdf')} className="cursor-pointer" data-testid="export-pdf">
-                          <FileText className="h-4 w-4 me-2 text-red-500" />
-                          <span>{isRTL ? 'تنزيل PDF' : 'Download PDF'}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportData('excel')} className="cursor-pointer" data-testid="export-excel">
-                          <BarChart3 className="h-4 w-4 me-2 text-green-600" />
-                          <span>{isRTL ? 'تنزيل Excel' : 'Download Excel'}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
 
                     {/* إعدادات العرض - Display Settings */}
                     <Button 
