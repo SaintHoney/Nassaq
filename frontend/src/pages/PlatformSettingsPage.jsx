@@ -627,26 +627,26 @@ export const PlatformSettingsPage = () => {
     }
   };
   
-  // Save general settings
+  // Save general settings using new API
   const handleSaveGeneralSettings = async () => {
     setLoading(true);
     try {
-      await axios.put(`${API_URL}/api/settings/platform/general`, {
-        platform_name_ar: generalSettings.platformNameAr,
+      // Save general settings
+      await api.put('/settings/general', {
+        platform_name: generalSettings.platformNameAr,
         platform_name_en: generalSettings.platformNameEn,
         browser_title: generalSettings.browserTitle,
         default_language: generalSettings.defaultLanguage,
-        date_format: generalSettings.dateFormat,
+        date_system: generalSettings.dateFormat,
         timezone: generalSettings.timezone,
-        email_notifications: generalSettings.emailNotifications,
-        sms_notifications: generalSettings.smsNotifications,
-        push_notifications: generalSettings.pushNotifications,
-        ai_features: generalSettings.aiFeatures,
-        registration_open: generalSettings.registrationOpen,
-        maintenance_mode: generalSettings.maintenanceMode,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Save maintenance settings separately
+      await api.put('/settings/maintenance', {
+        maintenance_mode: generalSettings.maintenanceMode,
+        registration_open: generalSettings.registrationOpen,
+      });
+      
       toast.success(t.savedSuccessfully);
     } catch (error) {
       console.error('Error saving general settings:', error);
@@ -656,44 +656,27 @@ export const PlatformSettingsPage = () => {
     }
   };
   
-  // Save brand settings
+  // Save brand settings (disabled as per requirements)
   const handleSaveBrandSettings = async () => {
-    setLoading(true);
-    try {
-      await axios.put(`${API_URL}/api/settings/platform/brand`, {
-        logo: brandSettings.logo,
-        favicon: brandSettings.favicon,
-        primary_color: brandSettings.primaryColor,
-        secondary_color: brandSettings.secondaryColor,
-        accent_color: brandSettings.accentColor,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success(t.savedSuccessfully);
-    } catch (error) {
-      console.error('Error saving brand settings:', error);
-      toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
-    } finally {
-      setLoading(false);
-    }
+    toast.info(isRTL ? 'تم إلغاء قسم الهوية البصرية' : 'Brand identity section disabled');
   };
   
-  // Save contact settings
+  // Save contact settings using new API
   const handleSaveContactSettings = async () => {
     setLoading(true);
     try {
-      await axios.put(`${API_URL}/api/settings/platform/contact`, {
-        primary_email: contactInfo.primaryEmail,
-        support_email: contactInfo.supportEmail,
-        primary_phone: contactInfo.primaryPhone,
-        alternate_phone: contactInfo.alternatePhone,
-        address: contactInfo.address,
-        working_hours: contactInfo.workingHours,
-        website: contactInfo.website,
-        owner_name: contactInfo.ownerName,
-        social_media: contactInfo.socialMedia,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      await api.put('/settings/contact', {
+        email: contactInfo.primaryEmail,
+        phone: contactInfo.primaryPhone,
+        working_hours_ar: contactInfo.workingHours,
+        working_hours_en: contactInfo.workingHours,
+        address_ar: contactInfo.address,
+        address_en: contactInfo.address,
+        social_twitter: contactInfo.socialMedia.twitter,
+        social_linkedin: contactInfo.socialMedia.linkedin,
+        social_instagram: contactInfo.socialMedia.instagram,
+        social_facebook: contactInfo.socialMedia.facebook,
+        social_youtube: contactInfo.socialMedia.youtube,
       });
       toast.success(t.savedSuccessfully);
     } catch (error) {
@@ -704,25 +687,98 @@ export const PlatformSettingsPage = () => {
     }
   };
   
-  // Save security settings
+  // Save security settings using new API
   const handleSaveSecuritySettings = async () => {
     setLoading(true);
     try {
-      await axios.put(`${API_URL}/api/settings/platform/security`, {
-        two_factor_enabled: securitySettings.twoFactorEnabled,
-        session_timeout: securitySettings.sessionTimeout,
-        max_sessions: securitySettings.maxSessions,
-        password_min_length: securitySettings.passwordMinLength,
-        password_require_uppercase: securitySettings.passwordRequireUppercase,
-        password_require_numbers: securitySettings.passwordRequireNumbers,
-        password_require_special: securitySettings.passwordRequireSpecial,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      await api.put('/settings/security', {
+        session_duration_minutes: securitySettings.sessionTimeout,
+        max_concurrent_sessions: securitySettings.maxSessions,
+        min_password_length: securitySettings.passwordMinLength,
+        require_uppercase: securitySettings.passwordRequireUppercase ? 1 : 0,
+        require_lowercase: 1,
+        require_numbers: securitySettings.passwordRequireNumbers ? 1 : 0,
+        require_special_chars: securitySettings.passwordRequireSpecial ? 1 : 0,
       });
       toast.success(t.savedSuccessfully);
     } catch (error) {
       console.error('Error saving security settings:', error);
       toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Save account settings
+  const handleSaveAccountSettings = async () => {
+    setLoading(true);
+    try {
+      await api.put('/settings/account', {
+        name: accountData.name,
+        title: accountData.title || '',
+        phone: accountData.phone,
+        language: accountData.language,
+      });
+      toast.success(t.savedSuccessfully);
+    } catch (error) {
+      console.error('Error saving account settings:', error);
+      toast.error(isRTL ? 'فشل الحفظ' : 'Save failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Upload profile picture
+  const handleUploadProfilePicture = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/settings/account/upload-picture', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data?.profile_picture) {
+        setAccountData(prev => ({ ...prev, profilePicture: response.data.profile_picture }));
+        toast.success(isRTL ? 'تم رفع الصورة بنجاح' : 'Picture uploaded successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading picture:', error);
+      toast.error(isRTL ? 'فشل رفع الصورة' : 'Failed to upload picture');
+    }
+  };
+  
+  // Save terms version
+  const handleSaveTermsVersion = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post('/settings/terms', null, {
+        params: { content_ar: termsData.content, content_en: '' }
+      });
+      if (response.data?.version_number) {
+        setTermsData(prev => ({ ...prev, version: `${response.data.version_number}.0` }));
+        toast.success(isRTL ? 'تم حفظ إصدار جديد من الشروط' : 'New terms version saved');
+      }
+    } catch (error) {
+      console.error('Error saving terms:', error);
+      toast.error(isRTL ? 'فشل حفظ الشروط' : 'Failed to save terms');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Save privacy version
+  const handleSavePrivacyVersion = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post('/settings/privacy', null, {
+        params: { content_ar: privacyData.content, content_en: '' }
+      });
+      if (response.data?.version_number) {
+        setPrivacyData(prev => ({ ...prev, version: `${response.data.version_number}.0` }));
+        toast.success(isRTL ? 'تم حفظ إصدار جديد من سياسة الخصوصية' : 'New privacy version saved');
+      }
+    } catch (error) {
+      console.error('Error saving privacy:', error);
+      toast.error(isRTL ? 'فشل حفظ سياسة الخصوصية' : 'Failed to save privacy');
     } finally {
       setLoading(false);
     }
