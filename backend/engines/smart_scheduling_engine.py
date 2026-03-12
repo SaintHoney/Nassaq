@@ -433,7 +433,15 @@ class SmartSchedulingEngine:
         settings = await self.school_settings.find_one({"school_id": school_id}, {"_id": 0})
         if settings:
             working_days = settings.get("working_days", [])
-            summary["working_days"] = len(working_days) if isinstance(working_days, list) else 0
+            # Handle dict format: {"sunday": True, "monday": True, ...}
+            if isinstance(working_days, dict):
+                working_days_list = [day for day, active in working_days.items() if active]
+                summary["working_days"] = len(working_days_list)
+            elif isinstance(working_days, list):
+                summary["working_days"] = len(working_days)
+            else:
+                summary["working_days"] = 0
+            
             summary["periods_per_day"] = settings.get("periods_per_day", 0)
             
             if summary["working_days"] == 0:
