@@ -513,6 +513,8 @@ export const Sidebar = ({ children }) => {
                 })()}
               </p>
             </div>
+            {/* Real-time Notifications */}
+            <RealtimeNotificationIndicator isRTL={isRTL} />
           </div>
           
           {/* Role Switcher Button */}
