@@ -735,6 +735,124 @@ export default function SchoolSettingsPagePro() {
     }
   };
   
+  // =============== SUBJECTS CRUD ===============
+  // Add Subject
+  const handleAddSubject = async () => {
+    if (!newSubject.name_ar) {
+      toast.error('يرجى إدخال اسم المادة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.post('/school/subjects', newSubject);
+      toast.success('تم إضافة المادة بنجاح');
+      setAddSubjectOpen(false);
+      setNewSubject({ name_ar: '', name_en: '', weekly_periods: 4, category: 'general' });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding subject:', error);
+      toast.error(error.response?.data?.detail || 'فشل إضافة المادة');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Update Subject
+  const handleUpdateSubject = async () => {
+    if (!editSubject || !editSubject.name_ar) {
+      toast.error('يرجى إدخال اسم المادة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.put(`/school/subjects/${editSubject.id}`, editSubject);
+      toast.success('تم تحديث المادة بنجاح');
+      setEditSubjectOpen(false);
+      setEditSubject(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating subject:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث المادة');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Delete Subject
+  const handleDeleteSubject = async (subjectId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
+    
+    try {
+      await api.delete(`/school/subjects/${subjectId}`);
+      toast.success('تم حذف المادة بنجاح');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف المادة');
+    }
+  };
+  
+  // =============== CONSTRAINTS CRUD ===============
+  // Add Constraint
+  const handleAddConstraint = async () => {
+    if (!newConstraint.name_ar) {
+      toast.error('يرجى إدخال اسم القيد');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.post('/school/constraints', newConstraint);
+      toast.success('تم إضافة القيد بنجاح');
+      setAddConstraintOpen(false);
+      setNewConstraint({ name_ar: '', description_ar: '', priority: 'medium', type: 'hard' });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding constraint:', error);
+      toast.error(error.response?.data?.detail || 'فشل إضافة القيد');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Update Constraint
+  const handleUpdateConstraint = async () => {
+    if (!editConstraint || !editConstraint.name_ar) {
+      toast.error('يرجى إدخال اسم القيد');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.put(`/school/constraints/${editConstraint.id}`, editConstraint);
+      toast.success('تم تحديث القيد بنجاح');
+      setEditConstraintOpen(false);
+      setEditConstraint(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating constraint:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث القيد');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // Delete Constraint
+  const handleDeleteConstraint = async (constraintId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا القيد؟')) return;
+    
+    try {
+      await api.delete(`/school/constraints/${constraintId}`);
+      toast.success('تم حذف القيد بنجاح');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting constraint:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف القيد');
+    }
+  };
+  
   // Loading state
   if (loading) {
     return (
