@@ -5279,6 +5279,36 @@ async def generate_schedule_auto(
         }}
     )
     
+    # Generate recommendations based on results
+    recommendations = []
+    if unplaced > 0:
+        if len(time_slots) * len(working_days) < total_requested / len(set(a.get('class_id') for a in assignments)):
+            recommendations.append({
+                "type": "insufficient_slots",
+                "message_ar": f"عدد الفترات الزمنية ({len(time_slots)}) غير كافٍ لتغطية جميع الحصص المطلوبة",
+                "message_en": f"Time slots ({len(time_slots)}) are insufficient for all requested sessions"
+            })
+        
+        # Check for overloaded teachers
+        overloaded_teachers = []
+        for teacher_id, count in [(t, sum(teacher_daily_count[d].get(t, 0) for d in working_days)) for t in teacher_ids]:
+            required = sum(a.get('weekly_sessions', 4) for a in assignments if a.get('teacher_id') == teacher_id)
+            if count < required:
+                teacher_info = teacher_map.get(teacher_id, {})
+                overloaded_teachers.append({
+                    "teacher_name": teacher_info.get("full_name", teacher_id),
+                    "required": required,
+                    "placed": count
+                })
+        
+        if overloaded_teachers:
+            recommendations.append({
+                "type": "teacher_overload",
+                "message_ar": "بعض المعلمين لديهم حصص أكثر مما يمكن جدولته بسبب التعارضات",
+                "message_en": "Some teachers have more sessions than can be scheduled due to conflicts",
+                "details": overloaded_teachers
+            })
+    
     return {
         "success": unplaced == 0,
         "schedule_id": schedule_id,
@@ -5292,9 +5322,11 @@ async def generate_schedule_auto(
             "conflicts_avoided": conflicts_avoided,
             "teachers_scheduled": len(teacher_ids),
             "days_used": len(working_days),
-            "slots_per_day": len(time_slots)
+            "slots_per_day": len(time_slots),
+            "total_available_slots": len(time_slots) * len(working_days)
         },
         "teacher_distribution": teacher_stats,
+        "recommendations": recommendations,
         "message": f"تم إنشاء {sessions_created} من {total_requested} حصة ({success_rate:.0f}%)",
         "message_en": f"Created {sessions_created} of {total_requested} sessions ({success_rate:.0f}%)"
     }
