@@ -1061,7 +1061,7 @@ export default function SchoolSettingsPagePro() {
           
           {/* Tabs Navigation */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-6 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9 mb-6 h-auto p-1">
               <TabsTrigger value="overview" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
                 <Calendar className="h-4 w-4 ml-1 hidden sm:inline" />
                 نظرة عامة
@@ -1077,6 +1077,10 @@ export default function SchoolSettingsPagePro() {
               <TabsTrigger value="classes" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
                 <GraduationCap className="h-4 w-4 ml-1 hidden sm:inline" />
                 الفصول
+              </TabsTrigger>
+              <TabsTrigger value="assignments" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
+                <Target className="h-4 w-4 ml-1 hidden sm:inline" />
+                الإسنادات
               </TabsTrigger>
               <TabsTrigger value="subjects" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
                 <BookOpen className="h-4 w-4 ml-1 hidden sm:inline" />
