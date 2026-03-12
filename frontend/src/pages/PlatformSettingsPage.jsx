@@ -1805,7 +1805,8 @@ export const PlatformSettingsPage = () => {
                               )}
                             </div>
                           </div>
-                        ))}
+                        ))
+                        )}
                       </div>
                     </CardContent>
                   </Card>
