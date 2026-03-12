@@ -749,6 +749,10 @@ export default function UsersClassesManagement() {
                   <Building2 className="h-4 w-4 me-1" />
                   {labels.classes}
                 </TabsTrigger>
+                <TabsTrigger value="import-export" className="rounded-lg" data-testid="filter-import-export">
+                  <FileSpreadsheet className="h-4 w-4 me-1" />
+                  {labels.importExport}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
