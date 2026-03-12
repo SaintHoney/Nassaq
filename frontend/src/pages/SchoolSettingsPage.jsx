@@ -1782,8 +1782,8 @@ export default function SchoolSettingsPage() {
 
           {/* Section 5 & 6: Periods and Timing - الحصص وأوقات الدوام */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <PeriodsPerDaySection periodsPerDay={settings.periodsPerDay} onSave={handleSavePeriodsPerDay} isRTL={isRTL} />
-            <SchoolTimingSection timing={settings.timing} onSave={handleSaveTiming} isRTL={isRTL} />
+            <PeriodsPerDaySection periodsPerDay={settings.periodsPerDay} periodDuration={settings.periodDuration} isRTL={isRTL} />
+            <SchoolTimingSection timing={settings.timing} isRTL={isRTL} />
           </div>
 
           {/* Section 7: Breaks - فترات الاستراحة */}
