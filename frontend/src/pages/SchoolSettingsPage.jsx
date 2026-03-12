@@ -1117,118 +1117,51 @@ const TeachingLoadSection = ({ teachers, teacherRanks, isRTL }) => {
 };
 
 // =============================================================
-// قسم القيود الإدارية
+// قسم القيود الإدارية - من البيانات المرجعية
 // =============================================================
-const ConstraintsSection = ({ teachers, constraints, onSave, isRTL }) => {
-  const [constraintsList, setConstraintsList] = useState(constraints || []);
-  const [showDialog, setShowDialog] = useState(false);
-  const [newConstraint, setNewConstraint] = useState({ type: '', teacher_id: '', day: '', period: '', description: '' });
-  const [saving, setSaving] = useState(false);
-
-  const constraintTypes = [
-    { id: 'no_first_period', name: isRTL ? 'لا يبدأ الحصة الأولى' : 'No first period' },
-    { id: 'no_last_period', name: isRTL ? 'لا يدرس الحصة الأخيرة' : 'No last period' },
-    { id: 'no_day', name: isRTL ? 'لا يعمل في يوم معين' : 'Not available on day' },
-    { id: 'max_consecutive', name: isRTL ? 'حد أقصى للحصص المتتالية' : 'Max consecutive periods' },
-    { id: 'custom', name: isRTL ? 'قيد مخصص' : 'Custom constraint' },
-  ];
-
-  const dayOptions = [
-    { id: 'sunday', name: isRTL ? 'الأحد' : 'Sunday' },
-    { id: 'monday', name: isRTL ? 'الاثنين' : 'Monday' },
-    { id: 'tuesday', name: isRTL ? 'الثلاثاء' : 'Tuesday' },
-    { id: 'wednesday', name: isRTL ? 'الأربعاء' : 'Wednesday' },
-    { id: 'thursday', name: isRTL ? 'الخميس' : 'Thursday' },
-  ];
-
-  useEffect(() => {
-    if (constraints) setConstraintsList(constraints);
-  }, [constraints]);
-
-  const handleAddConstraint = async () => {
-    if (!newConstraint.type) {
-      toast.error(isRTL ? 'يرجى اختيار نوع القيد' : 'Please select constraint type');
-      return;
-    }
-    setSaving(true);
-    try {
-      const updated = [...constraintsList, { ...newConstraint, id: Date.now().toString() }];
-      setConstraintsList(updated);
-      await onSave(updated);
-      setShowDialog(false);
-      setNewConstraint({ type: '', teacher_id: '', day: '', period: '', description: '' });
-      toast.success(isRTL ? 'تم إضافة القيد' : 'Constraint added');
-    } catch (error) {
-      toast.error(isRTL ? 'خطأ في الحفظ' : 'Save error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleRemoveConstraint = async (id) => {
-    const updated = constraintsList.filter(c => c.id !== id);
-    setConstraintsList(updated);
-    await onSave(updated);
-    toast.success(isRTL ? 'تم حذف القيد' : 'Constraint removed');
-  };
-
+const ConstraintsSection = ({ constraints, isRTL }) => {
   return (
     <Card className="border-2 border-rose-200 bg-gradient-to-br from-rose-50/50 to-white" data-testid="constraints-section">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-row-reverse">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-rose-600" />
-            </div>
-            <div className="text-right">
-              <CardTitle className="font-cairo">{isRTL ? 'القيود الإدارية' : 'Administrative Constraints'}</CardTitle>
-              <CardDescription>{isRTL ? 'قيود يلتزم بها محرك الجدولة عند التوزيع' : 'Rules the scheduling engine must follow'}</CardDescription>
-            </div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
+            <Shield className="h-5 w-5 text-rose-600" />
           </div>
-          <Badge variant="outline" className="text-lg px-4 py-2 bg-rose-100 text-rose-700">
-            {constraintsList.length} {isRTL ? 'قيد' : 'Constraints'}
+          <div className="text-right flex-1">
+            <CardTitle className="font-cairo text-base">{isRTL ? 'القيود الإدارية' : 'Administrative Constraints'}</CardTitle>
+          </div>
+          <Badge variant="outline" className="bg-rose-100 text-rose-700">
+            {constraints?.length || 0} {isRTL ? 'قيد' : 'rules'}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <Button onClick={() => setShowDialog(true)} className="bg-rose-600 hover:bg-rose-700 mb-4">
-          <Plus className="h-4 w-4 me-2" />
-          {isRTL ? 'إضافة قيد إداري' : 'Add Constraint'}
-        </Button>
-
-        {constraintsList.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-rose-200 rounded-xl">
-            <Shield className="h-12 w-12 mx-auto mb-3 text-rose-200" />
-            <p className="text-muted-foreground">{isRTL ? 'لا توجد قيود إدارية محددة' : 'No constraints defined'}</p>
+      <CardContent className="pt-0">
+        {constraints && constraints.length > 0 ? (
+          <div className="space-y-2">
+            {constraints.map((constraint, index) => (
+              <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-rose-50 border border-rose-200">
+                <div className="w-6 h-6 rounded-full bg-rose-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-rose-700">{index + 1}</span>
+                </div>
+                <div className="flex-1 text-right">
+                  <p className="text-sm font-medium text-rose-800">{constraint.name_ar || constraint.name}</p>
+                  {constraint.description_ar && (
+                    <p className="text-xs text-rose-600 mt-1">{constraint.description_ar}</p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="space-y-2">
-            {constraintsList.map((constraint) => {
-              const teacher = teachers.find(t => t.id === constraint.teacher_id);
-              const typeInfo = constraintTypes.find(t => t.id === constraint.type);
-              const dayInfo = dayOptions.find(d => d.id === constraint.day);
-              return (
-                <div key={constraint.id} className="flex items-center justify-between p-3 rounded-lg bg-white border hover:border-rose-300 transition-colors">
-                  <div className="flex items-center gap-3 flex-row-reverse flex-wrap">
-                    <Badge variant="outline" className="bg-rose-100 text-rose-700">{typeInfo?.name || constraint.type}</Badge>
-                    {teacher && <span className="text-sm">{teacher.full_name}</span>}
-                    {dayInfo && <Badge variant="secondary">{dayInfo.name}</Badge>}
-                    {constraint.description && <span className="text-xs text-muted-foreground">({constraint.description})</span>}
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveConstraint(constraint.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })}
+          <div className="py-6 text-center border-2 border-dashed border-rose-200 rounded-xl">
+            <Shield className="h-10 w-10 mx-auto mb-2 text-rose-200" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد قيود إدارية محددة' : 'No constraints defined'}</p>
           </div>
         )}
-
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-right font-cairo">{isRTL ? 'إضافة قيد إداري' : 'Add Constraint'}</DialogTitle>
-            </DialogHeader>
+      </CardContent>
+    </Card>
+  );
+};
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label className="text-right block">{isRTL ? 'نوع القيد' : 'Constraint Type'} <span className="text-red-500">*</span></Label>
