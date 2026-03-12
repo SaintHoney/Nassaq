@@ -60,6 +60,9 @@ db = client[os.environ['DB_NAME']]
 # Initialize Audit Engine
 audit_engine = AuditLogEngine(db)
 
+# Initialize Smart Scheduling Engine
+smart_scheduling_engine = SmartSchedulingEngine(db)
+
 # QR Code Generation Helper
 def generate_student_qr_code(student_id: str, student_name: str, student_number: str) -> str:
     """Generate QR code for student containing their info"""
