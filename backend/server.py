@@ -13965,9 +13965,73 @@ async def delete_school_stage(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
+    # Check for dependencies (grades in this stage)
+    grades_count = await db.school_grades.count_documents({"stage_id": stage_id, "school_id": school_id})
+    if grades_count > 0:
+        raise HTTPException(status_code=400, detail=f"لا يمكن حذف المرحلة لأنها تحتوي على {grades_count} صفوف")
+    
     await db.school_stages.delete_one({"id": stage_id, "school_id": school_id})
     
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "delete",
+        "entity_type": "stage",
+        "entity_id": stage_id,
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
     return {"message": "تم حذف المرحلة التعليمية"}
+
+
+@api_router.put("/school/settings/stages/{stage_id}")
+async def update_school_stage(
+    stage_id: str,
+    data: EducationalStageCreate,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update educational stage - تحديث مرحلة تعليمية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    update_data = {
+        "name": data.name,
+        "name_en": data.name_en,
+        "order": data.order,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    result = await db.school_stages.update_one(
+        {"id": stage_id, "school_id": school_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="المرحلة غير موجودة")
+    
+    # Audit log
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "school_id": school_id,
+        "action": "update",
+        "entity_type": "stage",
+        "entity_id": stage_id,
+        "new_data": update_data,
+        "performed_by": current_user["id"],
+        "performed_by_name": current_user.get("full_name", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.audit_logs.insert_one(audit_log)
+    
+    return {"message": "تم تحديث المرحلة التعليمية", "stage": update_data}
 
 
 # ============== GRADES ==============
