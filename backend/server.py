@@ -1799,15 +1799,26 @@ async def get_command_center_stats(
             "date": {"$gte": today_start.isoformat()[:10]}
         })
         
-        teachers_present_today = await db.attendance.count_documents({
-            "user_type": "teacher",
+        # Get teacher attendance from teacher_attendance collection (where it's actually stored)
+        teachers_present_today = await db.teacher_attendance.count_documents({
             "status": "present",
-            "date": {"$gte": today_start.isoformat()[:10]}
+            "date": today_start.isoformat()[:10]
         })
-        teachers_total_today = await db.attendance.count_documents({
-            "user_type": "teacher",
-            "date": {"$gte": today_start.isoformat()[:10]}
+        teachers_total_today = await db.teacher_attendance.count_documents({
+            "date": today_start.isoformat()[:10]
         })
+        
+        # If no records in teacher_attendance, try attendance collection
+        if teachers_total_today == 0:
+            teachers_present_today = await db.attendance.count_documents({
+                "user_type": "teacher",
+                "status": "present",
+                "date": {"$gte": today_start.isoformat()[:10]}
+            })
+            teachers_total_today = await db.attendance.count_documents({
+                "user_type": "teacher",
+                "date": {"$gte": today_start.isoformat()[:10]}
+            })
         
         # Calculate attendance rates
         student_attendance_rate = 0
