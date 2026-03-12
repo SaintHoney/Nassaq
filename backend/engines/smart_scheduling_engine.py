@@ -960,8 +960,8 @@ class SmartSchedulingEngine:
                             if period not in resource.availability.get(day, []):
                                 continue
                             
-                            # Check teacher not already assigned
-                            if teacher_grid[day][period] == teacher_id:
+                            # Check teacher not already assigned in this slot
+                            if teacher_id in teacher_grid[day][period]:
                                 continue
                             
                             # Check teacher load
