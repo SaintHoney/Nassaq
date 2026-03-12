@@ -1950,7 +1950,7 @@ export default function SchoolSettingsPage() {
       const [teachersRes, classesRes, settingsRes] = await Promise.all([
         api.get('/api/teachers').catch(() => ({ data: [] })),
         api.get('/api/classes').catch(() => ({ data: [] })),
-        api.get('/school/settings').catch(() => ({ data: {} })),
+        api.get('/api/school/settings').catch(() => ({ data: {} })),
       ]);
       
       setTeachers(teachersRes.data || []);
@@ -1959,22 +1959,45 @@ export default function SchoolSettingsPage() {
       // Set data from school settings API
       const settingsData = settingsRes.data || {};
       setSchoolInfo(settingsData.school_info || null);
-      setSubjects(settingsData.subjects || settingsRes.data?.subjects || []);
-      setGrades(settingsData.grades || []);
+      
+      // Get reference data
+      const refData = settingsData.reference_data || {};
+      const academicData = settingsData.academic_structure || {};
+      
+      setSubjects(refData.subjects || settingsData.subjects || []);
+      setGrades(academicData.grades || settingsData.grades || []);
+      
+      // Get working days from settings
+      const workingDays = settingsData.settings?.working_days || settingsData.working_days || { 
+        sunday: true, monday: true, tuesday: true, wednesday: true, thursday: true, friday: false, saturday: false 
+      };
       
       setSettings({
-        workDays: settingsData.work_days || { sunday: true, monday: true, tuesday: true, wednesday: true, thursday: true, friday: false, saturday: false },
+        workDays: workingDays,
+        workDaysAr: settingsData.settings?.working_days_ar || [],
+        workDaysEn: settingsData.settings?.working_days_en || [],
+        weekendDaysAr: settingsData.settings?.weekend_days_ar || [],
+        weekendDaysEn: settingsData.settings?.weekend_days_en || [],
         officialHolidays: settingsData.official_holidays || [],
         exceptionDays: settingsData.exception_days || [],
         periodsPerDay: settingsData.periods_per_day || 7,
-        timing: settingsData.timing || { start: '07:00', end: '14:00' },
+        periodDuration: settingsData.settings?.period_duration_minutes || 45,
+        breakDuration: settingsData.settings?.break_duration_minutes || 20,
+        prayerDuration: settingsData.settings?.prayer_duration_minutes || 20,
+        timing: { 
+          start: settingsData.school_day_start || '07:00', 
+          end: settingsData.school_day_end || '13:15' 
+        },
+        timeSlots: settingsData.time_slots || [],
         breaks: settingsData.breaks || [],
         activityDays: settingsData.activity_days || [],
         teachingLoads: settingsData.teaching_loads || {},
         teacherAvailability: settingsData.teacher_availability || {},
-        constraints: settingsData.constraints || [],
-        educationalStages: settingsData.educational_stages || [],
-        sections: settingsData.sections || [],
+        constraints: refData.admin_constraints || settingsData.constraints || [],
+        educationalStages: academicData.stages || settingsData.educational_stages || [],
+        educationTracks: academicData.tracks || [],
+        teacherRanks: refData.teacher_ranks || [],
+        sections: settingsData.school_classes || settingsData.sections || [],
         academicTerms: settingsData.academic_terms || [],
       });
     } catch (error) {
