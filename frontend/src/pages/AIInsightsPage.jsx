@@ -90,40 +90,12 @@ export const AIInsightsPage = () => {
           });
         }
         
-        // Set predictions (with icon mapping)
-        const iconMap = { Users, TrendingUp, AlertTriangle };
+        // Set predictions from API only - no mock data fallback
         if (predictionsRes.data && predictionsRes.data.length > 0) {
           setPredictions(predictionsRes.data.map((p, idx) => ({
             ...p,
             icon: p.category === 'attendance' ? Users : p.category === 'academic' ? TrendingUp : AlertTriangle,
           })));
-        } else {
-          setPredictions([
-            {
-              id: 1,
-              title: { ar: 'توقع نسبة الحضور', en: 'Attendance Prediction' },
-              description: { ar: 'من المتوقع أن تستقر نسبة الحضور الأسبوع القادم', en: 'Attendance is predicted to remain stable next week' },
-              confidence: 85,
-              impact: 'medium',
-              icon: Users,
-            },
-            {
-              id: 2,
-              title: { ar: 'أداء الطلاب', en: 'Student Performance' },
-              description: { ar: 'من المتوقع تحسن أداء الطلاب في الاختبارات القادمة', en: 'Student performance is expected to improve in upcoming exams' },
-              confidence: 78,
-              impact: 'positive',
-              icon: TrendingUp,
-            },
-            {
-              id: 3,
-              title: { ar: 'متابعة الطلاب', en: 'Student Follow-up' },
-              description: { ar: 'يوجد طلاب يحتاجون متابعة إضافية', en: 'Some students need additional follow-up' },
-              confidence: 72,
-              impact: 'high',
-              icon: AlertTriangle,
-            },
-          ]);
         }
         
         // Set recommendations
