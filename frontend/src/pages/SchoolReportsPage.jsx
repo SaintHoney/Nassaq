@@ -34,6 +34,8 @@ import {
   Percent,
   ArrowUpRight,
   ArrowDownRight,
+  CalendarDays,
+  Heart,
 } from 'lucide-react';
 import {
   Select,
