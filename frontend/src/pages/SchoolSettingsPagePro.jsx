@@ -506,7 +506,24 @@ export default function SchoolSettingsPagePro() {
   
   // States
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Edit Mode States
+  const [editDayTimesOpen, setEditDayTimesOpen] = useState(false);
+  const [editTimeSlotsOpen, setEditTimeSlotsOpen] = useState(false);
+  const [editConstraintOpen, setEditConstraintOpen] = useState(false);
+  const [selectedConstraint, setSelectedConstraint] = useState(null);
+  
+  // Edit Form States
+  const [editedDayTimes, setEditedDayTimes] = useState({
+    dayStart: '07:00',
+    dayEnd: '13:15',
+    periodsPerDay: 7,
+    periodDuration: 45,
+    breakDuration: 20,
+    prayerDuration: 20,
+  });
   
   // Data States
   const [schoolInfo, setSchoolInfo] = useState({});
