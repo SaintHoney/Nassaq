@@ -309,7 +309,7 @@ const Step3Subjects = ({ data, onChange, errors, options, isRTL }) => {
                     : 'bg-muted/30 border-border hover:bg-muted/50'
                 }`}
               >
-                <p className="font-medium text-sm">{isRTL ? grade.name_ar : grade.name_en}</p>
+                <p className="font-medium text-sm">{isRTL ? (grade.name_ar || grade.name) : (grade.name_en || grade.name_ar || grade.name)}</p>
               </div>
             ))}
           </div>
