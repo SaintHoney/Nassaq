@@ -318,12 +318,12 @@ export const TeacherAttendancePage = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-brand-turquoise mb-1">
-                    {isRTL ? 'حضور المعلمين' : 'Teacher Attendance'}
+                    {isRTL ? 'حضور المعلمين والاداريين' : 'Staff Attendance'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {isRTL 
-                      ? 'هذه الصفحة مخصصة لمتابعة وإدارة حضور المعلمين داخل المدرسة، وتشمل تسجيل الحضور والغياب والتأخر، ومتابعة التزام الكادر التعليمي بساعات العمل الرسمية.'
-                      : 'This page is dedicated to tracking and managing teacher attendance within the school, including recording presence, absence, and tardiness, and monitoring staff compliance with official working hours.'}
+                      ? 'هذه الصفحة مخصصة لمتابعة وإدارة حضور المعلمين والاداريين داخل المدرسة، وتشمل تسجيل الحضور والغياب والتأخر، ومتابعة التزام الكادر التعليمي والإداري بساعات العمل الرسمية.'
+                      : 'This page is dedicated to tracking and managing staff attendance within the school, including recording presence, absence, and tardiness, and monitoring compliance with official working hours.'}
                   </p>
                 </div>
               </div>
