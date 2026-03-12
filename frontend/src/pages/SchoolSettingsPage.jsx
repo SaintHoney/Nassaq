@@ -311,7 +311,7 @@ const TeachersSection = ({ teachers, loading, onRefresh, onAddTeacher, onEditTea
             <p className="text-muted-foreground mb-4">{isRTL ? 'قم بإضافة المعلمين ليصبحوا متاحين للجدولة' : 'Add teachers to make them available for scheduling'}</p>
             <Button onClick={onAddTeacher} variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
               <Plus className="h-4 w-4 me-2" />
-              {isRTL ? 'إضافة أول معلم' : 'Add First Teacher'}
+              {isRTL ? 'معلم / معلمين' : 'Teacher(s)'}
             </Button>
           </div>
         ) : (
