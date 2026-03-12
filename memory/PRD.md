@@ -387,13 +387,37 @@
 - **البيانات المحفوظة:** User Identity ID, Role ID, School ID
 - **الاستجابة:** اسم الدور بالعربية، اسم المدرسة، وقت التعيين
 
-### نتائج الاختبار (Iteration 66):
-- **Backend:** 21/21 اختبار نجح (100%)
-- **Frontend:** جميع الميزات تم التحقق منها
+#### 5. إسنادات المعلمين والفصول
+- **تبويب جديد:** "الإسنادات" في صفحة إعدادات المدرسة
+- **عرض الإسنادات:** مجمعة حسب المعلم مع الفصل والمادة وعدد الحصص
+- **CRUD كامل:** إضافة/تعديل/حذف الإسنادات
+- **إصلاح توليد الجدول:** يبحث عن الإسنادات بدون تصفية السنة إذا لم يجد
+
+#### 6. إصلاح قوائم نموذج إضافة معلم
+- **قائمة الجنسيات:** تعمل الآن (سعودي، مصري، أردني، سوري، إلخ)
+- **قائمة الدرجة العلمية:** تعمل الآن (دبلوم، بكالوريوس، ماجستير، دكتوراه)
+- **قائمة الرتبة الوظيفية:** تعمل الآن (المعلم، المعلم الممارس، المتقدم، الخبير، إلخ)
+- **قائمة نوع العقد:** تعمل الآن
+
+#### 7. إصلاح نموذج إضافة طالب
+- تمرير `api`, `grades`, `classes` للمكون
+- تحسين logging للأخطاء
+
+#### 8. إصلاح Dashboard حضور المعلمين
+- يجلب الحضور من `teacher_attendance` collection
+- يدعم fallback إلى `attendance` collection
+
+### نتائج الاختبار:
+- **Backend APIs:** جميعها تعمل ✅
+- **Frontend:** جميع القوائم تعرض البيانات ✅
 
 ### الملفات المُحدّثة:
-- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - CRUD للمواد والقيود
-- `/app/backend/server.py` - APIs جديدة (lines 2800-3100, 590-750)
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - تبويب الإسنادات
+- `/app/frontend/src/components/wizards/AddTeacherWizard.jsx` - إصلاح القوائم
+- `/app/frontend/src/components/wizards/AddStudentWizard.jsx` - تحسين logging
+- `/app/frontend/src/pages/TeachersPage.jsx` - تمرير api و grades و classes
+- `/app/frontend/src/components/dashboard/SchoolDashboardContent.jsx` - جلب grades و classes
+- `/app/backend/server.py` - إصلاح APIs
 
 ---
 
