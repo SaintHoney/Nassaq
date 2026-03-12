@@ -2393,6 +2393,13 @@ export default function SchoolSettingsPage() {
           {/* Section 7: Breaks - فترات الاستراحة */}
           <BreaksSection breaks={settings.breaks} onSave={handleSaveBreaks} isRTL={isRTL} />
 
+          {/* Section 7.5: Time Slots - التوزيع الزمني الكامل */}
+          <TimeSlotsSection 
+            timeSlots={settings.timeSlots} 
+            periodsPerDay={settings.periodsPerDay}
+            isRTL={isRTL} 
+          />
+
           {/* Section 8: Activity Days - أيام الأنشطة */}
           <ActivityDaysSection 
             activityDays={settings.activityDays || []} 
