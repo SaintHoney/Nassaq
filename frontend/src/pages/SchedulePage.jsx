@@ -355,11 +355,26 @@ export const SchedulePage = () => {
   };
 
   const handleGenerateSchedule = async () => {
-    if (!selectedSchedule) return;
-    
     setGenerating(true);
     try {
-      const response = await api.post(`/schedules/${selectedSchedule}/generate?respect_workload=true&balance_daily=true&avoid_consecutive=true`);
+      let scheduleId = selectedSchedule;
+      
+      // If no schedule exists, create one automatically
+      if (!scheduleId) {
+        const createResponse = await api.post('/schedules', {
+          name: isRTL ? 'الجدول المدرسي - تلقائي' : 'Auto Schedule',
+          academic_year: '2026-2027',
+          semester: 1,
+          effective_from: new Date().toISOString().split('T')[0],
+          school_id: schoolId,
+          working_days: DAYS.map(d => d.key),
+        });
+        scheduleId = createResponse.data.id;
+        setSelectedSchedule(scheduleId);
+        toast.success(isRTL ? 'تم إنشاء جدول جديد' : 'New schedule created');
+      }
+      
+      const response = await api.post(`/schedules/${scheduleId}/generate?respect_workload=true&balance_daily=true&avoid_consecutive=true`);
       
       // Store generation stats
       setGenerationStats(response.data);
@@ -378,8 +393,10 @@ export const SchedulePage = () => {
         );
       }
       
+      fetchData();
       fetchSessions();
     } catch (error) {
+      console.error('Generate schedule error:', error);
       toast.error(error.response?.data?.detail || (isRTL ? 'فشل توليد الجدول' : 'Failed to generate schedule'));
     } finally {
       setGenerating(false);
