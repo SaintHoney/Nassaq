@@ -223,7 +223,31 @@ export default function SchedulePageNew() {
   // Generate schedule
   const handleGenerateSchedule = async () => {
     setGenerating(true);
+    setGenerationErrors([]);
+    
     try {
+      // التحقق من البيانات المطلوبة
+      const errors = [];
+      
+      if (timeSlots.length === 0) {
+        errors.push('لم يتم تحديد الفترات الزمنية. يرجى إعداد التوزيع الزمني من إعدادات المدرسة أولاً.');
+      }
+      
+      if (teachers.length === 0) {
+        errors.push('لا يوجد معلمون مسجلون. يرجى إضافة معلمين من صفحة إدارة المستخدمين والفصول.');
+      }
+      
+      if (classes.length === 0) {
+        errors.push('لا يوجد فصول مسجلة. يرجى إضافة فصول من صفحة إدارة المستخدمين والفصول.');
+      }
+      
+      if (errors.length > 0) {
+        setGenerationErrors(errors);
+        setGenerating(false);
+        toast.error('يوجد مشاكل تمنع إنشاء الجدول');
+        return;
+      }
+      
       let scheduleId = selectedSchedule;
       
       // Create schedule if none exists
@@ -246,17 +270,54 @@ export default function SchedulePageNew() {
       setGenerateDialogOpen(false);
       setGenerationResultOpen(true);
       
+      // التحقق من الأخطاء في الاستجابة
+      if (response.data.errors && response.data.errors.length > 0) {
+        setGenerationErrors(response.data.errors);
+      }
+      
+      if (response.data.warnings && response.data.warnings.length > 0) {
+        setGenerationErrors(prev => [...prev, ...response.data.warnings]);
+      }
+      
       if (response.data.success) {
         toast.success(`تم إنشاء ${response.data.sessions_created} حصة بنجاح`);
       } else {
-        toast.warning(`تم إنشاء ${response.data.sessions_created} حصة مع ${response.data.unplaced_sessions || 0} حصة غير مجدولة`);
+        const msg = response.data.message || `تم إنشاء ${response.data.sessions_created} حصة مع ${response.data.unplaced_sessions || 0} حصة غير مجدولة`;
+        toast.warning(msg);
       }
       
       fetchData();
       fetchSessions();
     } catch (error) {
       console.error('Generate error:', error);
-      toast.error(error.response?.data?.detail || 'فشل توليد الجدول');
+      
+      // تحليل رسالة الخطأ بالتفصيل
+      let errorMessage = 'فشل توليد الجدول';
+      let errorDetails = [];
+      
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail)) {
+          errorDetails = detail;
+        } else if (detail.message) {
+          errorMessage = detail.message;
+          if (detail.errors) errorDetails = detail.errors;
+        }
+      }
+      
+      if (error.response?.data?.errors) {
+        errorDetails = error.response.data.errors;
+      }
+      
+      if (errorDetails.length > 0) {
+        setGenerationErrors(errorDetails);
+      } else {
+        setGenerationErrors([errorMessage]);
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setGenerating(false);
     }
