@@ -625,82 +625,121 @@ export default function UsersManagement() {
         
         <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
           
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4">
-            {/* إجمالي المستخدمين */}
-            <Card className="bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white col-span-2 lg:col-span-1">
-              <CardContent className="p-4">
+          {/* Stats Cards - مُحدَّثة حسب المتطلبات الجديدة - غير قابلة للنقر */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3 mb-6">
+            {/* المدارس المسجلة */}
+            <Card className="border-teal-200 bg-teal-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-white/70 text-sm">إجمالي المستخدمين</p>
-                    <p className="text-3xl font-bold">{stats.totalUsers}</p>
+                    <p className="text-teal-600 text-xs">المدارس المسجلة</p>
+                    <p className="text-xl font-bold text-teal-700">{stats.totalSchools}</p>
                   </div>
-                  <Users className="h-10 w-10 text-white/30" />
+                  <Building2 className="h-6 w-6 text-teal-200" />
                 </div>
               </CardContent>
             </Card>
             
-            {/* إجمالي المدارس */}
-            <Card className="border-teal-200 bg-teal-50">
-              <CardContent className="p-4">
+            {/* الطلاب المسجلين */}
+            <Card className="border-cyan-200 bg-cyan-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-teal-600 text-sm">إجمالي المدارس</p>
-                    <p className="text-2xl lg:text-3xl font-bold text-teal-700">{stats.totalSchools}</p>
+                    <p className="text-cyan-600 text-xs">الطلاب المسجلين</p>
+                    <p className="text-xl font-bold text-cyan-700">{stats.totalStudents}</p>
                   </div>
-                  <Building2 className="h-8 lg:h-10 w-8 lg:w-10 text-teal-200" />
+                  <GraduationCap className="h-6 w-6 text-cyan-200" />
                 </div>
               </CardContent>
             </Card>
             
-            {/* معلمين داخل المدارس */}
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="p-4">
+            {/* المعلمين في المدارس */}
+            <Card className="border-blue-200 bg-blue-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-blue-600 text-sm">معلمين داخل المدارس</p>
-                    <p className="text-2xl lg:text-3xl font-bold text-blue-700">{stats.teachersInSchools}</p>
+                    <p className="text-blue-600 text-xs">معلمين المدارس</p>
+                    <p className="text-xl font-bold text-blue-700">{stats.teachersInSchools}</p>
                   </div>
-                  <GraduationCap className="h-8 lg:h-10 w-8 lg:w-10 text-blue-200" />
+                  <UserCheck className="h-6 w-6 text-blue-200" />
                 </div>
               </CardContent>
             </Card>
             
-            {/* معلمين مستقلين */}
-            <Card className="border-violet-200 bg-violet-50">
-              <CardContent className="p-4">
+            {/* المعلمين المستقلين */}
+            <Card className="border-violet-200 bg-violet-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-violet-600 text-sm">معلمين مستقلين</p>
-                    <p className="text-2xl lg:text-3xl font-bold text-violet-700">{stats.independentTeachers}</p>
+                    <p className="text-violet-600 text-xs">معلمين مستقلين</p>
+                    <p className="text-xl font-bold text-violet-700">{stats.independentTeachers}</p>
                   </div>
-                  <Sparkles className="h-8 lg:h-10 w-8 lg:w-10 text-violet-200" />
+                  <Sparkles className="h-6 w-6 text-violet-200" />
                 </div>
               </CardContent>
             </Card>
             
-            {/* حسابات إدارية */}
-            <Card className="border-purple-200 bg-purple-50">
-              <CardContent className="p-4">
+            {/* نسبة حضور الطلاب */}
+            <Card className="border-green-200 bg-green-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-purple-600 text-sm">حسابات المنصة</p>
-                    <p className="text-2xl lg:text-3xl font-bold text-purple-700">{stats.platformAdmins}</p>
+                    <p className="text-green-600 text-xs">حضور الطلاب</p>
+                    <p className="text-xl font-bold text-green-700">{stats.studentAttendanceRate}%</p>
                   </div>
-                  <Shield className="h-8 lg:h-10 w-8 lg:w-10 text-purple-200" />
+                  <TrendingUp className="h-6 w-6 text-green-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* نسبة حضور المعلمين */}
+            <Card className="border-emerald-200 bg-emerald-50 cursor-default">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between flex-row-reverse">
+                  <div className="text-right">
+                    <p className="text-emerald-600 text-xs">حضور المعلمين</p>
+                    <p className="text-xl font-bold text-emerald-700">{stats.teacherAttendanceRate}%</p>
+                  </div>
+                  <Activity className="h-6 w-6 text-emerald-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* حسابات المنصة */}
+            <Card className="border-purple-200 bg-purple-50 cursor-default">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between flex-row-reverse">
+                  <div className="text-right">
+                    <p className="text-purple-600 text-xs">حسابات المنصة</p>
+                    <p className="text-xl font-bold text-purple-700">{stats.platformAdmins}</p>
+                  </div>
+                  <Shield className="h-6 w-6 text-purple-200" />
                 </div>
               </CardContent>
             </Card>
             
             {/* طلبات معلقة */}
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardContent className="p-4">
+            <Card className="border-yellow-200 bg-yellow-50 cursor-default">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between flex-row-reverse">
                   <div className="text-right">
-                    <p className="text-yellow-600 text-sm">طلبات معلقة</p>
-                    <p className="text-2xl lg:text-3xl font-bold text-yellow-700">{teacherRequests.filter(r => r.status === 'pending').length}</p>
+                    <p className="text-yellow-600 text-xs">طلبات معلقة</p>
+                    <p className="text-xl font-bold text-yellow-700">{stats.pendingRequests}</p>
                   </div>
-                  <Clock className="h-8 lg:h-10 w-8 lg:w-10 text-yellow-200" />
+                  <Clock className="h-6 w-6 text-yellow-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* مدارس تستخدم AI */}
+            <Card className="border-indigo-200 bg-indigo-50 cursor-default">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between flex-row-reverse">
+                  <div className="text-right">
+                    <p className="text-indigo-600 text-xs">مدارس AI</p>
+                    <p className="text-xl font-bold text-indigo-700">{stats.aiEnabledSchools}</p>
+                  </div>
+                  <Brain className="h-6 w-6 text-indigo-200" />
                 </div>
               </CardContent>
             </Card>
