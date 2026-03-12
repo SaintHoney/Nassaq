@@ -987,6 +987,196 @@ export default function SchoolSettingsPagePro() {
     }
   };
   
+  // =============== SCHOOL INFO UPDATE ===============
+  const handleUpdateSchoolInfo = async () => {
+    setSaving(true);
+    try {
+      await api.put('/school/settings/info', editedSchoolInfo);
+      toast.success('تم تحديث معلومات المدرسة بنجاح');
+      setEditSchoolInfoOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating school info:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث معلومات المدرسة');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // =============== WORK DAYS UPDATE ===============
+  const handleSaveWorkDays = async () => {
+    setSaving(true);
+    try {
+      await api.put('/school/settings/work-days', editedWorkDays);
+      toast.success('تم تحديث أيام العمل بنجاح');
+      setEditWorkDaysOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error saving work days:', error);
+      toast.error(error.response?.data?.detail || 'فشل حفظ أيام العمل');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const toggleWorkDay = (day) => {
+    setEditedWorkDays(prev => ({ ...prev, [day]: !prev[day] }));
+  };
+  
+  // =============== STAGES CRUD ===============
+  const handleAddStage = async () => {
+    if (!newStage.name) {
+      toast.error('يرجى إدخال اسم المرحلة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.post('/school/settings/stages', newStage);
+      toast.success('تم إضافة المرحلة التعليمية بنجاح');
+      setAddStageOpen(false);
+      setNewStage({ name: '', name_en: '', order: 1 });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding stage:', error);
+      toast.error(error.response?.data?.detail || 'فشل إضافة المرحلة');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const handleUpdateStage = async () => {
+    if (!editStage || !editStage.name) {
+      toast.error('يرجى إدخال اسم المرحلة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.put(`/school/settings/stages/${editStage.id}`, editStage);
+      toast.success('تم تحديث المرحلة التعليمية بنجاح');
+      setEditStageOpen(false);
+      setEditStage(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating stage:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث المرحلة');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const handleDeleteStage = async (stageId, stageName) => {
+    try {
+      const result = await api.delete(`/school/settings/stages/${stageId}`);
+      if (result.data?.warning) {
+        setDeleteTarget({ type: 'stage', id: stageId, name: stageName, dependencies: result.data.dependencies });
+        setDeleteConfirmOpen(true);
+      } else {
+        toast.success('تم حذف المرحلة التعليمية بنجاح');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error deleting stage:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف المرحلة');
+    }
+  };
+  
+  // =============== GRADES CRUD ===============
+  const handleAddGrade = async () => {
+    if (!newGrade.name || !newGrade.stage_id) {
+      toast.error('يرجى إدخال اسم الصف واختيار المرحلة');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.post('/school/settings/grades', newGrade);
+      toast.success('تم إضافة الصف الدراسي بنجاح');
+      setAddGradeOpen(false);
+      setNewGrade({ name: '', name_en: '', stage_id: '' });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding grade:', error);
+      toast.error(error.response?.data?.detail || 'فشل إضافة الصف');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const handleUpdateGrade = async () => {
+    if (!editGrade || !editGrade.name) {
+      toast.error('يرجى إدخال اسم الصف');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await api.put(`/school/settings/grades/${editGrade.id}`, editGrade);
+      toast.success('تم تحديث الصف الدراسي بنجاح');
+      setEditGradeOpen(false);
+      setEditGrade(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating grade:', error);
+      toast.error(error.response?.data?.detail || 'فشل تحديث الصف');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const handleDeleteGrade = async (gradeId, gradeName) => {
+    try {
+      const result = await api.delete(`/school/settings/grades/${gradeId}`);
+      if (result.data?.warning) {
+        setDeleteTarget({ type: 'grade', id: gradeId, name: gradeName, dependencies: result.data.dependencies });
+        setDeleteConfirmOpen(true);
+      } else {
+        toast.success('تم حذف الصف الدراسي بنجاح');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error deleting grade:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف الصف');
+    }
+  };
+  
+  // =============== DELETE WITH CONFIRMATION ===============
+  const handleDeleteWithDependencies = async (subjectId) => {
+    try {
+      const result = await api.delete(`/school/subjects/${subjectId}`);
+      if (result.data?.warning) {
+        setDeleteTarget({ type: 'subject', id: subjectId, name: result.data.subject_name, dependencies: result.data.dependencies });
+        setDeleteConfirmOpen(true);
+      } else {
+        toast.success('تم حذف المادة بنجاح');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      toast.error(error.response?.data?.detail || 'فشل حذف المادة');
+    }
+  };
+  
+  const confirmDelete = async () => {
+    try {
+      if (deleteTarget.type === 'subject') {
+        await api.delete(`/school/subjects/${deleteTarget.id}?force=true`);
+      } else if (deleteTarget.type === 'stage') {
+        await api.delete(`/school/settings/stages/${deleteTarget.id}?force=true`);
+      } else if (deleteTarget.type === 'grade') {
+        await api.delete(`/school/settings/grades/${deleteTarget.id}?force=true`);
+      }
+      toast.success('تم الحذف بنجاح');
+      setDeleteConfirmOpen(false);
+      setDeleteTarget({ type: '', id: '', name: '', dependencies: null });
+      fetchData();
+    } catch (error) {
+      console.error('Error force deleting:', error);
+      toast.error(error.response?.data?.detail || 'فشل الحذف');
+    }
+  };
+  
   // Loading state
   if (loading) {
     return (
