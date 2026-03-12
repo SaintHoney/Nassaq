@@ -348,11 +348,11 @@ export const PlatformSettingsPage = () => {
   const [copiedField, setCopiedField] = useState(null);
   const [versionHistory, setVersionHistory] = useState([]);
   
-  // Account settings
+  // Account settings - using user data only
   const [accountData, setAccountData] = useState({
-    name: user?.full_name || 'مدير المنصة',
-    email: user?.email || 'info@nassaqapp.com',
-    phone: user?.phone || '+966500000000',
+    name: user?.full_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     language: user?.preferred_language || 'ar',
     profilePicture: user?.avatar_url || null,
     title: user?.title || '',
