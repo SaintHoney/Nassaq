@@ -1095,7 +1095,13 @@ export const SystemMonitoringPage = () => {
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-120px)] mt-6">
               <div className="space-y-4 pe-4">
-                {SAMPLE_ERRORS.concat(SAMPLE_ERRORS).concat(SAMPLE_ERRORS).map((error, index) => (
+                {errorLogs.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                    <p>{isRTL ? 'لا توجد أخطاء مسجلة' : 'No errors recorded'}</p>
+                  </div>
+                ) : (
+                  errorLogs.map((error, index) => (
                   <div 
                     key={`${error.id}-${index}`}
                     className="p-4 border rounded-lg space-y-2"
