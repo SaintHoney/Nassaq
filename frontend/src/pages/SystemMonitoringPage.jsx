@@ -241,6 +241,7 @@ const INITIAL_ALERTS = [];
 
 export const SystemMonitoringPage = () => {
   const { isRTL = true, isDark } = useTheme();
+  const { api } = useAuth();
   const t = translations[isRTL ? 'ar' : 'en'];
   
   // States
@@ -252,6 +253,13 @@ export const SystemMonitoringPage = () => {
   const [showJobsSheet, setShowJobsSheet] = useState(false);
   const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
+  
+  // Dynamic data states
+  const [errorLogs, setErrorLogs] = useState(INITIAL_ERRORS);
+  const [jobs, setJobs] = useState(INITIAL_JOBS);
+  const [integrations, setIntegrations] = useState(INITIAL_INTEGRATIONS);
+  const [alerts, setAlerts] = useState(INITIAL_ALERTS);
+  const [loadingData, setLoadingData] = useState(true);
   
   // System metrics (simulated)
   const [metrics, setMetrics] = useState({
