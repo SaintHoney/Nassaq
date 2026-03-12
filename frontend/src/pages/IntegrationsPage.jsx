@@ -458,7 +458,9 @@ export default function IntegrationsPage() {
         const response = await axios.get(`${API_URL}/api/api-keys`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setApiKeys(response.data || []);
+        // Handle both array and object response formats
+        const data = response.data?.keys || response.data || [];
+        setApiKeys(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch API keys:', error);
         setApiKeys([]);
