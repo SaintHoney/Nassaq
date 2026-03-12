@@ -94,7 +94,6 @@ import {
   List,
   X,
 } from 'lucide-react';
-import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
