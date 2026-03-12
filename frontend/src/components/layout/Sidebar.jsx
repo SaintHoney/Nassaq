@@ -233,6 +233,12 @@ export const Sidebar = ({ children }) => {
         roles: ['platform_admin'],
       },
       {
+        icon: FileSpreadsheet,
+        label: isRTL ? 'الاستيراد والتصدير' : 'Import & Export',
+        href: '/admin/bulk',
+        roles: ['platform_admin', 'school_principal'],
+      },
+      {
         icon: Settings,
         label: isRTL ? 'إعدادات النظام' : 'System Settings',
         href: '/settings',
