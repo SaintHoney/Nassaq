@@ -209,6 +209,29 @@ class TeacherRegistrationEngine:
             details={"email": email, "tracking_code": tracking_code}
         )
         
+        # Send real-time notification to platform admins
+        try:
+            from routes.websocket_routes import get_connection_manager, send_realtime_notification
+            ws_manager = get_connection_manager()
+            await send_realtime_notification(
+                manager=ws_manager,
+                db=self.db,
+                notification_type="teacher_request",
+                message_ar=f"طلب تسجيل جديد من {full_name} - {email}",
+                message_en=f"New registration request from {full_name} - {email}",
+                target_roles=["platform_admin", "platform_operations_manager"],
+                extra_data={
+                    "request_id": request_id,
+                    "tracking_code": tracking_code,
+                    "teacher_name": full_name,
+                    "teacher_email": email,
+                    "action_url": "/admin/users?tab=requests"
+                },
+                save_to_db=True
+            )
+        except Exception as e:
+            print(f"Error sending real-time notification: {e}")
+        
         # Save school data for future outreach
         await self._save_pending_school(
             school_name=school_name,
