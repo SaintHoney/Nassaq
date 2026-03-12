@@ -685,7 +685,7 @@ function AppRoutes() {
         path="/principal/settings"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
-            <SchoolSettingsPage />
+            <SchoolSettingsPagePro />
           </ProtectedRoute>
         }
       />
@@ -693,7 +693,7 @@ function AppRoutes() {
         path="/school/settings"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
-            <SchoolSettingsPage />
+            <SchoolSettingsPagePro />
           </ProtectedRoute>
         }
       />
