@@ -12702,6 +12702,103 @@ async def delete_official_holiday(
     return {"message": "تم حذف الإجازة الرسمية"}
 
 
+@api_router.put("/school/settings")
+async def update_school_settings_full(
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Update full school settings including time slots - تحديث إعدادات المدرسة الكاملة"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    settings_data = data.get("settings", {})
+    
+    # Prepare update data
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Update main settings
+    if "school_day_start" in settings_data:
+        update_data["settings.school_day_start"] = settings_data["school_day_start"]
+    if "school_day_end" in settings_data:
+        update_data["settings.school_day_end"] = settings_data["school_day_end"]
+    if "periods_per_day" in settings_data:
+        update_data["settings.periods_per_day"] = settings_data["periods_per_day"]
+    if "period_duration_minutes" in settings_data:
+        update_data["settings.period_duration_minutes"] = settings_data["period_duration_minutes"]
+    if "break_duration_minutes" in settings_data:
+        update_data["settings.break_duration_minutes"] = settings_data["break_duration_minutes"]
+    if "prayer_duration_minutes" in settings_data:
+        update_data["settings.prayer_duration_minutes"] = settings_data["prayer_duration_minutes"]
+    if "time_slots" in settings_data:
+        update_data["settings.time_slots"] = settings_data["time_slots"]
+    
+    # Update school_settings collection
+    await db.school_settings.update_one(
+        {"school_id": school_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Also update time_slots collection if time_slots provided
+    if "time_slots" in settings_data:
+        # Delete old time slots
+        await db.time_slots.delete_many({"school_id": school_id})
+        
+        # Insert new time slots
+        for slot in settings_data["time_slots"]:
+            slot_doc = {
+                "id": str(uuid.uuid4()),
+                "school_id": school_id,
+                **slot,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.time_slots.insert_one(slot_doc)
+    
+    return {"message": "تم تحديث إعدادات المدرسة بنجاح", "settings": settings_data}
+
+
+@api_router.put("/school/constraints/{constraint_id}")
+async def update_school_constraint(
+    constraint_id: str,
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.PLATFORM_ADMIN])),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Toggle constraint active status - تبديل حالة القيد"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if "is_active" in data:
+        update_data["is_active"] = data["is_active"]
+    
+    # Try to update in reference_admin_constraints first
+    result = await db.reference_admin_constraints.update_one(
+        {"id": constraint_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        # Try admin_constraints collection
+        result = await db.admin_constraints.update_one(
+            {"id": constraint_id},
+            {"$set": update_data}
+        )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Constraint not found")
+    
+    return {"message": "تم تحديث القيد بنجاح", "is_active": data.get("is_active")}
+
+
 @api_router.post("/school/settings/exception-days")
 async def add_exception_day(
     data: ExceptionDay,
