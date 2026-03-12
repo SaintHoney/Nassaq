@@ -98,68 +98,19 @@ export const AIInsightsPage = () => {
           })));
         }
         
-        // Set recommendations
+        // Set recommendations from API only - no mock data fallback
         if (recommendationsRes.data && recommendationsRes.data.length > 0) {
           setRecommendations(recommendationsRes.data);
-        } else {
-          setRecommendations([
-            {
-              id: 1,
-              category: { ar: 'التحصيل الأكاديمي', en: 'Academic Achievement' },
-              title: { ar: 'تعزيز مهارات القراءة', en: 'Enhance Reading Skills' },
-              description: { ar: 'يُنصح بزيادة الأنشطة التفاعلية لتحسين مهارات القراءة والفهم', en: 'Increase interactive activities to improve reading comprehension skills' },
-              priority: 'high',
-              expected_impact: 15,
-            },
-            {
-              id: 2,
-              category: { ar: 'الحضور والانضباط', en: 'Attendance & Discipline' },
-              title: { ar: 'نظام الحوافز', en: 'Incentive System' },
-              description: { ar: 'تطبيق نظام نقاط للحضور المنتظم قد يحسن نسبة الحضور', en: 'A points system for regular attendance could improve attendance rates' },
-              priority: 'medium',
-              expected_impact: 8,
-            },
-            {
-              id: 3,
-              category: { ar: 'التواصل', en: 'Communication' },
-              title: { ar: 'تفعيل التواصل الرقمي', en: 'Activate Digital Communication' },
-              description: { ar: 'تحسين قنوات التواصل مع أولياء الأمور', en: 'Improve communication channels with parents' },
-              priority: 'low',
-              expected_impact: 20,
-            },
-          ]);
         }
         
-        // Set alerts
+        // Set alerts from API only - no mock data fallback
         if (alertsRes.data && alertsRes.data.length > 0) {
           setAlerts(alertsRes.data);
-        } else {
-          setAlerts([
-            {
-              id: 1,
-              type: 'info',
-              title: { ar: 'مراجعة الأداء الشهري', en: 'Monthly Performance Review' },
-              description: { ar: 'حان موعد مراجعة الأداء الشهري للمعلمين', en: 'Time for monthly teacher performance review' },
-              timestamp: new Date().toISOString(),
-            },
-            {
-              id: 2,
-              type: 'success',
-              title: { ar: 'تحسن ملحوظ', en: 'Notable Improvement' },
-              description: { ar: 'تحسن في معدلات الحضور مقارنة بالأسبوع الماضي', en: 'Attendance rates improved compared to last week' },
-              timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            },
-          ]);
         }
         
-        // Set at-risk students
+        // Set at-risk students from API only - no mock data fallback
         if (risksRes.data && risksRes.data.length > 0) {
           setStudentRisks(risksRes.data);
-        } else {
-          setStudentRisks([
-            { id: 1, name: 'طالب للمتابعة', grade: '3-أ', risk_level: 65, risk_type: 'academic', factors: ['انخفاض الدرجات', 'غياب متكرر'] },
-            { id: 2, name: 'طالب آخر', grade: '2-ب', risk_level: 55, risk_type: 'behavioral', factors: ['عدم مشاركة', 'تأخر في الواجبات'] },
-          ]);
         }
         
       } catch (error) {
