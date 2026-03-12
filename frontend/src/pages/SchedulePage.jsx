@@ -667,6 +667,168 @@ export const SchedulePage = () => {
 
               {/* Right Side Actions */}
               <div className="flex gap-2 items-center">
+                {/* Conflicts Sheet - moved from after New Schedule */}
+                {conflicts.length > 0 && (
+                  <Sheet open={conflictsSheetOpen} onOpenChange={setConflictsSheetOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="destructive" size="sm" className="rounded-xl h-9 animate-pulse" data-testid="conflicts-btn">
+                        <AlertTriangle className="h-4 w-4 me-1" />
+                        {conflicts.length} {isRTL ? 'تعارض' : 'conflicts'}
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent className="w-[500px]">
+                      <SheetHeader>
+                        <SheetTitle className="font-cairo flex items-center gap-2 text-red-600">
+                          <AlertTriangle className="h-5 w-5" />
+                          {isRTL ? 'التعارضات المكتشفة' : 'Detected Conflicts'} ({conflicts.length})
+                        </SheetTitle>
+                        <SheetDescription>
+                          {isRTL ? 'يجب حل هذه التعارضات قبل نشر الجدول' : 'These conflicts must be resolved before publishing'}
+                        </SheetDescription>
+                      </SheetHeader>
+                      
+                      {/* Conflict Statistics */}
+                      {conflictStats && (
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                          <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-center">
+                            <p className="text-lg font-bold text-orange-600">{conflictStats.teacher_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض معلم' : 'Teacher'}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
+                            <p className="text-lg font-bold text-purple-600">{conflictStats.class_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض فصل' : 'Class'}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
+                            <p className="text-lg font-bold text-blue-600">{conflictStats.room_conflicts || 0}</p>
+                            <p className="text-xs text-muted-foreground">{isRTL ? 'تعارض قاعة' : 'Room'}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Auto-Resolve Button */}
+                      {suggestions.length > 0 && (
+                        <div className="mt-4">
+                          <Button 
+                            onClick={handleAutoResolveAll}
+                            disabled={autoResolving}
+                            className="w-full bg-green-600 hover:bg-green-700 rounded-xl"
+                            data-testid="auto-resolve-btn"
+                          >
+                            {autoResolving ? (
+                              <>
+                                <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                                {isRTL ? 'جارٍ الحل...' : 'Resolving...'}
+                              </>
+                            ) : (
+                              <>
+                                <Wand2 className="h-4 w-4 me-2" />
+                                {isRTL ? `حل الكل تلقائياً (${suggestions.length})` : `Auto-Resolve All (${suggestions.length})`}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 space-y-3 max-h-[50vh] overflow-y-auto">
+                        {conflicts.map((conflict, index) => {
+                          // Find suggestion for this conflict
+                          const suggestion = suggestions.find(s => 
+                            (s.conflict_type === conflict.type) && 
+                            (s.teacher_id === conflict.teacher_id || s.class_id === conflict.class_id)
+                          );
+                          
+                          return (
+                            <div key={conflict.id || index} className={`p-3 rounded-xl border ${
+                              conflict.type === 'teacher_overlap' ? 'border-orange-200 bg-orange-50 dark:bg-orange-900/20' :
+                              conflict.type === 'class_overlap' ? 'border-purple-200 bg-purple-50 dark:bg-purple-900/20' :
+                              conflict.type === 'room_overlap' ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/20' :
+                              'border-red-200 bg-red-50 dark:bg-red-900/20'
+                            }`}>
+                              <div className="flex items-start gap-3">
+                                <div className={`p-2 rounded-lg ${
+                                  conflict.type === 'teacher_overlap' ? 'bg-orange-100 text-orange-600' :
+                                  conflict.type === 'class_overlap' ? 'bg-purple-100 text-purple-600' :
+                                  conflict.type === 'room_overlap' ? 'bg-blue-100 text-blue-600' :
+                                  'bg-red-100 text-red-600'
+                                }`}>
+                                  {conflict.type === 'teacher_overlap' ? (
+                                    <UserCheck className="h-4 w-4" />
+                                  ) : conflict.type === 'class_overlap' ? (
+                                    <GraduationCap className="h-4 w-4" />
+                                  ) : conflict.type === 'room_overlap' ? (
+                                    <Calendar className="h-4 w-4" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm">
+                                    {conflict.type === 'teacher_overlap' 
+                                      ? (isRTL ? `تعارض معلم: ${conflict.teacher_name || ''}` : `Teacher: ${conflict.teacher_name || ''}`)
+                                      : conflict.type === 'class_overlap'
+                                      ? (isRTL ? `تعارض فصل: ${conflict.class_name || ''}` : `Class: ${conflict.class_name || ''}`)
+                                      : conflict.type === 'room_overlap'
+                                      ? (isRTL ? `تعارض قاعة: ${conflict.room_name || ''}` : `Room: ${conflict.room_name || ''}`)
+                                      : (isRTL ? 'تعارض' : 'Conflict')
+                                    }
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {conflict.description_ar || conflict.message_ar || conflict.message || conflict.description_en}
+                                  </p>
+                                  <div className="flex gap-2 mt-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {DAYS.find(d => d.key === conflict.day_of_week || d.key === conflict.day)?.[isRTL ? 'ar' : 'en'] || conflict.day_of_week || conflict.day}
+                                    </Badge>
+                                    {conflict.period && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {isRTL ? `الحصة ${conflict.period}` : `Period ${conflict.period}`}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Suggestion & Apply Button */}
+                                  {suggestion && (
+                                    <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
+                                      <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                                        <Lightbulb className="h-4 w-4" />
+                                        <span className="text-xs font-medium">{isRTL ? 'اقتراح:' : 'Suggestion:'}</span>
+                                      </div>
+                                      <p className="text-xs mt-1 text-green-800 dark:text-green-300">
+                                        {suggestion.suggestion_ar || suggestion.suggestion_en}
+                                      </p>
+                                      <div className="flex items-center justify-between mt-2">
+                                        <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300">
+                                          {isRTL ? `ثقة ${suggestion.confidence}%` : `${suggestion.confidence}% confidence`}
+                                        </Badge>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleApplySuggestion(suggestion)}
+                                          disabled={applyingSuggestion === suggestion.id}
+                                          className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 rounded-lg"
+                                          data-testid={`apply-suggestion-${suggestion.id}`}
+                                        >
+                                          {applyingSuggestion === suggestion.id ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                          ) : (
+                                            <>
+                                              <CheckCircle2 className="h-3 w-3 me-1" />
+                                              {isRTL ? 'تطبيق' : 'Apply'}
+                                            </>
+                                          )}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                )}
+
                 {/* Generate Schedule with AI - Primary Action */}
                 <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
                   <Button 
