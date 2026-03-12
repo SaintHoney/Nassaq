@@ -372,6 +372,7 @@ export default function UsersManagement() {
     fetchUsers();
     fetchTeacherRequests();
     fetchSchoolUsers();
+    fetchCommandCenterStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
