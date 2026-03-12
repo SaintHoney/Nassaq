@@ -45,31 +45,42 @@
 - `/api/audit/stats` - إحصائيات السجلات
 - `/api/audit/log` - إنشاء سجل جديد
 
-### ✅ إعدادات النظام (System Settings) - Backend مكتمل
-**APIs:**
-- `/api/settings/general` - الإعدادات العامة
-- `/api/settings/maintenance` - وضع الصيانة والتسجيل
-- `/api/settings/terms/versions` - إصدارات الشروط والأحكام
-- `/api/settings/privacy/versions` - إصدارات سياسة الخصوصية
-- `/api/settings/contact` - بيانات التواصل
-- `/api/settings/security` - إعدادات الأمان
-- `/api/settings/account` - إعدادات حساب المستخدم
-- `/api/settings/titles` - قائمة الألقاب
-- `/api/settings/sessions/active` - الجلسات النشطة
+### ✅ إعدادات النظام (System Settings) - مكتمل بالكامل
+**Backend APIs:**
+- `/api/settings/general` - الإعدادات العامة (GET/PUT)
+- `/api/settings/maintenance` - وضع الصيانة والتسجيل (GET/PUT)
+- `/api/settings/terms/versions` - إصدارات الشروط والأحكام (GET)
+- `/api/settings/terms` - إنشاء إصدار جديد (POST)
+- `/api/settings/terms/{id}/publish` - نشر إصدار (POST)
+- `/api/settings/privacy/versions` - إصدارات سياسة الخصوصية (GET)
+- `/api/settings/privacy` - إنشاء إصدار جديد (POST)
+- `/api/settings/privacy/{id}/publish` - نشر إصدار (POST)
+- `/api/settings/contact` - بيانات التواصل (GET/PUT)
+- `/api/settings/security` - إعدادات الأمان (GET/PUT)
+- `/api/settings/account` - إعدادات حساب المستخدم (GET/PUT)
+- `/api/settings/account/upload-picture` - رفع صورة شخصية (POST)
+- `/api/settings/titles` - قائمة الألقاب (GET)
+- `/api/settings/sessions/active` - الجلسات النشطة (GET)
+
+**Frontend (PlatformSettingsPage.jsx):**
+- ✅ إعدادات الحساب (اسم، بريد، هاتف، لغة، صورة، تغيير كلمة المرور)
+- ✅ الإعدادات العامة (اسم المنصة، عنوان المتصفح، اللغة، نظام التاريخ، المنطقة الزمنية)
+- ✅ إشعارات (بريد، SMS، نظام)
+- ✅ ميزات الذكاء الاصطناعي
+- ✅ التسجيل مفتوح/مغلق
+- ✅ وضع الصيانة
+- ✅ الشروط والأحكام (محرر، إصدارات، نشر)
+- ✅ سياسة الخصوصية (محرر، إصدارات، نشر)
+- ✅ بيانات التواصل (بريد، هاتف، عنوان، ساعات العمل، وسائل التواصل)
+- ✅ إعدادات الأمان (الجلسات النشطة، مدة الجلسة، الحد الأقصى، سياسة كلمات المرور)
 
 ---
 
 ## المهام المعلقة
 
-### 🟡 P1: Frontend لإعدادات النظام
-- [ ] تحديث واجهة PlatformSettingsPage.jsx لاستخدام APIs الجديدة
-- [ ] قسم الإعدادات العامة (اسم المنصة، عنوان المتصفح، اللغة، التاريخ، المنطقة الزمنية)
-- [ ] قسم وضع الصيانة والتسجيل المفتوح
-- [ ] محرر الشروط والأحكام مع نظام الإصدارات
-- [ ] محرر سياسة الخصوصية مع نظام الإصدارات
-- [ ] قسم بيانات التواصل
-- [ ] قسم إعدادات الأمان (الجلسات، كلمات المرور)
-- [ ] رفع الصورة الشخصية + اختيار اللقب
+### 🟡 P1: إدارة المستخدمين - طلبات التسجيل
+- [ ] عرض طلبات تسجيل المعلمين المستقلين المعلقة
+- [ ] قبول/رفض الطلبات
 
 ### 🟡 P1: زر تبديل الأدوار + القائمة الجانبية
 - [ ] تبديل بين الأدوار بدون تسجيل خروج
@@ -121,3 +132,10 @@
 - OpenAI (Emergent LLM Key) - مساعد حكيم
 - MongoDB (MONGO_URL)
 - Faker, qrcode, @dnd-kit, canvas-confetti
+
+---
+
+## نتائج الاختبار (March 12, 2026)
+- **Backend:** 100% (18/18 اختبار نجح)
+- **Frontend:** 100% (جميع الـ 7 tabs تعمل)
+- **Test Report:** `/app/test_reports/iteration_56.json`
