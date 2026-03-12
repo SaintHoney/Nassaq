@@ -435,11 +435,37 @@ const ConstraintItem = ({ constraint, index, onToggle, onEdit, onDelete }) => {
 // ============================================
 // مكون الهيكل الأكاديمي
 // ============================================
-const AcademicStructureView = ({ stages, grades, tracks }) => {
+const AcademicStructureView = ({ 
+  stages, 
+  grades, 
+  tracks, 
+  onAddStage, 
+  onEditStage, 
+  onDeleteStage,
+  onAddGrade,
+  onEditGrade,
+  onDeleteGrade 
+}) => {
   const [expandedStage, setExpandedStage] = useState(null);
 
   return (
     <div className="space-y-4">
+      {/* Header with Add Stage Button */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <School className="h-5 w-5 text-blue-600" />
+          <h3 className="font-bold">المراحل والصفوف</h3>
+        </div>
+        <Button 
+          onClick={onAddStage} 
+          className="bg-purple-600 hover:bg-purple-700"
+          data-testid="add-stage-btn"
+        >
+          <Plus className="h-4 w-4 ml-2" />
+          إضافة مرحلة
+        </Button>
+      </div>
+      
       {stages?.map((stage) => {
         const stageGrades = grades?.filter(g => g.stage_id === stage.id) || [];
         const isExpanded = expandedStage === stage.id;
@@ -456,7 +482,7 @@ const AcademicStructureView = ({ stages, grades, tracks }) => {
                     <School className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">{stage.name_ar}</CardTitle>
+                    <CardTitle className="text-base">{stage.name_ar || stage.name}</CardTitle>
                     <CardDescription className="text-xs">{stage.name_en}</CardDescription>
                   </div>
                 </div>
@@ -464,26 +490,79 @@ const AcademicStructureView = ({ stages, grades, tracks }) => {
                   <Badge className="bg-blue-100 text-blue-700">
                     {stageGrades.length} صف
                   </Badge>
+                  {/* Stage Actions */}
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onEditStage(stage)}
+                      data-testid={`edit-stage-${stage.id}`}
+                    >
+                      <Edit2 className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onDeleteStage(stage.id, stage.name_ar || stage.name)}
+                      data-testid={`delete-stage-${stage.id}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
                   {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
                 </div>
               </div>
             </CardHeader>
             {isExpanded && (
               <CardContent className="bg-blue-50/30 border-t">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 pt-4">
+                <div className="flex justify-between items-center mb-3 pt-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">الصفوف الدراسية</h4>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onAddGrade(stage.id)}
+                    data-testid={`add-grade-${stage.id}`}
+                  >
+                    <Plus className="h-4 w-4 ml-1" />
+                    إضافة صف
+                  </Button>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {stageGrades.map((grade) => (
-                    <div key={grade.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-blue-200 shadow-sm">
+                    <div key={grade.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-blue-200 shadow-sm group">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                           <span className="text-sm font-bold text-blue-600">{grade.order}</span>
                         </div>
-                        <span className="font-medium text-sm">{grade.name_ar}</span>
+                        <span className="font-medium text-sm">{grade.name_ar || grade.name}</span>
                       </div>
-                      {grade.is_lower_grades && (
-                        <Badge variant="outline" className="text-xs">صفوف أولية</Badge>
-                      )}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => onEditGrade(grade)}
+                        >
+                          <Edit2 className="h-3 w-3 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => onDeleteGrade(grade.id, grade.name_ar || grade.name)}
+                        >
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
+                  {stageGrades.length === 0 && (
+                    <div className="col-span-full text-center py-4 text-muted-foreground text-sm">
+                      لا توجد صفوف في هذه المرحلة
+                    </div>
+                  )}
                 </div>
               </CardContent>
             )}
