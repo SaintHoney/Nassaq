@@ -524,44 +524,54 @@ export const SchoolReportsPage = () => {
 
             {/* Behavior Tab */}
             <TabsContent value="behavior" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {behaviorData.map((item, index) => (
-                  <Card key={index} className="card-nassaq">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            {isRTL ? item.type_ar : item.type}
-                          </p>
-                          <p className="text-3xl font-bold mt-1">{item.count}</p>
-                          <div className={`flex items-center gap-1 mt-2 text-sm ${
-                            item.change > 0 
-                              ? item.type === 'negative' || item.type === 'warning' ? 'text-red-600' : 'text-green-600'
-                              : item.type === 'negative' || item.type === 'warning' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {item.change > 0 ? (
-                              <ArrowUpRight className="h-4 w-4" />
-                            ) : (
-                              <ArrowDownRight className="h-4 w-4" />
-                            )}
-                            <span>{Math.abs(item.change)}%</span>
+              {behaviorData.length === 0 ? (
+                <div className="text-center py-12">
+                  <Heart className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">{isRTL ? 'لا توجد بيانات سلوك متاحة' : 'No behavior data available'}</p>
+                  <p className="text-sm text-muted-foreground/70 mt-2">
+                    {isRTL ? 'سيتم عرض البيانات عند تسجيل ملاحظات السلوك' : 'Data will appear when behavior notes are recorded'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {behaviorData.map((item, index) => (
+                      <Card key={index} className="card-nassaq">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-muted-foreground">
+                                {isRTL ? item.type_ar : item.type}
+                              </p>
+                              <p className="text-3xl font-bold mt-1">{item.count}</p>
+                              <div className={`flex items-center gap-1 mt-2 text-sm ${
+                                item.change > 0 
+                                  ? item.type === 'negative' || item.type === 'warning' ? 'text-red-600' : 'text-green-600'
+                                  : item.type === 'negative' || item.type === 'warning' ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {item.change > 0 ? (
+                                  <ArrowUpRight className="h-4 w-4" />
+                                ) : (
+                                  <ArrowDownRight className="h-4 w-4" />
+                                )}
+                                <span>{Math.abs(item.change)}%</span>
+                              </div>
+                            </div>
+                            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
+                              item.type === 'positive' ? 'bg-green-500' :
+                              item.type === 'negative' ? 'bg-red-500' :
+                              item.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                            }`}>
+                              {item.type === 'positive' && <CheckCircle className="h-7 w-7 text-white" />}
+                              {item.type === 'negative' && <XCircle className="h-7 w-7 text-white" />}
+                              {item.type === 'warning' && <AlertTriangle className="h-7 w-7 text-white" />}
+                              {item.type === 'recognition' && <Award className="h-7 w-7 text-white" />}
+                            </div>
                           </div>
-                        </div>
-                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
-                          item.type === 'positive' ? 'bg-green-500' :
-                          item.type === 'negative' ? 'bg-red-500' :
-                          item.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                        }`}>
-                          {item.type === 'positive' && <CheckCircle className="h-7 w-7 text-white" />}
-                          {item.type === 'negative' && <XCircle className="h-7 w-7 text-white" />}
-                          {item.type === 'warning' && <AlertTriangle className="h-7 w-7 text-white" />}
-                          {item.type === 'recognition' && <Award className="h-7 w-7 text-white" />}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
               <Card className="card-nassaq">
                 <CardHeader>
