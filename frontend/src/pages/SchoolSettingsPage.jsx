@@ -395,7 +395,7 @@ const ClassesSection = ({ classes, loading, onRefresh, onAddClass, onEditClass, 
             <p className="text-muted-foreground mb-4">{isRTL ? 'قم بإضافة الفصول ليتم ربطها بالجدول' : 'Add classes to link them to the schedule'}</p>
             <Button onClick={onAddClass} variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
               <Plus className="h-4 w-4 me-2" />
-              {isRTL ? 'إضافة أول فصل' : 'Add First Class'}
+              {isRTL ? 'فصل / فصول' : 'Class(es)'}
             </Button>
           </div>
         ) : (
