@@ -46,4 +46,5 @@ __all__ = [
     "setup_admin_routes",
     "setup_security_routes",
     "setup_audit_routes",
+    "setup_settings_routes",
 ]
