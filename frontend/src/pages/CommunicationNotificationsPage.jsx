@@ -407,7 +407,7 @@ export const CommunicationNotificationsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-nassaq">
+            <Card className="card-nassaq cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('inbox')}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
@@ -415,7 +415,7 @@ export const CommunicationNotificationsPage = () => {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{messageStats.received}</p>
-                    <p className="text-xs text-muted-foreground">{isRTL ? 'مستلمة' : 'Received'}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'الرسائل المستلمة' : 'Received'}</p>
                   </div>
                 </div>
               </CardContent>
