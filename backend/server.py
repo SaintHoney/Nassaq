@@ -2895,7 +2895,18 @@ async def get_teachers(
         query["school_id"] = current_user.get("tenant_id")
     
     teachers = await db.teachers.find(query, {"_id": 0}).to_list(1000)
-    return [TeacherResponse(**t) for t in teachers]
+    
+    # Normalize field names for consistency
+    result = []
+    for t in teachers:
+        # Map full_name_ar to full_name if needed
+        if not t.get("full_name") and t.get("full_name_ar"):
+            t["full_name"] = t["full_name_ar"]
+        # Map subject_name to specialization if needed
+        if not t.get("specialization") and t.get("subject_name"):
+            t["specialization"] = t["subject_name"]
+        result.append(TeacherResponse(**t))
+    return result
 
 @api_router.get("/teachers/{teacher_id}", response_model=TeacherResponse)
 async def get_teacher(teacher_id: str, current_user: dict = Depends(get_current_user)):
