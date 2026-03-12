@@ -410,3 +410,156 @@ def setup_student_portal_routes(db, get_current_user, require_roles, UserRole):
         return {"teachers": teachers}
     
     return router
+
+
+# ============= TEST ACCOUNTS CREATION =============
+
+async def create_test_student_account(db):
+    """Create test student account for testing"""
+    import bcrypt
+    from datetime import datetime, timezone
+    import uuid
+    
+    # Check if test student already exists
+    existing = await db.users.find_one({"email": "student@nassaq.com"})
+    if existing:
+        return existing
+    
+    # Get first school
+    school = await db.schools.find_one({"status": "active"})
+    if not school:
+        return None
+    
+    # Create student user
+    student_user_id = str(uuid.uuid4())
+    student_id = str(uuid.uuid4())
+    
+    password_hash = bcrypt.hashpw("Student@123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Create user record
+    user_doc = {
+        "id": student_user_id,
+        "email": "student@nassaq.com",
+        "password_hash": password_hash,
+        "full_name": "طالب تجريبي",
+        "full_name_en": "Test Student",
+        "role": "student",
+        "tenant_id": school.get("id"),
+        "phone": "0512345678",
+        "is_active": True,
+        "must_change_password": False,
+        "student_id": student_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    
+    # Create student record
+    student_doc = {
+        "id": student_id,
+        "user_id": student_user_id,
+        "full_name": "طالب تجريبي",
+        "full_name_en": "Test Student",
+        "email": "student@nassaq.com",
+        "phone": "0512345678",
+        "school_id": school.get("id"),
+        "school_name": school.get("name"),
+        "grade": "الصف الأول",
+        "class_name": "الفصل أ",
+        "national_id": "1234567890",
+        "birth_date": "2010-01-15",
+        "gender": "male",
+        "parent_phone": "0509876543",
+        "parent_name": "ولي أمر تجريبي",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.students.insert_one(student_doc)
+    
+    # Add some test grades
+    subjects = ["الرياضيات", "اللغة العربية", "العلوم", "اللغة الإنجليزية"]
+    for subject in subjects:
+        for i in range(3):
+            grade_doc = {
+                "id": str(uuid.uuid4()),
+                "student_id": student_id,
+                "subject": subject,
+                "score": 75 + (i * 5),
+                "max_score": 100,
+                "percentage": 75 + (i * 5),
+                "assessment_type": ["اختبار شهري", "اختبار نهائي", "واجب"][i],
+                "date": f"2026-03-{10 - i}",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.grades.insert_one(grade_doc)
+    
+    # Add some test attendance
+    for i in range(20):
+        status = "present" if i < 17 else ("late" if i < 19 else "absent")
+        attendance_doc = {
+            "id": str(uuid.uuid4()),
+            "student_id": student_id,
+            "date": f"2026-02-{(i % 28) + 1:02d}",
+            "status": status,
+            "check_in_time": "07:30" if status == "present" else "08:00",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.attendance.insert_one(attendance_doc)
+    
+    return user_doc
+
+
+async def create_test_parent_account(db):
+    """Create test parent account for testing"""
+    import bcrypt
+    from datetime import datetime, timezone
+    import uuid
+    
+    # Check if test parent already exists
+    existing = await db.users.find_one({"email": "parent@nassaq.com"})
+    if existing:
+        return existing
+    
+    # Get test student
+    test_student = await db.students.find_one({"email": "student@nassaq.com"})
+    school = await db.schools.find_one({"status": "active"})
+    
+    if not school:
+        return None
+    
+    # Create parent user
+    parent_user_id = str(uuid.uuid4())
+    parent_id = str(uuid.uuid4())
+    
+    password_hash = bcrypt.hashpw("Parent@123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Create user record
+    user_doc = {
+        "id": parent_user_id,
+        "email": "parent@nassaq.com",
+        "password_hash": password_hash,
+        "full_name": "ولي أمر تجريبي",
+        "full_name_en": "Test Parent",
+        "role": "parent",
+        "tenant_id": school.get("id"),
+        "phone": "0509876543",
+        "is_active": True,
+        "must_change_password": False,
+        "parent_id": parent_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    
+    # Link parent to student
+    if test_student:
+        await db.students.update_one(
+            {"id": test_student.get("id")},
+            {"$set": {
+                "parent_id": parent_id,
+                "parent_user_id": parent_user_id,
+                "parent_phone": "0509876543",
+                "parent_name": "ولي أمر تجريبي"
+            }}
+        )
+    
+    return user_doc
