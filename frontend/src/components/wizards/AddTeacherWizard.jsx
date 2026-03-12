@@ -662,7 +662,6 @@ export const AddTeacherWizard = ({ open, onOpenChange, onSuccess, api }) => {
       if (!basicData.email?.trim()) newErrors.email = isRTL ? 'مطلوب' : 'Required';
     } else if (step === 2) {
       if (!qualData.academic_degree) newErrors.academic_degree = isRTL ? 'مطلوب' : 'Required';
-      if (!qualData.specialization?.trim()) newErrors.specialization = isRTL ? 'مطلوب' : 'Required';
       if (!qualData.teacher_rank) newErrors.teacher_rank = isRTL ? 'مطلوب' : 'Required';
     } else if (step === 3) {
       if (!subjectData.subject_ids?.length) newErrors.subject_ids = isRTL ? 'اختر مادة واحدة على الأقل' : 'Select at least one';
