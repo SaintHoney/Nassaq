@@ -27,7 +27,7 @@ import {
   Loader2, Wand2, CheckCircle2, AlertTriangle, XCircle,
   RefreshCw, Settings, Filter, ChevronLeft, ChevronRight,
   Sun, Moon, Play, Eye, Download, FileText, Sparkles,
-  User, Coffee
+  User, Coffee, Send, Globe, List
 } from 'lucide-react';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 
