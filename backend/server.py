@@ -2568,7 +2568,6 @@ async def get_reference_default_settings(current_user: dict = Depends(get_curren
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
     """Get available grade levels from reference database"""
-    db = await get_database()
     
     # Get grades from the reference academic_grades collection
     grades = await db.academic_grades.find(
