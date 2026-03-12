@@ -340,15 +340,9 @@ export const AdminDashboard = () => {
         }
       } else if (activityViewBy === 'school') {
         // التأكد من أن البيانات على شكل مصفوفة للمدارس
+        // Empty state if no data - no mock data
         if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) {
-          // بيانات تجريبية للمدارس
-          chartData = [
-            { school: 'مدرسة النور', lessons: 45, attendance: 120, grades: 30, users: 180 },
-            { school: 'مدرسة الأمل', lessons: 38, attendance: 95, grades: 25, users: 150 },
-            { school: 'مدرسة الفجر', lessons: 52, attendance: 140, grades: 35, users: 200 },
-            { school: 'مدرسة الهدى', lessons: 30, attendance: 85, grades: 20, users: 120 },
-            { school: 'مدرسة السلام', lessons: 42, attendance: 110, grades: 28, users: 165 },
-          ];
+          chartData = [];
         }
       }
       
