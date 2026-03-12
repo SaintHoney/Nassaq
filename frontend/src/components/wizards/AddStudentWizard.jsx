@@ -39,6 +39,10 @@ import {
   MapPin,
   QrCode,
   Sparkles,
+  Search,
+  Link2,
+  UserCheck,
+  Loader2,
 } from 'lucide-react';
 
 const STEPS = [
