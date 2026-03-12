@@ -318,6 +318,7 @@ const AI_RECOMMENDATIONS = [
 export default function SecurityCenterPage() {
   const { isRTL = true, isDark } = useTheme();
   const navigate = useNavigate();
+  const { api } = useAuth();
   const t = translations[isRTL ? 'ar' : 'en'];
   
   const [activeTab, setActiveTab] = useState('overview');
@@ -326,12 +327,26 @@ export default function SecurityCenterPage() {
   const [showScoreDetailsDialog, setShowScoreDetailsDialog] = useState(false);
   const [showAlertDetailsSheet, setShowAlertDetailsSheet] = useState(false);
   const [showLockAccountDialog, setShowLockAccountDialog] = useState(false);
+  const [showUnlockAccountDialog, setShowUnlockAccountDialog] = useState(false);
+  const [showEndSessionsDialog, setShowEndSessionsDialog] = useState(false);
+  const [showForcePasswordDialog, setShowForcePasswordDialog] = useState(false);
   const [showAIReportDialog, setShowAIReportDialog] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [generatingReport, setGeneratingReport] = useState(false);
+  
+  // New states for security operations
+  const [accountSearchQuery, setAccountSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [forcePasswordType, setForcePasswordType] = useState('user'); // 'user', 'role', 'all'
+  const [selectedRole, setSelectedRole] = useState('');
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [lockReason, setLockReason] = useState('suspicious');
   
   const [metrics, setMetrics] = useState({
     securityScore: 87,
