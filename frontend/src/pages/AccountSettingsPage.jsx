@@ -362,6 +362,24 @@ export const AccountSettingsPage = () => {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
+                      <Label>{isRTL ? 'اللقب' : 'Title'}</Label>
+                      <Select 
+                        value={profile.title} 
+                        onValueChange={(value) => setProfile({ ...profile, title: value })}
+                      >
+                        <SelectTrigger className="rounded-xl" data-testid="profile-title">
+                          <SelectValue placeholder={isRTL ? 'اختر اللقب' : 'Select Title'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {titleOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
                       <Label>{isRTL ? 'الاسم الكامل (عربي)' : 'Full Name (Arabic)'}</Label>
                       <Input
                         value={profile.full_name}
