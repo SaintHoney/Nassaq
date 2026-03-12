@@ -126,11 +126,16 @@ def setup_bulk_routes(db, get_current_user, require_roles, UserRole):
         
         output.seek(0)
         
-        return StreamingResponse(
-            output,
-            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
-        )
+            return StreamingResponse(
+                output,
+                media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+            )
+        except Exception as e:
+            print(f"Error creating template: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
     
     # ============= IMPORT DATA =============
     
