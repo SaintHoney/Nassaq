@@ -271,15 +271,12 @@ const Step3Subjects = ({ data, onChange, errors, options, isRTL }) => {
           <Label>{isRTL ? 'المادة الأساسية' : 'Primary Subject'} <span className="text-red-500">*</span></Label>
           <Select value={data.primary_subject_id || ''} onValueChange={(val) => onChange('primary_subject_id', val)}>
             <SelectTrigger className={errors.primary_subject_id ? 'border-red-500' : ''} data-testid="teacher-primary-subject">
-              <SelectValue placeholder={isRTL ? 'اختر' : 'Select'} />
+              <SelectValue placeholder={isRTL ? 'اختر المادة الأساسية' : 'Select primary subject'} />
             </SelectTrigger>
             <SelectContent>
-              {(data.subject_ids || []).map((id) => {
-                const subject = options.subjects?.find(s => s.id === id);
-                return subject ? (
-                  <SelectItem key={id} value={id}>{isRTL ? (subject.name_ar || subject.name) : (subject.name_en || subject.name_ar || subject.name)}</SelectItem>
-                ) : null;
-              })}
+              {options.subjects?.map((subject) => (
+                <SelectItem key={subject.id} value={subject.id}>{isRTL ? (subject.name_ar || subject.name) : (subject.name_en || subject.name_ar || subject.name)}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {errors.primary_subject_id && <p className="text-red-500 text-sm">{errors.primary_subject_id}</p>}
