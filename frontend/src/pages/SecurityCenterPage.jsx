@@ -413,6 +413,150 @@ export default function SecurityCenterPage() {
     setTimeout(() => { setRefreshing(false); toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed'); }, 1500);
   };
   
+  // ============= NEW SECURITY API FUNCTIONS =============
+  
+  // Search for account by email or phone
+  const handleSearchAccount = async () => {
+    if (!accountSearchQuery.trim()) return;
+    setSearchLoading(true);
+    try {
+      const response = await api.post('/security/search-account', { search_query: accountSearchQuery });
+      setSearchResults(response.data || []);
+      if (response.data?.length === 0) {
+        toast.info(isRTL ? 'لم يتم العثور على نتائج' : 'No results found');
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error(isRTL ? 'فشل البحث' : 'Search failed');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+  
+  // Lock account
+  const handleLockAccount = async () => {
+    if (!selectedAccount) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/security/lock-account/${selectedAccount.id}`);
+      toast.success(isRTL ? 'تم قفل الحساب بنجاح' : 'Account locked successfully');
+      setShowLockAccountDialog(false);
+      setSelectedAccount(null);
+      setSearchResults([]);
+      setAccountSearchQuery('');
+    } catch (error) {
+      console.error('Lock error:', error);
+      toast.error(isRTL ? 'فشل قفل الحساب' : 'Failed to lock account');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // Unlock account
+  const handleUnlockAccount = async () => {
+    if (!selectedAccount) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/security/unlock-account/${selectedAccount.id}`);
+      toast.success(isRTL ? 'تم فتح الحساب بنجاح' : 'Account unlocked successfully');
+      setShowUnlockAccountDialog(false);
+      setSelectedAccount(null);
+      setSearchResults([]);
+      setAccountSearchQuery('');
+    } catch (error) {
+      console.error('Unlock error:', error);
+      toast.error(isRTL ? 'فشل فتح الحساب' : 'Failed to unlock account');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // End all sessions
+  const handleEndAllSessions = async () => {
+    setActionLoading(true);
+    try {
+      const response = await api.post('/security/end-all-sessions');
+      toast.success(
+        isRTL 
+          ? `تم إنهاء ${response.data.affected_count} جلسة` 
+          : `${response.data.affected_count} sessions ended`
+      );
+      setShowEndSessionsDialog(false);
+    } catch (error) {
+      console.error('End sessions error:', error);
+      toast.error(isRTL ? 'فشل إنهاء الجلسات' : 'Failed to end sessions');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // Force password change
+  const handleForcePasswordChange = async () => {
+    setActionLoading(true);
+    try {
+      const payload = {
+        target_type: forcePasswordType,
+        user_id: forcePasswordType === 'user' ? selectedAccount?.id : null,
+        role: forcePasswordType === 'role' ? selectedRole : null,
+      };
+      
+      const response = await api.post('/security/force-password-change', payload);
+      toast.success(
+        isRTL 
+          ? `تم فرض تغيير كلمة المرور على ${response.data.affected_count} مستخدم` 
+          : `Password change forced for ${response.data.affected_count} users`
+      );
+      setShowForcePasswordDialog(false);
+      setSelectedAccount(null);
+      setForcePasswordType('user');
+    } catch (error) {
+      console.error('Force password error:', error);
+      toast.error(isRTL ? 'فشل فرض تغيير كلمة المرور' : 'Failed to force password change');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // Fetch available roles
+  const fetchRoles = async () => {
+    try {
+      const response = await api.get('/security/roles');
+      setAvailableRoles(response.data || []);
+    } catch (error) {
+      console.error('Fetch roles error:', error);
+    }
+  };
+  
+  // Load roles on component mount
+  React.useEffect(() => {
+    fetchRoles();
+  }, []);
+  
+  // Reset search when dialog opens
+  const openLockDialog = () => {
+    setAccountSearchQuery('');
+    setSearchResults([]);
+    setSelectedAccount(null);
+    setShowLockAccountDialog(true);
+  };
+  
+  const openUnlockDialog = () => {
+    setAccountSearchQuery('');
+    setSearchResults([]);
+    setSelectedAccount(null);
+    setShowUnlockAccountDialog(true);
+  };
+  
+  const openForcePasswordDialog = () => {
+    setAccountSearchQuery('');
+    setSearchResults([]);
+    setSelectedAccount(null);
+    setForcePasswordType('user');
+    setShowForcePasswordDialog(true);
+  };
+  
+  // ============= END NEW SECURITY API FUNCTIONS =============
+
   const handleDownloadReport = () => {
     setLoading(true);
     // إنشاء تقرير أمان حقيقي
