@@ -1799,39 +1799,24 @@ export default function SchoolSettingsPage() {
           {/* Section 8: Activity Days - أيام الأنشطة */}
           <ActivityDaysSection 
             activityDays={settings.activityDays || []} 
-            onAddActivity={handleAddActivityDay}
-            onDeleteActivity={handleDeleteActivityDay}
             isRTL={isRTL} 
           />
 
           {/* Section 9: Teaching Load - النصاب التدريسي */}
-          <TeachingLoadSection teachers={teachers} teachingLoads={settings.teachingLoads} onSave={handleSaveTeachingLoads} isRTL={isRTL} />
+          <TeachingLoadSection teachers={teachers} teacherRanks={settings.teacherRanks} isRTL={isRTL} />
 
           {/* Section 10: Availability - التوافر */}
           <AvailabilitySection 
             teachers={teachers} 
-            availability={settings.teacherAvailability || {}}
-            onSave={handleSaveAvailability}
             isRTL={isRTL} 
           />
 
           {/* Section 11: Constraints - القيود الإدارية */}
-          <ConstraintsSection teachers={teachers} constraints={settings.constraints} onSave={handleSaveConstraints} isRTL={isRTL} />
+          <ConstraintsSection constraints={settings.adminConstraints || []} isRTL={isRTL} />
 
           {/* Section 12-15: Academic Structure - الهيكل الأكاديمي */}
           <AcademicStructureSection 
-            stages={settings.educationalStages || []}
-            grades={grades}
-            sections={settings.sections || []}
-            terms={settings.academicTerms || []}
-            onAddStage={handleAddStage}
-            onDeleteStage={handleDeleteStage}
-            onAddGrade={handleAddGrade}
-            onDeleteGrade={handleDeleteGrade}
-            onAddSection={handleAddSection}
-            onDeleteSection={handleDeleteSection}
-            onAddTerm={handleAddTerm}
-            onDeleteTerm={handleDeleteTerm}
+            academicStructure={settings.academicStructure}
             isRTL={isRTL}
           />
         </main>
