@@ -11543,6 +11543,10 @@ bulk_teacher_router = create_bulk_teacher_routes(db, get_current_user, require_r
 from routes.student_creation_routes import create_student_creation_routes
 student_creation_router = create_student_creation_routes(db, get_current_user, require_roles, UserRole, hash_password, generate_secure_password)
 
+# Import and create admin dashboard router (Command Center)
+from routes.admin_dashboard_routes import setup_admin_routes
+admin_dashboard_router = setup_admin_routes(db, get_current_user, require_roles, UserRole)
+
 # Add to API router
 api_router.include_router(scheduling_router)
 api_router.include_router(attendance_router)
