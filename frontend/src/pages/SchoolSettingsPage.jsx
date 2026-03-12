@@ -377,7 +377,7 @@ const ClassesSection = ({ classes, loading, onRefresh, onAddClass, onEditClass, 
             data-testid="add-class-settings-btn"
           >
             <Plus className="h-4 w-4 me-2" />
-            {isRTL ? 'إضافة فصل' : 'Add Class'}
+            {isRTL ? 'فصل / فصول' : 'Class(es)'}
           </Button>
           <Button variant="outline" onClick={onRefresh} size="icon">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
