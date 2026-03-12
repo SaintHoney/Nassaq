@@ -3578,11 +3578,17 @@ async def get_classes(
     # Get teacher names
     teacher_ids = list(set([c.get("homeroom_teacher_id") for c in classes if c.get("homeroom_teacher_id")]))
     teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
-    teacher_map = {t.get("id"): t.get("full_name") for t in teachers}
+    teacher_map = {t.get("id"): t.get("full_name") or t.get("full_name_ar") for t in teachers}
     
     result = []
     for c in classes:
         c["homeroom_teacher_name"] = teacher_map.get(c.get("homeroom_teacher_id"))
+        # Normalize field names - map name_ar to name if needed
+        if not c.get("name") and c.get("name_ar"):
+            c["name"] = c["name_ar"]
+        # Map grade_id to grade_level_id if needed
+        if not c.get("grade_level_id") and c.get("grade_id"):
+            c["grade_level_id"] = c["grade_id"]
         result.append(ClassResponse(**c))
     
     return result
