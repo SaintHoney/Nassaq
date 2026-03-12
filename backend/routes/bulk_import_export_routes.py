@@ -51,8 +51,8 @@ def setup_bulk_routes(db, get_current_user, require_roles, UserRole):
         current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
     ):
         """تحميل قالب الاستيراد"""
-        
-        if import_type == ImportType.STUDENTS:
+        try:
+            if import_type == ImportType.STUDENTS:
             columns = {
                 'الاسم الأول (مطلوب)': ['أحمد', 'محمد'],
                 'اسم الأب': ['علي', 'خالد'],
