@@ -268,6 +268,12 @@ export default function SecurityCenterPage() {
   const [filterPriority, setFilterPriority] = useState('all');
   const [generatingReport, setGeneratingReport] = useState(false);
   
+  // Dynamic data states
+  const [scoreFactors, setScoreFactors] = useState(INITIAL_SCORE_FACTORS);
+  const [securityAlerts, setSecurityAlerts] = useState(INITIAL_SECURITY_ALERTS);
+  const [securityEvents, setSecurityEvents] = useState(INITIAL_SECURITY_EVENTS);
+  const [aiRecommendations, setAiRecommendations] = useState(INITIAL_AI_RECOMMENDATIONS);
+  
   // New states for security operations
   const [accountSearchQuery, setAccountSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
