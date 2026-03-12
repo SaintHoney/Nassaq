@@ -523,8 +523,8 @@ export const PlatformAnalyticsPage = () => {
       stats: stats,
       charts: {
         schools_by_city: SCHOOLS_BY_CITY,
-        attendance_rates: ATTENDANCE_DATA,
-        ai_insights: AI_INSIGHTS,
+        attendance_rates: attendanceData,
+        ai_insights: aiInsights,
       },
       summary: isRTL 
         ? `تقرير شامل للمنصة - ${stats.totalSchools} مدرسة - ${stats.totalStudents} طالب`
@@ -589,7 +589,7 @@ export const PlatformAnalyticsPage = () => {
     
     const aiSummary = {
       generated_at: new Date().toISOString(),
-      insights: AI_INSIGHTS,
+      insights: aiInsights,
       recommendations: [
         isRTL ? 'تحسين نسب الحضور في المدارس ذات المعدل المنخفض' : 'Improve attendance in low-rate schools',
         isRTL ? 'زيادة عدد المعلمين في المدارس الكبيرة' : 'Increase teachers in large schools',
@@ -976,7 +976,7 @@ export const PlatformAnalyticsPage = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={CITIES_DATA}
+                            data={citiesData}
                             cx="50%"
                             cy="50%"
                             innerRadius={60}
@@ -987,7 +987,7 @@ export const PlatformAnalyticsPage = () => {
                               `${isRTL ? name : name_en}: ${value} (${(percent * 100).toFixed(0)}%)`
                             }
                           >
-                            {CITIES_DATA.map((entry, index) => (
+                            {citiesData.map((entry, index) => (
                               <Cell key={index} fill={entry.color} />
                             ))}
                           </Pie>
@@ -1000,7 +1000,7 @@ export const PlatformAnalyticsPage = () => {
                                     <p className="font-bold">{isRTL ? data.name : data.name_en}</p>
                                     <p className="text-sm">عدد المدارس: {data.value}</p>
                                     <p className="text-sm text-muted-foreground">
-                                      النسبة: {((data.value / CITIES_DATA.reduce((a, b) => a + b.value, 0)) * 100).toFixed(1)}%
+                                      النسبة: {((data.value / citiesData.reduce((a, b) => a + b.value, 0)) * 100).toFixed(1)}%
                                     </p>
                                   </div>
                                 );
@@ -1013,7 +1013,7 @@ export const PlatformAnalyticsPage = () => {
                     </div>
                     {/* Legend */}
                     <div className="flex flex-wrap gap-2 mt-4 justify-center">
-                      {CITIES_DATA.map((city, idx) => (
+                      {citiesData.map((city, idx) => (
                         <Badge key={idx} variant="outline" className="flex items-center gap-1">
                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: city.color }} />
                           {isRTL ? city.name : city.name_en}
@@ -1036,7 +1036,7 @@ export const PlatformAnalyticsPage = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={ATTENDANCE_DATA}
+                            data={attendanceData}
                             cx="50%"
                             cy="50%"
                             innerRadius={60}
@@ -1047,7 +1047,7 @@ export const PlatformAnalyticsPage = () => {
                               `${isRTL ? name : name_en}: ${value}%`
                             }
                           >
-                            {ATTENDANCE_DATA.map((entry, index) => (
+                            {attendanceData.map((entry, index) => (
                               <Cell key={index} fill={entry.color} />
                             ))}
                           </Pie>
@@ -1070,7 +1070,7 @@ export const PlatformAnalyticsPage = () => {
                     </div>
                     {/* Stats below chart */}
                     <div className="grid grid-cols-3 gap-4 mt-4">
-                      {ATTENDANCE_DATA.map((item, idx) => (
+                      {attendanceData.map((item, idx) => (
                         <div key={idx} className="text-center p-3 rounded-xl" style={{ backgroundColor: `${item.color}15` }}>
                           <p className="text-2xl font-bold" style={{ color: item.color }}>{item.value}%</p>
                           <p className="text-sm text-muted-foreground">{isRTL ? item.name : item.name_en}</p>
@@ -1092,7 +1092,7 @@ export const PlatformAnalyticsPage = () => {
                 <CardContent>
                   <div className="h-[350px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={GROWTH_DATA}>
+                      <AreaChart data={growthData}>
                         <defs>
                           <linearGradient id="colorSchools" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
@@ -1167,7 +1167,7 @@ export const PlatformAnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {RECENT_REPORTS.map(report => (
+                    {recentReports.map(report => (
                       <div key={report.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
                           <FileText className="h-5 w-5 text-brand-navy" />
@@ -1222,7 +1222,7 @@ export const PlatformAnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {SCHEDULED_REPORTS.map(report => (
+                    {scheduledReports.map(report => (
                       <div key={report.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
                         <div className="flex items-center gap-3">
                           <CalendarClock className="h-5 w-5 text-purple-600" />
@@ -1277,7 +1277,7 @@ export const PlatformAnalyticsPage = () => {
               
               {/* Insights Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {AI_INSIGHTS.map(insight => {
+                {aiInsights.map(insight => {
                   const InsightIcon = insight.icon;
                   return (
                     <Card 
