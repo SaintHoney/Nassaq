@@ -403,7 +403,7 @@ ${loginUrl}
                   <Select value={studentData.grade_id} onValueChange={(val) => setStudentData({...studentData, grade_id: val})}>
                     <SelectTrigger className="rounded-xl"><SelectValue placeholder={isRTL ? 'اختر الصف' : 'Select grade'} /></SelectTrigger>
                     <SelectContent>
-                      {grades.length > 0 ? grades.map(grade => (<SelectItem key={grade.id} value={grade.id}>{grade.name}</SelectItem>)) : (
+                      {grades.length > 0 ? grades.map(grade => (<SelectItem key={grade.id} value={grade.id}>{isRTL ? (grade.name_ar || grade.name) : (grade.name_en || grade.name)}</SelectItem>)) : (
                         <><SelectItem value="grade-1">الصف الأول</SelectItem><SelectItem value="grade-2">الصف الثاني</SelectItem><SelectItem value="grade-3">الصف الثالث</SelectItem></>
                       )}
                     </SelectContent>
