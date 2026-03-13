@@ -967,6 +967,7 @@ export function SchoolSettingsPagePro() {
           <DialogContent className="sm:max-w-md" dir="rtl">
             <DialogHeader>
               <DialogTitle>إضافة فصل جديد</DialogTitle>
+              <DialogDescription>أدخل بيانات الفصل الجديد</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
