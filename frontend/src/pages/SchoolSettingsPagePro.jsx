@@ -1352,7 +1352,7 @@ function SchoolSettingsPagePro() {
                             </CardTitle>
                             <CardDescription>حدد أوقات عدم توفر المعلمين</CardDescription>
                           </div>
-                          <Button variant="outline" size="sm" className="gap-1">
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => handleAddUnavailability('teacher')} data-testid="add-teacher-unavailability-btn">
                             <Plus className="h-4 w-4" />
                             إضافة
                           </Button>
@@ -1366,10 +1366,10 @@ function SchoolSettingsPagePro() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {teacherUnavailability.map((item, idx) => (
-                              <div key={idx} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+                            {teacherUnavailability.map((item) => (
+                              <div key={item.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
                                 <span className="text-sm">{item.teacher_name} - {item.day} - الحصة {item.period}</span>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500"><X className="h-3 w-3" /></Button>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => handleDeleteUnavailability(item.id, 'teacher')}><X className="h-3 w-3" /></Button>
                               </div>
                             ))}
                           </div>
@@ -1388,7 +1388,7 @@ function SchoolSettingsPagePro() {
                             </CardTitle>
                             <CardDescription>حدد أوقات عدم توفر الفصول</CardDescription>
                           </div>
-                          <Button variant="outline" size="sm" className="gap-1">
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => handleAddUnavailability('class')} data-testid="add-class-unavailability-btn">
                             <Plus className="h-4 w-4" />
                             إضافة
                           </Button>
@@ -1402,10 +1402,10 @@ function SchoolSettingsPagePro() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {classUnavailability.map((item, idx) => (
-                              <div key={idx} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                            {classUnavailability.map((item) => (
+                              <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                                 <span className="text-sm">{item.class_name} - {item.day} - الحصة {item.period}</span>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500"><X className="h-3 w-3" /></Button>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => handleDeleteUnavailability(item.id, 'class')}><X className="h-3 w-3" /></Button>
                               </div>
                             ))}
                           </div>
