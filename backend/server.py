@@ -4316,10 +4316,10 @@ async def get_class_students_options(current_user: dict = Depends(get_current_us
 async def get_class_types_options(current_user: dict = Depends(get_current_user)):
     """Get available class types"""
     types = [
-        {"id": "regular", "name": "عادي", "name_en": "Regular"},
-        {"id": "advanced", "name": "متقدم", "name_en": "Advanced"},
-        {"id": "special", "name": "تربية خاصة", "name_en": "Special Education"},
-        {"id": "gifted", "name": "موهوبين", "name_en": "Gifted"},
+        {"code": "regular", "name_ar": "عادي", "name_en": "Regular"},
+        {"code": "advanced", "name_ar": "متقدم", "name_en": "Advanced"},
+        {"code": "special", "name_ar": "تربية خاصة", "name_en": "Special Education"},
+        {"code": "gifted", "name_ar": "موهوبين", "name_en": "Gifted"},
     ]
     return {"types": types}
 
