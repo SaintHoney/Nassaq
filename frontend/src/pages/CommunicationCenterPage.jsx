@@ -102,9 +102,21 @@ export const CommunicationCenterPage = () => {
       const statsRes = await api.get('/communication/stats');
       setStats(statsRes.data);
       
-      // Fetch recent messages
-      const messagesRes = await api.get('/communication?limit=10');
+      // Fetch sent messages
+      const messagesRes = await api.get('/communication?limit=50');
       setMessages(messagesRes.data.messages || []);
+      
+      // Fetch received messages
+      try {
+        const receivedRes = await api.get('/communication/received');
+        setReceivedMessages(receivedRes.data.messages || []);
+      } catch (e) {
+        setReceivedMessages([]);
+      }
+      
+      // Fetch scheduled messages
+      const scheduled = (messagesRes.data.messages || []).filter(m => m.status === 'scheduled');
+      setScheduledMessages(scheduled);
       
       // Fetch templates
       const templatesRes = await api.get('/communication/templates');
