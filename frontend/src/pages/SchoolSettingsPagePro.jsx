@@ -1872,16 +1872,16 @@ export default function SchoolSettingsPagePro() {
                       </div>
                     </div>
                     
-                    {/* شبكة الأيام المحسنة */}
-                    <div className="grid grid-cols-7 gap-2">
+                    {/* شبكة الأيام - تصميم بصري محسّن */}
+                    <div className="grid grid-cols-7 gap-3">
                       {[
-                        { key: 'sunday', name: 'الأحد', short: 'أحد' },
-                        { key: 'monday', name: 'الإثنين', short: 'إثن' },
-                        { key: 'tuesday', name: 'الثلاثاء', short: 'ثلا' },
-                        { key: 'wednesday', name: 'الأربعاء', short: 'أرب' },
-                        { key: 'thursday', name: 'الخميس', short: 'خمي' },
-                        { key: 'friday', name: 'الجمعة', short: 'جمع' },
-                        { key: 'saturday', name: 'السبت', short: 'سبت' },
+                        { key: 'sunday', name: 'الأحد', short: 'أحد', icon: '☀️' },
+                        { key: 'monday', name: 'الإثنين', short: 'إثن', icon: '🌙' },
+                        { key: 'tuesday', name: 'الثلاثاء', short: 'ثلا', icon: '⭐' },
+                        { key: 'wednesday', name: 'الأربعاء', short: 'أرب', icon: '🌟' },
+                        { key: 'thursday', name: 'الخميس', short: 'خمي', icon: '✨' },
+                        { key: 'friday', name: 'الجمعة', short: 'جمع', icon: '🕌' },
+                        { key: 'saturday', name: 'السبت', short: 'سبت', icon: '🏠' },
                       ].map((day) => {
                         const isWorkDay = settings.workingDays?.includes(day.name);
                         const isWeekend = settings.weekendDays?.includes(day.name);
@@ -1890,22 +1890,44 @@ export default function SchoolSettingsPagePro() {
                           <div
                             key={day.key}
                             className={`
-                              relative p-3 rounded-xl text-center transition-all duration-300 overflow-hidden
+                              group relative flex flex-col items-center justify-center
+                              p-4 rounded-2xl transition-all duration-300 cursor-default
+                              hover:scale-105 hover:-translate-y-1
                               ${isWorkDay 
-                                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-200' 
-                                : 'bg-gradient-to-br from-red-100 to-red-200 text-red-700 border border-red-300'
+                                ? 'bg-gradient-to-b from-emerald-400 via-green-500 to-emerald-600 text-white shadow-lg shadow-green-300/50 ring-2 ring-green-300/30' 
+                                : 'bg-gradient-to-b from-slate-200 via-gray-300 to-slate-400 text-gray-700 shadow-md shadow-gray-300/30'
                               }
                             `}
                           >
-                            {isWorkDay && (
-                              <div className="absolute top-1 left-1">
-                                <CheckCircle2 className="h-3 w-3 text-white/80" />
-                              </div>
-                            )}
-                            <p className="font-bold text-sm mb-1">{day.short}</p>
-                            <p className="text-[10px] opacity-90">
-                              {isWorkDay ? 'دراسة' : 'عطلة'}
+                            {/* أيقونة الحالة */}
+                            <div className={`
+                              absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs
+                              ${isWorkDay 
+                                ? 'bg-white text-green-600 shadow-md' 
+                                : 'bg-red-100 text-red-500 shadow-sm'
+                              }
+                            `}>
+                              {isWorkDay ? '✓' : '✕'}
+                            </div>
+                            
+                            {/* أيقونة اليوم */}
+                            <span className="text-2xl mb-1 drop-shadow-sm">{day.icon}</span>
+                            
+                            {/* اسم اليوم */}
+                            <p className={`font-bold text-base ${isWorkDay ? 'text-white' : 'text-gray-800'}`}>
+                              {day.short}
                             </p>
+                            
+                            {/* الحالة */}
+                            <span className={`
+                              mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium
+                              ${isWorkDay 
+                                ? 'bg-white/20 text-white' 
+                                : 'bg-red-500/20 text-red-700'
+                              }
+                            `}>
+                              {isWorkDay ? 'دراسة' : 'عطلة'}
+                            </span>
                           </div>
                         );
                       })}
