@@ -4338,11 +4338,12 @@ async def get_class_types_options(current_user: dict = Depends(get_current_user)
 
 class ClassWizardCreate(BaseModel):
     """Class creation via wizard"""
-    name: str
+    name: Optional[str] = None
+    name_ar: Optional[str] = None  # Support Arabic name from frontend
     name_en: Optional[str] = None
     grade_id: str
-    grade: int
-    section: str
+    grade: Optional[int] = None  # Can be derived from grade_id
+    section: Optional[str] = "أ"  # Default section
     class_type: Optional[str] = "regular"
     capacity: int = 30
     homeroom_teacher_id: Optional[str] = None
