@@ -326,14 +326,14 @@ export const CommunicationCenterPage = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-nassaq">
+            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-green-500/50 transition-all" onClick={() => setReceivedMessagesOpen(true)}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
                   <Inbox className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{messages.length}</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'الرسائل' : 'Total'}</p>
+                  <p className="text-2xl font-bold">{receivedMessages.length}</p>
+                  <p className="text-sm text-muted-foreground">{isRTL ? 'الرسائل المستلمة' : 'Received'}</p>
                 </div>
               </CardContent>
             </Card>
