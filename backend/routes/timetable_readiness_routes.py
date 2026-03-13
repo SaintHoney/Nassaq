@@ -505,7 +505,7 @@ async def check_teacher_assignments(school_id: str) -> CategoryReadiness:
             category="teacher_assignments",
             message_ar=f"{len(unassigned_classes)} فصل بدون إسنادات للمعلمين",
             message_en=f"{len(unassigned_classes)} classes without teacher assignments",
-            fix_link="/school/teacher-class-assignments",
+            fix_link="/school/settings?tab=teacher-assignments",
             fix_action="ربط المعلمين بالفصول",
             affected_items=unassigned_class_names
         ))
