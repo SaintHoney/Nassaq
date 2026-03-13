@@ -173,6 +173,45 @@ export const AccountSettingsPage = () => {
     }
   }, [user]);
 
+  // Fetch user roles for role switching
+  useEffect(() => {
+    const fetchUserRoles = async () => {
+      try {
+        const response = await api.get('/user-roles/available');
+        setUserRoles(response.data?.roles || []);
+      } catch (error) {
+        console.error('Failed to fetch user roles:', error);
+        setUserRoles([]);
+      }
+    };
+    fetchUserRoles();
+  }, [api]);
+
+  const handleSwitchRole = async (roleId) => {
+    setSwitchingRole(true);
+    try {
+      const response = await api.post(`/user-roles/switch/${roleId}`);
+      
+      // Store new token if provided
+      if (response.data?.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+      }
+      
+      toast.success(isRTL ? 'تم تبديل الدور بنجاح' : 'Role switched successfully');
+      
+      // Reload the page to apply new role context
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Role switch failed:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'فشل تبديل الدور' : 'Failed to switch role'));
+    } finally {
+      setSwitchingRole(false);
+      setShowRoleSwitchDialog(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
