@@ -583,6 +583,187 @@ export const CommunicationCenterPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Sent Messages Dialog */}
+        <Dialog open={sentMessagesOpen} onOpenChange={setSentMessagesOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Send className="h-5 w-5 text-brand-navy" />
+                {isRTL ? 'الرسائل المرسلة' : 'Sent Messages'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {messages.filter(m => m.status === 'sent').length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  {isRTL ? 'لا توجد رسائل مرسلة' : 'No sent messages'}
+                </p>
+              ) : (
+                messages.filter(m => m.status === 'sent').map((msg) => (
+                  <div key={msg.id} className="p-4 bg-muted/30 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{msg.title}</p>
+                      <Badge variant="success" className="text-xs">
+                        {isRTL ? 'مرسلة' : 'Sent'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{msg.content}</p>
+                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                      <span>{isRTL ? 'الجمهور:' : 'Audience:'} {msg.audience === 'all' ? (isRTL ? 'الجميع' : 'All') : msg.audience}</span>
+                      <span>{isRTL ? 'المستلمون:' : 'Recipients:'} {msg.recipient_count || 0}</span>
+                      <span>{new Date(msg.sent_at || msg.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Received Messages Dialog */}
+        <Dialog open={receivedMessagesOpen} onOpenChange={setReceivedMessagesOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Inbox className="h-5 w-5 text-green-600" />
+                {isRTL ? 'الرسائل المستلمة' : 'Received Messages'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {receivedMessages.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  {isRTL ? 'لا توجد رسائل مستلمة' : 'No received messages'}
+                </p>
+              ) : (
+                receivedMessages.map((msg) => (
+                  <div 
+                    key={msg.id} 
+                    className={`p-4 rounded-xl cursor-pointer transition-colors ${
+                      msg.is_read ? 'bg-muted/30' : 'bg-blue-50 dark:bg-blue-950/30'
+                    }`}
+                    onClick={() => handleMarkAsRead(msg.id)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className={`font-medium ${!msg.is_read ? 'font-bold' : ''}`}>{msg.title}</p>
+                      {!msg.is_read && (
+                        <Badge variant="default" className="text-xs bg-blue-500">
+                          {isRTL ? 'جديدة' : 'New'}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{msg.content}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(msg.sent_at || msg.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Scheduled Messages Dialog */}
+        <Dialog open={scheduledMessagesOpen} onOpenChange={setScheduledMessagesOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <Clock className="h-5 w-5 text-yellow-600" />
+                {isRTL ? 'الرسائل المجدولة' : 'Scheduled Messages'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {scheduledMessages.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  {isRTL ? 'لا توجد رسائل مجدولة' : 'No scheduled messages'}
+                </p>
+              ) : (
+                scheduledMessages.map((msg) => (
+                  <div key={msg.id} className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{msg.title}</p>
+                      <Badge variant="outline" className="text-xs text-yellow-700 border-yellow-500">
+                        <Clock className="h-3 w-3 me-1" />
+                        {isRTL ? 'مجدولة' : 'Scheduled'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{msg.content}</p>
+                    <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                      <span>{isRTL ? 'موعد الإرسال:' : 'Send at:'} {new Date(msg.scheduled_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedMessage(msg);
+                          setEditScheduledOpen(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 me-1" />
+                        {isRTL ? 'تعديل' : 'Edit'}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => handleSendScheduledNow(msg.id)}
+                      >
+                        <Send className="h-4 w-4 me-1" />
+                        {isRTL ? 'إرسال الآن' : 'Send Now'}
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Scheduled Message Dialog */}
+        <Dialog open={editScheduledOpen} onOpenChange={setEditScheduledOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-cairo">
+                {isRTL ? 'تعديل الرسالة المجدولة' : 'Edit Scheduled Message'}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedMessage && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>{isRTL ? 'عنوان الرسالة' : 'Message Title'}</Label>
+                  <Input
+                    value={selectedMessage.title}
+                    onChange={(e) => setSelectedMessage({...selectedMessage, title: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>{isRTL ? 'نص الرسالة' : 'Message Content'}</Label>
+                  <Textarea
+                    value={selectedMessage.content}
+                    onChange={(e) => setSelectedMessage({...selectedMessage, content: e.target.value})}
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <Label>{isRTL ? 'موعد الإرسال' : 'Scheduled Time'}</Label>
+                  <Input
+                    type="datetime-local"
+                    value={selectedMessage.scheduled_at?.slice(0, 16) || ''}
+                    onChange={(e) => setSelectedMessage({...selectedMessage, scheduled_at: e.target.value})}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setEditScheduledOpen(false)}>
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button onClick={handleUpdateScheduledMessage}>
+                    {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Sidebar>
   );
