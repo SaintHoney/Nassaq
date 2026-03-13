@@ -834,3 +834,72 @@
 - `/app/frontend/src/pages/AccountSettingsPage.jsx` - تبديل المستخدم
 - `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - توحيد المصطلحات
 - `/app/frontend/src/pages/AIInsightsPage.jsx` - أيقونة المخ
+
+
+---
+
+## تحديثات 13 مارس 2026 - المنهج الرسمي
+
+### المنهج الرسمي - تبويب جديد في إعدادات المدرسة ✅
+
+#### 1. إدخال بيانات المنهج الرسمي (Seed Data)
+- **سكربت**: `/app/backend/scripts/seed_official_curriculum.py`
+- **البيانات المُدخلة**:
+  - 3 مراحل دراسية (ابتدائية، متوسطة، ثانوية)
+  - 8 مسارات تعليمية (التعليم العام، تحفيظ القرآن، السنة المشتركة، المسار العام، علوم الحاسب، الصحة والحياة، إدارة الأعمال، المسار الشرعي)
+  - 29 صف دراسي
+  - 75 مادة دراسية
+  - 393 توزيع مادة/صف مع الحصص السنوية
+  - 7 رتب للنصاب الرسمي
+
+#### 2. APIs جديدة للمنهج الرسمي
+- **ملف**: `/app/backend/routes/official_curriculum_routes.py`
+- **Endpoints**:
+  - `GET /api/official-curriculum/stats` - إحصائيات المنهج
+  - `GET /api/official-curriculum/stages` - المراحل الدراسية
+  - `GET /api/official-curriculum/tracks` - المسارات التعليمية
+  - `GET /api/official-curriculum/grades` - الصفوف الدراسية
+  - `GET /api/official-curriculum/subjects` - المواد الدراسية
+  - `GET /api/official-curriculum/subjects/categories` - تصنيفات المواد
+  - `GET /api/official-curriculum/grade-subjects` - توزيع المواد على الصفوف
+  - `GET /api/official-curriculum/teacher-rank-loads` - النصاب الرسمي للمعلمين
+  - `GET /api/official-curriculum/curriculum-for-grade/{grade_id}` - المنهج الكامل لصف معين
+  - `GET /api/official-curriculum/search` - البحث في المنهج
+
+#### 3. تبويب المنهج الرسمي في الواجهة
+- **ملف**: `/app/frontend/src/pages/SchoolSettingsPagePro.jsx`
+- **الميزات**:
+  - كارت إحصائيات شامل (3 مراحل، 8 مسارات، 29 صف، 75 مادة، 393 توزيع، 7 رتب)
+  - شارة "بيانات مقفلة" لتوضيح أن البيانات للقراءة فقط
+  - قائمة المراحل الدراسية الرسمية (قابلة للاختيار)
+  - قائمة المسارات التعليمية الرسمية (قابلة للاختيار)
+  - عرض الصفوف عند اختيار مرحلة أو مسار
+  - جدول المنهج الكامل عند اختيار صف (المادة، التصنيف، أساسية/اختيارية، حصص/سنة، حصص/أسبوع)
+  - قسم النصاب الرسمي للمعلمين حسب الرتبة (تعليم عام + تربية خاصة)
+  - ملاحظة توضيحية حول طبيعة البيانات الرسمية
+
+#### 4. Collections جديدة في MongoDB
+- `official_curriculum_stages` - المراحل الدراسية
+- `official_curriculum_tracks` - المسارات التعليمية
+- `official_curriculum_grades` - الصفوف الدراسية
+- `official_curriculum_subjects` - المواد الدراسية
+- `official_curriculum_grade_subjects` - توزيع المواد على الصفوف
+- `official_teacher_rank_loads` - النصاب الرسمي للمعلمين
+
+### الملفات المُحدّثة/المُنشأة:
+- `/app/backend/scripts/seed_official_curriculum.py` - سكربت إدخال البيانات
+- `/app/backend/routes/official_curriculum_routes.py` - APIs المنهج الرسمي
+- `/app/backend/server.py` - تسجيل الـ router الجديد
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - تبويب المنهج الرسمي
+
+### المهام القادمة (P0):
+1. ~~إدخال بيانات المنهج الرسمي~~ ✅
+2. ~~إنشاء APIs للمنهج الرسمي~~ ✅
+3. ~~إضافة تبويب المنهج الرسمي~~ ✅
+4. إعادة هيكلة باقي إعدادات المدرسة لتستخدم البيانات الرسمية كمرجع
+5. منطق التحقق من جاهزية البيانات للجدولة
+
+### المهام المستقبلية (P1/P2):
+- تصدير الجداول إلى PDF/CSV
+- بوابة الطلاب/أولياء الأمور
+- تطبيق موبايل
