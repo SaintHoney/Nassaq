@@ -528,12 +528,8 @@ const PrincipalTimetablePage = () => {
   // ============================================
   if (pageStatus === 'loading') {
     return (
-      <div className="flex min-h-screen bg-muted/30">
-        {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-        
-        {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+      <Sidebar>
+        <div className="min-h-screen bg-muted/30">
           <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
             {/* Header Skeleton */}
             <div className="space-y-4">
@@ -558,18 +554,14 @@ const PrincipalTimetablePage = () => {
             <Skeleton className="h-[400px] w-full rounded-xl" />
           </div>
         </div>
-      </div>
+      </Sidebar>
     );
   }
 
   if (pageStatus === 'error') {
     return (
-      <div className="flex min-h-screen bg-muted/30">
-        {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-        
-        {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+      <Sidebar>
+        <div className="min-h-screen bg-muted/30">
           <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
@@ -586,17 +578,13 @@ const PrincipalTimetablePage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </Sidebar>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
-      {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+    <Sidebar>
+      <div className="min-h-screen bg-muted/30">
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl" data-testid="principal-timetable-page">
       {/* 1. Page Header */}
       <TimetablePageHeader
