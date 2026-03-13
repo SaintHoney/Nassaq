@@ -1763,7 +1763,7 @@ function SchoolSettingsPagePro() {
       {/* ================= Modals ================= */}
       
       {/* Modals removed */}
-    </div>
+    </Sidebar>
   );
 }
 
