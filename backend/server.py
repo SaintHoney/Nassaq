@@ -3895,28 +3895,41 @@ async def get_student(student_id: str, current_user: dict = Depends(get_current_
 @api_router.put("/students/{student_id}")
 async def update_student(
     student_id: str,
-    student_data: StudentCreate,
+    student_data: StudentUpdate,
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
 ):
     """Update student"""
+    # Build update dict with only provided fields
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if student_data.full_name is not None:
+        update_fields["full_name"] = student_data.full_name
+    if student_data.full_name_en is not None:
+        update_fields["full_name_en"] = student_data.full_name_en
+    if student_data.email is not None:
+        update_fields["email"] = student_data.email
+    if student_data.phone is not None:
+        update_fields["phone"] = student_data.phone
+    if student_data.class_id is not None:
+        update_fields["class_id"] = student_data.class_id
+    if student_data.date_of_birth is not None:
+        update_fields["date_of_birth"] = student_data.date_of_birth
+    if student_data.gender is not None:
+        update_fields["gender"] = student_data.gender
+    if student_data.parent_phone is not None:
+        update_fields["parent_phone"] = student_data.parent_phone
+    if student_data.parent_name is not None:
+        update_fields["parent_name"] = student_data.parent_name
+    if student_data.is_active is not None:
+        update_fields["is_active"] = student_data.is_active
+    
     result = await db.students.update_one(
         {"id": student_id},
-        {"$set": {
-            "full_name": student_data.full_name,
-            "full_name_en": student_data.full_name_en,
-            "email": student_data.email,
-            "phone": student_data.phone,
-            "class_id": student_data.class_id,
-            "date_of_birth": student_data.date_of_birth,
-            "gender": student_data.gender,
-            "parent_phone": student_data.parent_phone,
-            "parent_name": student_data.parent_name,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_fields}
     )
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="الطالب غير موجود")
-    return {"message": "تم تحديث بيانات الطالب"}
+    return {"message": "تم تحديث بيانات الطالب", "success": True}
 
 @api_router.delete("/students/{student_id}")
 async def delete_student(
