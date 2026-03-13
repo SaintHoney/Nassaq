@@ -170,13 +170,13 @@ const TimetableViewControls = ({
         return (
           <>
             {/* Grade Filter */}
-            <Select value={selectedGradeId || ''} onValueChange={onGradeChange}>
+            <Select value={selectedGradeId || 'all'} onValueChange={(val) => onGradeChange(val === 'all' ? null : val)}>
               <SelectTrigger className="w-[160px]" data-testid="grade-filter">
                 <SelectValue placeholder="كل الصفوف" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">كل الصفوف</SelectItem>
-                {grades.map(g => (
+                <SelectItem value="all">كل الصفوف</SelectItem>
+                {grades.filter(g => g.id || g.value).map(g => (
                   <SelectItem key={g.id || g.value} value={g.id || g.value}>
                     {g.name_ar || g.label}
                   </SelectItem>
@@ -185,18 +185,21 @@ const TimetableViewControls = ({
             </Select>
             
             {/* Class Filter */}
-            <Select value={selectedClassId || ''} onValueChange={onClassChange}>
-              <SelectTrigger className="w-[180px]" data-testid="class-filter">
-                <SelectValue placeholder="اختر الفصل" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map(c => (
-                  <SelectItem key={c.id || c.value} value={c.id || c.value}>
-                    {c.name || c.name_ar || c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {classes.length > 0 && (
+              <Select value={selectedClassId || 'all'} onValueChange={(val) => onClassChange(val === 'all' ? null : val)}>
+                <SelectTrigger className="w-[180px]" data-testid="class-filter">
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الفصول</SelectItem>
+                  {classes.filter(c => c.id || c.value).map(c => (
+                    <SelectItem key={c.id || c.value} value={c.id || c.value}>
+                      {c.name || c.name_ar || c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </>
         );
         
@@ -204,27 +207,30 @@ const TimetableViewControls = ({
         return (
           <>
             {/* Teacher Filter */}
-            <Select value={selectedTeacherId || ''} onValueChange={onTeacherChange}>
-              <SelectTrigger className="w-[200px]" data-testid="teacher-filter">
-                <SelectValue placeholder="اختر المعلم" />
-              </SelectTrigger>
-              <SelectContent>
-                {teachers.map(t => (
-                  <SelectItem key={t.id || t.value} value={t.id || t.value}>
-                    {t.full_name || t.name || t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {teachers.length > 0 && (
+              <Select value={selectedTeacherId || 'all'} onValueChange={(val) => onTeacherChange(val === 'all' ? null : val)}>
+                <SelectTrigger className="w-[200px]" data-testid="teacher-filter">
+                  <SelectValue placeholder="اختر المعلم" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل المعلمين</SelectItem>
+                  {teachers.filter(t => t.id || t.value).map(t => (
+                    <SelectItem key={t.id || t.value} value={t.id || t.value}>
+                      {t.full_name || t.name || t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             
             {/* Subject Filter (optional) */}
-            <Select value={selectedSubjectId || ''} onValueChange={onSubjectChange}>
+            <Select value={selectedSubjectId || 'all'} onValueChange={(val) => onSubjectChange(val === 'all' ? null : val)}>
               <SelectTrigger className="w-[160px]" data-testid="subject-filter">
                 <SelectValue placeholder="كل المواد" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">كل المواد</SelectItem>
-                {subjects.map(s => (
+                <SelectItem value="all">كل المواد</SelectItem>
+                {subjects.filter(s => s.id || s.value).map(s => (
                   <SelectItem key={s.id || s.value} value={s.id || s.value}>
                     {s.name_ar || s.name || s.label}
                   </SelectItem>
@@ -238,18 +244,21 @@ const TimetableViewControls = ({
         return (
           <>
             {/* Grade Filter */}
-            <Select value={selectedGradeId || ''} onValueChange={onGradeChange}>
-              <SelectTrigger className="w-[180px]" data-testid="grade-filter">
-                <SelectValue placeholder="اختر الصف" />
-              </SelectTrigger>
-              <SelectContent>
-                {grades.map(g => (
-                  <SelectItem key={g.id || g.value} value={g.id || g.value}>
-                    {g.name_ar || g.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {grades.length > 0 && (
+              <Select value={selectedGradeId || 'all'} onValueChange={(val) => onGradeChange(val === 'all' ? null : val)}>
+                <SelectTrigger className="w-[180px]" data-testid="grade-filter">
+                  <SelectValue placeholder="اختر الصف" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الصفوف</SelectItem>
+                  {grades.filter(g => g.id || g.value).map(g => (
+                    <SelectItem key={g.id || g.value} value={g.id || g.value}>
+                      {g.name_ar || g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </>
         );
         
@@ -257,13 +266,14 @@ const TimetableViewControls = ({
         return (
           <>
             {/* Weekday Filter */}
-            <Select value={selectedWeekday?.toString() || ''} onValueChange={(val) => onWeekdayChange(val ? parseInt(val) : null)}>
+            <Select value={selectedWeekday?.toString() || 'all'} onValueChange={(val) => onWeekdayChange(val === 'all' ? null : parseInt(val))}>
               <SelectTrigger className="w-[160px]" data-testid="weekday-filter">
                 <SelectValue placeholder="اختر اليوم" />
               </SelectTrigger>
               <SelectContent>
-                {weekdays.map(d => (
-                  <SelectItem key={d.number || d.value} value={(d.number ?? d.value)?.toString()}>
+                <SelectItem value="all">كل الأيام</SelectItem>
+                {weekdays.filter(d => d.number !== undefined || d.value !== undefined).map(d => (
+                  <SelectItem key={d.number ?? d.value} value={(d.number ?? d.value)?.toString()}>
                     {d.ar || d.label}
                   </SelectItem>
                 ))}
