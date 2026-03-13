@@ -69,6 +69,9 @@ function SchoolSettingsPagePro() {
   const [subjects, setSubjects] = useState([]);
   const [draggingSubject, setDraggingSubject] = useState(null);
   const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [assignmentSubTab, setAssignmentSubTab] = useState('subjects'); // 'subjects' or 'classes'
+  const [classAssignments, setClassAssignments] = useState([]);
+  const [classAssignmentsLoading, setClassAssignmentsLoading] = useState(false);
   
   // Modal States
   const [showEditSchool, setShowEditSchool] = useState(false);
