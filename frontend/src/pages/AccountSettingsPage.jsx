@@ -215,16 +215,86 @@ export const AccountSettingsPage = () => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // Convert 'none' back to empty string for API
+      // Use the extended profile endpoint
       const profileToSave = {
-        ...profile,
-        title: profile.title === 'none' ? '' : profile.title
+        title: profile.title === 'none' ? '' : profile.title,
+        full_name: profile.full_name,
+        full_name_en: profile.full_name_en,
+        email: profile.email,
+        phone: profile.phone,
+        preferred_language: preferences.language
       };
-      await api.put('/users/me', profileToSave);
+      
+      const response = await api.put('/users/me/profile', profileToSave);
+      
+      // Update local auth context if needed
+      if (response.data?.user) {
+        // Trigger re-fetch of user data by reloading
+        window.dispatchEvent(new CustomEvent('user-updated', { detail: response.data.user }));
+      }
+      
       toast.success(isRTL ? 'تم حفظ الملف الشخصي' : 'Profile saved');
     } catch (error) {
       toast.error(error.response?.data?.detail || (isRTL ? 'فشل حفظ الملف الشخصي' : 'Failed to save profile'));
     } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(isRTL ? 'صيغة الصورة غير مدعومة. الصيغ المدعومة: jpg, jpeg, png, webp' : 'Unsupported image format. Supported: jpg, jpeg, png, webp');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isRTL ? 'حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت' : 'Image too large. Max 5MB');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target?.result;
+        
+        try {
+          const response = await api.post('/users/me/avatar', {
+            image_data: base64Data
+          });
+          
+          if (response.data?.success) {
+            // Update local state
+            setProfile(prev => ({ ...prev, avatar_url: base64Data }));
+            
+            // Trigger global update
+            window.dispatchEvent(new CustomEvent('user-updated', { detail: { avatar_url: base64Data } }));
+            
+            toast.success(isRTL ? 'تم رفع الصورة بنجاح' : 'Avatar uploaded successfully');
+          }
+        } catch (err) {
+          toast.error(err.response?.data?.detail || (isRTL ? 'فشل رفع الصورة' : 'Failed to upload avatar'));
+        } finally {
+          setSaving(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        toast.error(isRTL ? 'فشل قراءة الصورة' : 'Failed to read image');
+        setSaving(false);
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error(isRTL ? 'حدث خطأ أثناء رفع الصورة' : 'Error uploading avatar');
       setSaving(false);
     }
   };
