@@ -450,6 +450,46 @@ export default function SmartTimetablePage() {
     }
   };
   
+  // Edit session handlers
+  const handleEditSession = (session) => {
+    setSelectedSession(session);
+    setEditingTeacher(session.teacher_id || '');
+    setEditSessionOpen(true);
+  };
+  
+  const handleSaveSession = async () => {
+    if (!selectedSession) return;
+    
+    try {
+      const response = await api.put(`/smart-scheduling/session/${selectedSession.id}`, {
+        teacher_id: editingTeacher || undefined
+      });
+      
+      if (response.data.success) {
+        toast.success('تم تعديل الحصة بنجاح');
+        setEditSessionOpen(false);
+        fetchSessions();
+      } else if (response.data.conflicts?.length > 0) {
+        toast.warning(response.data.message_ar);
+      }
+    } catch (error) {
+      toast.error('فشل تعديل الحصة');
+    }
+  };
+  
+  const handleDeleteSession = async () => {
+    if (!selectedSession) return;
+    
+    try {
+      await api.delete(`/smart-scheduling/session/${selectedSession.id}`);
+      toast.success('تم حذف الحصة');
+      setEditSessionOpen(false);
+      fetchSessions();
+    } catch (error) {
+      toast.error('فشل حذف الحصة');
+    }
+  };
+  
   // Effects
   useEffect(() => {
     if (user) fetchData();
