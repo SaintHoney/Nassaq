@@ -64,7 +64,6 @@ webpackConfig.devServer = (devServerConfig) => {
   devServerConfig.allowedHosts = "all";
   devServerConfig.host = "0.0.0.0";
   devServerConfig.port = 5000;
-
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;

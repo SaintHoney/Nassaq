@@ -540,7 +540,7 @@ async def main():
         user_doc = {
             "id": teacher["id"],
             "email": teacher["email"],
-            "password": teacher_password,
+            "password_hash": teacher_password,
             "full_name": teacher["full_name_ar"],
             "full_name_en": teacher["full_name_en"],
             "phone": teacher["phone"],
@@ -606,7 +606,7 @@ async def main():
         user_doc = {
             "id": student["id"],
             "email": email,
-            "password": student_password,
+            "password_hash": student_password,
             "full_name": student["full_name_ar"],
             "role": "student",
             "tenant_id": student["school_id"],
@@ -724,7 +724,7 @@ async def main():
         user_doc = {
             "id": principal["id"],
             "email": principal["email"],
-            "password": principal_password,
+            "password_hash": principal_password,
             "full_name": principal["full_name"],
             "role": "school_principal",
             "tenant_id": principal["tenant_id"],

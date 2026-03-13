@@ -8,8 +8,8 @@ import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 import { Bell, ShieldAlert, UserPlus, Megaphone, AlertTriangle, Lock, LogIn, Wrench } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
-const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
+const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+const WS_URL = API_URL ? API_URL.replace('https://', 'wss://').replace('http://', 'ws://') : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
 
 // Notification sound
 const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
