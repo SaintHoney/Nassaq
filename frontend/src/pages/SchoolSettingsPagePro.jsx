@@ -791,7 +791,7 @@ function SchoolSettingsPagePro() {
                             onClick={() => handleWorkDayChange(day.key)}
                             className={`cursor-pointer rounded-xl p-4 text-center transition-all duration-200 ${
                               workDays[day.key] 
-                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' 
+                                ? 'bg-brand-navy text-white shadow-lg shadow-brand-navy/20' 
                                 : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                             }`}
                             data-testid={`day-${day.key}`}
