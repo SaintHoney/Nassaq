@@ -228,6 +228,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateToken,
     updatePreferences,
+    updateUser,
+    refreshUser,
     api,
     isAuthenticated: !!user,
     isPlatformAdmin: user?.role === 'platform_admin',
