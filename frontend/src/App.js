@@ -700,6 +700,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/principal/timetable"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SchedulePageNew />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/principal/reports"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
