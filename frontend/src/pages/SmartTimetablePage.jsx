@@ -254,6 +254,13 @@ export default function SmartTimetablePage() {
   const [conflictsDialogOpen, setConflictsDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
+  // Edit Session State
+  const [editMode, setEditMode] = useState(false);
+  const [editSessionOpen, setEditSessionOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [editingTeacher, setEditingTeacher] = useState('');
+  const [subjects, setSubjects] = useState([]);
+  
   const schoolId = user?.tenant_id;
   const periods = getDefaultPeriods(settings?.periods_per_day || 7);
   
