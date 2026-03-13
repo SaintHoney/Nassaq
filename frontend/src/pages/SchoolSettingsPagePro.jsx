@@ -468,6 +468,49 @@ function SchoolSettingsPagePro() {
     }
   };
   
+  // Class Assignment handlers
+  const loadClassAssignments = async () => {
+    setClassAssignmentsLoading(true);
+    try {
+      const res = await api.get('/teacher-class-assignments');
+      setClassAssignments(res.data || []);
+    } catch (error) {
+      console.error('Error loading class assignments:', error);
+    } finally {
+      setClassAssignmentsLoading(false);
+    }
+  };
+  
+  const handleCreateClassAssignment = async (teacherId, classId) => {
+    try {
+      const response = await api.post('/teacher-class-assignments', {
+        teacher_id: teacherId,
+        class_id: classId
+      });
+      setClassAssignments(prev => [...prev, response.data.assignment]);
+      toast.success('تم إسناد الفصل للمعلم بنجاح');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'فشل في إنشاء الإسناد');
+    }
+  };
+  
+  const handleDeleteClassAssignment = async (assignmentId) => {
+    try {
+      await api.delete(`/teacher-class-assignments/${assignmentId}`);
+      setClassAssignments(prev => prev.filter(a => a.id !== assignmentId));
+      toast.success('تم حذف الإسناد بنجاح');
+    } catch (error) {
+      toast.error('فشل في حذف الإسناد');
+    }
+  };
+  
+  // Load class assignments when tab changes
+  useEffect(() => {
+    if (assignmentSubTab === 'classes' && classAssignments.length === 0) {
+      loadClassAssignments();
+    }
+  }, [assignmentSubTab]);
+  
   // Navigate to specific tab for fixing issues
   const navigateToFix = (category) => {
     setActiveSection('dynamic');
