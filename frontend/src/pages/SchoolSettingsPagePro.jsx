@@ -370,10 +370,6 @@ function SchoolSettingsPagePro() {
       toast.error(errorMessage);
     }
   };
-      }
-      toast.error(errorMessage);
-    }
-  };
   
   // Track changes
   const handleSettingChange = (key, value) => {
