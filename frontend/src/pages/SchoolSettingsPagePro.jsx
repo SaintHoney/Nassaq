@@ -810,7 +810,7 @@ function SchoolSettingsPagePro() {
                       <div className="flex items-center justify-between">
                         <div className="flex gap-6">
                           <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
+                            <div className="w-4 h-4 rounded-full bg-brand-navy"></div>
                             <span className="text-sm text-slate-600">{Object.values(workDays).filter(Boolean).length} أيام دراسة</span>
                           </div>
                           <div className="flex items-center gap-2">
