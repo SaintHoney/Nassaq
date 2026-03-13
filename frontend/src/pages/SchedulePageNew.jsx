@@ -224,8 +224,92 @@ export default function SchedulePageNew() {
     if (selectedSchedule) fetchSessions();
   }, [selectedSchedule, fetchSessions]);
 
-  // Generate schedule
+  // Generate schedule using Smart Scheduling Engine
   const handleGenerateSchedule = async () => {
+    setGenerating(true);
+    setGenerationErrors([]);
+    setGenerationStep('جاري التحقق من جاهزية البيانات...');
+    setUnplacedSessions([]);
+    
+    try {
+      // Step 1: Validate data readiness using Smart Scheduling API
+      const validateRes = await api.get(`/smart-scheduling/validate/${schoolId}`);
+      
+      if (!validateRes.data.can_proceed) {
+        const errors = validateRes.data.issues
+          .filter(i => i.severity === 'critical')
+          .map(i => i.message_ar);
+        
+        if (errors.length > 0) {
+          setGenerationErrors(errors);
+          setGenerating(false);
+          setGenerationStep('');
+          toast.error('يوجد مشاكل تمنع إنشاء الجدول');
+          return;
+        }
+      }
+      
+      // Show summary
+      const summary = validateRes.data.summary;
+      console.log('Data readiness summary:', summary);
+      
+      setGenerationStep('جاري إنشاء الجدول بالذكاء الاصطناعي...');
+      
+      // Step 2: Generate timetable using Smart Scheduling Engine
+      const response = await api.post(`/smart-scheduling/generate/${schoolId}`, {});
+      
+      if (response.data.success) {
+        const result = response.data;
+        setGenerationStats({
+          sessions_created: result.scheduled_sessions,
+          success_rate: (result.scheduled_sessions / result.total_sessions * 100).toFixed(1),
+          conflicts: result.conflicts_count,
+          unplaced_sessions: result.unscheduled_count,
+          optimization_score: result.optimization_score,
+          timetable_id: result.timetable_id,
+          run_id: result.run_id
+        });
+        
+        setGenerationStep('');
+        setGenerateDialogOpen(false);
+        setGenerationResultOpen(true);
+        
+        if (result.conflicts_count > 0) {
+          toast.warning(`تم إنشاء ${result.scheduled_sessions} حصة مع ${result.conflicts_count} تعارضات`);
+        } else {
+          toast.success(`تم إنشاء ${result.scheduled_sessions} حصة بنجاح - نسبة التحسين ${result.optimization_score}%`);
+        }
+        
+        // Refresh data
+        fetchData();
+        fetchSessions();
+      } else {
+        throw new Error(response.data.message_ar || 'فشل توليد الجدول');
+      }
+    } catch (error) {
+      console.error('Generate error:', error);
+      setGenerationStep('');
+      
+      let errorMessage = 'فشل توليد الجدول';
+      if (error.response?.data?.message_ar) {
+        errorMessage = error.response.data.message_ar;
+      } else if (error.response?.data?.detail) {
+        errorMessage = typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : error.response.data.detail.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setGenerationErrors([errorMessage]);
+      toast.error(errorMessage);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Legacy generate function (fallback)
+  const handleGenerateScheduleLegacy = async () => {
     setGenerating(true);
     setGenerationErrors([]);
     setGenerationStep('جاري التحقق من البيانات...');
