@@ -1855,20 +1855,32 @@ export default function SchoolSettingsPagePro() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-6">
-                    {/* ملخص إحصائي */}
-                    <div className="flex items-center justify-center gap-6 mb-6 p-4 bg-muted/30 rounded-xl">
-                      <div className="text-center">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto mb-2 shadow-md">
-                          <span className="text-xl font-bold text-white">{settings.workingDays?.length || 5}</span>
+                    {/* ملخص إحصائي - تصميم محسّن */}
+                    <div className="flex items-center justify-center gap-8 mb-6">
+                      <div className="text-center group">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center mx-auto shadow-xl shadow-green-200/50 group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-3xl font-bold text-white">{settings.workingDays?.length || 5}</span>
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center">
+                            <span className="text-lg">📚</span>
+                          </div>
                         </div>
-                        <p className="text-sm font-medium text-green-700">أيام دراسة</p>
+                        <p className="mt-3 text-sm font-bold text-green-700">أيام دراسة</p>
                       </div>
-                      <div className="h-12 w-px bg-border"></div>
-                      <div className="text-center">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center mx-auto mb-2 shadow-md">
-                          <span className="text-xl font-bold text-white">{settings.weekendDays?.length || 2}</span>
+                      
+                      <div className="h-16 w-px bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+                      
+                      <div className="text-center group">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center mx-auto shadow-xl shadow-red-200/50 group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-3xl font-bold text-white">{settings.weekendDays?.length || 2}</span>
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center">
+                            <span className="text-lg">🏖️</span>
+                          </div>
                         </div>
-                        <p className="text-sm font-medium text-red-600">أيام عطلة</p>
+                        <p className="mt-3 text-sm font-bold text-red-600">أيام عطلة</p>
                       </div>
                     </div>
                     
