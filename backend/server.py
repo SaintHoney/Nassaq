@@ -11,7 +11,7 @@ Architecture:
 - /middleware - RBAC and tenant isolation
 """
 
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Header, Query, Body
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Header, Query, Body, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
