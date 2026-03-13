@@ -1041,8 +1041,14 @@ export default function SchedulePageNew() {
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                 onClick={() => {
                   setGenerationResultOpen(false);
-                  navigate('/admin/smart-timetable');
+                  // عرض الجدول في نفس الصفحة بدلاً من التنقل
+                  setShowFullTimetable(true);
+                  // تعيين أول فصل
+                  if (classes.length > 0) {
+                    setSelectedViewClass(classes[0].id);
+                  }
                 }}
+                data-testid="view-full-timetable-btn"
               >
                 <Eye className="h-4 w-4 ml-2" />
                 عرض الجدول الكامل
