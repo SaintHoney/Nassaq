@@ -4236,20 +4236,32 @@ async def get_class_grades_options(current_user: dict = Depends(get_current_user
     
     grades = await db.grade_levels.find(
         {"school_id": school_id} if school_id else {},
-        {"_id": 0, "id": 1, "name": 1, "name_en": 1, "grade": 1, "stage": 1}
+        {"_id": 0}
     ).to_list(100)
     
-    if not grades:
-        grades = [
-            {"id": "1", "name": "الصف الأول", "name_en": "Grade 1", "grade": 1, "stage": "ابتدائي"},
-            {"id": "2", "name": "الصف الثاني", "name_en": "Grade 2", "grade": 2, "stage": "ابتدائي"},
-            {"id": "3", "name": "الصف الثالث", "name_en": "Grade 3", "grade": 3, "stage": "ابتدائي"},
-            {"id": "4", "name": "الصف الرابع", "name_en": "Grade 4", "grade": 4, "stage": "ابتدائي"},
-            {"id": "5", "name": "الصف الخامس", "name_en": "Grade 5", "grade": 5, "stage": "ابتدائي"},
-            {"id": "6", "name": "الصف السادس", "name_en": "Grade 6", "grade": 6, "stage": "ابتدائي"},
+    # Map to expected format with name_ar
+    result_grades = []
+    for g in grades:
+        result_grades.append({
+            "id": g.get("id", g.get("_id", "")),
+            "name_ar": g.get("name_ar") or g.get("name", ""),
+            "name_en": g.get("name_en", ""),
+            "grade": g.get("grade"),
+            "stage": g.get("stage"),
+            "stage_id": g.get("stage_id")
+        })
+    
+    if not result_grades:
+        result_grades = [
+            {"id": "1", "name_ar": "الصف الأول", "name_en": "Grade 1", "grade": 1, "stage": "ابتدائي"},
+            {"id": "2", "name_ar": "الصف الثاني", "name_en": "Grade 2", "grade": 2, "stage": "ابتدائي"},
+            {"id": "3", "name_ar": "الصف الثالث", "name_en": "Grade 3", "grade": 3, "stage": "ابتدائي"},
+            {"id": "4", "name_ar": "الصف الرابع", "name_en": "Grade 4", "grade": 4, "stage": "ابتدائي"},
+            {"id": "5", "name_ar": "الصف الخامس", "name_en": "Grade 5", "grade": 5, "stage": "ابتدائي"},
+            {"id": "6", "name_ar": "الصف السادس", "name_en": "Grade 6", "grade": 6, "stage": "ابتدائي"},
         ]
     
-    return {"grades": grades}
+    return {"grades": result_grades}
 
 @api_router.get("/classes/options/teachers")
 async def get_class_teachers_options(current_user: dict = Depends(get_current_user)):
