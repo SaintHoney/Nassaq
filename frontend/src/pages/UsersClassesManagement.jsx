@@ -765,6 +765,17 @@ export default function UsersClassesManagement() {
               {labels.addClass}
             </Button>
             
+            {/* Import/Export Button - Moved to actions row */}
+            <Button 
+              onClick={() => setActiveTab('import-export')}
+              variant="outline"
+              className="rounded-xl border-purple-400 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              data-testid="import-export-btn"
+            >
+              <FileSpreadsheet className="h-4 w-4 me-2" />
+              {labels.importExport}
+            </Button>
+            
             <div className="flex-1" />
             
             <Button variant="outline" size="icon" onClick={handleRefresh} className="rounded-xl" title={labels.refresh}>
