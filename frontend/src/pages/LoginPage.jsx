@@ -94,6 +94,8 @@ export const LoginPage = () => {
             navigate('/admin');
             break;
           case 'school_principal':
+            navigate('/principal');
+            break;
           case 'school_sub_admin':
             navigate('/school');
             break;
