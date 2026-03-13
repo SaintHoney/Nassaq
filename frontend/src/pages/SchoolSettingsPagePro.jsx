@@ -1121,12 +1121,12 @@ export default function SchoolSettingsPagePro() {
   
   // Effect for grade curriculum
   useEffect(() => {
-    if (selectedOfficialGrade) {
+    if (selectedOfficialGrade && api) {
       fetchOfficialGradeCurriculum(selectedOfficialGrade);
     } else {
       setOfficialGradeCurriculum(null);
     }
-  }, [selectedOfficialGrade]);
+  }, [selectedOfficialGrade, api]);
   
   // Save day times settings
   const saveDayTimes = async () => {
