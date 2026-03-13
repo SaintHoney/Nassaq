@@ -654,7 +654,7 @@ export default function SchedulePageNew() {
           </Card>
 
           {/* Schedule Grid */}
-          {!showFullTimetable && timeSlots.length === 0 ? (
+          {timeSlots.length === 0 ? (
             <Card className="border-2 border-dashed border-muted-foreground/30">
               <CardContent className="text-center py-16">
                 <Clock className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
