@@ -72,6 +72,7 @@ function SchoolSettingsPagePro() {
   const [assignmentSubTab, setAssignmentSubTab] = useState('subjects'); // 'subjects' or 'classes'
   const [classAssignments, setClassAssignments] = useState([]);
   const [classAssignmentsLoading, setClassAssignmentsLoading] = useState(false);
+  const [draggingClass, setDraggingClass] = useState(null);
   
   // Modal States
   const [showEditSchool, setShowEditSchool] = useState(false);
