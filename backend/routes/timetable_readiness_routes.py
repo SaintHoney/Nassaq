@@ -611,7 +611,8 @@ async def check_official_curriculum(school_id: str) -> CategoryReadiness:
 
 @router.get("/check")
 async def check_timetable_readiness(
-    x_school_context: str = Header(default=None, alias="X-School-Context")
+    x_school_context: str = Header(default=None, alias="X-School-Context"),
+    authorization: str = Header(default=None)
 ):
     """
     فحص جاهزية النظام لإنشاء الجدول
@@ -622,8 +623,29 @@ async def check_timetable_readiness(
     - Score per category
     - List of issues with fix links
     """
-    # For testing, use a default school_id if not provided
-    school_id = x_school_context or "school-001"
+    # Get school_id from user token or header
+    school_id = x_school_context
+    
+    if not school_id and authorization:
+        try:
+            import jwt
+            token = authorization.replace("Bearer ", "")
+            payload = jwt.decode(token, options={"verify_signature": False})
+            # Get school_id from token claims
+            school_id = payload.get("school_id")
+            if not school_id:
+                # Try to get from database
+                user_id = payload.get("sub")
+                if user_id:
+                    user = await db.users.find_one({"id": user_id}, {"_id": 0, "school_id": 1})
+                    if user:
+                        school_id = user.get("school_id")
+        except Exception as e:
+            print(f"Error decoding token: {e}")
+    
+    # Fallback if still no school_id
+    if not school_id:
+        school_id = "SCH-001"
     
     # Run all checks
     categories = {}
