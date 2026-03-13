@@ -669,19 +669,6 @@ export default function SchedulePageNew() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {/* زر الرجوع */}
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setShowFullTimetable(false)}
-                      className="bg-white/20 hover:bg-white/30 text-white border-0"
-                      data-testid="back-from-timetable-btn"
-                    >
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                      رجوع للصفحة الرئيسية
-                    </Button>
-                  </div>
                 </div>
               </CardHeader>
               
