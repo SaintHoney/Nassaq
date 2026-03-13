@@ -290,9 +290,11 @@ export default function SchedulePageNew() {
           toast.success(`تم إنشاء ${result.scheduled_sessions} حصة بنجاح - نسبة التحسين ${result.optimization_score}%`);
         }
         
+        // Set the new smart timetable as selected
+        setSelectedSmartTimetable(result.timetable_id);
+        
         // Refresh data
         fetchData();
-        fetchSessions();
       } else {
         throw new Error(response.data.message_ar || 'فشل توليد الجدول');
       }
