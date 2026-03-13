@@ -1431,25 +1431,26 @@ export default function SchoolSettingsPagePro() {
             
             {/* ================= TAB: نظرة عامة ================= */}
             <TabsContent value="overview" className="space-y-6">
-              {/* أيام العمل والعطلة */}
+              {/* أيام العمل والعطلة - التصميم الجديد */}
               <div className="grid lg:grid-cols-2 gap-6">
-                <Card className="border-2 border-green-200">
-                  <CardHeader className="pb-4">
+                <Card className="border-2 border-green-200 overflow-hidden">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-green-50 to-emerald-50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                          <Calendar className="h-5 w-5 text-green-600" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                          <Calendar className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-base">أيام العمل والعطلة</CardTitle>
-                          <CardDescription className="text-xs">
-                            {settings.workingDays?.length || 5} أيام دراسة • {settings.weekendDays?.length || 2} أيام عطلة
+                          <CardTitle className="text-lg">أيام العمل والعطلة</CardTitle>
+                          <CardDescription className="text-sm">
+                            الجدول الأسبوعي للمدرسة
                           </CardDescription>
                         </div>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm"
+                        className="border-green-500 text-green-700 hover:bg-green-100"
                         onClick={() => {
                           setEditedWorkDays({
                             sunday: settings.workingDays?.includes('الأحد') ?? true,
@@ -1469,11 +1470,70 @@ export default function SchoolSettingsPagePro() {
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <DaysGrid 
-                      workDays={settings.workingDays} 
-                      weekendDays={settings.weekendDays}
-                    />
+                  <CardContent className="p-6">
+                    {/* ملخص إحصائي */}
+                    <div className="flex items-center justify-center gap-6 mb-6 p-4 bg-muted/30 rounded-xl">
+                      <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto mb-2 shadow-md">
+                          <span className="text-xl font-bold text-white">{settings.workingDays?.length || 5}</span>
+                        </div>
+                        <p className="text-sm font-medium text-green-700">أيام دراسة</p>
+                      </div>
+                      <div className="h-12 w-px bg-border"></div>
+                      <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center mx-auto mb-2 shadow-md">
+                          <span className="text-xl font-bold text-white">{settings.weekendDays?.length || 2}</span>
+                        </div>
+                        <p className="text-sm font-medium text-red-600">أيام عطلة</p>
+                      </div>
+                    </div>
+                    
+                    {/* شبكة الأيام المحسنة */}
+                    <div className="grid grid-cols-7 gap-2">
+                      {[
+                        { key: 'sunday', name: 'الأحد', short: 'أحد' },
+                        { key: 'monday', name: 'الإثنين', short: 'إثن' },
+                        { key: 'tuesday', name: 'الثلاثاء', short: 'ثلا' },
+                        { key: 'wednesday', name: 'الأربعاء', short: 'أرب' },
+                        { key: 'thursday', name: 'الخميس', short: 'خمي' },
+                        { key: 'friday', name: 'الجمعة', short: 'جمع' },
+                        { key: 'saturday', name: 'السبت', short: 'سبت' },
+                      ].map((day) => {
+                        const isWorkDay = settings.workingDays?.includes(day.name);
+                        const isWeekend = settings.weekendDays?.includes(day.name);
+                        
+                        return (
+                          <div
+                            key={day.key}
+                            className={`
+                              relative p-3 rounded-xl text-center transition-all duration-300 overflow-hidden
+                              ${isWorkDay 
+                                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-200' 
+                                : 'bg-gradient-to-br from-red-100 to-red-200 text-red-700 border border-red-300'
+                              }
+                            `}
+                          >
+                            {isWorkDay && (
+                              <div className="absolute top-1 left-1">
+                                <CheckCircle2 className="h-3 w-3 text-white/80" />
+                              </div>
+                            )}
+                            <p className="font-bold text-sm mb-1">{day.short}</p>
+                            <p className="text-[10px] opacity-90">
+                              {isWorkDay ? 'دراسة' : 'عطلة'}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* تفاصيل إضافية */}
+                    <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                      <p className="text-xs text-green-700 flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        أيام الدراسة: {settings.workingDays?.join(' • ') || 'الأحد • الإثنين • الثلاثاء • الأربعاء • الخميس'}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
                 
