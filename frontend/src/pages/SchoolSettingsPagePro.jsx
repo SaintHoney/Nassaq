@@ -307,11 +307,18 @@ function SchoolSettingsPagePro() {
   const deleteClass = async (id) => {
     if (!confirm('هل أنت متأكد من حذف هذا الفصل؟')) return;
     try {
-      await api.delete(`/school/classes/${id}`);
+      await api.delete(`/classes/${id}`);
       toast.success('تم حذف الفصل بنجاح');
       fetchData();
     } catch (error) {
-      toast.error('حدث خطأ في حذف الفصل');
+      console.error('Delete class error:', error);
+      let errorMessage = 'حدث خطأ في حذف الفصل';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      toast.error(errorMessage);
     }
   };
   
