@@ -2089,6 +2089,345 @@ export default function SchoolSettingsPagePro() {
               </div>
             </TabsContent>
             
+            {/* ================= TAB: المنهج الرسمي ================= */}
+            <TabsContent value="official-curriculum" className="space-y-6" data-testid="official-curriculum-tab-content">
+              {/* Header Card */}
+              <Card className="border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-green-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
+                        <School className="h-7 w-7 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-emerald-800">المنهج الرسمي - وزارة التعليم</h2>
+                        <p className="text-sm text-emerald-600">
+                          بيانات رسمية مغلقة • للقراءة فقط • مصدر الحقيقة للجدولة الذكية
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-800 border-2 border-emerald-300 px-4 py-2 text-sm font-bold">
+                      <Shield className="h-4 w-4 ml-2" />
+                      بيانات مقفلة
+                    </Badge>
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  {officialCurriculumStats && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6">
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.stages}</p>
+                        <p className="text-xs text-emerald-600">مرحلة تعليمية</p>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.tracks}</p>
+                        <p className="text-xs text-emerald-600">مسار تعليمي</p>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.grades}</p>
+                        <p className="text-xs text-emerald-600">صف دراسي</p>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.subjects}</p>
+                        <p className="text-xs text-emerald-600">مادة دراسية</p>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.grade_subject_mappings}</p>
+                        <p className="text-xs text-emerald-600">توزيع مادة/صف</p>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-2xl font-bold text-emerald-700">{officialCurriculumStats.teacher_rank_loads}</p>
+                        <p className="text-xs text-emerald-600">رتبة معلم</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* المراحل الدراسية */}
+                <Card className="border-2 border-emerald-200">
+                  <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50">
+                    <CardTitle className="flex items-center gap-2 text-emerald-800">
+                      <Layers className="h-5 w-5" />
+                      المراحل الدراسية الرسمية
+                      <Badge variant="outline" className="mr-auto text-emerald-600 border-emerald-300">
+                        {officialStages.length} مرحلة
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {officialStages.map((stage) => (
+                        <div 
+                          key={stage.id} 
+                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            selectedOfficialStage === stage.id 
+                              ? 'bg-emerald-100 border-emerald-400' 
+                              : 'bg-white border-gray-200 hover:border-emerald-300'
+                          }`}
+                          onClick={() => {
+                            setSelectedOfficialStage(selectedOfficialStage === stage.id ? '' : stage.id);
+                            setSelectedOfficialGrade('');
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
+                              <span className="text-white font-bold">{stage.order}</span>
+                            </div>
+                            <div>
+                              <p className="font-bold text-emerald-900">{stage.name_ar}</p>
+                              <p className="text-xs text-emerald-600">{stage.name_en} • {stage.grades_count} صفوف</p>
+                            </div>
+                          </div>
+                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                            <Shield className="h-3 w-3 ml-1" />
+                            رسمي
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* المسارات التعليمية */}
+                <Card className="border-2 border-blue-200">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <CardTitle className="flex items-center gap-2 text-blue-800">
+                      <ArrowRight className="h-5 w-5" />
+                      المسارات التعليمية الرسمية
+                      <Badge variant="outline" className="mr-auto text-blue-600 border-blue-300">
+                        {officialTracks.length} مسار
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {officialTracks.map((track) => (
+                        <div 
+                          key={track.id} 
+                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            selectedOfficialTrack === track.id 
+                              ? 'bg-blue-100 border-blue-400' 
+                              : 'bg-white border-gray-200 hover:border-blue-300'
+                          }`}
+                          onClick={() => {
+                            setSelectedOfficialTrack(selectedOfficialTrack === track.id ? '' : track.id);
+                            setSelectedOfficialGrade('');
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                              <span className="text-white font-bold">{track.order}</span>
+                            </div>
+                            <div>
+                              <p className="font-bold text-blue-900">{track.name_ar}</p>
+                              <p className="text-xs text-blue-600">{track.name_en}</p>
+                            </div>
+                          </div>
+                          <Badge className="bg-blue-50 text-blue-700 border-blue-200">
+                            <Shield className="h-3 w-3 ml-1" />
+                            رسمي
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* الصفوف الدراسية - يظهر بعد اختيار المرحلة أو المسار */}
+              {(selectedOfficialStage || selectedOfficialTrack) && (
+                <Card className="border-2 border-purple-200">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+                    <CardTitle className="flex items-center gap-2 text-purple-800">
+                      <GraduationCap className="h-5 w-5" />
+                      الصفوف الدراسية
+                      <Badge variant="outline" className="mr-auto text-purple-600 border-purple-300">
+                        {officialGrades.length} صف
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      اختر صفاً لعرض المنهج الدراسي الكامل
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {officialGrades.map((grade) => (
+                        <div 
+                          key={grade.id} 
+                          className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            selectedOfficialGrade === grade.id 
+                              ? 'bg-purple-100 border-purple-400 shadow-md' 
+                              : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-sm'
+                          }`}
+                          onClick={() => setSelectedOfficialGrade(selectedOfficialGrade === grade.id ? '' : grade.id)}
+                        >
+                          <p className="font-bold text-purple-900">{grade.name_ar}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline" className="text-xs">{grade.stage_name_ar}</Badge>
+                            <Badge variant="outline" className="text-xs">{grade.track_name_ar}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* المنهج الكامل للصف المختار */}
+              {officialGradeCurriculum && (
+                <Card className="border-2 border-amber-200">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50">
+                    <CardTitle className="flex items-center gap-2 text-amber-800">
+                      <BookOpen className="h-5 w-5" />
+                      المنهج الدراسي: {officialGradeCurriculum.grade?.name_ar}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-4 mt-2">
+                      <span>{officialGradeCurriculum.stage?.name_ar}</span>
+                      <span>•</span>
+                      <span>{officialGradeCurriculum.track?.name_ar}</span>
+                      <span>•</span>
+                      <Badge className="bg-amber-100 text-amber-800">
+                        {officialGradeCurriculum.summary?.subjects_count} مادة
+                      </Badge>
+                      <Badge className="bg-amber-100 text-amber-800">
+                        {officialGradeCurriculum.summary?.total_weekly_periods} حصة/أسبوع
+                      </Badge>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b-2 border-amber-200">
+                            <th className="text-right py-3 px-4 font-bold text-amber-800">المادة</th>
+                            <th className="text-center py-3 px-4 font-bold text-amber-800">التصنيف</th>
+                            <th className="text-center py-3 px-4 font-bold text-amber-800">أساسية</th>
+                            <th className="text-center py-3 px-4 font-bold text-amber-800">حصص/سنة</th>
+                            <th className="text-center py-3 px-4 font-bold text-amber-800">حصص/أسبوع</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {officialGradeCurriculum.subjects?.map((subject, idx) => (
+                            <tr key={idx} className="border-b border-amber-100 hover:bg-amber-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div>
+                                  <p className="font-medium">{subject.subject_name_ar}</p>
+                                  <p className="text-xs text-muted-foreground">{subject.subject_name_en}</p>
+                                </div>
+                              </td>
+                              <td className="text-center py-3 px-4">
+                                <Badge className={`text-xs ${
+                                  CATEGORY_COLORS[subject.category]?.bg || 'bg-gray-100'
+                                } ${CATEGORY_COLORS[subject.category]?.text || 'text-gray-700'}`}>
+                                  {subject.category === 'islamic' ? 'إسلامية' :
+                                   subject.category === 'language' ? 'لغات' :
+                                   subject.category === 'science' ? 'علوم' :
+                                   subject.category === 'social' ? 'اجتماعية' :
+                                   subject.category === 'technology' ? 'تقنية' :
+                                   subject.category === 'activity' ? 'أنشطة' :
+                                   subject.category === 'skills' ? 'مهارات' :
+                                   subject.category === 'business' ? 'أعمال' : subject.category}
+                                </Badge>
+                              </td>
+                              <td className="text-center py-3 px-4">
+                                {subject.is_core ? (
+                                  <Badge className="bg-green-100 text-green-700">أساسية</Badge>
+                                ) : (
+                                  <Badge variant="outline">اختيارية</Badge>
+                                )}
+                              </td>
+                              <td className="text-center py-3 px-4 font-bold text-amber-700">
+                                {subject.annual_periods}
+                              </td>
+                              <td className="text-center py-3 px-4 font-bold text-amber-800 text-lg">
+                                {subject.weekly_periods}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-amber-100 font-bold">
+                            <td colSpan={3} className="py-3 px-4 text-amber-800">الإجمالي</td>
+                            <td className="text-center py-3 px-4 text-amber-800">
+                              {officialGradeCurriculum.summary?.total_annual_periods}
+                            </td>
+                            <td className="text-center py-3 px-4 text-amber-800 text-lg">
+                              {officialGradeCurriculum.summary?.total_weekly_periods}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* النصاب الرسمي للمعلمين */}
+              <Card className="border-2 border-violet-200">
+                <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50">
+                  <CardTitle className="flex items-center gap-2 text-violet-800">
+                    <Award className="h-5 w-5" />
+                    النصاب الرسمي للمعلمين حسب الرتبة
+                    <Badge variant="outline" className="mr-auto text-violet-600 border-violet-300">
+                      {officialRankLoads.length} رتبة
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    وفقاً لنظام وزارة التعليم السعودية
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {officialRankLoads.map((rank) => (
+                      <div 
+                        key={rank.id} 
+                        className={`p-4 rounded-xl border-2 ${
+                          rank.is_special_education 
+                            ? 'bg-gradient-to-br from-teal-50 to-cyan-50 border-teal-200' 
+                            : 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge className={rank.is_special_education ? 'bg-teal-100 text-teal-700' : 'bg-violet-100 text-violet-700'}>
+                            {rank.is_special_education ? 'تربية خاصة' : 'تعليم عام'}
+                          </Badge>
+                          <Badge variant="outline" className="text-emerald-600 border-emerald-300">
+                            <Shield className="h-3 w-3 ml-1" />
+                            رسمي
+                          </Badge>
+                        </div>
+                        <p className="font-bold text-lg">{rank.rank_name_ar}</p>
+                        <p className="text-xs text-muted-foreground mb-3">{rank.rank_name_en}</p>
+                        <div className="flex items-center justify-center p-3 bg-white rounded-lg border">
+                          <span className="text-3xl font-bold text-violet-700">{rank.weekly_periods}</span>
+                          <span className="text-sm text-violet-600 mr-2">حصة/أسبوع</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* ملاحظة توضيحية */}
+              <Card className="border-2 border-gray-200 bg-gray-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-gray-700">ملاحظة مهمة</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        هذه البيانات رسمية من وزارة التعليم السعودية ولا يمكن تعديلها. 
+                        تُستخدم كمصدر الحقيقة الأساسي لمحرك الجدولة الذكي لضمان توافق الجداول مع المتطلبات الرسمية.
+                        لتخصيص إعدادات مدرستك، استخدم التبويبات الأخرى (المواد، الرتب، الهيكل).
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
             {/* ================= TAB: التوزيع الزمني ================= */}
             <TabsContent value="time" className="space-y-4">
               <Card className="border-2 border-purple-200">
