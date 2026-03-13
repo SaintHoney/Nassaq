@@ -655,6 +655,22 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/smart-timetable"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SmartTimetablePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/school/smart-timetable"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <SmartTimetablePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/time-slots"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
