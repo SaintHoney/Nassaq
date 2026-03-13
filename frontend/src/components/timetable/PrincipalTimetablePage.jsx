@@ -52,6 +52,9 @@ const PrincipalTimetablePage = () => {
   const token = localStorage.getItem('nassaq_token') || localStorage.getItem('token');
   const userName = localStorage.getItem('user_name') || '';
 
+  // Sidebar State
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   // ============================================
   // State Management
   // ============================================
