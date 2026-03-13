@@ -483,7 +483,15 @@ export default function UsersClassesManagement() {
       fetchAllData();
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'فشل الحذف' : 'Delete failed'));
+      let errorMessage = isRTL ? 'فشل الحذف' : 'Delete failed';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
+        }
+      }
+      toast.error(errorMessage);
     }
   };
   
