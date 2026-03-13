@@ -79,6 +79,8 @@ export const SchoolReportsPage = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [gradeData, setGradeData] = useState([]);
   const [behaviorData, setBehaviorData] = useState([]);
+  const [behaviorNotes, setBehaviorNotes] = useState([]);
+  const [topClasses, setTopClasses] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
