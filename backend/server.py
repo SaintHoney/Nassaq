@@ -2754,6 +2754,18 @@ class TeacherCreate(BaseModel):
     qualification: Optional[str] = None
     gender: Optional[str] = None  # male/female
 
+class TeacherUpdate(BaseModel):
+    """Model for updating teacher - all fields optional"""
+    full_name: Optional[str] = None
+    full_name_en: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    qualification: Optional[str] = None
+    gender: Optional[str] = None
+    is_active: Optional[bool] = None
+
 class TeacherResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
