@@ -853,7 +853,7 @@ const PrincipalTimetablePage = () => {
       />
         </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 
