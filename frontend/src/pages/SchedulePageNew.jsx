@@ -463,27 +463,25 @@ export default function SchedulePageNew() {
   };
 
   // Get sessions for a specific cell
-  const getSessionForCell = (dayKey, slotIdOrPeriod, filterType, filterId) => {
+  // Supports both legacy schedules (time_slot_id) and smart timetables (period_number/slot_number)
+  const getSessionForCell = (dayKey, slotIdOrNumber, filterType, filterId, slotNumber = null) => {
     return sessions.find(s => {
       const dayMatch = s.day_of_week === dayKey || s.day === dayKey;
-      // Support both time_slot_id and period_number
-      const slotMatch = s.time_slot_id === slotIdOrPeriod || s.period_number === slotIdOrPeriod;
+      
+      // Smart timetable sessions use period_number
+      // Legacy schedule sessions use time_slot_id
+      // Also try matching by slot_number for flexibility
+      const slotMatch = 
+        s.time_slot_id === slotIdOrNumber || 
+        s.period_number === slotIdOrNumber ||
+        s.period_number === slotNumber ||
+        s.slot_number === slotNumber;
+      
       const filterMatch = filterType === 'class' 
         ? s.class_id === filterId 
         : s.teacher_id === filterId;
+      
       return dayMatch && slotMatch && filterMatch;
-    });
-  };
-
-  // Get sessions for a specific cell (smart timetable version - uses period number)
-  const getSmartSessionForCell = (dayKey, periodNumber, filterType, filterId) => {
-    return sessions.find(s => {
-      const dayMatch = s.day_of_week === dayKey;
-      const periodMatch = s.period_number === periodNumber;
-      const filterMatch = filterType === 'class' 
-        ? s.class_id === filterId 
-        : s.teacher_id === filterId;
-      return dayMatch && periodMatch && filterMatch;
     });
   };
 
