@@ -9,6 +9,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Import Sidebar
+import { Sidebar } from '../../components/layout/Sidebar';
+
 // Import Components
 import TimetablePageHeader from './TimetablePageHeader';
 import TimetableStatusBanner from './TimetableStatusBanner';
