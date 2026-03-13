@@ -164,8 +164,54 @@ export const SchoolReportsPage = () => {
     loadData();
   }, [user, selectedPeriod, selectedClass, api]);
 
-  const handleExport = (format) => {
-    toast.success(isRTL ? `جاري تصدير التقرير بصيغة ${format}` : `Exporting report as ${format}`);
+  const handleExport = async (format) => {
+    try {
+      toast.info(isRTL ? `جاري تحضير التقرير...` : `Preparing report...`);
+      
+      // Get report data from API
+      const response = await api.get(`/reports/school/export?report_type=${activeTab}&format=json`);
+      const data = response.data;
+      
+      if (format === 'PDF') {
+        // For PDF, we'll create a simple text representation
+        const textContent = JSON.stringify(data, null, 2);
+        const blob = new Blob([textContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report_${activeTab}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success(isRTL ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully');
+      } else if (format === 'CSV') {
+        // Convert to CSV
+        let csv = '';
+        if (activeTab === 'attendance' && data.attendance) {
+          csv = 'الفصل,حاضر,غائب,متأخر,النسبة\n';
+          data.attendance.forEach(row => {
+            csv += `${row.class},${row.present},${row.absent},${row.late},${row.rate}%\n`;
+          });
+        } else if (data.summary) {
+          csv = Object.entries(data.summary).map(([k, v]) => `${k},${v}`).join('\n');
+        }
+        
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success(isRTL ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(isRTL ? 'فشل تصدير التقرير' : 'Failed to export report');
+    }
   };
 
   const StatCard = ({ title, value, icon: Icon, change, changeType, color }) => (
