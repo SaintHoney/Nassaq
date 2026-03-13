@@ -1233,3 +1233,95 @@ GET /api/official-curriculum/complete        - المنهج الكامل
 
 ### الملفات المُحدّثة:
 - `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - إعادة كتابة كاملة
+
+
+
+---
+
+## تحديثات 13 مارس 2026 - إعادة بناء صفحة الجدول المدرسي
+
+### إعادة بناء صفحة الجدول المدرسي بالكامل ✅
+
+تم إعادة بناء صفحة "الجدول المدرسي" (`/principal/timetable`) من الصفر بناءً على مواصفات تفصيلية شاملة. 
+
+#### المكونات الجديدة:
+
+| المكون | الوظيفة |
+|--------|---------|
+| `PrincipalTimetablePage` | المكون الجذر - إدارة الحالة والبيانات |
+| `TimetablePageHeader` | رأس الصفحة مع metadata chips |
+| `TimetableStatusBanner` | شريط الحالة الديناميكي (5 حالات) |
+| `TimetableActionBar` | شريط الإجراءات الرئيسية |
+| `TimetableReadinessPanel` | لوحة جاهزية البيانات |
+| `TimetableViewControls` | أدوات التحكم (Tabs, Filters, Toggles) |
+| `TimetableGridSection` | شبكة الجدول التفاعلية |
+| `TimetableInsightsPanel` | لوحة الرؤى والتحليلات |
+| `TimetableVersionManager` | إدارة نسخ الجدول |
+| `TimetableIssuesSection` | قسم المشاكل والتحذيرات |
+
+#### الـ Modals:
+| Modal | الوظيفة |
+|-------|---------|
+| `AITimetableGenerationModal` | بدء التوليد بالذكاء الاصطناعي |
+| `PartialRegenerationModal` | إعادة معالجة جزئية |
+| `PublishTimetableVersionModal` | نشر النسخة |
+| `ArchiveTimetableVersionModal` | أرشفة النسخة |
+| `TimetableDiagnosticsModal` | تشخيص المحرك |
+| `TimetableSessionDetailsDrawer` | تفاصيل الحصة |
+
+#### APIs الجديدة:
+```
+GET /api/smart-scheduling/timetable/versions - نسخ الجدول
+GET /api/smart-scheduling/timetable/active/sessions - حصص الجدول النشط
+POST /api/timetable/generate-smart - توليد الجدول الذكي
+POST /api/timetable/publish/{version_id} - نشر النسخة
+```
+
+#### حالات شريط الحالة:
+1. **لا يوجد جدول** - Empty state مع زر بدء التوليد
+2. **نسخة مسودة** - Draft banner مع خيارات النشر
+3. **نسخة منشورة** - Published banner مع خيار إنشاء مسودة جديدة
+4. **جاري التوليد** - Processing state مع شريط تقدم
+5. **فشل التوليد** - Error state مع خيار إعادة المحاولة
+
+#### أوضاع العرض:
+- **بالفصل** - جدول الفصل المحدد
+- **بالمعلم** - جدول المعلم المحدد
+- **بالصف** - جميع فصول الصف
+- **باليوم** - جدول يوم محدد
+
+#### خصائص التصميم:
+- **ألوان المواد** - نظام ألوان تلقائي حسب اسم المادة
+- **خلايا تفاعلية** - Hover tooltips و Click للتفاصيل
+- **Responsive** - تصميم متجاوب للشاشات المختلفة
+- **RTL** - دعم كامل للعربية
+
+### نتائج الاختبار:
+- iteration_81: Backend 10/10 (100%) + Frontend 11/11 (100%)
+
+### الملفات الجديدة:
+```
+/app/frontend/src/components/timetable/
+├── index.js
+├── types.js
+├── PrincipalTimetablePage.jsx
+├── TimetablePageHeader.jsx
+├── TimetableStatusBanner.jsx
+├── TimetableActionBar.jsx
+├── TimetableReadinessPanel.jsx
+├── TimetableViewControls.jsx
+├── TimetableGridSection.jsx
+├── TimetableInsightsPanel.jsx
+├── TimetableVersionManager.jsx
+├── TimetableIssuesSection.jsx
+└── TimetableModals.jsx
+```
+
+### المهام القادمة (P1):
+1. التحقق من روابط "إصلاح" في بطاقة الجاهزية
+2. تفعيل توليد الجدول الفعلي بعد إكمال البيانات
+
+### المهام المستقبلية (P2):
+1. حفظ القيود (Constraints)
+2. تصدير الجداول PDF/CSV
+3. بوابة الطالب/ولي الأمر
