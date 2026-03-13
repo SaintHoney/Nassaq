@@ -400,6 +400,71 @@ function SchoolSettingsPagePro() {
     setHasChanges(true);
   };
   
+  // Break/Prayer handlers
+  const handleAddBreak = () => {
+    setEditingBreak(null);
+    setShowBreakModal(true);
+  };
+  
+  const handleEditBreak = (breakItem) => {
+    setEditingBreak(breakItem);
+    setShowBreakModal(true);
+  };
+  
+  const handleDeleteBreak = (breakId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الفترة؟')) {
+      setBreakTimes(prev => prev.filter(b => b.id !== breakId));
+      setHasChanges(true);
+      toast.success('تم حذف الفترة بنجاح');
+    }
+  };
+  
+  const handleSaveBreak = (breakData) => {
+    if (editingBreak) {
+      // Update existing
+      setBreakTimes(prev => prev.map(b => b.id === editingBreak.id ? { ...b, ...breakData } : b));
+    } else {
+      // Add new
+      const newBreak = {
+        id: Date.now(),
+        ...breakData
+      };
+      setBreakTimes(prev => [...prev, newBreak]);
+    }
+    setShowBreakModal(false);
+    setHasChanges(true);
+    toast.success(editingBreak ? 'تم تحديث الفترة بنجاح' : 'تم إضافة الفترة بنجاح');
+  };
+  
+  // Unavailability handlers
+  const handleAddUnavailability = (type) => {
+    setUnavailabilityType(type);
+    setShowUnavailabilityModal(true);
+  };
+  
+  const handleSaveUnavailability = (data) => {
+    if (unavailabilityType === 'teacher') {
+      setTeacherUnavailability(prev => [...prev, { id: Date.now(), ...data }]);
+    } else {
+      setClassUnavailability(prev => [...prev, { id: Date.now(), ...data }]);
+    }
+    setShowUnavailabilityModal(false);
+    setHasChanges(true);
+    toast.success('تم إضافة فترة عدم التوفر بنجاح');
+  };
+  
+  const handleDeleteUnavailability = (id, type) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الفترة؟')) {
+      if (type === 'teacher') {
+        setTeacherUnavailability(prev => prev.filter(u => u.id !== id));
+      } else {
+        setClassUnavailability(prev => prev.filter(u => u.id !== id));
+      }
+      setHasChanges(true);
+      toast.success('تم حذف الفترة بنجاح');
+    }
+  };
+  
   // Navigate to specific tab for fixing issues
   const navigateToFix = (category) => {
     setActiveSection('dynamic');
