@@ -315,7 +315,7 @@ export const CommunicationCenterPage = () => {
         <div className="p-6 space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="card-nassaq">
+            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-brand-navy/50 transition-all" onClick={() => setSentMessagesOpen(true)}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
                   <Send className="h-6 w-6 text-brand-navy" />
