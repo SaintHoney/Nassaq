@@ -241,6 +241,76 @@
 - تحويل أسماء الفصول (name_ar → name) في API الفصول
 - إصلاح مسارات API المزدوجة في SchoolSettingsPage.jsx
 
+### المنهج الرسمي الكامل - Official Curriculum Data ✅ (ديسمبر 2026)
+
+#### البيانات المُثبتة في قاعدة البيانات:
+تم تعبئة قاعدة البيانات ببيانات المنهج الرسمي الكامل من وزارة التعليم السعودية:
+
+**1. المراحل الدراسية (3):**
+- المرحلة الابتدائية (6 صفوف)
+- المرحلة المتوسطة (3 صفوف)
+- المرحلة الثانوية (3 صفوف)
+
+**2. المسارات التعليمية (8):**
+- التعليم العام
+- تحفيظ القرآن الكريم
+- السنة الأولى المشتركة
+- المسار العام
+- مسار علوم الحاسب والهندسة
+- مسار الصحة والحياة
+- مسار إدارة الأعمال
+- المسار الشرعي
+
+**3. الصفوف والسنوات (29):**
+- 12 صف للتعليم العام والتحفيظ (ابتدائي + متوسط)
+- 17 سنة للمرحلة الثانوية بمختلف المسارات
+
+**4. المواد الدراسية (81):**
+جميع المواد الرسمية مصنفة حسب الفئة:
+- islamic, language, science, social, technology, engineering, health, business, law, skills, physical, arts, activity, non_class, project, optional
+
+**5. توزيع المواد (394):**
+توزيع كامل للحصص السنوية والأسبوعية لكل مادة في كل صف
+
+**6. نصاب المعلمين (7 رتب):**
+| الرتبة | النصاب الأسبوعي |
+|--------|----------------|
+| المعلم | 24 حصة |
+| المعلم الممارس | 24 حصة |
+| المعلم المتقدم | 22 حصة |
+| المعلم الخبير | 18 حصة |
+| معلم تربية خاصة - ممارس | 18 حصة |
+| معلم تربية خاصة - متقدم | 16 حصة |
+| معلم تربية خاصة - خبير | 14 حصة |
+
+#### APIs المنهج الرسمي الجديدة:
+```
+GET /api/official-curriculum/stats           - إحصائيات المنهج
+GET /api/official-curriculum/stages          - المراحل الدراسية
+GET /api/official-curriculum/tracks          - المسارات التعليمية
+GET /api/official-curriculum/grades          - الصفوف والسنوات
+GET /api/official-curriculum/subjects        - المواد الدراسية
+GET /api/official-curriculum/subject-categories - تصنيفات المواد
+GET /api/official-curriculum/grade-subjects/{grade_id} - مواد صف محدد
+GET /api/official-curriculum/teacher-rank-loads - نصاب المعلمين
+GET /api/official-curriculum/stage/{stage_id}/full - المنهج الكامل لمرحلة
+GET /api/official-curriculum/complete        - المنهج الكامل
+```
+
+#### تحديثات واجهة المستخدم:
+- **Accordion تفاعلي لتوزيع المواد:** عرض هرمي للمراحل > المسارات > الصفوف > المواد
+- **جدول مواد تفصيلي:** يعرض المادة، الحصص السنوية، الأسبوعية، النوع، الحالة
+- **مؤشرات القفل:** شارات "رسمي" و"للقراءة فقط" على جميع البيانات الثابتة
+- **رسالة تحذيرية:** "هذه البيانات رسمية ومقفلة - لا يمكن تعديلها"
+
+#### Collections الجديدة في MongoDB:
+- `official_curriculum_stages`
+- `official_curriculum_tracks`
+- `official_curriculum_grades`
+- `official_curriculum_subjects`
+- `official_curriculum_subject_details`
+- `official_teacher_rank_loads`
+
 ---
 
 ## حسابات الاختبار
