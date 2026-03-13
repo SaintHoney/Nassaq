@@ -116,21 +116,24 @@ const getDefaultPeriods = (periodsCount = 7) => {
 };
 
 // ============================================
-// مكون كارت الحصة المصغر
+// مكون كارت الحصة المصغر (قابل للنقر للتعديل)
 // ============================================
-const SessionCell = ({ session, showTeacher = true, compact = false }) => {
+const SessionCell = ({ session, showTeacher = true, compact = false, onEdit, editable = false }) => {
   const colors = getSubjectColor(session?.subject_name);
   
   if (!session) {
     return (
-      <div className="h-full min-h-[50px] bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
+      <div className={`h-full min-h-[50px] bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center ${editable ? 'cursor-pointer hover:bg-gray-100' : ''}`}>
         <span className="text-gray-400 text-xs">-</span>
       </div>
     );
   }
   
   return (
-    <div className={`h-full min-h-[50px] p-1.5 rounded ${colors.bg} ${colors.border} border text-center`}>
+    <div 
+      className={`h-full min-h-[50px] p-1.5 rounded ${colors.bg} ${colors.border} border text-center ${editable ? 'cursor-pointer hover:opacity-80 hover:shadow-md transition-all' : ''}`}
+      onClick={editable && onEdit ? () => onEdit(session) : undefined}
+    >
       <p className={`font-bold text-xs ${colors.text} truncate`}>
         {session.subject_name || 'مادة'}
       </p>
@@ -138,6 +141,9 @@ const SessionCell = ({ session, showTeacher = true, compact = false }) => {
         <p className="text-[10px] text-gray-600 truncate mt-0.5">
           {session.teacher_name || ''}
         </p>
+      )}
+      {editable && (
+        <p className="text-[8px] text-blue-500 mt-0.5">انقر للتعديل</p>
       )}
     </div>
   );
