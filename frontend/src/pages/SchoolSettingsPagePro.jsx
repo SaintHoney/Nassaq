@@ -352,38 +352,6 @@ function SchoolSettingsPagePro() {
   const getSubjectById = (subjectId) => {
     return subjects.find(s => s.id === subjectId);
   };
-      fetchData();
-    } catch (error) {
-      console.error('Add class error:', error);
-      let errorMessage = 'حدث خطأ في إضافة الفصل';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
-        }
-      }
-      toast.error(errorMessage);
-    }
-  };
-  
-  const deleteTeacher = async (id) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المعلم؟')) return;
-    try {
-      await api.delete(`/teachers/${id}`);
-      toast.success('تم حذف المعلم بنجاح');
-      fetchData();
-    } catch (error) {
-      console.error('Delete teacher error:', error);
-      let errorMessage = 'حدث خطأ في حذف المعلم';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        }
-      }
-      toast.error(errorMessage);
-    }
-  };
   
   const deleteClass = async (id) => {
     if (!confirm('هل أنت متأكد من حذف هذا الفصل؟')) return;
@@ -398,6 +366,10 @@ function SchoolSettingsPagePro() {
         if (typeof error.response.data.detail === 'string') {
           errorMessage = error.response.data.detail;
         }
+      }
+      toast.error(errorMessage);
+    }
+  };
       }
       toast.error(errorMessage);
     }
