@@ -206,19 +206,25 @@ export default function SchedulePageNew() {
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
-    if (!selectedSchedule) {
+    if (!selectedSchedule && !selectedSmartTimetable) {
       setSessions([]);
       return;
     }
     
     try {
-      const res = await api.get(`/schedule-sessions?schedule_id=${selectedSchedule}`);
-      setSessions(res.data || []);
+      // Prefer smart timetable if available
+      if (selectedSmartTimetable) {
+        const res = await api.get(`/smart-scheduling/timetable/${selectedSmartTimetable}/sessions`);
+        setSessions(res.data?.sessions || []);
+      } else if (selectedSchedule) {
+        const res = await api.get(`/schedule-sessions?schedule_id=${selectedSchedule}`);
+        setSessions(res.data || []);
+      }
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
       setSessions([]);
     }
-  }, [selectedSchedule, api]);
+  }, [selectedSchedule, selectedSmartTimetable, api]);
 
   useEffect(() => {
     if (user) fetchData();
