@@ -66,6 +66,15 @@ export const CommunicationCenterPage = () => {
   const [messages, setMessages] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [audienceGroups, setAudienceGroups] = useState([]);
+  const [receivedMessages, setReceivedMessages] = useState([]);
+  const [scheduledMessages, setScheduledMessages] = useState([]);
+  
+  // Dialogs
+  const [sentMessagesOpen, setSentMessagesOpen] = useState(false);
+  const [receivedMessagesOpen, setReceivedMessagesOpen] = useState(false);
+  const [scheduledMessagesOpen, setScheduledMessagesOpen] = useState(false);
+  const [editScheduledOpen, setEditScheduledOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
   
   // New message form
   const [newMessageOpen, setNewMessageOpen] = useState(false);
