@@ -354,4 +354,176 @@ def create_communication_routes(db, get_current_user, require_roles, UserRole):
             "message": f"تم إرسال الرسالة إلى {recipient_count} مستخدم"
         }
     
+    @router.get("/received")
+    async def get_received_messages(
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Get received messages for current user"""
+        user_id = current_user.get("id")
+        user_role = current_user.get("role")
+        school_id = current_user.get("tenant_id")
+        
+        # Build query based on user's role and school
+        query = {"status": "sent"}
+        
+        if school_id:
+            query["$or"] = [
+                {"school_id": school_id},
+                {"school_id": None}  # Platform-wide messages
+            ]
+        
+        # Filter by audience
+        audience_filter = ["all"]
+        if user_role in ["teacher", "independent_teacher", "school_teacher"]:
+            audience_filter.append("teachers")
+        elif user_role == "student":
+            audience_filter.append("students")
+        elif user_role == "parent":
+            audience_filter.append("parents")
+        
+        query["audience"] = {"$in": audience_filter}
+        
+        messages = await db.messages.find(query, {"_id": 0}).sort("sent_at", -1).to_list(50)
+        
+        # Add read status
+        for msg in messages:
+            read_by = msg.get("read_by", [])
+            msg["is_read"] = user_id in read_by
+        
+        return {
+            "messages": messages,
+            "total": len(messages),
+            "unread_count": len([m for m in messages if not m.get("is_read")])
+        }
+    
+    @router.put("/{message_id}/read")
+    async def mark_message_read(
+        message_id: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Mark message as read"""
+        user_id = current_user.get("id")
+        
+        await db.messages.update_one(
+            {"id": message_id},
+            {"$addToSet": {"read_by": user_id}}
+        )
+        
+        return {"success": True, "message": "تم تعيين الرسالة كمقروءة"}
+    
+    @router.put("/{message_id}")
+    async def update_scheduled_message(
+        message_id: str,
+        data: dict,
+        current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
+    ):
+        """Update a scheduled message"""
+        # Find the message
+        message = await db.messages.find_one({"id": message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+        
+        if message.get("status") != "scheduled":
+            raise HTTPException(status_code=400, detail="يمكن تعديل الرسائل المجدولة فقط")
+        
+        # Update allowed fields
+        update_fields = {}
+        if "title" in data:
+            update_fields["title"] = data["title"]
+        if "content" in data:
+            update_fields["content"] = data["content"]
+        if "audience" in data:
+            update_fields["audience"] = data["audience"]
+        if "scheduled_at" in data:
+            update_fields["scheduled_at"] = data["scheduled_at"]
+        
+        update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.messages.update_one({"id": message_id}, {"$set": update_fields})
+        
+        return {"success": True, "message": "تم تحديث الرسالة المجدولة"}
+    
+    @router.post("/{message_id}/send-now")
+    async def send_scheduled_message_now(
+        message_id: str,
+        current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
+    ):
+        """Send a scheduled message immediately"""
+        # Find the message
+        message = await db.messages.find_one({"id": message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+        
+        if message.get("status") != "scheduled":
+            raise HTTPException(status_code=400, detail="هذه الرسالة ليست مجدولة")
+        
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Update status to sent
+        await db.messages.update_one(
+            {"id": message_id},
+            {"$set": {
+                "status": "sent",
+                "sent_at": now,
+                "sent_count": message.get("recipient_count", 0)
+            }}
+        )
+        
+        # Create notification
+        notification_doc = {
+            "id": str(uuid.uuid4()),
+            "message_id": message_id,
+            "title": message.get("title"),
+            "content": message.get("content"),
+            "type": "announcement",
+            "school_id": message.get("school_id"),
+            "audience": message.get("audience"),
+            "created_at": now,
+            "read_by": []
+        }
+        await db.notifications.insert_one(notification_doc)
+        
+        return {
+            "success": True,
+            "message": "تم إرسال الرسالة بنجاح",
+            "sent_count": message.get("recipient_count", 0)
+        }
+    
+    @router.delete("/{message_id}")
+    async def delete_message(
+        message_id: str,
+        current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
+    ):
+        """Delete a message"""
+        result = await db.messages.delete_one({"id": message_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="الرسالة غير موجودة")
+        
+        return {"success": True, "message": "تم حذف الرسالة"}
+    
+    @router.post("/templates")
+    async def create_message_template(
+        data: dict,
+        current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
+    ):
+        """Create a message template"""
+        school_id = current_user.get("tenant_id")
+        
+        template = {
+            "id": str(uuid.uuid4()),
+            "name": data.get("name"),
+            "name_en": data.get("name_en", data.get("name")),
+            "content_template": data.get("content_template"),
+            "icon": data.get("icon", "mail"),
+            "school_id": school_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user.get("id")
+        }
+        
+        await db.message_templates.insert_one(template)
+        template.pop("_id", None)
+        
+        return {"success": True, "template": template}
+    
     return router
