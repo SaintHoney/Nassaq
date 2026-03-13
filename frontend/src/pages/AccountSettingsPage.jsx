@@ -803,6 +803,70 @@ export const AccountSettingsPage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Role Switch Dialog */}
+        <Dialog open={showRoleSwitchDialog} onOpenChange={setShowRoleSwitchDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-brand-turquoise" />
+                {isRTL ? 'تبديل المستخدم' : 'Switch User Role'}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL ? 'اختر الدور الذي تريد التبديل إليه' : 'Select the role you want to switch to'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {userRoles.length === 0 ? (
+                <div className="text-center py-6">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">
+                    {isRTL ? 'لا توجد أدوار أخرى متاحة' : 'No other roles available'}
+                  </p>
+                </div>
+              ) : (
+                userRoles.map((role) => (
+                  <Card 
+                    key={role.id}
+                    className={`cursor-pointer transition-all hover:ring-2 hover:ring-brand-turquoise/50 ${
+                      role.is_active ? 'ring-2 ring-brand-turquoise bg-brand-turquoise/5' : ''
+                    }`}
+                    onClick={() => !role.is_active && handleSwitchRole(role.id)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          role.role_type === 'school_principal' ? 'bg-purple-100 text-purple-600' :
+                          role.role_type === 'teacher' ? 'bg-blue-100 text-blue-600' :
+                          role.role_type === 'parent' ? 'bg-green-100 text-green-600' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {role.role_type === 'school_principal' ? <Building2 className="h-5 w-5" /> :
+                           role.role_type === 'teacher' ? <Users className="h-5 w-5" /> :
+                           <User className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <p className="font-medium">{role.role_name_ar || role.role_name}</p>
+                          {role.school_name && (
+                            <p className="text-sm text-muted-foreground">{role.school_name}</p>
+                          )}
+                        </div>
+                      </div>
+                      {role.is_active ? (
+                        <Badge className="bg-brand-turquoise text-white">
+                          <CheckCircle className="h-3 w-3 me-1" />
+                          {isRTL ? 'نشط' : 'Active'}
+                        </Badge>
+                      ) : switchingRole ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       <HakimAssistant />
     </Sidebar>
