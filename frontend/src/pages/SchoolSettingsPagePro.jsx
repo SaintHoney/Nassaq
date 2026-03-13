@@ -42,7 +42,8 @@ import {
   ChevronRight, ChevronDown, ChevronLeft, Building2, MapPin, Phone, Mail,
   Grid3X3, Coffee, Play, CheckCircle2, AlertTriangle, Info, Eye, EyeOff,
   CalendarDays, Timer, Loader2, FileText, Copy, Check, School, Layers,
-  AlertCircle, Ban, Star, Award, Bookmark, ArrowRight, ArrowUpDown, Filter
+  AlertCircle, Ban, Star, Award, Bookmark, ArrowRight, ArrowUpDown, Filter,
+  ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 
