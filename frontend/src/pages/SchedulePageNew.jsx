@@ -1112,10 +1112,11 @@ export default function SchedulePageNew() {
         {/* Generation Result Dialog */}
         <Dialog open={generationResultOpen} onOpenChange={(open) => {
           if (!open) {
-            // عند إغلاق النافذة، اعرض الجدول تلقائياً
-            setShowFullTimetable(true);
+            // عند إغلاق النافذة، اعرض الجدول مباشرة
+            // اختر أول فصل لعرض جدوله
             if (classes.length > 0) {
-              setSelectedViewClass(classes[0].id);
+              setSelectedClass(classes[0].id);
+              setViewMode('class');
             }
           }
           setGenerationResultOpen(open);
