@@ -337,7 +337,7 @@ export const CommunicationCenterPage = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-nassaq">
+            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-yellow-500/50 transition-all" onClick={() => setScheduledMessagesOpen(true)}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
                   <Clock className="h-6 w-6 text-yellow-600" />
