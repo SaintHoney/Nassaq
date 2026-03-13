@@ -148,6 +148,9 @@ export const AccountSettingsPage = () => {
   // Dialogs
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showRoleSwitchDialog, setShowRoleSwitchDialog] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
+  const [switchingRole, setSwitchingRole] = useState(false);
 
   useEffect(() => {
     if (user) {
