@@ -116,8 +116,15 @@ async def check_academic_context(school_id: str) -> CategoryReadiness:
     if not settings:
         settings = {}
     
-    # Check academic year
-    academic_year = settings.get("academicYear") or settings.get("academic_year")
+    # Check nested settings object as well
+    nested_settings = settings.get("settings", {})
+    
+    # Check academic year (check both root and nested)
+    academic_year = (
+        settings.get("academicYear") or 
+        settings.get("academic_year") or
+        nested_settings.get("academic_year")
+    )
     if academic_year:
         score += 10
     else:
@@ -131,8 +138,12 @@ async def check_academic_context(school_id: str) -> CategoryReadiness:
             fix_action="تحديد العام الدراسي"
         ))
     
-    # Check semester
-    semester = settings.get("currentSemester") or settings.get("current_semester")
+    # Check semester (check both root and nested)
+    semester = (
+        settings.get("currentSemester") or 
+        settings.get("current_semester") or
+        nested_settings.get("current_semester")
+    )
     if semester:
         score += 10
     else:
