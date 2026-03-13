@@ -2150,54 +2150,69 @@ export default function SchoolSettingsPagePro() {
         </main>
         
         {/* ============================================ */}
-        {/* Dialog تعديل مواعيد اليوم الدراسي */}
+        {/* Dialog تعديل مواعيد اليوم الدراسي - المحسّن */}
         {/* ============================================ */}
-        <Dialog open={editDayTimesOpen} onOpenChange={setEditDayTimesOpen}>
-          <DialogContent className="max-w-lg">
+        <Dialog open={editDayTimesOpen} onOpenChange={(open) => {
+          setEditDayTimesOpen(open);
+          if (!open) {
+            setShowCalculatedPreview(false);
+            setCalculatedSlots([]);
+          }
+        }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-cairo flex items-center gap-2">
                 <Clock className="h-5 w-5 text-blue-600" />
                 تعديل مواعيد اليوم الدراسي
               </DialogTitle>
               <DialogDescription>
-                تعديل أوقات بداية ونهاية اليوم الدراسي وعدد الحصص والاستراحات
+                أدخل وقت بداية الحصة الأولى فقط وسيتم حساب باقي الأوقات تلقائياً
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4 py-4">
-              {/* أوقات الدوام */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dayStart">بداية الدوام</Label>
-                  <Input
-                    id="dayStart"
-                    type="time"
-                    value={editedDayTimes.dayStart}
-                    onChange={(e) => setEditedDayTimes({...editedDayTimes, dayStart: e.target.value})}
-                    className="text-center text-lg font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dayEnd">نهاية الدوام</Label>
-                  <Input
-                    id="dayEnd"
-                    type="time"
-                    value={editedDayTimes.dayEnd}
-                    onChange={(e) => setEditedDayTimes({...editedDayTimes, dayEnd: e.target.value})}
-                    className="text-center text-lg font-bold"
-                  />
+            <div className="space-y-6 py-4">
+              {/* القسم الأول: الإدخال الأساسي */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                  <Sun className="h-5 w-5" />
+                  وقت بداية الحصة الأولى
+                </h4>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="dayStart" className="text-sm text-blue-700 mb-2 block">
+                      حدد وقت بداية الدوام
+                    </Label>
+                    <Input
+                      id="dayStart"
+                      type="time"
+                      value={editedDayTimes.dayStart}
+                      onChange={(e) => {
+                        setEditedDayTimes({...editedDayTimes, dayStart: e.target.value});
+                        setShowCalculatedPreview(false);
+                      }}
+                      className="text-center text-2xl font-bold h-14 border-2 border-blue-300 focus:border-blue-500"
+                      data-testid="first-period-start-time"
+                    />
+                  </div>
+                  <div className="flex-1 p-4 bg-white rounded-xl text-center border border-blue-200">
+                    <p className="text-xs text-muted-foreground mb-1">نهاية الدوام (محسوبة)</p>
+                    <p className="text-2xl font-bold text-blue-700">{editedDayTimes.dayEnd}</p>
+                  </div>
                 </div>
               </div>
               
               <Separator />
               
-              {/* عدد الحصص ومدتها */}
+              {/* إعدادات الحصص */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="periodsPerDay">عدد الحصص اليومية</Label>
                   <Select 
                     value={String(editedDayTimes.periodsPerDay)} 
-                    onValueChange={(v) => setEditedDayTimes({...editedDayTimes, periodsPerDay: parseInt(v)})}
+                    onValueChange={(v) => {
+                      setEditedDayTimes({...editedDayTimes, periodsPerDay: parseInt(v)});
+                      setShowCalculatedPreview(false);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -2213,7 +2228,10 @@ export default function SchoolSettingsPagePro() {
                   <Label htmlFor="periodDuration">مدة الحصة (دقيقة)</Label>
                   <Select 
                     value={String(editedDayTimes.periodDuration)} 
-                    onValueChange={(v) => setEditedDayTimes({...editedDayTimes, periodDuration: parseInt(v)})}
+                    onValueChange={(v) => {
+                      setEditedDayTimes({...editedDayTimes, periodDuration: parseInt(v)});
+                      setShowCalculatedPreview(false);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -2236,7 +2254,10 @@ export default function SchoolSettingsPagePro() {
                   </Label>
                   <Select 
                     value={String(editedDayTimes.breakDuration)} 
-                    onValueChange={(v) => setEditedDayTimes({...editedDayTimes, breakDuration: parseInt(v)})}
+                    onValueChange={(v) => {
+                      setEditedDayTimes({...editedDayTimes, breakDuration: parseInt(v)});
+                      setShowCalculatedPreview(false);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -2255,7 +2276,10 @@ export default function SchoolSettingsPagePro() {
                   </Label>
                   <Select 
                     value={String(editedDayTimes.prayerDuration)} 
-                    onValueChange={(v) => setEditedDayTimes({...editedDayTimes, prayerDuration: parseInt(v)})}
+                    onValueChange={(v) => {
+                      setEditedDayTimes({...editedDayTimes, prayerDuration: parseInt(v)});
+                      setShowCalculatedPreview(false);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -2269,20 +2293,75 @@ export default function SchoolSettingsPagePro() {
                 </div>
               </div>
               
+              {/* زر حساب تلقائي */}
+              <Button 
+                onClick={handleAutoCalculate}
+                className="w-full h-12 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                data-testid="auto-calculate-btn"
+              >
+                <RefreshCw className="h-5 w-5 ml-2" />
+                احسب التوزيع الزمني تلقائياً
+              </Button>
+              
+              {/* معاينة النتيجة */}
+              {showCalculatedPreview && calculatedSlots.length > 0 && (
+                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-300">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    معاينة التوزيع الزمني المحسوب
+                  </h4>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {calculatedSlots.map((slot, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`flex items-center justify-between p-2 rounded-lg ${
+                          slot.type === 'period' ? 'bg-blue-100' :
+                          slot.type === 'break' ? 'bg-amber-100' : 'bg-emerald-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {slot.type === 'period' && <BookOpen className="h-4 w-4 text-blue-600" />}
+                          {slot.type === 'break' && <Coffee className="h-4 w-4 text-amber-600" />}
+                          {slot.type === 'prayer' && <Moon className="h-4 w-4 text-emerald-600" />}
+                          <span className="font-medium text-sm">{slot.name_ar}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {slot.duration} دقيقة
+                          </Badge>
+                          <span className="font-mono text-sm font-bold">
+                            {slot.start_time} - {slot.end_time}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-2 bg-green-200 rounded-lg text-center">
+                    <p className="text-sm font-bold text-green-800">
+                      إجمالي الوقت: من {editedDayTimes.dayStart} إلى {editedDayTimes.dayEnd}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               {/* ملاحظة */}
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-xs text-blue-700 flex items-center gap-2">
                   <Info className="h-4 w-4" />
-                  سيتم إعادة توليد التوزيع الزمني تلقائياً بناءً على هذه الإعدادات
+                  اضغط على "احسب التوزيع" لمعاينة الجدول، ثم "حفظ" لتطبيق التغييرات
                 </p>
               </div>
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setEditDayTimesOpen(false)}>
                 إلغاء
               </Button>
-              <Button onClick={saveDayTimes} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                onClick={saveDayTimes} 
+                disabled={saving || !showCalculatedPreview} 
+                className="bg-green-600 hover:bg-green-700"
+              >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Save className="h-4 w-4 ml-2" />}
                 حفظ التغييرات
               </Button>
