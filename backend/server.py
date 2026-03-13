@@ -3218,9 +3218,12 @@ async def update_school_constraint(
     """Update an admin constraint - تعديل قيد إداري"""
     school_id = await get_school_id_from_context(current_user, x_school_context)
     
-    # Check constraint exists - also check for constraints without school_id (reference constraints)
-    constraint = await db.admin_constraints.find_one(
-        {"id": constraint_id},
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    # Check constraint exists in school_constraints collection
+    constraint = await db.school_constraints.find_one(
+        {"id": constraint_id, "school_id": school_id},
         {"_id": 0}
     )
     
@@ -3248,7 +3251,10 @@ async def update_school_constraint(
     if constraint_data.is_active is not None:
         update_data["is_active"] = constraint_data.is_active
     
-    await db.admin_constraints.update_one({"id": constraint_id}, {"$set": update_data})
+    await db.school_constraints.update_one(
+        {"id": constraint_id, "school_id": school_id}, 
+        {"$set": update_data}
+    )
     
     return {"message": "تم تحديث القيد بنجاح"}
 
@@ -3261,15 +3267,21 @@ async def delete_school_constraint(
     """Delete (soft) an admin constraint - حذف قيد إداري"""
     school_id = await get_school_id_from_context(current_user, x_school_context)
     
-    # Check constraint exists
-    constraint = await db.admin_constraints.find_one({"id": constraint_id}, {"_id": 0})
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    # Check constraint exists in school_constraints collection
+    constraint = await db.school_constraints.find_one(
+        {"id": constraint_id, "school_id": school_id}, 
+        {"_id": 0}
+    )
     
     if not constraint:
         raise HTTPException(status_code=404, detail="القيد غير موجود")
     
     # Soft delete
-    await db.admin_constraints.update_one(
-        {"id": constraint_id},
+    await db.school_constraints.update_one(
+        {"id": constraint_id, "school_id": school_id},
         {"$set": {"is_active": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
     )
     
