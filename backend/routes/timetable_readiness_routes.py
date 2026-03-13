@@ -183,8 +183,21 @@ async def check_school_days(school_id: str) -> CategoryReadiness:
     if not settings:
         settings = {}
     
-    working_days = settings.get("workingDays") or settings.get("working_days") or []
-    weekend_days = settings.get("weekendDays") or settings.get("weekend_days") or []
+    # Check nested settings object as well
+    nested_settings = settings.get("settings", {})
+    
+    working_days = (
+        settings.get("workingDays") or 
+        settings.get("working_days") or 
+        nested_settings.get("working_days") or
+        []
+    )
+    weekend_days = (
+        settings.get("weekendDays") or 
+        settings.get("weekend_days") or
+        nested_settings.get("weekend_days") or
+        []
+    )
     
     if len(working_days) >= 1:
         score += 10
