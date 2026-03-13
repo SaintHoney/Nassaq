@@ -1080,6 +1080,54 @@ export default function SchoolSettingsPagePro() {
     fetchData();
   }, [fetchData]);
   
+  // Fetch official curriculum for a specific grade
+  const fetchOfficialGradeCurriculum = async (gradeId) => {
+    if (!gradeId) {
+      setOfficialGradeCurriculum(null);
+      return;
+    }
+    try {
+      const res = await api.get(`/official-curriculum/curriculum-for-grade/${gradeId}`);
+      setOfficialGradeCurriculum(res.data);
+    } catch (error) {
+      console.error('Error fetching grade curriculum:', error);
+      setOfficialGradeCurriculum(null);
+    }
+  };
+  
+  // Fetch official grades when stage/track changes
+  const fetchOfficialGrades = async (stageId, trackId) => {
+    try {
+      let url = '/official-curriculum/grades';
+      const params = [];
+      if (stageId) params.push(`stage_id=${stageId}`);
+      if (trackId) params.push(`track_id=${trackId}`);
+      if (params.length > 0) url += '?' + params.join('&');
+      
+      const res = await api.get(url);
+      setOfficialGrades(res.data || []);
+    } catch (error) {
+      console.error('Error fetching official grades:', error);
+      setOfficialGrades([]);
+    }
+  };
+  
+  // Effect for official curriculum filters
+  useEffect(() => {
+    if (selectedOfficialStage || selectedOfficialTrack) {
+      fetchOfficialGrades(selectedOfficialStage, selectedOfficialTrack);
+    }
+  }, [selectedOfficialStage, selectedOfficialTrack]);
+  
+  // Effect for grade curriculum
+  useEffect(() => {
+    if (selectedOfficialGrade) {
+      fetchOfficialGradeCurriculum(selectedOfficialGrade);
+    } else {
+      setOfficialGradeCurriculum(null);
+    }
+  }, [selectedOfficialGrade]);
+  
   // Save day times settings
   const saveDayTimes = async () => {
     setSaving(true);
