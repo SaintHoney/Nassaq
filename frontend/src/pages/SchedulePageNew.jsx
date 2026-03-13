@@ -185,8 +185,15 @@ export default function SchedulePageNew() {
       setClasses(classesRes.data || []);
       setSmartTimetables(smartRes.data?.timetables || []);
       
-      // Auto-select first schedule
-      if (schedulesRes.data?.length > 0 && !selectedSchedule) {
+      // Auto-select most recent smart timetable if available (priority over legacy schedules)
+      const smartTimetablesList = smartRes.data?.timetables || [];
+      if (smartTimetablesList.length > 0 && !selectedSmartTimetable) {
+        // Select the most recent timetable (first in list)
+        const latestSmart = smartTimetablesList[0];
+        setSelectedSmartTimetable(latestSmart.id);
+        console.log('Auto-selected smart timetable:', latestSmart.id);
+      } else if (schedulesRes.data?.length > 0 && !selectedSchedule && !selectedSmartTimetable) {
+        // Fallback to legacy schedule only if no smart timetable
         const first = schedulesRes.data.find(s => s.status !== 'archived') || schedulesRes.data[0];
         setSelectedSchedule(first.id);
       }
