@@ -1956,6 +1956,138 @@ export default function SchoolSettingsPagePro() {
               </div>
             </div>
             
+            {/* ================= Timetable Readiness Card ================= */}
+            {readinessData && (
+              <Card className={`border-2 mb-4 ${
+                readinessData.status === 'FULLY_READY' ? 'border-green-300 bg-green-50' :
+                readinessData.status === 'PARTIALLY_READY' ? 'border-amber-300 bg-amber-50' :
+                'border-red-300 bg-red-50'
+              }`} data-testid="readiness-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {/* Status Icon */}
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                        readinessData.status === 'FULLY_READY' ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+                        readinessData.status === 'PARTIALLY_READY' ? 'bg-gradient-to-br from-amber-500 to-yellow-600' :
+                        'bg-gradient-to-br from-red-500 to-rose-600'
+                      }`}>
+                        {readinessData.status === 'FULLY_READY' ? (
+                          <CheckCircle2 className="h-7 w-7 text-white" />
+                        ) : readinessData.status === 'PARTIALLY_READY' ? (
+                          <AlertTriangle className="h-7 w-7 text-white" />
+                        ) : (
+                          <AlertCircle className="h-7 w-7 text-white" />
+                        )}
+                      </div>
+                      
+                      {/* Status Text */}
+                      <div>
+                        <h3 className={`text-lg font-bold ${
+                          readinessData.status === 'FULLY_READY' ? 'text-green-800' :
+                          readinessData.status === 'PARTIALLY_READY' ? 'text-amber-800' :
+                          'text-red-800'
+                        }`}>
+                          {readinessData.status === 'FULLY_READY' ? 'النظام جاهز بالكامل لإنشاء الجدول' :
+                           readinessData.status === 'PARTIALLY_READY' ? 'النظام جاهز جزئياً - يمكن المتابعة مع تحذيرات' :
+                           'البيانات غير مكتملة - لا يمكن إنشاء الجدول'}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          نسبة الجاهزية: {readinessData.percentage}% • 
+                          {readinessData.summary?.critical_count > 0 && (
+                            <span className="text-red-600 mr-2">{readinessData.summary.critical_count} مشكلة حرجة</span>
+                          )}
+                          {readinessData.summary?.warning_count > 0 && (
+                            <span className="text-amber-600 mr-2">{readinessData.summary.warning_count} تحذير</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Progress Circle */}
+                    <div className="hidden md:flex flex-col items-center gap-2">
+                      <div className={`relative w-16 h-16 rounded-full flex items-center justify-center border-4 ${
+                        readinessData.status === 'FULLY_READY' ? 'border-green-400' :
+                        readinessData.status === 'PARTIALLY_READY' ? 'border-amber-400' :
+                        'border-red-400'
+                      }`}>
+                        <span className={`text-xl font-bold ${
+                          readinessData.status === 'FULLY_READY' ? 'text-green-700' :
+                          readinessData.status === 'PARTIALLY_READY' ? 'text-amber-700' :
+                          'text-red-700'
+                        }`}>{Math.round(readinessData.percentage)}%</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">جاهزية النظام</span>
+                    </div>
+                    
+                    {/* Action Button */}
+                    <Button 
+                      className={`${
+                        readinessData.can_generate 
+                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' 
+                          : 'bg-gray-400 cursor-not-allowed'
+                      }`}
+                      disabled={!readinessData.can_generate}
+                      onClick={() => window.location.href = '/principal/timetable'}
+                      data-testid="generate-timetable-btn"
+                    >
+                      <Play className="h-4 w-4 ml-2" />
+                      {readinessData.can_generate ? 'معالجة الجدول بالذكاء الاصطناعي' : 'أكمل البيانات أولاً'}
+                    </Button>
+                  </div>
+                  
+                  {/* Issues Summary */}
+                  {(readinessData.critical_issues?.length > 0 || readinessData.warnings?.length > 0) && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">المشاكل المكتشفة:</p>
+                      <div className="grid md:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                        {readinessData.critical_issues?.slice(0, 4).map((issue, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm p-2 bg-red-100 rounded-lg">
+                            <Ban className="h-4 w-4 text-red-600 flex-shrink-0" />
+                            <span className="text-red-700 truncate">{issue.message_ar}</span>
+                            {issue.fix_link && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 px-2 text-xs text-red-600 hover:bg-red-200 mr-auto"
+                                onClick={() => setActiveTab(issue.fix_link?.split('tab=')[1] || 'overview')}
+                              >
+                                إصلاح
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        {readinessData.warnings?.slice(0, 2).map((issue, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm p-2 bg-amber-100 rounded-lg">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                            <span className="text-amber-700 truncate">{issue.message_ar}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Categories Progress - Collapsed View */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(readinessData.categories || {}).map(([key, cat]) => (
+                        <Badge 
+                          key={key}
+                          className={`${
+                            cat.status === 'ready' ? 'bg-green-100 text-green-700 border-green-300' :
+                            cat.status === 'warning' ? 'bg-amber-100 text-amber-700 border-amber-300' :
+                            'bg-red-100 text-red-700 border-red-300'
+                          }`}
+                        >
+                          {cat.status === 'ready' ? '✓' : cat.status === 'warning' ? '!' : '✗'} {cat.name_ar} ({cat.score}/{cat.max_score})
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* ================= TAB: نظرة عامة ================= */}
             <TabsContent value="overview" className="space-y-6">
               {/* أيام العمل والعطلة - التصميم الجديد */}
