@@ -711,6 +711,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/school/teacher-class-assignments"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
+            <TeacherClassAssignmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/principal/reports"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>
