@@ -2728,7 +2728,7 @@ export default function SchoolSettingsPagePro() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="subject-periods">الحصص الأسبوعية</Label>
+                  <Label htmlFor="subject-periods">النصاب الأسبوعي</Label>
                   <Select 
                     value={String(newSubject.weekly_periods)} 
                     onValueChange={(v) => setNewSubject({...newSubject, weekly_periods: parseInt(v)})}
@@ -2815,7 +2815,7 @@ export default function SchoolSettingsPagePro() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>الحصص الأسبوعية</Label>
+                    <Label>النصاب الأسبوعي</Label>
                     <Select 
                       value={String(editSubject.weekly_periods || 4)} 
                       onValueChange={(v) => setEditSubject({...editSubject, weekly_periods: parseInt(v)})}
@@ -3108,7 +3108,7 @@ export default function SchoolSettingsPagePro() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="assignment-sessions">عدد الحصص الأسبوعية</Label>
+                <Label htmlFor="assignment-sessions">النصاب الأسبوعي</Label>
                 <Select 
                   value={String(newAssignment.weekly_sessions)} 
                   onValueChange={(v) => setNewAssignment({...newAssignment, weekly_sessions: parseInt(v)})}
@@ -3210,7 +3210,7 @@ export default function SchoolSettingsPagePro() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>عدد الحصص الأسبوعية</Label>
+                  <Label>النصاب الأسبوعي</Label>
                   <Select 
                     value={String(editAssignment.weekly_sessions || 4)} 
                     onValueChange={(v) => setEditAssignment({...editAssignment, weekly_sessions: parseInt(v)})}
