@@ -444,7 +444,8 @@ const AcademicStructureView = ({
   onDeleteStage,
   onAddGrade,
   onEditGrade,
-  onDeleteGrade 
+  onDeleteGrade,
+  onToggleStage
 }) => {
   const [expandedStage, setExpandedStage] = useState(null);
 
@@ -466,32 +467,71 @@ const AcademicStructureView = ({
         </Button>
       </div>
       
+      {/* معلومات توضيحية */}
+      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+        <p className="text-sm text-blue-700 flex items-center gap-2">
+          <Info className="h-4 w-4" />
+          المراحل المُفعّلة فقط ستظهر في محرك الجدولة الذكي. يمكنك تعطيل المراحل غير المستخدمة حالياً.
+        </p>
+      </div>
+      
       {stages?.map((stage) => {
         const stageGrades = grades?.filter(g => g.stage_id === stage.id) || [];
         const isExpanded = expandedStage === stage.id;
+        const isActive = stage.is_active !== false; // Default to true if undefined
         
         return (
-          <Card key={stage.id} className="border-2 border-blue-200 overflow-hidden">
+          <Card 
+            key={stage.id} 
+            className={`border-2 overflow-hidden transition-all ${
+              isActive ? 'border-blue-200' : 'border-gray-200 opacity-60'
+            }`}
+          >
             <CardHeader 
-              className="cursor-pointer hover:bg-blue-50/50 transition-colors py-4"
+              className={`cursor-pointer transition-colors py-4 ${
+                isActive ? 'hover:bg-blue-50/50' : 'bg-gray-50 hover:bg-gray-100'
+              }`}
               onClick={() => setExpandedStage(isExpanded ? null : stage.id)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
+                    isActive 
+                      ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
+                      : 'bg-gradient-to-br from-gray-400 to-gray-500'
+                  }`}>
                     <School className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">{stage.name_ar || stage.name}</CardTitle>
+                    <CardTitle className={`text-base ${!isActive && 'text-gray-500'}`}>
+                      {stage.name_ar || stage.name}
+                    </CardTitle>
                     <CardDescription className="text-xs">{stage.name_en}</CardDescription>
                   </div>
+                  {/* شارة الحالة */}
+                  {!isActive && (
+                    <Badge className="bg-gray-200 text-gray-600">
+                      معطّلة
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-blue-100 text-blue-700">
+                  <Badge className={isActive ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}>
                     {stageGrades.length} صف
                   </Badge>
                   {/* Stage Actions */}
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    {/* Toggle Active Button */}
+                    <Button
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      className={`h-8 px-2 ${isActive ? 'bg-green-600 hover:bg-green-700' : 'border-gray-400'}`}
+                      onClick={() => onToggleStage && onToggleStage(stage.id, !isActive)}
+                      data-testid={`toggle-stage-${stage.id}`}
+                      title={isActive ? 'تعطيل المرحلة' : 'تفعيل المرحلة'}
+                    >
+                      {isActive ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
