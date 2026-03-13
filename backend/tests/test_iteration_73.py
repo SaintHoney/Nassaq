@@ -15,7 +15,7 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://school-planner-pro.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://edu-planner-19.preview.emergentagent.com')
 
 # Test credentials
 PRINCIPAL_EMAIL = "principal1@nassaq.com"

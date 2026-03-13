@@ -11,7 +11,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://school-planner-pro.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://edu-planner-19.preview.emergentagent.com')
 
 class TestTimetableReadinessCheck:
     """Tests for GET /api/timetable-readiness/check endpoint"""
