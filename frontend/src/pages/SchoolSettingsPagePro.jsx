@@ -772,16 +772,16 @@ function SchoolSettingsPagePro() {
               
               {/* Dynamic Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="w-full h-auto bg-white rounded-xl p-2 shadow-sm border mb-6 flex flex-wrap gap-1">
+                <TabsList className="w-full h-auto bg-white rounded-xl p-1.5 shadow-sm border mb-6 grid grid-cols-8 gap-1">
                   {dynamicTabs.map((tab) => (
                     <TabsTrigger 
                       key={tab.id} 
                       value={tab.id}
-                      className="flex-1 min-w-[140px] rounded-lg text-xs lg:text-sm py-2.5 data-[state=active]:bg-[#1C3D74] data-[state=active]:text-white transition-all"
+                      className="rounded-lg text-[10px] sm:text-xs py-2 px-1 data-[state=active]:bg-[#1C3D74] data-[state=active]:text-white transition-all flex flex-col items-center gap-1"
                       data-testid={`tab-${tab.id}`}
                     >
-                      <tab.icon className="h-4 w-4 ml-1.5" />
-                      {tab.label}
+                      <tab.icon className="h-4 w-4" />
+                      <span className="truncate max-w-full">{tab.label}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
