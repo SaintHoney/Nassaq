@@ -167,17 +167,19 @@ export default function SchedulePageNew() {
     
     setLoading(true);
     try {
-      const [schedulesRes, slotsRes, teachersRes, classesRes] = await Promise.all([
+      const [schedulesRes, slotsRes, teachersRes, classesRes, smartRes] = await Promise.all([
         api.get(`/schedules?school_id=${schoolId}`).catch(() => ({ data: [] })),
         api.get(`/time-slots?school_id=${schoolId}`).catch(() => ({ data: [] })),
         api.get(`/teachers?school_id=${schoolId}`).catch(() => ({ data: [] })),
         api.get(`/classes?school_id=${schoolId}`).catch(() => ({ data: [] })),
+        api.get(`/smart-scheduling/timetables/${schoolId}`).catch(() => ({ data: { timetables: [] } })),
       ]);
       
       setSchedules(schedulesRes.data || []);
       setTimeSlots((slotsRes.data || []).sort((a, b) => (a.slot_number || 0) - (b.slot_number || 0)));
       setTeachers(teachersRes.data || []);
       setClasses(classesRes.data || []);
+      setSmartTimetables(smartRes.data?.timetables || []);
       
       // Auto-select first schedule
       if (schedulesRes.data?.length > 0 && !selectedSchedule) {
