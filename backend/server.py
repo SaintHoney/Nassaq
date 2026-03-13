@@ -3182,6 +3182,77 @@ async def get_school_subjects(
     
     return subjects
 
+@api_router.get("/school/subjects/unique")
+async def get_unique_school_subjects(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get unique subjects from all sources for teacher assignment - جلب المواد الفريدة للإسناد"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    subjects_dict = {}
+    
+    # 1. Get subjects from school's subjects collection
+    school_subjects = await db.subjects.find(
+        {"school_id": school_id, "is_active": {"$ne": False}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    for s in school_subjects:
+        name = s.get("name") or s.get("name_ar") or "مادة بدون اسم"
+        if name not in subjects_dict:
+            subjects_dict[name] = {
+                "id": s.get("id"),
+                "name_ar": s.get("name_ar") or s.get("name"),
+                "name_en": s.get("name_en"),
+                "code": s.get("code"),
+                "source": "school"
+            }
+    
+    # 2. Get subjects from reference_subjects (if not enough)
+    if len(subjects_dict) < 10:
+        ref_subjects = await db.reference_subjects.find(
+            {},
+            {"_id": 0}
+        ).to_list(500)
+        
+        for s in ref_subjects:
+            name = s.get("name") or s.get("name_ar") or "مادة بدون اسم"
+            if name not in subjects_dict:
+                subjects_dict[name] = {
+                    "id": s.get("id"),
+                    "name_ar": s.get("name_ar") or s.get("name"),
+                    "name_en": s.get("name_en"),
+                    "code": s.get("code"),
+                    "source": "reference"
+                }
+    
+    # 3. If still not enough, get from official curriculum
+    if len(subjects_dict) < 10:
+        official_subjects = await db.official_curriculum_subjects.find(
+            {},
+            {"_id": 0}
+        ).to_list(500)
+        
+        for s in official_subjects:
+            name = s.get("name_ar") or s.get("name") or "مادة بدون اسم"
+            if name not in subjects_dict:
+                subjects_dict[name] = {
+                    "id": s.get("id"),
+                    "name_ar": s.get("name_ar") or s.get("name"),
+                    "name_en": s.get("name_en"),
+                    "code": s.get("code"),
+                    "source": "official"
+                }
+    
+    # Convert to list sorted by name
+    result = sorted(subjects_dict.values(), key=lambda x: x.get("name_ar") or "")
+    
+    return result
+
 
 # ============== ADMIN CONSTRAINTS CRUD - إدارة القيود الإدارية ==============
 
