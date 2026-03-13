@@ -1132,6 +1132,26 @@ export default function SchoolSettingsPagePro() {
     }
   }, [selectedOfficialGrade, api]);
   
+  // Fetch timetable readiness data
+  const fetchReadinessData = async () => {
+    setReadinessLoading(true);
+    try {
+      const res = await api.get('/timetable-readiness/check');
+      setReadinessData(res.data);
+    } catch (error) {
+      console.error('Error fetching readiness data:', error);
+    } finally {
+      setReadinessLoading(false);
+    }
+  };
+  
+  // Fetch readiness on mount and after settings changes
+  useEffect(() => {
+    if (api) {
+      fetchReadinessData();
+    }
+  }, [api, settings, teachers, classes, constraints]);
+  
   // Save day times settings
   const saveDayTimes = async () => {
     setSaving(true);
