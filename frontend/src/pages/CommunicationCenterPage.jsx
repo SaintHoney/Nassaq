@@ -26,6 +26,7 @@ import {
   GraduationCap,
   UserCheck,
   Loader2,
+  Edit,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import {
