@@ -1855,94 +1855,46 @@ export default function SchoolSettingsPagePro() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-6">
-                    {/* ملخص إحصائي - تصميم محسّن */}
-                    <div className="flex items-center justify-center gap-8 mb-6">
-                      <div className="text-center group">
-                        <div className="relative">
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center mx-auto shadow-xl shadow-green-200/50 group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-3xl font-bold text-white">{settings.workingDays?.length || 5}</span>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center">
-                            <span className="text-lg">📚</span>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-sm font-bold text-green-700">أيام دراسة</p>
-                      </div>
-                      
-                      <div className="h-16 w-px bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
-                      
-                      <div className="text-center group">
-                        <div className="relative">
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center mx-auto shadow-xl shadow-red-200/50 group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-3xl font-bold text-white">{settings.weekendDays?.length || 2}</span>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center">
-                            <span className="text-lg">🏖️</span>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-sm font-bold text-red-600">أيام عطلة</p>
-                      </div>
-                    </div>
-                    
-                    {/* شبكة الأيام - تصميم بصري محسّن */}
-                    <div className="grid grid-cols-7 gap-3">
+                    {/* كروت الأيام - تصميم بسيط وأنيق */}
+                    <div className="flex flex-wrap justify-center gap-2 mb-5">
                       {[
-                        { key: 'sunday', name: 'الأحد', short: 'أحد', icon: '☀️' },
-                        { key: 'monday', name: 'الإثنين', short: 'إثن', icon: '🌙' },
-                        { key: 'tuesday', name: 'الثلاثاء', short: 'ثلا', icon: '⭐' },
-                        { key: 'wednesday', name: 'الأربعاء', short: 'أرب', icon: '🌟' },
-                        { key: 'thursday', name: 'الخميس', short: 'خمي', icon: '✨' },
-                        { key: 'friday', name: 'الجمعة', short: 'جمع', icon: '🕌' },
-                        { key: 'saturday', name: 'السبت', short: 'سبت', icon: '🏠' },
+                        { key: 'sunday', name: 'الأحد' },
+                        { key: 'monday', name: 'الإثنين' },
+                        { key: 'tuesday', name: 'الثلاثاء' },
+                        { key: 'wednesday', name: 'الأربعاء' },
+                        { key: 'thursday', name: 'الخميس' },
+                        { key: 'friday', name: 'الجمعة' },
+                        { key: 'saturday', name: 'السبت' },
                       ].map((day) => {
                         const isWorkDay = settings.workingDays?.includes(day.name);
-                        const isWeekend = settings.weekendDays?.includes(day.name);
                         
                         return (
                           <div
                             key={day.key}
                             className={`
-                              group relative flex flex-col items-center justify-center
-                              p-4 rounded-2xl transition-all duration-300 cursor-default
-                              hover:scale-105 hover:-translate-y-1
+                              px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
                               ${isWorkDay 
-                                ? 'bg-gradient-to-b from-emerald-400 via-green-500 to-emerald-600 text-white shadow-lg shadow-green-300/50 ring-2 ring-green-300/30' 
-                                : 'bg-gradient-to-b from-slate-200 via-gray-300 to-slate-400 text-gray-700 shadow-md shadow-gray-300/30'
+                                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md shadow-green-200/50' 
+                                : 'bg-gray-100 text-gray-500 border border-gray-200'
                               }
                             `}
                           >
-                            {/* أيقونة الحالة */}
-                            <div className={`
-                              absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs
-                              ${isWorkDay 
-                                ? 'bg-white text-green-600 shadow-md' 
-                                : 'bg-red-100 text-red-500 shadow-sm'
-                              }
-                            `}>
-                              {isWorkDay ? '✓' : '✕'}
-                            </div>
-                            
-                            {/* أيقونة اليوم */}
-                            <span className="text-2xl mb-1 drop-shadow-sm">{day.icon}</span>
-                            
-                            {/* اسم اليوم */}
-                            <p className={`font-bold text-base ${isWorkDay ? 'text-white' : 'text-gray-800'}`}>
-                              {day.short}
-                            </p>
-                            
-                            {/* الحالة */}
-                            <span className={`
-                              mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium
-                              ${isWorkDay 
-                                ? 'bg-white/20 text-white' 
-                                : 'bg-red-500/20 text-red-700'
-                              }
-                            `}>
-                              {isWorkDay ? 'دراسة' : 'عطلة'}
-                            </span>
+                            {day.name}
                           </div>
                         );
                       })}
+                    </div>
+                    
+                    {/* ملخص */}
+                    <div className="flex items-center justify-center gap-6 pt-4 border-t">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                        <span className="text-sm text-muted-foreground">{settings.workingDays?.length || 5} أيام دراسة</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <span className="text-sm text-muted-foreground">{settings.weekendDays?.length || 2} أيام عطلة</span>
+                      </div>
                     </div>
                     
                     {/* تفاصيل إضافية */}
