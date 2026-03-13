@@ -192,6 +192,43 @@ function SchoolSettingsPagePro() {
   }, [fetchData]);
 
   // ============================================
+  // Curriculum Loading Functions
+  // ============================================
+  
+  const fetchStageCurriculum = useCallback(async (stageId) => {
+    if (!api || stageCurriculums[stageId] || loadingCurriculum[stageId]) return;
+    
+    setLoadingCurriculum(prev => ({ ...prev, [stageId]: true }));
+    try {
+      const response = await api.get(`/official-curriculum/stage/${stageId}/full`);
+      setStageCurriculums(prev => ({ ...prev, [stageId]: response.data }));
+    } catch (error) {
+      console.error('Error fetching stage curriculum:', error);
+      toast.error('حدث خطأ في تحميل بيانات المرحلة');
+    } finally {
+      setLoadingCurriculum(prev => ({ ...prev, [stageId]: false }));
+    }
+  }, [api, stageCurriculums, loadingCurriculum]);
+  
+  const toggleStageExpand = (stageId) => {
+    setExpandedStages(prev => {
+      const newExpanded = { ...prev, [stageId]: !prev[stageId] };
+      if (newExpanded[stageId]) {
+        fetchStageCurriculum(stageId);
+      }
+      return newExpanded;
+    });
+  };
+  
+  const toggleTrackExpand = (trackId) => {
+    setExpandedTracks(prev => ({ ...prev, [trackId]: !prev[trackId] }));
+  };
+  
+  const toggleGradeExpand = (gradeId) => {
+    setExpandedGrades(prev => ({ ...prev, [gradeId]: !prev[gradeId] }));
+  };
+
+  // ============================================
   // Save Functions
   // ============================================
   
