@@ -282,12 +282,12 @@ export default function SchedulePageNew() {
         
         setGenerationStep('');
         setGenerateDialogOpen(false);
-        setGenerationResultOpen(true);
+        // لا نعرض نافذة النتيجة - ننتقل مباشرة لعرض الجدول
         
         if (result.conflicts_count > 0) {
-          toast.warning(`تم إنشاء ${result.scheduled_sessions} حصة مع ${result.conflicts_count} تعارضات`);
+          toast.warning(`تم إنشاء ${result.scheduled_sessions} حصة مع ${result.conflicts_count} تعارضات - اضغط "عرض الجدول" للمشاهدة`);
         } else {
-          toast.success(`تم إنشاء ${result.scheduled_sessions} حصة بنجاح - نسبة التحسين ${result.optimization_score}%`);
+          toast.success(`تم إنشاء ${result.scheduled_sessions} حصة بنجاح! اضغط "عرض الجدول" للمشاهدة`);
         }
         
         // Set the new smart timetable as selected
