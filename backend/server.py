@@ -13571,6 +13571,11 @@ api_router.include_router(bulk_routes)
 api_router.include_router(student_portal_routes)
 api_router.include_router(parent_portal_routes)
 
+# Official Curriculum Routes - المنهج الرسمي
+from routes.official_curriculum_routes import router as official_curriculum_router, set_database as set_official_curriculum_db
+set_official_curriculum_db(db)
+api_router.include_router(official_curriculum_router)
+
 # ============== TEST ACCOUNTS CREATION ENDPOINT ==============
 @api_router.post("/test-accounts/create")
 async def create_test_accounts(
