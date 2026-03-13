@@ -2814,6 +2814,29 @@ class ClassCreate(BaseModel):
     capacity: int = 30
     homeroom_teacher_id: Optional[str] = None
 
+class StudentUpdate(BaseModel):
+    """Model for updating student - all fields optional"""
+    full_name: Optional[str] = None
+    full_name_en: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    class_id: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = None
+    parent_phone: Optional[str] = None
+    parent_name: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ClassUpdate(BaseModel):
+    """Model for updating class - all fields optional"""
+    name: Optional[str] = None
+    name_en: Optional[str] = None
+    grade_level: Optional[str] = None
+    section: Optional[str] = None
+    capacity: Optional[int] = None
+    homeroom_teacher_id: Optional[str] = None
+    is_active: Optional[bool] = None
+
 class ClassResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
