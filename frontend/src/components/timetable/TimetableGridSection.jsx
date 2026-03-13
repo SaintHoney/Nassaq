@@ -12,7 +12,7 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
 import { 
   Clock, Coffee, Moon, GraduationCap, User, AlertTriangle,
-  Lock, Sparkles, Filter
+  Lock, Sparkles, Filter, Calendar
 } from 'lucide-react';
 import { 
   ViewModes, BlockType, EntryType, SessionStatus, 
@@ -342,6 +342,13 @@ const TimetableGridSection = ({
       </Card>
     );
   }
+
+  // Filter slots based on toggles - define early for use in all views
+  const visibleSlots = timeSlots.filter(slot => {
+    if (!showBreaks && isBreakSlot(slot)) return false;
+    if (!showPrayer && isPrayerSlot(slot)) return false;
+    return true;
+  });
 
   // No Filter Selected - Show all sessions in a different view
   if (!selectedFilter && sessions.length > 0) {
