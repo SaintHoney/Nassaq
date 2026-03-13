@@ -237,25 +237,14 @@ function SchoolSettingsPagePro() {
   });
   
   // Break Times
-  const [breakTimes, setBreakTimes] = useState([
-    { id: 1, name: 'الاستراحة الأولى', afterPeriod: 2, duration: 15, type: 'break' },
-    { id: 2, name: 'صلاة الظهر', afterPeriod: 4, duration: 20, type: 'prayer' },
-    { id: 3, name: 'الاستراحة الثانية', afterPeriod: 5, duration: 10, type: 'break' }
-  ]);
+  const [breakTimes, setBreakTimes] = useState([]);
   
   // Unavailability
   const [teacherUnavailability, setTeacherUnavailability] = useState([]);
   const [classUnavailability, setClassUnavailability] = useState([]);
   
   // Soft Constraints
-  const [softConstraints, setSoftConstraints] = useState([
-    { id: 1, name: 'توزيع حصص المادة على أكثر من يوم', enabled: true, weight: 80 },
-    { id: 2, name: 'تقليل الفجوات في جدول المعلم', enabled: true, weight: 70 },
-    { id: 3, name: 'تقليل الفجوات في جدول الفصل', enabled: true, weight: 70 },
-    { id: 4, name: 'المواد الثقيلة في أول اليوم', enabled: false, weight: 50 },
-    { id: 5, name: 'عدم تكرار نفس المادة متتالياً', enabled: true, weight: 60 },
-    { id: 6, name: 'توزيع حصص المعلم بشكل متوازن', enabled: true, weight: 65 }
-  ]);
+  const [softConstraints, setSoftConstraints] = useState([]);
 
   // ============================================
   // Data Fetching
@@ -323,6 +312,11 @@ function SchoolSettingsPagePro() {
         breakDuration: s.breakDuration || 20,
         breakAfterPeriod: s.breakAfterPeriod || 3
       });
+      
+      setBreakTimes(Array.isArray(s.breaks) ? s.breaks : []);
+      setSoftConstraints(Array.isArray(s.softConstraints) ? s.softConstraints : []);
+      setTeacherUnavailability(Array.isArray(s.teacherUnavailability) ? s.teacherUnavailability : []);
+      setClassUnavailability(Array.isArray(s.classUnavailability) ? s.classUnavailability : []);
       
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -395,7 +389,11 @@ function SchoolSettingsPagePro() {
         breakDuration: timingSettings.breakDuration,
         breakAfterPeriod: timingSettings.breakAfterPeriod,
         workingDays, 
-        weekendDays 
+        weekendDays,
+        breakTimes,
+        softConstraints,
+        teacherUnavailability,
+        classUnavailability
       };
       
       await api.put('/school/settings', dataToSave);

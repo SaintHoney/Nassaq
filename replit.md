@@ -51,6 +51,8 @@ Smart Multi-Tenant School Management System
 - Frontend uses Arabic RTL layout (NASSAQ is an Arabic school management platform)
 - The `WDS_SOCKET_PORT=443` env var handles WebSocket for hot reload through Replit's proxy
 - User password field in DB is `password_hash` (not `password`)
+- Server auto-seeds essential accounts (admin + principals + schools) on startup if they don't exist
+- School settings variable data (breaks, soft constraints, unavailability) are persisted to MongoDB `school_settings` collection via `PUT /api/school/settings`
 
 ## Dependencies
 - Python deps: `backend/requirements.txt` (install with `pip install -r backend/requirements_filtered.txt` to skip `emergentintegrations`)

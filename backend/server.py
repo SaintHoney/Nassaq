@@ -14864,6 +14864,7 @@ async def get_school_settings(
         "periodsPerDay": nested_settings.get("periods_per_day") or settings.get("periods_per_day", 7),
         "periodDuration": nested_settings.get("period_duration_minutes") or settings.get("period_duration_minutes", 45),
         "breakDuration": nested_settings.get("break_duration_minutes") or settings.get("break_duration_minutes", 20),
+        "breakAfterPeriod": nested_settings.get("break_after_period") or settings.get("break_after_period", 3),
         "workingDays": nested_settings.get("working_days") or settings.get("working_days_ar", []),
         "weekendDays": nested_settings.get("weekend_days") or settings.get("weekend_days_ar", []),
         # Original field names for backward compatibility
@@ -14882,6 +14883,10 @@ async def get_school_settings(
             "teacher_ranks": teacher_ranks,
             "admin_constraints": admin_constraints
         },
+        "breaks": settings.get("breaks", []),
+        "softConstraints": settings.get("soft_constraints", []),
+        "teacherUnavailability": settings.get("teacher_unavailability", []),
+        "classUnavailability": settings.get("class_unavailability", []),
         "school_classes": sections,
         "academic_terms": terms,
         "last_sync": settings.get("updated_at", datetime.now(timezone.utc).isoformat())
@@ -15097,6 +15102,7 @@ async def update_school_settings_full(
         "period_duration_minutes": ("settings.period_duration_minutes", "period_duration_minutes"),
         "break_duration_minutes": ("settings.break_duration_minutes", "break_duration_minutes"),
         "prayer_duration_minutes": ("settings.prayer_duration_minutes", "prayer_duration_minutes"),
+        "breakAfterPeriod": ("settings.break_after_period", "break_after_period"),
         "time_slots": ("settings.time_slots", "time_slots"),
     }
     
@@ -15105,6 +15111,18 @@ async def update_school_settings_full(
             update_data[nested_key] = settings_data[frontend_key]
             update_data[root_key] = settings_data[frontend_key]
     
+    if "breakTimes" in settings_data:
+        update_data["breaks"] = settings_data["breakTimes"]
+    
+    if "softConstraints" in settings_data:
+        update_data["soft_constraints"] = settings_data["softConstraints"]
+    
+    if "teacherUnavailability" in settings_data:
+        update_data["teacher_unavailability"] = settings_data["teacherUnavailability"]
+    
+    if "classUnavailability" in settings_data:
+        update_data["class_unavailability"] = settings_data["classUnavailability"]
+
     # Update school_settings collection
     await db.school_settings.update_one(
         {"school_id": school_id},
