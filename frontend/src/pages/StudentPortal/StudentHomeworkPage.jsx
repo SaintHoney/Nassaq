@@ -1,6 +1,6 @@
 /**
  * Student Portal - Homework Page
- * صفحة الواجبات للطالب
+ * صفحة الواجبات للطالب - محدثة لاستخدام البيانات الحقيقية
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,11 +9,11 @@ import { useTheme } from '../../contexts/ThemeContext';
 import PortalLayout from '../../components/portal/PortalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Skeleton } from '../../components/ui/skeleton';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { toast } from 'sonner';
-import axios from 'axios';
 import {
   ClipboardList,
   BookOpen,
@@ -22,62 +22,58 @@ import {
   AlertCircle,
   Calendar,
   FileText,
+  RefreshCw,
+  Upload,
+  Loader2
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const StudentHomeworkPage = () => {
-  const { token } = useAuth();
+  const { token, api } = useAuth();
   const { isRTL } = useTheme();
   const [loading, setLoading] = useState(true);
   const [homework, setHomework] = useState({ pending: [], completed: [], overdue: [] });
+  const [statistics, setStatistics] = useState({ pending: 0, submitted: 0, graded: 0, late: 0 });
 
   useEffect(() => {
     fetchHomework();
   }, [token]);
 
   const fetchHomework = async () => {
+    setLoading(true);
     try {
-      // For now, use mock data since API might not exist yet
-      // In production, this would call the actual API
-      setHomework({
-        pending: [
-          {
-            id: '1',
-            title: 'حل تمارين الفصل الثالث',
-            subject: 'الرياضيات',
-            teacher: 'أ. محمد أحمد',
-            due_date: '2026-03-15',
-            description: 'حل التمارين من 1 إلى 15',
-            status: 'pending'
-          },
-          {
-            id: '2',
-            title: 'كتابة موضوع تعبير',
-            subject: 'اللغة العربية',
-            teacher: 'أ. فاطمة علي',
-            due_date: '2026-03-16',
-            description: 'كتابة موضوع عن أهمية القراءة',
-            status: 'pending'
-          }
-        ],
-        completed: [
-          {
-            id: '3',
-            title: 'تقرير عن البيئة',
-            subject: 'العلوم',
-            teacher: 'أ. خالد سعيد',
-            due_date: '2026-03-10',
-            completed_date: '2026-03-09',
-            grade: 95,
-            status: 'completed'
-          }
-        ],
-        overdue: []
-      });
+      // Fetch from real API
+      const response = await api.get('/student-portal/assignments');
+      
+      if (response.data && response.data.assignments) {
+        const assignments = response.data.assignments;
+        
+        // Categorize assignments
+        const pending = assignments.filter(a => a.status === 'pending');
+        const completed = assignments.filter(a => a.status === 'submitted' || a.status === 'graded');
+        const overdue = assignments.filter(a => a.status === 'late');
+        
+        setHomework({ pending, completed, overdue });
+        setStatistics(response.data.statistics || {
+          pending: pending.length,
+          submitted: completed.filter(a => a.status === 'submitted').length,
+          graded: completed.filter(a => a.status === 'graded').length,
+          late: overdue.length
+        });
+      }
     } catch (error) {
       console.error('Error fetching homework:', error);
-      toast.error(isRTL ? 'حدث خطأ في جلب الواجبات' : 'Error fetching homework');
+      
+      // Show appropriate error message
+      if (error.response?.status === 403) {
+        toast.error(isRTL ? 'لا يمكنك الوصول إلى هذه الصفحة. يجب تسجيل الدخول كطالب.' : 'Access denied. Please login as a student.');
+      } else {
+        toast.error(isRTL ? 'حدث خطأ في جلب الواجبات' : 'Error fetching homework');
+      }
+      
+      // Set empty data
+      setHomework({ pending: [], completed: [], overdue: [] });
     } finally {
       setLoading(false);
     }
