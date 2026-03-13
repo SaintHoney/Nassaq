@@ -16825,6 +16825,91 @@ async def get_teacher_assignments(
 app.include_router(api_router)
 
 
+@app.on_event("startup")
+async def seed_essential_accounts():
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+
+    admin_exists = await db.users.find_one({"email": "admin@nassaq.com"})
+    if not admin_exists:
+        logger.info("Seeding platform admin account...")
+        await db.users.update_one(
+            {"email": "admin@nassaq.com"},
+            {"$set": {
+                "id": "admin-001",
+                "email": "admin@nassaq.com",
+                "password_hash": hash_password("Admin@123"),
+                "full_name": "مدير المنصة",
+                "role": "platform_admin",
+                "is_active": True,
+                "preferred_language": "ar",
+                "created_at": now,
+                "updated_at": now
+            }},
+            upsert=True
+        )
+        logger.info("Platform admin account created: admin@nassaq.com")
+
+    schools_data = [
+        {"id": "SCH-001", "name": "مدرسة النور", "name_en": "Al Noor School",
+         "email": "principal1@nassaq.com", "phone": "0500001001",
+         "city": "الرياض", "region": "الياسمين",
+         "address": "حي الياسمين، الرياض، المملكة العربية السعودية",
+         "country": "SA", "status": "active",
+         "principal_email": "principal1@nassaq.com",
+         "principal_name": "الأستاذ طلال أحمد", "code": "NSS-SA-26-0001"},
+        {"id": "SCH-002", "name": "مدرسة الأحساء", "name_en": "Al Ahsa School",
+         "email": "principal4@nassaq.com", "phone": "0500004004",
+         "city": "الأحساء", "region": "الهفوف",
+         "address": "حي الهفوف، الأحساء، المملكة العربية السعودية",
+         "country": "SA", "status": "active",
+         "principal_email": "principal4@nassaq.com",
+         "principal_name": "الأستاذ محمد عبد العزيز", "code": "NSS-SA-26-0002"}
+    ]
+
+    principals_data = [
+        {"id": "principal-001", "email": "principal1@nassaq.com",
+         "full_name": "الأستاذ طلال أحمد", "tenant_id": "SCH-001"},
+        {"id": "principal-004", "email": "principal4@nassaq.com",
+         "full_name": "الأستاذ محمد عبد العزيز", "tenant_id": "SCH-002"}
+    ]
+
+    for school in schools_data:
+        existing = await db.schools.find_one({"id": school["id"]})
+        if not existing:
+            logger.info(f"Seeding school: {school['name']}")
+            await db.schools.update_one(
+                {"id": school["id"]},
+                {"$set": {**school, "student_capacity": 500, "current_students": 0,
+                          "current_teachers": 0, "current_classes": 0,
+                          "language": "ar", "calendar_system": "hijri_gregorian",
+                          "school_type": "public", "stage": "all",
+                          "logo_url": None, "created_at": now, "updated_at": now}},
+                upsert=True
+            )
+
+    principal_pw = hash_password("Principal@123")
+    for p in principals_data:
+        existing = await db.users.find_one({"email": p["email"]})
+        if not existing:
+            logger.info(f"Seeding principal account: {p['email']}")
+            await db.users.update_one(
+                {"email": p["email"]},
+                {"$set": {
+                    "id": p["id"], "email": p["email"],
+                    "password_hash": principal_pw,
+                    "full_name": p["full_name"],
+                    "role": "school_principal",
+                    "tenant_id": p["tenant_id"],
+                    "is_active": True,
+                    "preferred_language": "ar",
+                    "created_at": now, "updated_at": now
+                }},
+                upsert=True
+            )
+
+    logger.info("Essential accounts seeding complete.")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
