@@ -1288,6 +1288,19 @@ export default function SchoolSettingsPagePro() {
     }
   };
   
+  // Toggle stage active status
+  const handleToggleStage = async (stageId, isActive) => {
+    try {
+      await api.put(`/school/settings/stages/${stageId}`, { is_active: isActive });
+      toast.success(`تم ${isActive ? 'تفعيل' : 'تعطيل'} المرحلة بنجاح`);
+      // Update stages locally
+      setStages(prev => prev.map(s => s.id === stageId ? { ...s, is_active: isActive } : s));
+    } catch (error) {
+      console.error('Error toggling stage:', error);
+      toast.error('فشل تحديث حالة المرحلة');
+    }
+  };
+  
   // =============== GRADES CRUD ===============
   const handleAddGrade = async () => {
     if (!newGrade.name || !newGrade.stage_id) {
