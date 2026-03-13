@@ -448,29 +448,33 @@ export const SchoolReportsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      { rank: 1, name: 'الصف الثاني - ب', name_en: 'Grade 2-B', score: 92.5 },
-                      { rank: 2, name: 'الصف الأول - ب', name_en: 'Grade 1-B', score: 90.8 },
-                      { rank: 3, name: 'الصف الثالث - ب', name_en: 'Grade 3-B', score: 88.2 },
-                    ].map((item) => (
-                      <Card key={item.rank} className="border-2 border-brand-gold/30">
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                              item.rank === 1 ? 'bg-yellow-400' : item.rank === 2 ? 'bg-gray-300' : 'bg-amber-600'
-                            }`}>
-                              <span className="text-xl font-bold text-white">{item.rank}</span>
+                  {topClasses.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Trophy className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                      <p className="text-muted-foreground">{isRTL ? 'لا توجد بيانات كافية لتحديد أفضل الفصول' : 'Not enough data to determine top classes'}</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {topClasses.slice(0, 3).map((item, index) => (
+                        <Card key={item.class_id} className="border-2 border-brand-gold/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-4">
+                              <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                                index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-300' : 'bg-amber-600'
+                              }`}>
+                                <span className="text-xl font-bold text-white">{index + 1}</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{item.class_name}</p>
+                                <p className="text-2xl font-bold text-brand-turquoise">{item.score}%</p>
+                                <p className="text-xs text-muted-foreground mt-1">{item.rank_reason}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">{isRTL ? item.name : item.name_en}</p>
-                              <p className="text-2xl font-bold text-brand-turquoise">{item.score}%</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
