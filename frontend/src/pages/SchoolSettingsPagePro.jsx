@@ -985,55 +985,62 @@ function SchoolSettingsPagePro() {
                 
                 {/* ======= TAB: الفصول والشعب ======= */}
                 <TabsContent value="classes" className="space-y-6">
-                  <Card className="bg-white shadow-sm">
-                    <CardHeader>
+                  <Card className="bg-white shadow-sm border-brand-navy/10">
+                    <CardHeader className="bg-gradient-to-l from-brand-navy/5 to-transparent">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-xl flex items-center gap-2">
-                            <School className="h-5 w-5 text-[#1C3D74]" />
-                            الفصول الدراسية والشعب
-                          </CardTitle>
-                          <CardDescription>{classes.length} فصل مسجل</CardDescription>
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-brand-navy flex items-center justify-center">
+                            <School className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl text-brand-navy">الفصول الدراسية والشعب</CardTitle>
+                            <CardDescription className="text-brand-navy/60">{classes.length} فصل مسجل في قاعدة البيانات</CardDescription>
+                          </div>
                         </div>
-                        <Button onClick={() => setShowAddClass(true)} className="bg-[#1C3D74]" data-testid="add-class-btn">
-                          <Plus className="h-4 w-4 ml-2" />
-                          إضافة فصل
-                        </Button>
+                        <Badge variant="outline" className="bg-brand-turquoise/10 text-brand-turquoise border-brand-turquoise/30">
+                          <Database className="h-3 w-3 ml-1" />
+                          بيانات من قاعدة البيانات
+                        </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-0">
                       {classes.length === 0 ? (
                         <div className="text-center py-12">
                           <School className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                          <p className="text-lg text-slate-500 mb-4">لا يوجد فصول مسجلة</p>
-                          <Button onClick={() => setShowAddClass(true)} variant="outline">
-                            <Plus className="h-4 w-4 ml-2" />
-                            إضافة فصل جديد
-                          </Button>
+                          <p className="text-lg text-slate-500 mb-2">لا يوجد فصول مسجلة</p>
+                          <p className="text-sm text-slate-400">يمكنك إضافة الفصول من صفحة إدارة المستخدمين والفصول</p>
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">اسم الفصل</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">الصف</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">الشعبة</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">السعة</th>
-                                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-600">إجراءات</th>
+                            <thead className="bg-slate-50">
+                              <tr>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-brand-navy">#</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-brand-navy">اسم الفصل</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-brand-navy">الصف</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-brand-navy">الشعبة</th>
+                                <th className="text-center py-3 px-4 text-sm font-semibold text-brand-navy">السعة</th>
+                                <th className="text-center py-3 px-4 text-sm font-semibold text-brand-navy">الحالة</th>
                               </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-slate-100">
                               {classes.map((cls, idx) => (
-                                <tr key={cls.id || idx} className="border-b hover:bg-slate-50">
-                                  <td className="py-3 px-4 font-medium">{cls.name || cls.name_ar || '-'}</td>
-                                  <td className="py-3 px-4 text-slate-600">{cls.grade || cls.grade_name || '-'}</td>
+                                <tr key={cls.id || idx} className="hover:bg-brand-navy/5 transition-colors">
+                                  <td className="py-3 px-4 text-slate-500 text-sm">{idx + 1}</td>
+                                  <td className="py-3 px-4">
+                                    <span className="font-medium text-slate-800">{cls.name || cls.name_ar || '-'}</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-600">{cls.grade_level || cls.grade || cls.grade_name || '-'}</td>
                                   <td className="py-3 px-4 text-slate-600">{cls.section || '-'}</td>
-                                  <td className="py-3 px-4 text-slate-600">{cls.capacity || '-'}</td>
                                   <td className="py-3 px-4 text-center">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-red-600" onClick={() => deleteClass(cls.id)}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <Badge variant="outline" className="bg-brand-navy/5 text-brand-navy border-brand-navy/20">
+                                      {cls.capacity || 30} طالب
+                                    </Badge>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <Badge className={cls.is_active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}>
+                                      {cls.is_active !== false ? 'نشط' : 'غير نشط'}
+                                    </Badge>
                                   </td>
                                 </tr>
                               ))}
@@ -1041,6 +1048,17 @@ function SchoolSettingsPagePro() {
                           </table>
                         </div>
                       )}
+                      {/* Info Banner */}
+                      <div className="p-4 bg-amber-50 border-t border-amber-200">
+                        <div className="flex items-start gap-3">
+                          <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-amber-700">
+                              لإضافة أو تعديل الفصول، استخدم صفحة <span className="font-medium">إدارة المستخدمين والفصول</span> من القائمة الجانبية.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
