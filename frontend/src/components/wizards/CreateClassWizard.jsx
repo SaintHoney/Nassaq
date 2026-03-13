@@ -366,10 +366,24 @@ export const CreateClassWizard = ({ open, onOpenChange, onSuccess, api }) => {
           onSuccess(response.data);
         }
       } else {
-        toast.error(response.data.error);
+        toast.error(response.data.error || (isRTL ? 'حدث خطأ' : 'Error occurred'));
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Error');
+      // Handle validation errors properly - detail can be array or string
+      const detail = error.response?.data?.detail;
+      let errorMessage = isRTL ? 'حدث خطأ' : 'Error occurred';
+      
+      if (typeof detail === 'string') {
+        errorMessage = detail;
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        // Pydantic validation error format
+        errorMessage = detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', ');
+      } else if (detail && typeof detail === 'object') {
+        errorMessage = detail.msg || detail.message || JSON.stringify(detail);
+      }
+      
+      toast.error(errorMessage);
+      console.error('Create class error:', error.response?.data);
     } finally {
       setSubmitting(false);
     }
