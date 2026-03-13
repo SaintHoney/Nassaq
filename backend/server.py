@@ -14498,9 +14498,23 @@ async def get_school_settings(
     sections = await db.classes.find({"school_id": school_id}, {"_id": 0}).to_list(200)
     terms = await db.academic_terms.find({"school_id": school_id}, {"_id": 0}).to_list(10)
     
+    # Extract settings nested values
+    nested_settings = settings.get("settings", {})
+    
     return {
         "school_info": school or {},
         "settings": settings,
+        # Frontend-compatible field names from nested settings
+        "academicYear": nested_settings.get("academic_year", ""),
+        "currentSemester": nested_settings.get("current_semester", ""),
+        "dayStart": nested_settings.get("school_day_start", settings.get("school_day_start", "07:00")),
+        "dayEnd": nested_settings.get("school_day_end", settings.get("school_day_end", "13:15")),
+        "periodsPerDay": nested_settings.get("periods_per_day", settings.get("periods_per_day", 7)),
+        "periodDuration": nested_settings.get("period_duration_minutes", settings.get("period_duration_minutes", 45)),
+        "breakDuration": nested_settings.get("break_duration_minutes", settings.get("break_duration_minutes", 20)),
+        "workingDays": nested_settings.get("working_days", settings.get("working_days_ar", [])),
+        "weekendDays": nested_settings.get("weekend_days", settings.get("weekend_days_ar", [])),
+        # Original field names for backward compatibility
         "working_days": settings.get("working_days", {}),
         "periods_per_day": settings.get("periods_per_day", 7),
         "time_slots": settings.get("time_slots", []),
