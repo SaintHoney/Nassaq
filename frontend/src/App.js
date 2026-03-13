@@ -23,6 +23,8 @@ import { ClassesPage } from "./pages/ClassesPage";
 import { SubjectsPage } from "./pages/SubjectsPage";
 import SchedulePageNew from "./pages/SchedulePageNew";
 // SmartTimetablePage removed - functionality merged into SchedulePageNew
+// New Timetable Page Component
+import { PrincipalTimetablePage } from "./components/timetable";
 import { TimeSlotsPage } from "./pages/TimeSlotsPage";
 import { TeacherAssignmentsPage } from "./pages/TeacherAssignmentsPage";
 import { AttendancePage } from "./pages/AttendancePage";
