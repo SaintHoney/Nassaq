@@ -1437,7 +1437,25 @@ function SchoolSettingsPagePro() {
                   
                   {/* ===== إسناد الفصول ===== */}
                   {assignmentSubTab === 'classes' && (
-                    <>
+                    <DndContext 
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragStart={(e) => setDraggingClass(e.active?.data?.current?.classItem || null)}
+                      onDragEnd={(e) => {
+                        setDraggingClass(null);
+                        const classItem = e.active?.data?.current?.classItem;
+                        const teacher = e.over?.data?.current?.teacher;
+                        if (classItem && teacher) {
+                          // Check if already assigned
+                          const exists = classAssignments.some(a => a.class_id === classItem.id && a.teacher_id === teacher.id);
+                          if (!exists) {
+                            handleCreateClassAssignment(teacher.id, classItem.id);
+                          } else {
+                            toast.warning('هذا الفصل مسند بالفعل لهذا المعلم');
+                          }
+                        }
+                      }}
+                    >
                       {/* Header */}
                       <Card className="bg-gradient-to-l from-brand-turquoise/10 to-brand-turquoise/5 border-brand-turquoise/20">
                         <CardContent className="p-4">
@@ -1453,15 +1471,10 @@ function SchoolSettingsPagePro() {
                                 </p>
                               </div>
                             </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={loadClassAssignments}
-                              className="text-xs"
-                            >
-                              <RefreshCw className={`h-3 w-3 ml-1 ${classAssignmentsLoading ? 'animate-spin' : ''}`} />
-                              تحديث
-                            </Button>
+                            <Badge variant="outline" className="bg-brand-turquoise/10 text-brand-turquoise-dark border-brand-turquoise/30 text-xs">
+                              <Zap className="h-3 w-3 ml-1" />
+                              سحب وإفلات
+                            </Badge>
                           </div>
                         </CardContent>
                       </Card>
@@ -1471,113 +1484,73 @@ function SchoolSettingsPagePro() {
                         <div className="flex items-start gap-2">
                           <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                           <p className="text-xs text-blue-700">
-                            اختر معلماً ثم اختر فصلاً لإسناده له. يتم الحفظ تلقائياً في قاعدة البيانات ويُستخدم في توليد الجدول.
+                            اسحب أي فصل من قائمة الفصول على اليسار وأفلته داخل صندوق المعلم المطلوب لإسناده له.
+                            يتم الحفظ تلقائياً في قاعدة البيانات ويُستخدم في توليد الجدول.
                           </p>
                         </div>
                       </div>
                       
-                      {/* Main Grid */}
-                      <div className="grid lg:grid-cols-2 gap-4">
-                        {/* Teachers with Assigned Classes */}
-                        <Card className="bg-white shadow-sm">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Users className="h-4 w-4 text-brand-navy" />
-                              المعلمون والفصول المسندة
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ScrollArea className="h-[400px]">
-                              <div className="space-y-3">
-                                {teachers.map((teacher) => {
-                                  const teacherClassAssignments = classAssignments.filter(a => a.teacher_id === teacher.id);
-                                  return (
-                                    <div key={teacher.id} className="p-3 rounded-lg border bg-slate-50">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-8 h-8 rounded-full bg-brand-navy/10 flex items-center justify-center text-brand-navy font-bold text-sm">
-                                          {teacher.full_name?.charAt(0) || 'م'}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="font-medium text-sm truncate">{teacher.full_name}</p>
-                                          <p className="text-xs text-slate-500">{teacherClassAssignments.length} فصول</p>
-                                        </div>
-                                      </div>
-                                      {teacherClassAssignments.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                          {teacherClassAssignments.map(assignment => (
-                                            <div key={assignment.id} className="flex items-center gap-1 px-2 py-1 bg-brand-turquoise/10 rounded text-xs text-brand-turquoise-dark">
-                                              <span>{assignment.class_name}</span>
-                                              <button
-                                                onClick={() => handleDeleteClassAssignment(assignment.id)}
-                                                className="text-red-500 hover:text-red-700"
-                                              >
-                                                <X className="h-3 w-3" />
-                                              </button>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </ScrollArea>
-                          </CardContent>
-                        </Card>
+                      {/* Main Grid - Drag & Drop */}
+                      <div className="grid lg:grid-cols-5 gap-4">
+                        {/* Classes List (Draggable) */}
+                        <div className="lg:col-span-2">
+                          <Card className="bg-white shadow-sm h-full">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-base flex items-center gap-2">
+                                <GraduationCap className="h-4 w-4 text-brand-turquoise" />
+                                الفصول الدراسية
+                                <Badge variant="outline" className="text-xs">{classes.length}</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <ScrollArea className="h-[400px] pr-2">
+                                <div className="space-y-2">
+                                  {classes.map((classItem) => {
+                                    const hasAssignment = classAssignments.some(a => a.class_id === classItem.id);
+                                    return (
+                                      <DraggableClassItem 
+                                        key={classItem.id} 
+                                        classItem={classItem}
+                                        isAssigned={hasAssignment}
+                                        assignedTeacher={classAssignments.find(a => a.class_id === classItem.id)?.teacher_name}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </ScrollArea>
+                            </CardContent>
+                          </Card>
+                        </div>
                         
-                        {/* Unassigned Classes + Quick Assign */}
-                        <Card className="bg-white shadow-sm">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <GraduationCap className="h-4 w-4 text-amber-600" />
-                              إسناد سريع للفصول
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ScrollArea className="h-[400px]">
-                              <div className="space-y-3">
-                                {classes.map((classItem) => {
-                                  const hasAssignment = classAssignments.some(a => a.class_id === classItem.id);
-                                  return (
-                                    <div key={classItem.id} className={`p-3 rounded-lg border ${hasAssignment ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-                                      <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                          {hasAssignment ? (
-                                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                          ) : (
-                                            <AlertCircle className="h-4 w-4 text-amber-600" />
-                                          )}
-                                          <span className="font-medium text-sm">{classItem.name} - {classItem.section}</span>
-                                        </div>
-                                      </div>
-                                      {!hasAssignment && (
-                                        <Select
-                                          onValueChange={(teacherId) => handleCreateClassAssignment(teacherId, classItem.id)}
-                                        >
-                                          <SelectTrigger className="h-8 text-xs">
-                                            <SelectValue placeholder="اختر معلماً لإسناده..." />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {teachers.map(t => (
-                                              <SelectItem key={t.id} value={t.id} className="text-xs">
-                                                {t.full_name}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      )}
-                                      {hasAssignment && (
-                                        <p className="text-xs text-green-700">
-                                          مسند لـ: {classAssignments.find(a => a.class_id === classItem.id)?.teacher_name}
-                                        </p>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </ScrollArea>
-                          </CardContent>
-                        </Card>
+                        {/* Teachers List (Droppable) */}
+                        <div className="lg:col-span-3">
+                          <Card className="bg-white shadow-sm h-full">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-base flex items-center gap-2">
+                                <Users className="h-4 w-4 text-brand-navy" />
+                                المعلمون
+                                <Badge variant="outline" className="text-xs">{teachers.length}</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <ScrollArea className="h-[400px] pr-2">
+                                <div className="grid grid-cols-2 gap-3">
+                                  {teachers.map((teacher) => {
+                                    const teacherClassAssignments = classAssignments.filter(a => a.teacher_id === teacher.id);
+                                    return (
+                                      <DroppableTeacherBox
+                                        key={teacher.id}
+                                        teacher={teacher}
+                                        assignments={teacherClassAssignments}
+                                        onRemoveAssignment={handleDeleteClassAssignment}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </ScrollArea>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
                       
                       {/* Stats */}
@@ -1595,7 +1568,22 @@ function SchoolSettingsPagePro() {
                           <p className="text-xs text-blue-600">إجمالي الإسنادات</p>
                         </div>
                       </div>
-                    </>
+                      
+                      {/* Drag Overlay */}
+                      <DragOverlay>
+                        {draggingClass && (
+                          <div className="p-3 rounded-lg border-2 border-brand-turquoise bg-white shadow-xl">
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="h-5 w-5 text-brand-turquoise" />
+                              <div>
+                                <p className="font-medium text-sm">{draggingClass.name}</p>
+                                <p className="text-xs text-muted-foreground">{draggingClass.section}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </DragOverlay>
+                    </DndContext>
                   )}
                 </TabsContent>
                 
