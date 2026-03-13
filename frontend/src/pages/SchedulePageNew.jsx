@@ -846,26 +846,6 @@ export default function SchedulePageNew() {
                     </tbody>
                   </table>
                 </div>
-                
-                {/* أزرار التصدير والطباعة */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setShowFullTimetable(false)}>
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                      رجوع
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 ml-1" />
-                      تصدير CSV
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <FileText className="h-4 w-4 ml-1" />
-                      طباعة
-                    </Button>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           )}
