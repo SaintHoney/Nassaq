@@ -85,11 +85,13 @@ export const SchoolReportsPage = () => {
       setLoading(true);
       try {
         // Fetch data from APIs
-        const [classesRes, overviewRes, attendanceRes, gradesRes] = await Promise.all([
+        const [classesRes, overviewRes, attendanceRes, gradesRes, behaviorRes, topClassesRes] = await Promise.all([
           api.get(`/classes?school_id=${user?.tenant_id}`).catch(() => ({ data: [] })),
           api.get(`/reports/school/overview?period=${selectedPeriod}`).catch(() => ({ data: null })),
           api.get(`/reports/school/attendance?period=${selectedPeriod}`).catch(() => ({ data: [] })),
           api.get(`/reports/school/grades?period=${selectedPeriod}`).catch(() => ({ data: [] })),
+          api.get(`/reports/school/behavior?period=${selectedPeriod}`).catch(() => ({ data: null })),
+          api.get(`/reports/school/top-classes`).catch(() => ({ data: [] })),
         ]);
         
         setClasses(classesRes.data || []);
@@ -102,6 +104,7 @@ export const SchoolReportsPage = () => {
             total_classes: overviewRes.data.total_classes || 0,
             attendance_rate: overviewRes.data.attendance_rate || 0,
             avg_grade: overviewRes.data.avg_grade || 0,
+            positive_behavior: overviewRes.data.positive_behavior || (behaviorRes.data?.stats?.positive || 0),
           });
         } else {
           // Empty state - no mock data
@@ -111,6 +114,7 @@ export const SchoolReportsPage = () => {
             total_classes: 0,
             attendance_rate: 0,
             avg_grade: 0,
+            positive_behavior: 0,
           });
         }
         
@@ -130,8 +134,23 @@ export const SchoolReportsPage = () => {
           setGradeData([]);
         }
         
-        // Behavior data - empty until API is available
-        setBehaviorData([]);
+        // Set behavior data from API
+        if (behaviorRes.data) {
+          const behaviorStats = behaviorRes.data.stats || {};
+          setBehaviorData([
+            { type: 'positive', count: behaviorStats.positive || 0, change: 0 },
+            { type: 'negative', count: behaviorStats.negative || 0, change: 0 },
+            { type: 'warning', count: behaviorStats.warning || 0, change: 0 },
+            { type: 'appreciation', count: behaviorStats.appreciation || 0, change: 0 },
+          ]);
+          setBehaviorNotes(behaviorRes.data.recent_notes || []);
+        } else {
+          setBehaviorData([]);
+          setBehaviorNotes([]);
+        }
+        
+        // Set top classes
+        setTopClasses(topClassesRes.data || []);
         
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -141,7 +160,7 @@ export const SchoolReportsPage = () => {
     };
     
     loadData();
-  }, [user, selectedPeriod, selectedClass]);
+  }, [user, selectedPeriod, selectedClass, api]);
 
   const handleExport = (format) => {
     toast.success(isRTL ? `جاري تصدير التقرير بصيغة ${format}` : `Exporting report as ${format}`);
