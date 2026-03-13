@@ -1093,6 +1093,80 @@ export default function SmartTimetablePage() {
           </DialogContent>
         </Dialog>
         
+        {/* Edit Session Dialog */}
+        <Dialog open={editSessionOpen} onOpenChange={setEditSessionOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-amber-600" />
+                تعديل الحصة
+              </DialogTitle>
+              <DialogDescription>
+                تعديل معلومات الحصة المحددة
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedSession && (
+              <div className="space-y-4 my-4">
+                {/* Session Info */}
+                <div className="bg-muted p-3 rounded-lg space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">المادة:</span>
+                    <span className="font-medium">{selectedSession.subject_name || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">الفصل:</span>
+                    <span className="font-medium">{selectedSession.class_name || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">اليوم:</span>
+                    <span className="font-medium">{DAYS.find(d => d.key === selectedSession.day_of_week)?.ar || selectedSession.day_of_week}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">الحصة:</span>
+                    <span className="font-medium">{selectedSession.period_number}</span>
+                  </div>
+                </div>
+                
+                {/* Change Teacher */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">تغيير المعلم:</label>
+                  <Select value={editingTeacher} onValueChange={setEditingTeacher}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المعلم" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map(t => (
+                        <SelectItem key={t.id || t.teacher_id} value={t.id || t.teacher_id}>
+                          {t.full_name || t.full_name_ar}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteSession}
+                className="ml-auto"
+              >
+                <XCircle className="h-4 w-4 ml-2" />
+                حذف
+              </Button>
+              <Button variant="outline" onClick={() => setEditSessionOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveSession} className="bg-green-600 hover:bg-green-700">
+                <CheckCircle2 className="h-4 w-4 ml-2" />
+                حفظ
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
         {/* Print Styles */}
         <style>{`
           @media print {
