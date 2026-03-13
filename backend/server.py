@@ -16555,6 +16555,227 @@ async def get_behaviour_types(
     return DEFAULT_BEHAVIOUR_TYPES
 
 
+
+# ============================================
+# Teacher Class Assignments APIs
+# إسناد المعلمين للفصول
+# ============================================
+
+class TeacherClassAssignmentCreate(BaseModel):
+    teacher_id: str
+    class_id: str
+    academic_year_id: Optional[str] = None
+
+class TeacherClassAssignmentResponse(BaseModel):
+    id: str
+    teacher_id: str
+    class_id: str
+    school_id: str
+    academic_year_id: Optional[str] = None
+    teacher_name: Optional[str] = None
+    class_name: Optional[str] = None
+    created_at: Optional[str] = None
+
+@api_router.get("/teacher-class-assignments")
+async def get_teacher_class_assignments(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب جميع إسنادات المعلمين للفصول
+    Get all teacher-class assignments for the school
+    """
+    school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="Missing school context")
+    
+    assignments = await db.teacher_class_assignments.find(
+        {"school_id": school_id}
+    ).to_list(None)
+    
+    # Enrich with teacher and class names
+    result = []
+    for assignment in assignments:
+        # Get teacher name
+        teacher = await db.teachers.find_one({"id": assignment.get("teacher_id")})
+        # Get class name
+        class_doc = await db.classes.find_one({"id": assignment.get("class_id")})
+        
+        result.append({
+            "id": assignment.get("id"),
+            "teacher_id": assignment.get("teacher_id"),
+            "class_id": assignment.get("class_id"),
+            "school_id": assignment.get("school_id"),
+            "academic_year_id": assignment.get("academic_year_id"),
+            "teacher_name": teacher.get("full_name") if teacher else None,
+            "class_name": f"{class_doc.get('name', '')} - {class_doc.get('section', '')}" if class_doc else None,
+            "created_at": assignment.get("created_at")
+        })
+    
+    return result
+
+@api_router.post("/teacher-class-assignments")
+async def create_teacher_class_assignment(
+    assignment: TeacherClassAssignmentCreate,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    إنشاء إسناد جديد للمعلم بالفصل
+    Create a new teacher-class assignment
+    """
+    school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="Missing school context")
+    
+    # Check if assignment already exists
+    existing = await db.teacher_class_assignments.find_one({
+        "school_id": school_id,
+        "teacher_id": assignment.teacher_id,
+        "class_id": assignment.class_id,
+        "academic_year_id": assignment.academic_year_id
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا الإسناد موجود بالفعل")
+    
+    # Get settings for academic year if not provided
+    academic_year_id = assignment.academic_year_id
+    if not academic_year_id:
+        settings = await db.school_settings.find_one({"school_id": school_id})
+        if settings:
+            nested = settings.get("settings", {})
+            academic_year_id = nested.get("academic_year") or settings.get("academicYear")
+    
+    # Create new assignment
+    new_assignment = {
+        "id": str(uuid.uuid4()),
+        "teacher_id": assignment.teacher_id,
+        "class_id": assignment.class_id,
+        "school_id": school_id,
+        "academic_year_id": academic_year_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.teacher_class_assignments.insert_one(new_assignment)
+    
+    # Get teacher and class names for response
+    teacher = await db.teachers.find_one({"id": assignment.teacher_id})
+    class_doc = await db.classes.find_one({"id": assignment.class_id})
+    
+    return {
+        "message": "تم إنشاء الإسناد بنجاح",
+        "assignment": {
+            "id": new_assignment["id"],
+            "teacher_id": new_assignment["teacher_id"],
+            "class_id": new_assignment["class_id"],
+            "school_id": new_assignment["school_id"],
+            "academic_year_id": new_assignment["academic_year_id"],
+            "teacher_name": teacher.get("full_name") if teacher else None,
+            "class_name": f"{class_doc.get('name', '')} - {class_doc.get('section', '')}" if class_doc else None,
+            "created_at": new_assignment["created_at"]
+        }
+    }
+
+@api_router.delete("/teacher-class-assignments/{assignment_id}")
+async def delete_teacher_class_assignment(
+    assignment_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    حذف إسناد معلم من فصل
+    Delete a teacher-class assignment
+    """
+    school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="Missing school context")
+    
+    result = await db.teacher_class_assignments.delete_one({
+        "id": assignment_id,
+        "school_id": school_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الإسناد غير موجود")
+    
+    return {"message": "تم حذف الإسناد بنجاح"}
+
+@api_router.get("/teacher-class-assignments/classes-without-teachers")
+async def get_classes_without_teachers(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب الفصول التي ليس لها معلمون مسندون
+    Get classes without any teacher assignments
+    """
+    school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="Missing school context")
+    
+    # Get all classes
+    all_classes = await db.classes.find({"school_id": school_id}).to_list(None)
+    
+    # Get all assigned class IDs
+    assignments = await db.teacher_class_assignments.find(
+        {"school_id": school_id},
+        {"class_id": 1}
+    ).to_list(None)
+    assigned_class_ids = {a.get("class_id") for a in assignments}
+    
+    # Filter unassigned classes
+    unassigned = []
+    for c in all_classes:
+        if c.get("id") not in assigned_class_ids:
+            unassigned.append({
+                "id": c.get("id"),
+                "name": c.get("name"),
+                "section": c.get("section"),
+                "grade_id": c.get("grade_id")
+            })
+    
+    return {
+        "count": len(unassigned),
+        "classes": unassigned
+    }
+
+@api_router.get("/teacher-class-assignments/teacher/{teacher_id}")
+async def get_teacher_assignments(
+    teacher_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    جلب الفصول المسندة لمعلم معين
+    Get all class assignments for a specific teacher
+    """
+    school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="Missing school context")
+    
+    assignments = await db.teacher_class_assignments.find({
+        "school_id": school_id,
+        "teacher_id": teacher_id
+    }).to_list(None)
+    
+    # Enrich with class details
+    result = []
+    for assignment in assignments:
+        class_doc = await db.classes.find_one({"id": assignment.get("class_id")})
+        if class_doc:
+            result.append({
+                "id": assignment.get("id"),
+                "class_id": assignment.get("class_id"),
+                "class_name": class_doc.get("name"),
+                "section": class_doc.get("section"),
+                "grade_id": class_doc.get("grade_id")
+            })
+    
+    return result
+
+
 # Re-include api_router to pick up school settings routes
 app.include_router(api_router)
 
