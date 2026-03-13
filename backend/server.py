@@ -9695,8 +9695,8 @@ async def get_school_attendance_report(
         rate = round((present / total) * 100, 1) if total > 0 else 0
         
         report_data.append({
-            "class": cls.get("name"),
-            "class_en": cls.get("name_en", cls.get("name")),
+            "class": cls.get("name_ar") or cls.get("name"),
+            "class_en": cls.get("name_en") or cls.get("name_ar") or cls.get("name"),
             "present": present,
             "absent": absent,
             "late": late,
