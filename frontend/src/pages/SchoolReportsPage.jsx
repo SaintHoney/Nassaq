@@ -36,6 +36,7 @@ import {
   ArrowDownRight,
   CalendarDays,
   Heart,
+  Trophy,
 } from 'lucide-react';
 import {
   Select,
