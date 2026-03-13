@@ -142,7 +142,7 @@ function SchoolSettingsPagePro() {
         api.get('/official-curriculum/stages').catch(() => ({ data: [] })),
         api.get('/official-curriculum/tracks').catch(() => ({ data: [] })),
         api.get('/official-curriculum/teacher-rank-loads').catch(() => ({ data: [] })),
-        api.get('/official-curriculum/subjects').catch(() => ({ data: [] }))
+        api.get('/school/subjects/unique').catch(() => ({ data: [] }))
       ]);
       
       setSettings(settingsRes.data || {});
