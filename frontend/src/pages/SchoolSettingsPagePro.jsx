@@ -959,6 +959,18 @@ export default function SchoolSettingsPagePro() {
   const [tracks, setTracks] = useState([]);
   const [defaultSettings, setDefaultSettings] = useState({});
   
+  // Official Curriculum States - المنهج الرسمي
+  const [officialCurriculumStats, setOfficialCurriculumStats] = useState(null);
+  const [officialStages, setOfficialStages] = useState([]);
+  const [officialTracks, setOfficialTracks] = useState([]);
+  const [officialGrades, setOfficialGrades] = useState([]);
+  const [officialSubjects, setOfficialSubjects] = useState([]);
+  const [officialRankLoads, setOfficialRankLoads] = useState([]);
+  const [selectedOfficialStage, setSelectedOfficialStage] = useState('');
+  const [selectedOfficialTrack, setSelectedOfficialTrack] = useState('');
+  const [selectedOfficialGrade, setSelectedOfficialGrade] = useState('');
+  const [officialGradeCurriculum, setOfficialGradeCurriculum] = useState(null);
+  
   // Fetch all data
   const fetchData = useCallback(async () => {
     setLoading(true);
