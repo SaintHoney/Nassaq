@@ -61,4 +61,4 @@ externalPort = 3000
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "start_production.sh"]
-build = ["bash", "-c", "cd frontend && REACT_APP_BACKEND_URL='' NODE_OPTIONS='--max-old-space-size=1536' yarn build"]
+build = ["bash", "build_production.sh"]
