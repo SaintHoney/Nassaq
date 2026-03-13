@@ -31,6 +31,9 @@ import {
   Trash2,
   Languages,
   Monitor,
+  RefreshCw,
+  Users,
+  Building2,
 } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
