@@ -313,6 +313,28 @@ GET /api/official-curriculum/complete        - المنهج الكامل
 
 ---
 
+### إصلاحات حفظ البيانات (ديسمبر 2026)
+
+#### المشاكل المُصلحة:
+1. **مشكلة حفظ بيانات الطلاب والفصول والمعلمين:**
+   - **السبب:** APIs التعديل كانت تستخدم models تتطلب كل الحقول
+   - **الحل:** أنشأت `StudentUpdate`, `ClassUpdate`, `TeacherUpdate` بحقول اختيارية
+
+2. **خطأ "Objects are not valid as React child":**
+   - **السبب:** الأخطاء من Backend كانت تُعرض مباشرة ككائنات
+   - **الحل:** إضافة معالجة للأخطاء لتحويلها إلى نصوص
+
+3. **مسارات API خاطئة في صفحة الإعدادات:**
+   - **السبب:** استخدام مسارات غير موجودة (`/school/teachers`)
+   - **الحل:** تصحيح المسارات إلى (`/teachers`, `/classes`, `/teacher-assignments`)
+
+#### الملفات المُعدلة:
+- `backend/server.py` - إضافة models للتحديث الجزئي وإصلاح APIs
+- `frontend/src/pages/UsersClassesManagement.jsx` - معالجة الأخطاء
+- `frontend/src/pages/SchoolSettingsPagePro.jsx` - تصحيح مسارات API
+
+---
+
 ## حسابات الاختبار
 
 | الدور | البريد الإلكتروني | كلمة المرور |
