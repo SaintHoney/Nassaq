@@ -9745,8 +9745,8 @@ async def get_school_grades_report(
             pass_rate = 0
         
         report_data.append({
-            "subject": subject.get("name"),
-            "subject_en": subject.get("name_en", subject.get("name")),
+            "subject": subject.get("name_ar") or subject.get("name"),
+            "subject_en": subject.get("name_en") or subject.get("name_ar") or subject.get("name"),
             "avg": avg,
             "highest": highest,
             "lowest": lowest,
