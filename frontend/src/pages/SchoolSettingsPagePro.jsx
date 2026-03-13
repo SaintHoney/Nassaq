@@ -1456,6 +1456,171 @@ function SchoolSettingsPagePro() {
                       </div>
                     </div>
                   </div>
+                    </>
+                  )}
+                  
+                  {/* ===== إسناد الفصول ===== */}
+                  {assignmentSubTab === 'classes' && (
+                    <>
+                      {/* Header */}
+                      <Card className="bg-gradient-to-l from-brand-turquoise/10 to-brand-turquoise/5 border-brand-turquoise/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-brand-turquoise flex items-center justify-center">
+                                <GraduationCap className="h-5 w-5 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-brand-turquoise-dark">ربط المعلمين بالفصول</h3>
+                                <p className="text-xs text-slate-600">
+                                  {teachers.length} معلم • {classes.length} فصل • {classAssignments.length} إسناد
+                                </p>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={loadClassAssignments}
+                              className="text-xs"
+                            >
+                              <RefreshCw className={`h-3 w-3 ml-1 ${classAssignmentsLoading ? 'animate-spin' : ''}`} />
+                              تحديث
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Instructions */}
+                      <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                        <div className="flex items-start gap-2">
+                          <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-blue-700">
+                            اختر معلماً ثم اختر فصلاً لإسناده له. يتم الحفظ تلقائياً في قاعدة البيانات ويُستخدم في توليد الجدول.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Main Grid */}
+                      <div className="grid lg:grid-cols-2 gap-4">
+                        {/* Teachers with Assigned Classes */}
+                        <Card className="bg-white shadow-sm">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Users className="h-4 w-4 text-brand-navy" />
+                              المعلمون والفصول المسندة
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ScrollArea className="h-[400px]">
+                              <div className="space-y-3">
+                                {teachers.map((teacher) => {
+                                  const teacherClassAssignments = classAssignments.filter(a => a.teacher_id === teacher.id);
+                                  return (
+                                    <div key={teacher.id} className="p-3 rounded-lg border bg-slate-50">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-brand-navy/10 flex items-center justify-center text-brand-navy font-bold text-sm">
+                                          {teacher.full_name?.charAt(0) || 'م'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm truncate">{teacher.full_name}</p>
+                                          <p className="text-xs text-slate-500">{teacherClassAssignments.length} فصول</p>
+                                        </div>
+                                      </div>
+                                      {teacherClassAssignments.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                          {teacherClassAssignments.map(assignment => (
+                                            <div key={assignment.id} className="flex items-center gap-1 px-2 py-1 bg-brand-turquoise/10 rounded text-xs text-brand-turquoise-dark">
+                                              <span>{assignment.class_name}</span>
+                                              <button
+                                                onClick={() => handleDeleteClassAssignment(assignment.id)}
+                                                className="text-red-500 hover:text-red-700"
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </ScrollArea>
+                          </CardContent>
+                        </Card>
+                        
+                        {/* Unassigned Classes + Quick Assign */}
+                        <Card className="bg-white shadow-sm">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <GraduationCap className="h-4 w-4 text-amber-600" />
+                              إسناد سريع للفصول
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ScrollArea className="h-[400px]">
+                              <div className="space-y-3">
+                                {classes.map((classItem) => {
+                                  const hasAssignment = classAssignments.some(a => a.class_id === classItem.id);
+                                  return (
+                                    <div key={classItem.id} className={`p-3 rounded-lg border ${hasAssignment ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                          {hasAssignment ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                          ) : (
+                                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                                          )}
+                                          <span className="font-medium text-sm">{classItem.name} - {classItem.section}</span>
+                                        </div>
+                                      </div>
+                                      {!hasAssignment && (
+                                        <Select
+                                          onValueChange={(teacherId) => handleCreateClassAssignment(teacherId, classItem.id)}
+                                        >
+                                          <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue placeholder="اختر معلماً لإسناده..." />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {teachers.map(t => (
+                                              <SelectItem key={t.id} value={t.id} className="text-xs">
+                                                {t.full_name}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      )}
+                                      {hasAssignment && (
+                                        <p className="text-xs text-green-700">
+                                          مسند لـ: {classAssignments.find(a => a.class_id === classItem.id)?.teacher_name}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </ScrollArea>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {/* Stats */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="p-3 bg-green-50 rounded-xl border border-green-200 text-center">
+                          <p className="text-2xl font-bold text-green-700">{new Set(classAssignments.map(a => a.class_id)).size}</p>
+                          <p className="text-xs text-green-600">فصول مسندة</p>
+                        </div>
+                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
+                          <p className="text-2xl font-bold text-amber-700">{classes.length - new Set(classAssignments.map(a => a.class_id)).size}</p>
+                          <p className="text-xs text-amber-600">بدون إسناد</p>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
+                          <p className="text-2xl font-bold text-blue-700">{classAssignments.length}</p>
+                          <p className="text-xs text-blue-600">إجمالي الإسنادات</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
                 
                 {/* ======= TAB: عدم التوفر ======= */}
