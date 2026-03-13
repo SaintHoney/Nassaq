@@ -433,26 +433,25 @@ function SchoolSettingsPagePro() {
   
   if (loading) {
     return (
-      <div className="flex h-screen bg-slate-50" dir="rtl">
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-[#1C3D74] mx-auto mb-4" />
-            <p className="text-slate-600">جاري تحميل البيانات...</p>
+      <Sidebar>
+        <div className="min-h-screen bg-slate-50" dir="rtl">
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-[#1C3D74] mx-auto mb-4" />
+              <p className="text-slate-600">جاري تحميل البيانات...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </Sidebar>
     );
   }
 
   return (
-    <div className="flex h-screen bg-slate-50" dir="rtl">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-6 lg:p-8">
+    <Sidebar>
+      <div className="min-h-screen bg-slate-50" dir="rtl">
+        {/* Main Content */}
+        <div className="overflow-auto">
+          <div className="max-w-7xl mx-auto p-6 lg:p-8">
           
           {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
