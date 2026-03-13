@@ -838,6 +838,8 @@ export default function SmartTimetablePage() {
                         periods={periods}
                         days={DAYS}
                         showTeacher={true}
+                        editable={editMode}
+                        onEditSession={handleEditSession}
                       />
                     </CardContent>
                   </Card>
@@ -864,6 +866,8 @@ export default function SmartTimetablePage() {
                   periods={periods}
                   days={DAYS}
                   showTeacher={true}
+                  editable={editMode}
+                  onEditSession={handleEditSession}
                 />
               </CardContent>
             </Card>
