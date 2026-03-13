@@ -251,8 +251,15 @@ async def check_day_structure(school_id: str) -> CategoryReadiness:
     if not settings:
         settings = {}
     
+    # Check nested settings object as well
+    nested_settings = settings.get("settings", {})
+    
     # Check periods per day
-    periods_per_day = settings.get("periodsPerDay") or settings.get("periods_per_day")
+    periods_per_day = (
+        settings.get("periodsPerDay") or 
+        settings.get("periods_per_day") or
+        nested_settings.get("periods_per_day")
+    )
     if periods_per_day and periods_per_day >= 1:
         score += 8
     else:
@@ -267,7 +274,11 @@ async def check_day_structure(school_id: str) -> CategoryReadiness:
         ))
     
     # Check period duration
-    period_duration = settings.get("periodDuration") or settings.get("period_duration")
+    period_duration = (
+        settings.get("periodDuration") or 
+        settings.get("period_duration") or
+        nested_settings.get("period_duration_minutes")
+    )
     if period_duration and period_duration >= 30:
         score += 8
     else:
@@ -282,7 +293,12 @@ async def check_day_structure(school_id: str) -> CategoryReadiness:
         ))
     
     # Check day start time
-    day_start = settings.get("dayStart") or settings.get("day_start")
+    day_start = (
+        settings.get("dayStart") or 
+        settings.get("day_start") or
+        settings.get("school_day_start") or
+        nested_settings.get("school_day_start")
+    )
     if day_start:
         score += 5
     else:
@@ -297,7 +313,7 @@ async def check_day_structure(school_id: str) -> CategoryReadiness:
         ))
     
     # Check time slots
-    time_slots = settings.get("timeSlots") or settings.get("time_slots") or []
+    time_slots = settings.get("timeSlots") or settings.get("time_slots") or nested_settings.get("time_slots") or []
     if len(time_slots) >= periods_per_day if periods_per_day else 0:
         score += 4
     else:
