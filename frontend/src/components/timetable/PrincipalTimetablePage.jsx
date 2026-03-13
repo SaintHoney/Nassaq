@@ -40,6 +40,9 @@ import {
 // Skeleton Component
 import { Skeleton } from '../../components/ui/skeleton';
 
+// Import useAuth hook
+import { useAuth } from '../../contexts/AuthContext';
+
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
 // ============================================
@@ -47,10 +50,25 @@ const API_BASE = process.env.REACT_APP_BACKEND_URL;
 // ============================================
 const PrincipalTimetablePage = () => {
   const navigate = useNavigate();
-  const schoolId = localStorage.getItem('school_id');
+  const { user, schoolContext } = useAuth();
+  
+  // Get school_id from multiple sources (priority order)
+  const schoolId = React.useMemo(() => {
+    // 1. From school context (impersonation)
+    if (schoolContext?.school_id) return schoolContext.school_id;
+    // 2. From user's roles
+    if (user?.roles) {
+      for (const role of user.roles) {
+        if (role.school_id) return role.school_id;
+      }
+    }
+    // 3. From localStorage (legacy)
+    return localStorage.getItem('school_id') || localStorage.getItem('nassaq_school_id');
+  }, [user, schoolContext]);
+
   // Try both token storage keys
   const token = localStorage.getItem('nassaq_token') || localStorage.getItem('token');
-  const userName = localStorage.getItem('user_name') || '';
+  const userName = user?.full_name || localStorage.getItem('user_name') || '';
 
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(true);
