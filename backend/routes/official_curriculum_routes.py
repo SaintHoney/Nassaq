@@ -268,7 +268,7 @@ async def get_grade_subjects(grade_id: str):
     الحصول على توزيع المواد لصف محدد
     Get subject distribution for a specific grade
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     # Get the grade info
@@ -323,7 +323,7 @@ async def get_teacher_rank_loads():
     الحصول على النصاب الرسمي للمعلمين حسب الرتب
     Get official teacher workload by rank
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     ranks = await db.official_teacher_rank_loads.find(
@@ -339,7 +339,7 @@ async def get_stage_full_curriculum(stage_id: str):
     الحصول على المنهج الكامل لمرحلة محددة
     Get complete curriculum for a stage including all tracks, grades, and subjects
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     # Get stage
@@ -416,7 +416,7 @@ async def get_complete_curriculum():
     
     WARNING: This returns a large dataset. Use stage-specific endpoints for better performance.
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     # Get all stages
