@@ -9,7 +9,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-router = APIRouter(prefix="/api/official-curriculum", tags=["Official Curriculum"])
+router = APIRouter(prefix="/official-curriculum", tags=["Official Curriculum"])
 
 # Database dependency - will be injected
 db = None
