@@ -4427,13 +4427,14 @@ async def create_class_wizard(
         "success": True,
         "class": {
             "id": class_id,
-            "name": class_doc["name"],
-            "grade": data.grade,
-            "section": data.section,
+            "name": class_name,
+            "grade": grade_number,
+            "section": data.section or "أ",
             "capacity": data.capacity,
             "student_count": len(data.student_ids),
             "homeroom_teacher_name": teacher_name,
         },
+        "class_id": class_id,
         "message": "تم إنشاء الفصل بنجاح"
     }
 
