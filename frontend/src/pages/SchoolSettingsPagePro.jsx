@@ -1129,6 +1129,115 @@ export default function SchoolSettingsPagePro() {
     }
   };
   
+  // State for inline time editing
+  const [inlineTimeSlots, setInlineTimeSlots] = useState([]);
+  const [savingInline, setSavingInline] = useState(false);
+  
+  // Initialize inline slots from settings
+  useEffect(() => {
+    if (settings.time_slots?.length > 0) {
+      setInlineTimeSlots([...settings.time_slots]);
+    }
+  }, [settings.time_slots]);
+  
+  // Helper function to add minutes to time
+  const addMinutesToTime = (time, minutes) => {
+    const [h, m] = time.split(':').map(Number);
+    const totalMinutes = h * 60 + m + minutes;
+    const newH = Math.floor(totalMinutes / 60);
+    const newM = totalMinutes % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+  };
+  
+  // Handle inline time change with cascading recalculation
+  const handleInlineTimeChange = async (slotIndex, newStartTime) => {
+    // Clone slots for modification
+    const updatedSlots = [...inlineTimeSlots];
+    const currentSlot = updatedSlots[slotIndex];
+    
+    // Calculate duration of current slot
+    const duration = currentSlot.duration_minutes || currentSlot.duration || 45;
+    
+    // Update current slot
+    updatedSlots[slotIndex] = {
+      ...currentSlot,
+      start_time: newStartTime,
+      end_time: addMinutesToTime(newStartTime, duration)
+    };
+    
+    // Cascade update all following slots
+    let currentEndTime = updatedSlots[slotIndex].end_time;
+    
+    for (let i = slotIndex + 1; i < updatedSlots.length; i++) {
+      const slot = updatedSlots[i];
+      const slotDuration = slot.duration_minutes || slot.duration || 45;
+      
+      updatedSlots[i] = {
+        ...slot,
+        start_time: currentEndTime,
+        end_time: addMinutesToTime(currentEndTime, slotDuration)
+      };
+      
+      currentEndTime = updatedSlots[i].end_time;
+    }
+    
+    // Update state immediately for UI
+    setInlineTimeSlots(updatedSlots);
+    
+    // Save to database
+    setSavingInline(true);
+    try {
+      await api.put('/school/settings', {
+        settings: {
+          time_slots: updatedSlots,
+          school_day_start: updatedSlots[0]?.start_time,
+          school_day_end: updatedSlots[updatedSlots.length - 1]?.end_time
+        }
+      });
+      
+      toast.success('تم تحديث التوزيع الزمني بنجاح');
+      
+      // Update main settings state
+      setSettings(prev => ({
+        ...prev,
+        time_slots: updatedSlots,
+        school_day_start: updatedSlots[0]?.start_time,
+        school_day_end: updatedSlots[updatedSlots.length - 1]?.end_time
+      }));
+    } catch (error) {
+      console.error('Error saving inline time change:', error);
+      toast.error('فشل حفظ التعديل، جاري استعادة القيم السابقة');
+      // Revert to previous state
+      setInlineTimeSlots([...settings.time_slots]);
+    } finally {
+      setSavingInline(false);
+    }
+  };
+  
+  // Reset time slots to default
+  const handleResetTimeSlots = async () => {
+    const defaultSlots = calculateTimeSlots('07:00', 7, 45, 20, 20).slots;
+    setInlineTimeSlots(defaultSlots);
+    
+    setSavingInline(true);
+    try {
+      await api.put('/school/settings', {
+        settings: {
+          time_slots: defaultSlots,
+          school_day_start: '07:00',
+          school_day_end: defaultSlots[defaultSlots.length - 1]?.end_time
+        }
+      });
+      toast.success('تم إعادة ضبط التوزيع الزمني للوضع الافتراضي');
+      fetchData();
+    } catch (error) {
+      console.error('Error resetting:', error);
+      toast.error('فشل إعادة الضبط');
+    } finally {
+      setSavingInline(false);
+    }
+  };
+  
   // Toggle constraint active status
   const toggleConstraint = async (constraint) => {
     try {
