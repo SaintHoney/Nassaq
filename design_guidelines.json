@@ -1,14 +1,10 @@
 {
-  "project_name": "NASSAQ - Enterprise School Management System",
-  "design_philosophy": {
-    "core_values": [
-      "Trustworthy & Institutional (Ministry/Enterprise grade)",
-      "Modern & Intelligent (AI-driven)",
-      "Cultural Resonance (Arabic-first, RTL native)",
-      "Clarity & Efficiency (Dense data, clear hierarchy)"
-    ],
-    "visual_style": "Modern Enterprise SaaS. Clean lines, soft shadows, rounded corners, high readability. 'Hakim' (AI) adds a layer of friendly intelligence to the rigid admin interface.",
-    "rtl_strategy": "CRITICAL: All layouts must be RTL-first. Use logical properties (ps-*, pe-*, ms-*, me-*) instead of physical (pl-*, pr-*, ml-*, mr-*) to ensure bidirectional support."
+  "identity": {
+    "name": "NASSAQ | نَسَّق",
+    "persona": "E1 - The Anti-AI Designer",
+    "tone": "Professional, Trustworthy, Efficient, Organized",
+    "target_audience": "School Principals in Saudi Arabia",
+    "language": "Arabic (RTL)"
   },
   "typography": {
     "font_family": {
@@ -17,118 +13,166 @@
       "mono": "IBM Plex Mono, monospace"
     },
     "scale": {
-      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
-      "h2": "text-3xl md:text-4xl font-bold",
+      "h1": "text-4xl font-bold tracking-tight",
+      "h2": "text-3xl font-bold tracking-tight",
       "h3": "text-2xl font-semibold",
+      "h4": "text-xl font-semibold",
       "body_lg": "text-lg leading-relaxed",
       "body": "text-base leading-relaxed",
-      "caption": "text-sm text-muted-foreground"
-    },
-    "instructions": "Import 'Cairo' and 'Tajawal' from Google Fonts. Apply 'Cairo' to all headings (h1-h6) and 'Tajawal' to body text. Ensure font weights are distinct (Bold for heads, Regular/Medium for body)."
+      "small": "text-sm text-muted-foreground",
+      "tiny": "text-xs font-medium uppercase tracking-wider"
+    }
   },
   "colors": {
     "palette": {
       "primary": {
-        "name": "Nassaq Navy",
-        "hex": "#0F2C59",
-        "usage": "Main brand color, primary buttons, active states, sidebar backgrounds"
+        "name": "Brand Navy",
+        "hex": "#1C3D74",
+        "usage": "Primary actions, active states, headers"
       },
       "secondary": {
-        "name": "Smart Turquoise",
-        "hex": "#1B93A4",
-        "usage": "Highlights, success states, positive indicators, secondary actions"
+        "name": "Brand Turquoise",
+        "hex": "#46C1BE",
+        "usage": "Accents, success states, highlights"
       },
       "accent": {
-        "name": "AI Purple",
-        "hex": "#7C3AED",
-        "usage": "AI features, 'Hakim' interactions, analytics insights"
+        "name": "Brand Purple",
+        "hex": "#615090",
+        "usage": "Special features, AI suggestions"
       },
       "background": {
-        "light": "#F8FAFC",
-        "dark": "#020617"
+        "default": "#F8FAFC",
+        "paper": "#FFFFFF",
+        "subtle": "#F1F5F9"
       },
-      "surface": {
-        "light": "#FFFFFF",
-        "dark": "#0F172A"
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#64748B",
+        "muted": "#94A3B8"
+      },
+      "status": {
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
       }
     },
-    "tailwind_config_extension": {
-      "colors": {
-        "brand": {
-          "navy": "#0F2C59",
-          "turquoise": "#1B93A4",
-          "purple": "#7C3AED"
-        }
-      }
-    }
+    "rules": [
+      "Use 'Brand Navy' for primary buttons and active navigation items.",
+      "Use 'Brand Turquoise' sparingly for 'Call to Action' highlights or progress indicators.",
+      "Backgrounds should be mostly 'Background Default' (#F8FAFC) to reduce eye strain.",
+      "Cards should be 'Background Paper' (#FFFFFF) with a subtle shadow.",
+      "NEVER use gradients for text. Keep text high-contrast solid colors."
+    ]
   },
   "layout": {
-    "grid_system": "Use 'Bento' grids for dashboards. 12-column base. Sidebar fixed width (280px) on desktop.",
-    "spacing": "Generous padding inside cards (p-6 or p-8). Tight gaps in data tables. Use 'gap-6' for dashboard widgets.",
-    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
-    "radius": "rounded-xl (12px) for cards, rounded-lg (8px) for inputs/buttons. Avoid sharp edges."
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "settings_page": "flex flex-col gap-8",
+      "form_group": "grid grid-cols-1 md:grid-cols-2 gap-6"
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "section_gap": "gap-8",
+      "item_gap": "gap-4"
+    },
+    "rtl_strategy": {
+      "direction": "rtl",
+      "margins": "Use logical properties: ms-* (margin-start), me-* (margin-end) instead of ml/mr.",
+      "paddings": "Use logical properties: ps-* (padding-start), pe-* (padding-end) instead of pl/pr.",
+      "alignment": "text-right by default. Use text-start/text-end for explicit alignment."
+    }
   },
   "components": {
-    "buttons": {
-      "primary": "bg-brand-navy text-white hover:bg-brand-navy/90 shadow-md rounded-lg h-10 px-6",
-      "secondary": "bg-brand-turquoise/10 text-brand-turquoise hover:bg-brand-turquoise/20 border-0",
-      "outline": "border-2 border-brand-navy/20 text-brand-navy hover:bg-brand-navy/5"
-    },
     "cards": {
-      "style": "bg-card text-card-foreground rounded-xl border shadow-sm hover:shadow-md transition-shadow duration-200",
-      "dashboard_widget": "p-6 flex flex-col justify-between h-full"
+      "style": "bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200",
+      "padding": "p-6"
+    },
+    "buttons": {
+      "primary": "bg-[#1C3D74] hover:bg-[#152d57] text-white rounded-lg px-6 py-2.5 font-medium transition-all shadow-sm hover:shadow-md active:scale-95",
+      "secondary": "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg px-6 py-2.5 font-medium transition-all",
+      "ghost": "text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg px-4 py-2 transition-all",
+      "destructive": "bg-red-50 text-red-600 hover:bg-red-100 rounded-lg px-6 py-2.5 font-medium transition-all"
     },
     "inputs": {
-      "style": "h-11 rounded-lg border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      "style": "flex h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#46C1BE] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+      "label": "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2 block text-slate-700"
     },
-    "navigation": {
-      "sidebar": "bg-brand-navy text-white w-72 fixed inset-y-0 right-0 (for RTL) z-50 flex flex-col",
-      "sidebar_item": "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors hover:bg-white/10 data-[active=true]:bg-brand-turquoise data-[active=true]:text-white"
+    "tabs": {
+      "list": "inline-flex h-12 items-center justify-center rounded-lg bg-slate-100 p-1 text-slate-500",
+      "trigger": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-[#1C3D74] data-[state=active]:shadow-sm"
+    },
+    "readiness_card": {
+      "description": "A prominent card showing the school's data completion status.",
+      "style": "bg-gradient-to-br from-[#1C3D74] to-[#2a5096] text-white rounded-2xl p-8 relative overflow-hidden",
+      "elements": [
+        "Circular Progress Indicator (0-100%)",
+        "Status Text (e.g., 'بيانات المدرسة غير مكتملة')",
+        "Action Button (e.g., 'إكمال البيانات')",
+        "Background Pattern (Subtle geometric shapes)"
+      ]
     }
   },
-  "assets": {
-    "logos": {
-      "light_bg": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/a2a1b0lv_Nassaq%20LinkedIn%20Logo.png",
-      "dark_bg": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/q04svb5j_Nassaq%20LinkedIn%20Logo%20White.png"
-    },
-    "backgrounds": {
-      "pattern": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/1itjy61q_Nassaq%20Background.png"
-    },
-    "characters": {
-      "hakim_ai": "https://customer-assets.emergentagent.com/job_f5ea20bb-5cf5-462f-a7f0-958201e27f89/artifacts/bfdsnfxc_Hakim%20Character%20Examples%20and%20Referance%2001.avif"
-    },
-    "stock_images": {
-      "hero_students": "https://images.pexels.com/photos/33846282/pexels-photo-33846282.jpeg",
-      "teachers_working": "https://images.unsplash.com/photo-1594256347468-5cd43df8fbaf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxtaWRkbGUlMjBlYXN0ZXJuJTIwdGVhY2hlciUyMHVzaW5nJTIwbGFwdG9wJTIwZWR1Y2F0aW9ufGVufDB8fHx8MTc3Mjk3OTc3MHww&ixlib=rb-4.1.0&q=85"
+  "page_structure": {
+    "school_settings": {
+      "header": {
+        "title": "إعدادات المدرسة",
+        "subtitle": "قم بإدارة بيانات المدرسة، الفصول، والمعلمين لتجهيز الجدول المدرسي."
+      },
+      "tabs": [
+        { "id": "overview", "label": "نظرة عامة", "icon": "LayoutDashboard" },
+        { "id": "workdays", "label": "أيام العمل", "icon": "CalendarDays" },
+        { "id": "timings", "label": "التوقيت", "icon": "Clock" },
+        { "id": "classes", "label": "الفصول", "icon": "School" },
+        { "id": "teachers", "label": "المعلمون", "icon": "Users" },
+        { "id": "assignments", "label": "الإسنادات", "icon": "BookOpen" },
+        { "id": "constraints", "label": "القيود", "icon": "Sliders" }
+      ]
     }
   },
-  "page_strategies": {
-    "landing_page": {
-      "hero": "Use the 'Background Pattern' as a subtle overlay on a Navy gradient. Place 'Hakim' (AI Character) floating or interacting with a UI element. Headline in Cairo Bold.",
-      "features": "Bento grid layout. Use icons + short Arabic text. Hover effects: Card lifts, border glows Turquoise.",
-      "testimonials": "Horizontal scroll or marquee. Use circular avatars.",
-      "cta": "High contrast. Navy background, White text, Turquoise button."
-    },
-    "auth_pages": {
-      "layout": "Split screen. Right side (RTL): Form. Left side: Branding + Hakim AI illustration + Testimonial.",
-      "form": "Clean, stacked inputs. 'Forgot Password' prominent."
-    },
-    "dashboard": {
-      "layout": "Sidebar layout (Right aligned for RTL). Top header for search/notifications/profile.",
-      "widgets": "White cards with soft shadow. Headers in Cairo. Data in Tajawal/Numbers in Mono.",
-      "ai_panel": "Floating action button (FAB) or persistent sidebar widget featuring Hakim's face. Clicking opens a chat interface."
-    }
+  "visual_enhancers": {
+    "icons": "Use 'lucide-react' icons. Stroke width: 1.5px or 2px. Size: 18px or 20px.",
+    "shadows": "Use 'shadow-soft' for cards, 'shadow-lg' for dropdowns/modals.",
+    "borders": "Use 'border-slate-200' for subtle separation. Avoid heavy borders.",
+    "radius": "Use 'rounded-xl' for containers, 'rounded-lg' for inner elements."
   },
   "accessibility": {
-    "contrast": "Ensure text on Navy background is Pure White. Text on Turquoise must be Dark Navy.",
-    "rtl": "Add 'dir=rtl' to the html tag. Use 'text-right' as default alignment for Arabic.",
-    "focus": "Visible focus rings (ring-2 ring-brand-turquoise) on all interactive elements."
+    "contrast": "Ensure text contrast ratio is at least 4.5:1.",
+    "focus_states": "All interactive elements must have a visible focus ring.",
+    "aria_labels": "Use aria-label for icon-only buttons."
   },
-  "universal_guidelines": [
-    "Use 'sonner' for toasts.",
-    "All interactive elements must have 'data-testid'.",
-    "Do not use generic gradients. Use the provided background pattern.",
-    "Avoid 'Inter' font. Use Cairo/Tajawal.",
-    "Dark mode is mandatory. Ensure colors adapt (Navy becomes darker, White becomes Slate-900)."
+  "image_urls": {
+    "school_hero": "https://images.unsplash.com/photo-1730106443463-0fb1512c5e60?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzY2hvb2wlMjBidWlsZGluZyUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3NzM0MTQyMTh8MA&ixlib=rb-4.1.0&q=85",
+    "placeholder_avatar": "https://ui.shadcn.com/avatars/01.png"
+  },
+  "instructions_to_main_agent": [
+    "1. Implement the 'School Settings' page as a main layout with a sidebar or top tabs.",
+    "2. Use the 'Readiness Status' card as the hero element on the 'Overview' tab.",
+    "3. For the 'Teachers' and 'Classes' tabs, use a clean Data Table with search and filter options.",
+    "4. Ensure all text is Arabic and direction is RTL.",
+    "5. Use 'react-hook-form' and 'zod' for all data entry forms.",
+    "6. Mock data should be realistic Saudi school data (e.g., 'المرحلة الثانوية', 'مسار علوم الحاسب', 'أ. محمد الغامدي').",
+    "7. Do NOT use 'lorem ipsum'. Use meaningful Arabic placeholder text.",
+    "8. Keep the design spacious. Avoid clutter."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx"
   ]
 }
