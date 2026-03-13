@@ -508,54 +508,76 @@ const PrincipalTimetablePage = () => {
   // ============================================
   if (pageStatus === 'loading') {
     return (
-      <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
-        {/* Header Skeleton */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Skeleton className="w-14 h-14 rounded-2xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-48" />
+      <div className="flex min-h-screen bg-muted/30">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        
+        {/* Main Content */}
+        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+          <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
+            {/* Header Skeleton */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-14 h-14 rounded-2xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Skeleton key={i} className="h-6 w-24 rounded-full" />
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Skeleton key={i} className="h-6 w-24 rounded-full" />
-            ))}
+            
+            {/* Content Skeleton */}
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-[400px] w-full rounded-xl" />
           </div>
         </div>
-        
-        {/* Content Skeleton */}
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-32 w-full rounded-xl" />
-        <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
     );
   }
 
   if (pageStatus === 'error') {
     return (
-      <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-            <span className="text-4xl">⚠️</span>
+      <div className="flex min-h-screen bg-muted/30">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        
+        {/* Main Content */}
+        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+          <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl">
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h2 className="text-xl font-bold text-red-700 mb-2">حدث خطأ في تحميل الصفحة</h2>
+              <p className="text-red-600 mb-4">{errorMessage}</p>
+              <button
+                onClick={loadPageData}
+                className="px-4 py-2 bg-brand-navy text-white rounded-lg hover:bg-brand-navy/90"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-red-700 mb-2">حدث خطأ في تحميل الصفحة</h2>
-          <p className="text-red-600 mb-4">{errorMessage}</p>
-          <button
-            onClick={loadPageData}
-            className="px-4 py-2 bg-brand-navy text-white rounded-lg hover:bg-brand-navy/90"
-          >
-            إعادة المحاولة
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl" data-testid="principal-timetable-page">
+    <div className="flex min-h-screen bg-muted/30">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      
+      {/* Main Content */}
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-64' : 'mr-20'}`}>
+        <div className="p-6 space-y-6 max-w-[1600px] mx-auto" dir="rtl" data-testid="principal-timetable-page">
       {/* 1. Page Header */}
       <TimetablePageHeader
         schoolNameAr={schoolInfo?.name_ar || schoolInfo?.school_name_ar}
