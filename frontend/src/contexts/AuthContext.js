@@ -189,6 +189,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user data (for profile updates)
+  const updateUser = (updatedData) => {
+    setUser((prev) => ({ ...prev, ...updatedData }));
+  };
+
+  // Refresh user data from server
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const response = await api.get('/auth/me');
+      setUser(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return null;
+    }
+  };
+
+  // Listen for user-updated events
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      if (event.detail) {
+        setUser((prev) => ({ ...prev, ...event.detail }));
+      }
+    };
+    
+    window.addEventListener('user-updated', handleUserUpdate);
+    return () => window.removeEventListener('user-updated', handleUserUpdate);
+  }, []);
+
   const value = {
     user,
     token,
