@@ -9756,6 +9756,203 @@ async def get_school_grades_report(
     return report_data
 
 
+@api_router.get("/reports/school/behavior")
+async def get_school_behavior_report(
+    period: str = "current_term",
+    current_user: dict = Depends(get_current_user)
+):
+    """Get behavior report with statistics"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get all behavior records for the school
+    behavior_records = await db.behavior.find(
+        {"school_id": school_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Count by type
+    positive_count = len([b for b in behavior_records if b.get("type") == "positive" or b.get("behavior_type") == "positive"])
+    negative_count = len([b for b in behavior_records if b.get("type") == "negative" or b.get("behavior_type") == "negative"])
+    warning_count = len([b for b in behavior_records if b.get("type") == "warning" or b.get("behavior_type") == "warning"])
+    appreciation_count = len([b for b in behavior_records if b.get("type") == "appreciation" or b.get("behavior_type") == "appreciation"])
+    
+    # Get recent behavior notes (last 10)
+    recent_notes = []
+    for record in behavior_records[:10]:
+        student_id = record.get("student_id")
+        student = await db.students.find_one({"id": student_id}, {"_id": 0, "name": 1, "name_ar": 1})
+        student_name = student.get("name_ar") or student.get("name") if student else "طالب"
+        
+        recent_notes.append({
+            "id": record.get("id"),
+            "student_name": student_name,
+            "student_id": student_id,
+            "note": record.get("note") or record.get("description") or record.get("notes", ""),
+            "type": record.get("type") or record.get("behavior_type", "positive"),
+            "date": record.get("created_at") or record.get("date"),
+            "class_id": record.get("class_id")
+        })
+    
+    return {
+        "stats": {
+            "positive": positive_count,
+            "negative": negative_count,
+            "warning": warning_count,
+            "appreciation": appreciation_count,
+            "total": len(behavior_records)
+        },
+        "recent_notes": recent_notes,
+        "period": period,
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@api_router.get("/reports/school/top-classes")
+async def get_top_performing_classes(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get top performing classes based on attendance and behavior"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get all classes
+    classes = await db.classes.find({"school_id": school_id}, {"_id": 0}).to_list(100)
+    
+    class_performance = []
+    for cls in classes:
+        class_id = cls.get("id")
+        
+        # Get attendance rate
+        attendance = await db.attendance.find({"class_id": class_id}, {"_id": 0}).to_list(10000)
+        present_count = len([a for a in attendance if a.get("status") == "present"])
+        total_attendance = len(attendance)
+        attendance_rate = round((present_count / total_attendance) * 100, 1) if total_attendance > 0 else 0
+        
+        # Get positive behavior count
+        positive_behavior = await db.behavior.count_documents({
+            "class_id": class_id,
+            "$or": [
+                {"type": "positive"},
+                {"behavior_type": "positive"},
+                {"type": "appreciation"},
+                {"behavior_type": "appreciation"}
+            ]
+        })
+        
+        # Calculate score (70% attendance, 30% behavior)
+        behavior_score = min(30, positive_behavior * 3)  # Cap at 30
+        total_score = round(attendance_rate * 0.7 + behavior_score, 1)
+        
+        class_performance.append({
+            "class_id": class_id,
+            "class_name": cls.get("name") or cls.get("name_ar"),
+            "attendance_rate": attendance_rate,
+            "positive_behavior_count": positive_behavior,
+            "score": total_score,
+            "rank_reason": f"نسبة حضور {attendance_rate}% | {positive_behavior} سلوك إيجابي"
+        })
+    
+    # Sort by score
+    class_performance.sort(key=lambda x: x["score"], reverse=True)
+    
+    return class_performance[:5]  # Return top 5
+
+
+@api_router.get("/reports/school/export")
+async def export_school_report(
+    report_type: str = "overview",
+    format: str = "json",
+    current_user: dict = Depends(get_current_user)
+):
+    """Export school report data"""
+    school_id = current_user.get("tenant_id")
+    if not school_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
+    
+    # Get data based on report type
+    if report_type == "overview":
+        # Get counts
+        total_students = await db.students.count_documents({"school_id": school_id})
+        total_teachers = await db.teachers.count_documents({"school_id": school_id})
+        total_classes = await db.classes.count_documents({"school_id": school_id})
+        
+        # Get attendance
+        attendance = await db.attendance.find({"school_id": school_id}, {"_id": 0}).to_list(10000)
+        present = len([a for a in attendance if a.get("status") == "present"])
+        attendance_rate = round((present / len(attendance)) * 100, 1) if attendance else 0
+        
+        # Get positive behavior
+        positive_behavior = await db.behavior.count_documents({
+            "school_id": school_id,
+            "$or": [{"type": "positive"}, {"behavior_type": "positive"}]
+        })
+        
+        data = {
+            "report_type": "نظرة عامة",
+            "school_id": school_id,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "total_students": total_students,
+                "total_teachers": total_teachers,
+                "total_classes": total_classes,
+                "attendance_rate": attendance_rate,
+                "positive_behavior_count": positive_behavior
+            }
+        }
+    
+    elif report_type == "attendance":
+        # Get attendance by class
+        classes = await db.classes.find({"school_id": school_id}, {"_id": 0}).to_list(100)
+        attendance_data = []
+        
+        for cls in classes:
+            attendance = await db.attendance.find({"class_id": cls.get("id")}, {"_id": 0}).to_list(10000)
+            present = len([a for a in attendance if a.get("status") == "present"])
+            absent = len([a for a in attendance if a.get("status") == "absent"])
+            late = len([a for a in attendance if a.get("status") == "late"])
+            total = len(attendance)
+            rate = round((present / total) * 100, 1) if total > 0 else 0
+            
+            attendance_data.append({
+                "class": cls.get("name"),
+                "present": present,
+                "absent": absent,
+                "late": late,
+                "rate": rate
+            })
+        
+        data = {
+            "report_type": "تقرير الحضور",
+            "school_id": school_id,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "attendance": attendance_data
+        }
+    
+    elif report_type == "behavior":
+        behavior_records = await db.behavior.find({"school_id": school_id}, {"_id": 0}).to_list(1000)
+        
+        data = {
+            "report_type": "تقرير السلوك",
+            "school_id": school_id,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "stats": {
+                "positive": len([b for b in behavior_records if b.get("type") == "positive"]),
+                "negative": len([b for b in behavior_records if b.get("type") == "negative"]),
+                "warning": len([b for b in behavior_records if b.get("type") == "warning"]),
+                "appreciation": len([b for b in behavior_records if b.get("type") == "appreciation"])
+            },
+            "records": behavior_records[:100]
+        }
+    
+    else:
+        data = {"error": "نوع التقرير غير صالح"}
+    
+    return data
+
+
 # ============== AI INSIGHTS APIs ==============
 @api_router.get("/ai/insights/overview")
 async def get_ai_insights_overview(
