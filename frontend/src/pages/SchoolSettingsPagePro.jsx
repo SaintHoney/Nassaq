@@ -604,11 +604,11 @@ function SchoolSettingsPagePro() {
                     size="lg"
                     className={`${readinessData.can_generate ? 'bg-white text-[#1C3D74] hover:bg-slate-100' : 'bg-white/20 text-white cursor-not-allowed'}`}
                     disabled={!readinessData.can_generate}
-                    onClick={() => navigate('/school/schedule')}
+                    onClick={() => navigate('/principal/timetable')}
                     data-testid="generate-timetable-btn"
                   >
                     <Play className="h-5 w-5 ml-2" />
-                    {readinessData.can_generate ? 'إنشاء الجدول' : 'أكمل البيانات أولاً'}
+                    {readinessData.can_generate ? 'الذهاب للجدول' : 'أكمل البيانات أولاً'}
                   </Button>
                 </div>
               </div>
