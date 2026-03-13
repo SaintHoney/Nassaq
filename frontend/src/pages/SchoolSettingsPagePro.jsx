@@ -271,36 +271,79 @@ function SchoolSettingsPagePro() {
   
   const addTeacher = async () => {
     try {
-      await api.post('/school/teachers', newTeacher);
+      // Get school_id from current user context
+      const schoolId = currentUser?.tenant_id || currentUser?.school_id || 'SCH-001';
+      const teacherData = {
+        full_name: newTeacher.name,
+        email: newTeacher.email,
+        phone: newTeacher.phone,
+        specialization: newTeacher.specialization,
+        school_id: schoolId
+      };
+      await api.post('/teachers', teacherData);
       toast.success('تمت إضافة المعلم بنجاح');
       setShowAddTeacher(false);
       setNewTeacher({ name: '', email: '', phone: '', specialization: '' });
       fetchData();
     } catch (error) {
-      toast.error('حدث خطأ في إضافة المعلم');
+      console.error('Add teacher error:', error);
+      let errorMessage = 'حدث خطأ في إضافة المعلم';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
+        }
+      }
+      toast.error(errorMessage);
     }
   };
   
   const addClass = async () => {
     try {
-      await api.post('/school/classes', newClass);
+      // Get school_id from current user context
+      const schoolId = currentUser?.tenant_id || currentUser?.school_id || 'SCH-001';
+      const classData = {
+        name: newClass.name,
+        grade_level: newClass.grade,
+        section: newClass.section,
+        capacity: newClass.capacity || 30,
+        school_id: schoolId
+      };
+      await api.post('/classes', classData);
       toast.success('تمت إضافة الفصل بنجاح');
       setShowAddClass(false);
       setNewClass({ name: '', grade: '', section: '', capacity: 30 });
       fetchData();
     } catch (error) {
-      toast.error('حدث خطأ في إضافة الفصل');
+      console.error('Add class error:', error);
+      let errorMessage = 'حدث خطأ في إضافة الفصل';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
+        }
+      }
+      toast.error(errorMessage);
     }
   };
   
   const deleteTeacher = async (id) => {
     if (!confirm('هل أنت متأكد من حذف هذا المعلم؟')) return;
     try {
-      await api.delete(`/school/teachers/${id}`);
+      await api.delete(`/teachers/${id}`);
       toast.success('تم حذف المعلم بنجاح');
       fetchData();
     } catch (error) {
-      toast.error('حدث خطأ في حذف المعلم');
+      console.error('Delete teacher error:', error);
+      let errorMessage = 'حدث خطأ في حذف المعلم';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      toast.error(errorMessage);
     }
   };
   
