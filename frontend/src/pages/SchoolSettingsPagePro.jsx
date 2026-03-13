@@ -170,6 +170,15 @@ function SchoolSettingsPagePro() {
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   
+  // DnD Sensors for class assignment
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+  
   // Data States
   const [schoolInfo, setSchoolInfo] = useState({});
   const [settings, setSettings] = useState({});
