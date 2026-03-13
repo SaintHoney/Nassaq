@@ -2119,6 +2119,131 @@ export default function SchoolSettingsPagePro() {
               </div>
             </TabsContent>
             
+            {/* ================= TAB: أيام العمل والعطلة - التصميم الجديد ================= */}
+            <TabsContent value="work-days" className="space-y-6" data-testid="work-days-tab-content">
+              <Card className="border-2 border-blue-200">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                        <CalendarDays className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">أيام العمل والعطلة</CardTitle>
+                        <CardDescription>تحديد أيام الدراسة والعطلة الأسبوعية</CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-blue-500 text-blue-700 hover:bg-blue-100"
+                      onClick={() => {
+                        setEditedWorkDays({
+                          sunday: settings.workingDays?.includes('الأحد') ?? true,
+                          monday: settings.workingDays?.includes('الإثنين') ?? true,
+                          tuesday: settings.workingDays?.includes('الثلاثاء') ?? true,
+                          wednesday: settings.workingDays?.includes('الأربعاء') ?? true,
+                          thursday: settings.workingDays?.includes('الخميس') ?? true,
+                          friday: settings.weekendDays?.includes('الجمعة') ?? false,
+                          saturday: settings.weekendDays?.includes('السبت') ?? false,
+                        });
+                        setEditWorkDaysOpen(true);
+                      }}
+                      data-testid="edit-work-days-btn-new"
+                    >
+                      <Edit2 className="h-4 w-4 ml-1" />
+                      تعديل
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {/* أيام الأسبوع - Grid واضح مع Toggle */}
+                  <div className="grid grid-cols-7 gap-3 mb-6">
+                    {[
+                      { key: 'sunday', name: 'الأحد', nameEn: 'Sunday' },
+                      { key: 'monday', name: 'الإثنين', nameEn: 'Monday' },
+                      { key: 'tuesday', name: 'الثلاثاء', nameEn: 'Tuesday' },
+                      { key: 'wednesday', name: 'الأربعاء', nameEn: 'Wednesday' },
+                      { key: 'thursday', name: 'الخميس', nameEn: 'Thursday' },
+                      { key: 'friday', name: 'الجمعة', nameEn: 'Friday' },
+                      { key: 'saturday', name: 'السبت', nameEn: 'Saturday' },
+                    ].map((day) => {
+                      const isWorkDay = settings.workingDays?.includes(day.name);
+                      
+                      return (
+                        <Card
+                          key={day.key}
+                          className={`transition-all duration-300 cursor-pointer hover:scale-105 ${
+                            isWorkDay 
+                              ? 'bg-gradient-to-br from-green-100 to-emerald-50 border-2 border-green-400 shadow-lg shadow-green-200/50' 
+                              : 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200'
+                          }`}
+                          data-testid={`day-card-${day.key}`}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">{day.nameEn}</p>
+                            <p className={`text-lg font-bold mb-2 ${isWorkDay ? 'text-green-700' : 'text-red-600'}`}>
+                              {day.name}
+                            </p>
+                            <div className={`
+                              inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                              ${isWorkDay 
+                                ? 'bg-green-500 text-white' 
+                                : 'bg-red-400 text-white'
+                              }
+                            `}>
+                              {isWorkDay ? (
+                                <>
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  يوم دراسة
+                                </>
+                              ) : (
+                                <>
+                                  <Ban className="h-3.5 w-3.5" />
+                                  عطلة
+                                </>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* ملخص أيام العمل */}
+                  <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl border">
+                    <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-green-200">
+                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <CheckCircle2 className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-green-700">{settings.workingDays?.length || 5}</p>
+                        <p className="text-sm text-green-600">أيام دراسة أسبوعياً</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-red-200">
+                      <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <Ban className="h-6 w-6 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-red-600">{settings.weekendDays?.length || 2}</p>
+                        <p className="text-sm text-red-500">أيام عطلة أسبوعياً</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ملاحظة توضيحية */}
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-start gap-2">
+                    <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-blue-700">
+                      تحديد أيام العمل يؤثر مباشرة على محرك الجدول الذكي. 
+                      عند تغيير أيام العمل، قد تحتاج إلى إعادة توليد الجدول المدرسي.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
             {/* ================= TAB: المنهج الرسمي ================= */}
             <TabsContent value="official-curriculum" className="space-y-6" data-testid="official-curriculum-tab-content">
               {/* Header Card */}
