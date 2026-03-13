@@ -158,6 +158,10 @@ export default function SchedulePageNew() {
   const [unplacedSessions, setUnplacedSessions] = useState([]);
   const [smartTimetables, setSmartTimetables] = useState([]); // Smart Scheduling timetables
   const [selectedSmartTimetable, setSelectedSmartTimetable] = useState(null);
+  const [showFullTimetable, setShowFullTimetable] = useState(false); // عرض الجدول الكامل في نفس الصفحة
+  const [timetableViewMode, setTimetableViewMode] = useState('class'); // 'class' or 'teacher' for full view
+  const [selectedViewClass, setSelectedViewClass] = useState('');
+  const [selectedViewTeacher, setSelectedViewTeacher] = useState('');
   
   const schoolId = user?.tenant_id;
 
