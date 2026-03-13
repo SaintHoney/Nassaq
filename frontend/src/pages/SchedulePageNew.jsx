@@ -619,6 +619,17 @@ export default function SchedulePageNew() {
                     {sessions.length} حصة
                   </Badge>
                   
+                  {/* View Smart Timetable Button - NEW */}
+                  <Link to="/admin/smart-timetable">
+                    <Button 
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
+                      data-testid="view-smart-timetable-btn"
+                    >
+                      <Eye className="h-4 w-4 ml-2" />
+                      عرض الجدول
+                    </Button>
+                  </Link>
+                  
                   {/* Full Schedule View Button */}
                   {sessions.length > 0 && (
                     <Button 
