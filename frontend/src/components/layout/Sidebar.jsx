@@ -65,19 +65,30 @@ export const Sidebar = ({ children }) => {
 
   // Fetch available roles on mount
   useEffect(() => {
-    if (token) {
-      fetchAvailableRoles();
+    // Only fetch if we have a valid token and user
+    if (token && user?.id) {
+      // Small delay to ensure auth context is fully initialized
+      const timeoutId = setTimeout(() => {
+        fetchAvailableRoles();
+      }, 100);
+      return () => clearTimeout(timeoutId);
     }
-  }, [token]);
+  }, [token, user?.id]);
 
   // Fetch available roles when modal opens
   useEffect(() => {
-    if (showRoleSwitcher && token) {
+    if (showRoleSwitcher && token && user?.id) {
       fetchAvailableRoles();
     }
-  }, [showRoleSwitcher]);
+  }, [showRoleSwitcher, token, user?.id]);
 
   const fetchAvailableRoles = async () => {
+    // Double check token is valid before making request
+    if (!token) {
+      console.warn('Skipping roles fetch - no token available');
+      return;
+    }
+    
     setLoadingRoles(true);
     try {
       const response = await axios.get(`${API_URL}/api/user-roles/my-roles`, {
