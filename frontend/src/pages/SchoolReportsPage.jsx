@@ -373,69 +373,91 @@ export const SchoolReportsPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">{isRTL ? 'نسبة الحضور الكلية' : 'Overall Attendance'}</span>
-                        <span className="font-bold text-green-600">94.5%</span>
-                      </div>
-                      <Progress value={94.5} className="h-3" />
+                    {(() => {
+                      // Calculate totals from attendanceData
+                      const totalPresent = attendanceData.reduce((sum, row) => sum + (row.present || 0), 0);
+                      const totalAbsent = attendanceData.reduce((sum, row) => sum + (row.absent || 0), 0);
+                      const totalLate = attendanceData.reduce((sum, row) => sum + (row.late || 0), 0);
+                      const totalRecords = totalPresent + totalAbsent + totalLate;
+                      const attendanceRate = totalRecords > 0 ? ((totalPresent / totalRecords) * 100).toFixed(1) : 0;
                       
-                      <div className="grid grid-cols-3 gap-4 mt-6">
-                        <div className="text-center p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
-                          <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
-                          <p className="text-2xl font-bold text-green-600">425</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'حاضر' : 'Present'}</p>
+                      return (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">{isRTL ? 'نسبة الحضور الكلية' : 'Overall Attendance'}</span>
+                            <span className="font-bold text-green-600">{attendanceRate}%</span>
+                          </div>
+                          <Progress value={parseFloat(attendanceRate)} className="h-3" />
+                          
+                          <div className="grid grid-cols-3 gap-4 mt-6">
+                            <div className="text-center p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
+                              <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                              <p className="text-2xl font-bold text-green-600">{totalPresent}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'حاضر' : 'Present'}</p>
+                            </div>
+                            <div className="text-center p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
+                              <XCircle className="h-8 w-8 mx-auto text-red-500 mb-2" />
+                              <p className="text-2xl font-bold text-red-600">{totalAbsent}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'غائب' : 'Absent'}</p>
+                            </div>
+                            <div className="text-center p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20">
+                              <Clock className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
+                              <p className="text-2xl font-bold text-yellow-600">{totalLate}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'متأخر' : 'Late'}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-center p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
-                          <XCircle className="h-8 w-8 mx-auto text-red-500 mb-2" />
-                          <p className="text-2xl font-bold text-red-600">18</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'غائب' : 'Absent'}</p>
-                        </div>
-                        <div className="text-center p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20">
-                          <Clock className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
-                          <p className="text-2xl font-bold text-yellow-600">7</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'متأخر' : 'Late'}</p>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
 
-                {/* Grades Overview */}
+                {/* Behavior Overview - Replacing Grades */}
                 <Card className="card-nassaq">
                   <CardHeader>
                     <CardTitle className="font-cairo flex items-center gap-2">
-                      <Award className="h-5 w-5 text-amber-500" />
-                      {isRTL ? 'ملخص الدرجات' : 'Grades Summary'}
+                      <Heart className="h-5 w-5 text-green-500" />
+                      {isRTL ? 'السلوك الإيجابي' : 'Positive Behavior'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">{isRTL ? 'متوسط الدرجات الكلي' : 'Overall Average'}</span>
-                        <span className="font-bold text-amber-600">78.3%</span>
-                      </div>
-                      <Progress value={78.3} className="h-3" />
+                    {(() => {
+                      const positiveCount = behaviorData.find(b => b.type === 'positive')?.count || 0;
+                      const negativeCount = behaviorData.find(b => b.type === 'negative')?.count || 0;
+                      const warningCount = behaviorData.find(b => b.type === 'warning')?.count || 0;
+                      const appreciationCount = behaviorData.find(b => b.type === 'appreciation')?.count || 0;
+                      const totalBehavior = positiveCount + negativeCount + warningCount + appreciationCount;
+                      const positiveRate = totalBehavior > 0 ? (((positiveCount + appreciationCount) / totalBehavior) * 100).toFixed(1) : 0;
                       
-                      <div className="grid grid-cols-4 gap-4 mt-6">
-                        <div className="text-center p-3 rounded-xl bg-green-50 dark:bg-green-900/20">
-                          <p className="text-xl font-bold text-green-600">125</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'ممتاز' : 'Excellent'}</p>
+                      return (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">{isRTL ? 'نسبة السلوك الإيجابي' : 'Positive Behavior Rate'}</span>
+                            <span className="font-bold text-green-600">{positiveRate}%</span>
+                          </div>
+                          <Progress value={parseFloat(positiveRate)} className="h-3" />
+                          
+                          <div className="grid grid-cols-4 gap-4 mt-6">
+                            <div className="text-center p-3 rounded-xl bg-green-50 dark:bg-green-900/20">
+                              <p className="text-xl font-bold text-green-600">{positiveCount}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'إيجابي' : 'Positive'}</p>
+                            </div>
+                            <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20">
+                              <p className="text-xl font-bold text-blue-600">{appreciationCount}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'تقدير' : 'Appreciation'}</p>
+                            </div>
+                            <div className="text-center p-3 rounded-xl bg-yellow-50 dark:bg-yellow-900/20">
+                              <p className="text-xl font-bold text-yellow-600">{warningCount}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'تحذير' : 'Warning'}</p>
+                            </div>
+                            <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
+                              <p className="text-xl font-bold text-red-600">{negativeCount}</p>
+                              <p className="text-xs text-muted-foreground">{isRTL ? 'سلبي' : 'Negative'}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                          <p className="text-xl font-bold text-blue-600">180</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'جيد جداً' : 'Very Good'}</p>
-                        </div>
-                        <div className="text-center p-3 rounded-xl bg-yellow-50 dark:bg-yellow-900/20">
-                          <p className="text-xl font-bold text-yellow-600">110</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'جيد' : 'Good'}</p>
-                        </div>
-                        <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
-                          <p className="text-xl font-bold text-red-600">35</p>
-                          <p className="text-xs text-muted-foreground">{isRTL ? 'ضعيف' : 'Weak'}</p>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
