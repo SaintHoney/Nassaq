@@ -39,7 +39,6 @@ import {
 function SchoolSettingsPagePro() {
   const navigate = useNavigate();
   const { api, user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('dynamic'); // 'dynamic' or 'static'
   const [activeTab, setActiveTab] = useState('academic-year');
   const [loading, setLoading] = useState(true);
