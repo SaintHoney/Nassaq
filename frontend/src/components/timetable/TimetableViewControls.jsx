@@ -281,13 +281,13 @@ const TimetableViewControls = ({
             </Select>
             
             {/* Grade or Teacher Filter */}
-            <Select value={selectedGradeId || ''} onValueChange={onGradeChange}>
+            <Select value={selectedGradeId || 'all'} onValueChange={(val) => onGradeChange(val === 'all' ? null : val)}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="كل الصفوف" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">كل الصفوف</SelectItem>
-                {grades.map(g => (
+                <SelectItem value="all">كل الصفوف</SelectItem>
+                {grades.filter(g => g.id || g.value).map(g => (
                   <SelectItem key={g.id || g.value} value={g.id || g.value}>
                     {g.name_ar || g.label}
                   </SelectItem>
