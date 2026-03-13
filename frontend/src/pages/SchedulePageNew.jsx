@@ -463,14 +463,27 @@ export default function SchedulePageNew() {
   };
 
   // Get sessions for a specific cell
-  const getSessionForCell = (dayKey, slotId, filterType, filterId) => {
+  const getSessionForCell = (dayKey, slotIdOrPeriod, filterType, filterId) => {
     return sessions.find(s => {
       const dayMatch = s.day_of_week === dayKey || s.day === dayKey;
-      const slotMatch = s.time_slot_id === slotId;
+      // Support both time_slot_id and period_number
+      const slotMatch = s.time_slot_id === slotIdOrPeriod || s.period_number === slotIdOrPeriod;
       const filterMatch = filterType === 'class' 
         ? s.class_id === filterId 
         : s.teacher_id === filterId;
       return dayMatch && slotMatch && filterMatch;
+    });
+  };
+
+  // Get sessions for a specific cell (smart timetable version - uses period number)
+  const getSmartSessionForCell = (dayKey, periodNumber, filterType, filterId) => {
+    return sessions.find(s => {
+      const dayMatch = s.day_of_week === dayKey;
+      const periodMatch = s.period_number === periodNumber;
+      const filterMatch = filterType === 'class' 
+        ? s.class_id === filterId 
+        : s.teacher_id === filterId;
+      return dayMatch && periodMatch && filterMatch;
     });
   };
 
