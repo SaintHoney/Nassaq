@@ -59,6 +59,13 @@ function SchoolSettingsPagePro() {
   const [officialTracks, setOfficialTracks] = useState([]);
   const [officialRankLoads, setOfficialRankLoads] = useState([]);
   
+  // Full curriculum data per stage
+  const [stageCurriculums, setStageCurriculums] = useState({});
+  const [loadingCurriculum, setLoadingCurriculum] = useState({});
+  const [expandedStages, setExpandedStages] = useState({});
+  const [expandedTracks, setExpandedTracks] = useState({});
+  const [expandedGrades, setExpandedGrades] = useState({});
+  
   // Modal States
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [showAddClass, setShowAddClass] = useState(false);
