@@ -9607,6 +9607,102 @@ async def update_current_user_notification_settings(
     return {"message": "تم تحديث إعدادات الإشعارات بنجاح", "success": True}
 
 
+# ============== USER AVATAR UPLOAD ==============
+@api_router.post("/users/me/avatar")
+async def upload_user_avatar(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload user avatar image (supports jpg, png, jpeg, webp)"""
+    try:
+        body = await request.json()
+        image_data = body.get("image_data")
+        
+        if not image_data:
+            raise HTTPException(status_code=400, detail="لم يتم إرسال صورة")
+        
+        # Validate it's a base64 data URL
+        if not image_data.startswith("data:image/"):
+            raise HTTPException(status_code=400, detail="صيغة الصورة غير صالحة")
+        
+        # Extract mime type and validate
+        mime_type = image_data.split(";")[0].split(":")[1] if ";" in image_data else ""
+        allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        
+        if mime_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="صيغة الصورة غير مدعومة. الصيغ المدعومة: jpg, jpeg, png, webp")
+        
+        # Save avatar URL (base64 data URL)
+        update_data = {
+            "avatar_url": image_data,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+        
+        return {
+            "success": True,
+            "message": "تم رفع الصورة بنجاح",
+            "avatar_url": image_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"فشل رفع الصورة: {str(e)}")
+
+
+class UserProfileUpdateExtended(BaseModel):
+    """Extended profile update with title support"""
+    title: Optional[str] = None
+    full_name: Optional[str] = None
+    full_name_en: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    preferred_language: Optional[str] = None
+
+
+@api_router.put("/users/me/profile")
+async def update_user_profile_extended(
+    data: UserProfileUpdateExtended,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update current user's profile including title and language"""
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if data.title is not None:
+        update_data["title"] = data.title if data.title != "none" else ""
+    if data.full_name is not None:
+        update_data["full_name"] = data.full_name
+    if data.full_name_en is not None:
+        update_data["full_name_en"] = data.full_name_en
+    if data.email is not None:
+        existing = await db.users.find_one({"email": data.email, "id": {"$ne": current_user["id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="البريد الإلكتروني مستخدم مسبقاً")
+        update_data["email"] = data.email
+    if data.phone is not None:
+        existing = await db.users.find_one({"phone": data.phone, "id": {"$ne": current_user["id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="رقم الهاتف مستخدم مسبقاً")
+        update_data["phone"] = data.phone
+    if data.avatar_url is not None:
+        update_data["avatar_url"] = data.avatar_url
+    if data.preferred_language is not None:
+        update_data["preferred_language"] = data.preferred_language
+    
+    await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password_hash": 0})
+    
+    return {
+        "success": True,
+        "message": "تم حفظ الملف الشخصي بنجاح",
+        "user": updated_user
+    }
+
+
 # ============== SCHOOL REPORTS APIs ==============
 @api_router.get("/reports/school/overview")
 async def get_school_overview_report(
