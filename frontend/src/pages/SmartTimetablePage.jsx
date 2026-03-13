@@ -681,6 +681,17 @@ export default function SmartTimetablePage() {
                 </Select>
               )}
               
+              {/* Edit Mode Toggle */}
+              <Button 
+                variant={editMode ? "default" : "outline"}
+                onClick={() => setEditMode(!editMode)}
+                className={`gap-2 ${editMode ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                data-testid="edit-mode-btn"
+              >
+                <Settings className="h-4 w-4" />
+                {editMode ? 'إلغاء التعديل' : 'تعديل الجدول'}
+              </Button>
+              
               <Button 
                 variant="outline" 
                 onClick={() => setExportDialogOpen(true)}
@@ -692,6 +703,20 @@ export default function SmartTimetablePage() {
               </Button>
             </div>
           </div>
+          
+          {/* Edit Mode Banner */}
+          {editMode && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 flex items-center gap-3 print:hidden">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <div className="flex-1">
+                <p className="font-medium text-amber-800">وضع التعديل مفعّل</p>
+                <p className="text-sm text-amber-600">انقر على أي حصة لتعديلها أو تغيير المعلم</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setEditMode(false)}>
+                إنهاء التعديل
+              </Button>
+            </div>
+          )}
           
           {/* Stats Cards - Hidden in print */}
           {selectedTimetable && (
