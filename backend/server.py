@@ -13576,6 +13576,11 @@ from routes.official_curriculum_routes import router as official_curriculum_rout
 set_official_curriculum_db(db)
 api_router.include_router(official_curriculum_router)
 
+# Timetable Readiness Routes - نظام التحقق من الجاهزية
+from routes.timetable_readiness_routes import router as timetable_readiness_router, set_database as set_readiness_db
+set_readiness_db(db)
+api_router.include_router(timetable_readiness_router)
+
 # ============== TEST ACCOUNTS CREATION ENDPOINT ==============
 @api_router.post("/test-accounts/create")
 async def create_test_accounts(
