@@ -6581,6 +6581,124 @@ async def smart_get_school_timetables(
     }
 
 
+# --- Timetable Versions List API (New - Must be before dynamic route) ---
+@api_router.get("/smart-scheduling/timetable/versions")
+async def get_timetable_versions(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: Optional[str] = Header(None)
+):
+    """
+    الحصول على جميع نسخ الجدول للمدرسة
+    Get all timetable versions for the school
+    """
+    school_id = x_school_context or current_user.get("school_id")
+    if not school_id:
+        user_roles = current_user.get("roles", [])
+        for role in user_roles:
+            if role.get("school_id"):
+                school_id = role.get("school_id")
+                break
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="معرف المدرسة مطلوب")
+    
+    # Fetch all timetables
+    timetables = await db.timetables.find(
+        {"school_id": school_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    versions = []
+    for tt in timetables:
+        versions.append({
+            "id": tt.get("id"),
+            "versionName": tt.get("version_name") or tt.get("name") or f"نسخة {tt.get('id', '')[:6]}",
+            "status": tt.get("status", "draft"),
+            "generation_mode": tt.get("generation_mode", "full"),
+            "quality_score": tt.get("quality_score", 0),
+            "conflicts_count": tt.get("conflicts_count", 0),
+            "warnings_count": tt.get("warnings_count", 0),
+            "created_at": tt.get("created_at"),
+            "published_at": tt.get("published_at"),
+            "created_by": tt.get("created_by", "النظام"),
+        })
+    
+    return {
+        "school_id": school_id,
+        "total": len(versions),
+        "versions": versions
+    }
+
+
+# --- Active Timetable Sessions API (New - Must be before dynamic route) ---
+@api_router.get("/smart-scheduling/timetable/active/sessions")
+async def get_active_timetable_sessions(
+    class_id: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+    x_school_context: Optional[str] = Header(None)
+):
+    """
+    الحصول على حصص الجدول النشط (المنشور أو المسودة)
+    Get sessions for the active timetable
+    """
+    school_id = x_school_context or current_user.get("school_id")
+    if not school_id:
+        user_roles = current_user.get("roles", [])
+        for role in user_roles:
+            if role.get("school_id"):
+                school_id = role.get("school_id")
+                break
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="معرف المدرسة مطلوب")
+    
+    # Find active (published) timetable first, then draft
+    timetable = await db.timetables.find_one(
+        {"school_id": school_id, "status": "published"},
+        {"_id": 0, "id": 1}
+    )
+    
+    if not timetable:
+        timetable = await db.timetables.find_one(
+            {"school_id": school_id, "status": "draft"},
+            {"_id": 0, "id": 1}
+        )
+    
+    if not timetable:
+        return {"sessions": [], "total": 0, "message": "لا يوجد جدول نشط"}
+    
+    # Build query
+    query = {"timetable_id": timetable.get("id")}
+    if class_id:
+        query["class_id"] = class_id
+    if teacher_id:
+        query["teacher_id"] = teacher_id
+    
+    # Fetch sessions
+    sessions = await db.timetable_sessions.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich sessions
+    enriched_sessions = []
+    for session in sessions:
+        # Get teacher name
+        teacher = await db.teachers.find_one({"id": session.get("teacher_id")}, {"_id": 0, "full_name": 1})
+        # Get class name
+        cls = await db.classes.find_one({"id": session.get("class_id")}, {"_id": 0, "name": 1})
+        # Get grade
+        grade = await db.grades.find_one({"id": cls.get("grade_id") if cls else None}, {"_id": 0, "name_ar": 1})
+        
+        session["teacher_name"] = teacher.get("full_name") if teacher else ""
+        session["class_name"] = f"{grade.get('name_ar', '')} - {cls.get('section', '') if cls else ''}" if grade else (cls.get("name", "") if cls else "")
+        enriched_sessions.append(session)
+    
+    return {
+        "timetable_id": timetable.get("id"),
+        "total": len(enriched_sessions),
+        "sessions": enriched_sessions
+    }
+
+
 # --- Get Timetable Details API ---
 @api_router.get("/smart-scheduling/timetable/{timetable_id}")
 async def smart_get_timetable(
