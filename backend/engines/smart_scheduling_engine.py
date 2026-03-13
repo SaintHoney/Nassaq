@@ -885,8 +885,10 @@ class SmartSchedulingEngine:
         # Create time slot lookup
         slot_lookup = {}
         for slot in time_slots:
-            if slot.get("type") == "class" and slot.get("period"):
-                slot_lookup[slot["period"]] = {
+            slot_type = slot.get("type", "period")
+            period_num = slot.get("period") or slot.get("slot_number")
+            if slot_type in ["class", "period"] and period_num:
+                slot_lookup[period_num] = {
                     "start_time": slot.get("start_time", ""),
                     "end_time": slot.get("end_time", "")
                 }
