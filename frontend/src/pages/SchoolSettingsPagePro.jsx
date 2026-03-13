@@ -128,7 +128,8 @@ function SchoolSettingsPagePro() {
       const [
         settingsRes, teachersRes, classesRes, assignmentsRes, 
         constraintsRes, readinessRes, schoolRes,
-        officialStatsRes, officialStagesRes, officialTracksRes, officialRankLoadsRes
+        officialStatsRes, officialStagesRes, officialTracksRes, officialRankLoadsRes,
+        subjectsRes
       ] = await Promise.all([
         api.get('/school/settings').catch(() => ({ data: {} })),
         api.get('/teachers').catch(() => ({ data: [] })),
@@ -140,7 +141,8 @@ function SchoolSettingsPagePro() {
         api.get('/official-curriculum/stats').catch(() => ({ data: null })),
         api.get('/official-curriculum/stages').catch(() => ({ data: [] })),
         api.get('/official-curriculum/tracks').catch(() => ({ data: [] })),
-        api.get('/official-curriculum/teacher-rank-loads').catch(() => ({ data: [] }))
+        api.get('/official-curriculum/teacher-rank-loads').catch(() => ({ data: [] })),
+        api.get('/official-curriculum/subjects').catch(() => ({ data: [] }))
       ]);
       
       setSettings(settingsRes.data || {});
@@ -154,6 +156,7 @@ function SchoolSettingsPagePro() {
       setOfficialStages(Array.isArray(officialStagesRes.data) ? officialStagesRes.data : []);
       setOfficialTracks(Array.isArray(officialTracksRes.data) ? officialTracksRes.data : []);
       setOfficialRankLoads(Array.isArray(officialRankLoadsRes.data) ? officialRankLoadsRes.data : []);
+      setSubjects(Array.isArray(subjectsRes.data) ? subjectsRes.data : []);
       
       // Update states from settings
       const s = settingsRes.data || {};
