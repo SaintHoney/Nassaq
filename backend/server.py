@@ -4966,15 +4966,20 @@ async def create_teacher_assignment(
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
 ):
     """إسناد معلم لفصل ومادة"""
-    # Check if assignment already exists
-    existing = await db.teacher_assignments.find_one({
+    # Build query for checking duplicates
+    duplicate_check = {
         "teacher_id": assignment_data.teacher_id,
-        "class_id": assignment_data.class_id,
         "subject_id": assignment_data.subject_id,
-        "academic_year": assignment_data.academic_year,
-        "semester": assignment_data.semester,
         "is_active": True
-    })
+    }
+    # Only check class_id if provided
+    if assignment_data.class_id:
+        duplicate_check["class_id"] = assignment_data.class_id
+    else:
+        # For general assignments (no class_id), check by teacher + subject only
+        duplicate_check["class_id"] = None
+    
+    existing = await db.teacher_assignments.find_one(duplicate_check)
     if existing:
         raise HTTPException(status_code=400, detail="هذا الإسناد موجود بالفعل")
     
@@ -4983,7 +4988,7 @@ async def create_teacher_assignment(
         "id": assignment_id,
         "school_id": assignment_data.school_id,
         "teacher_id": assignment_data.teacher_id,
-        "class_id": assignment_data.class_id,
+        "class_id": assignment_data.class_id,  # Can be None
         "subject_id": assignment_data.subject_id,
         "weekly_sessions": assignment_data.weekly_sessions,
         "academic_year": assignment_data.academic_year,
@@ -4996,10 +5001,16 @@ async def create_teacher_assignment(
     
     # Get names for response (support both naming conventions)
     teacher = await db.teachers.find_one({"id": assignment_data.teacher_id}, {"_id": 0, "full_name": 1, "full_name_ar": 1})
-    class_doc = await db.classes.find_one({"id": assignment_data.class_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    class_doc = None
+    if assignment_data.class_id:
+        class_doc = await db.classes.find_one({"id": assignment_data.class_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    
+    # Try to get subject from multiple collections
     subject = await db.subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1, "name_ar": 1})
     if not subject:
         subject = await db.reference_subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1, "name_ar": 1})
+    if not subject:
+        subject = await db.official_curriculum_subjects.find_one({"id": assignment_data.subject_id}, {"_id": 0, "name": 1, "name_ar": 1})
     
     # Remove _id from response
     if "_id" in assignment_doc:
