@@ -2,28 +2,36 @@
 Smart Multi-Tenant School Management System
 
 ## Architecture
-- **Frontend**: React (CRA + CRACO), port 5000, located in `frontend/`
-- **Backend**: FastAPI (Python), port 8001, located in `backend/`
+- **Frontend**: React (CRA + CRACO), port 5000 (dev), located in `frontend/`
+- **Backend**: FastAPI (Python), port 8001 (dev) / port 5000 (production), located in `backend/`
 - **Database**: MongoDB, running locally at `localhost:27017`, data at `/home/runner/data/mongodb`
 
-## Running the App
+## Running the App (Development)
 - **Frontend**: `cd frontend && yarn start` → port 5000
 - **Backend**: `bash start_backend.sh` → starts MongoDB + uvicorn on port 8001
+- Dev server proxy forwards `/api` and `/ws` from port 5000 to port 8001
+
+## Running the App (Production / Deployment)
+- `bash start_production.sh` → builds frontend, starts MongoDB + uvicorn on port 5000
+- Backend serves both the API (`/api/*`) and the built React frontend (static files + SPA fallback)
+- Build step: `cd frontend && yarn build` (with `REACT_APP_BACKEND_URL=''`)
 
 ## Key Config Files
 - `frontend/.env` - Frontend env vars (`REACT_APP_BACKEND_URL` is empty; API calls are relative and proxied)
 - `frontend/src/setupProxy.js` - Dev server proxy: `/api` and `/ws` → `http://localhost:8001`
 - `backend/.env` - Backend env vars: `MONGO_URL`, `DB_NAME`, `JWT_SECRET_KEY`, etc.
 - `frontend/craco.config.js` - CRACO config with dev server settings (allowedHosts: "all", host: 0.0.0.0, port: 5000)
+- `start_backend.sh` - Dev startup (MongoDB + backend on port 8001)
+- `start_production.sh` - Production startup (MongoDB + backend on port 5000, serves built frontend)
 
 ## Workflows
-- `Start application` (webview, port 5000) - React frontend
-- `Backend` (console, port 8001) - MongoDB + FastAPI backend
+- `Start application` (webview, port 5000) - React frontend dev server
+- `Backend` (console, port 8001) - MongoDB + FastAPI backend dev server
 
 ## API Proxy
-- Frontend uses `setupProxy.js` to proxy `/api` and `/ws` requests to the backend at `http://localhost:8001`
+- In dev: Frontend uses `setupProxy.js` to proxy `/api` and `/ws` requests to the backend at `http://localhost:8001`
+- In prod: Backend serves everything on port 5000 (API + static frontend build)
 - `REACT_APP_BACKEND_URL` is set to empty string so all API calls use relative URLs
-- Both HTTP and WebSocket requests are proxied
 
 ## Test Accounts (seeded via `backend/scripts/seed_exact_test_data.py`)
 - Platform Admin: `admin@nassaq.com` / `Admin@123`

@@ -16828,3 +16828,18 @@ app.include_router(api_router)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+import pathlib
+_frontend_build = pathlib.Path(__file__).parent.parent / "frontend" / "build"
+if _frontend_build.exists():
+    from starlette.staticfiles import StaticFiles
+    from starlette.responses import FileResponse
+
+    app.mount("/static", StaticFiles(directory=str(_frontend_build / "static")), name="static")
+
+    @app.get("/{full_path:path}")
+    async def serve_react(full_path: str):
+        file_path = _frontend_build / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(str(_frontend_build / "index.html"))
