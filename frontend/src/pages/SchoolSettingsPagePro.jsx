@@ -32,6 +32,131 @@ import {
   Calendar, Timer, Coffee, Moon, UserX, DoorClosed, Link2, Heart
 } from 'lucide-react';
 
+// Import dnd-kit for drag and drop
+import { DndContext, DragOverlay, closestCenter, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+
+// ============================================
+// Draggable Class Item Component
+// ============================================
+const DraggableClassItem = ({ classItem, isAssigned, assignedTeacher }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `class-${classItem.id}`,
+    data: { classItem }
+  });
+  
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
+  
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`p-3 rounded-lg border cursor-grab active:cursor-grabbing transition-all
+        ${isDragging 
+          ? 'opacity-50 border-brand-turquoise bg-brand-turquoise/20 shadow-lg' 
+          : isAssigned 
+            ? 'bg-green-50 border-green-200' 
+            : 'bg-white border-slate-200 hover:border-brand-turquoise hover:shadow-sm'
+        }`}
+      data-testid={`draggable-class-${classItem.id}`}
+    >
+      <div className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          isAssigned ? 'bg-green-100 text-green-600' : 'bg-brand-turquoise/10 text-brand-turquoise'
+        }`}>
+          <GraduationCap className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-slate-800 truncate text-sm">
+            {classItem.name || `${classItem.grade?.name_ar || ''} - ${classItem.section || ''}`}
+          </p>
+          {isAssigned && assignedTeacher && (
+            <p className="text-xs text-green-600 truncate">مسند إلى: {assignedTeacher}</p>
+          )}
+          {!isAssigned && (
+            <p className="text-xs text-slate-500">غير مسند</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// Droppable Teacher Box Component
+// ============================================
+const DroppableTeacherBox = ({ teacher, assignments, onRemoveAssignment }) => {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `teacher-${teacher.id}`,
+    data: { teacher }
+  });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`p-3 rounded-xl border-2 transition-all min-h-[120px]
+        ${isOver 
+          ? 'border-brand-turquoise bg-brand-turquoise/10 shadow-lg' 
+          : 'border-slate-200 bg-white hover:border-slate-300'
+        }`}
+      data-testid={`teacher-drop-zone-${teacher.id}`}
+    >
+      {/* Teacher Header */}
+      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+        <div className="w-8 h-8 rounded-full bg-brand-navy flex items-center justify-center">
+          <span className="text-white font-bold text-xs">
+            {(teacher.full_name || teacher.name || '?')[0]}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-800 text-sm truncate">{teacher.full_name || teacher.name || '-'}</p>
+          <p className="text-[10px] text-slate-500 truncate">{teacher.specialization || teacher.email || '-'}</p>
+        </div>
+        <Badge className="bg-brand-navy/10 text-brand-navy text-[10px]">
+          {assignments.length}
+        </Badge>
+      </div>
+      
+      {/* Assigned Classes */}
+      <div className="space-y-1">
+        {assignments.length === 0 ? (
+          <div className={`text-center py-3 rounded-lg transition-colors
+            ${isOver ? 'bg-brand-turquoise/20' : 'bg-slate-50'}`}
+          >
+            <p className="text-xs text-slate-400">
+              {isOver ? 'أفلت الفصل هنا' : 'لا توجد فصول مسندة'}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {assignments.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-turquoise/10 border border-brand-turquoise/30 group"
+              >
+                <span className="text-xs font-medium text-brand-turquoise-dark truncate max-w-[80px]">
+                  {assignment.class_name || `فصل ${assignment.class_id?.substring(0, 6)}`}
+                </span>
+                <button
+                  onClick={() => onRemoveAssignment(assignment.id)}
+                  className="w-4 h-4 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="إلغاء الإسناد"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ============================================
 // Main Component
 // ============================================
