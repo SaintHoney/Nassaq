@@ -1857,50 +1857,80 @@ export default function SchoolSettingsPagePro() {
             </CardContent>
           </Card>
           
-          {/* Tabs Navigation */}
+          {/* Tabs Navigation - Reorganized into Two Sections */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
-            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 mb-6 h-auto p-1">
-              <TabsTrigger value="overview" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Calendar className="h-4 w-4 ml-1 hidden sm:inline" />
-                نظرة عامة
-              </TabsTrigger>
-              <TabsTrigger value="official-curriculum" className="text-xs py-2 data-[state=active]:bg-emerald-700 data-[state=active]:text-white" data-testid="tab-official-curriculum">
-                <School className="h-4 w-4 ml-1 hidden sm:inline" />
-                المنهج الرسمي
-              </TabsTrigger>
-              <TabsTrigger value="time" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Timer className="h-4 w-4 ml-1 hidden sm:inline" />
-                التوقيت
-              </TabsTrigger>
-              <TabsTrigger value="teachers" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Users className="h-4 w-4 ml-1 hidden sm:inline" />
-                المعلمون
-              </TabsTrigger>
-              <TabsTrigger value="classes" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <GraduationCap className="h-4 w-4 ml-1 hidden sm:inline" />
-                الفصول
-              </TabsTrigger>
-              <TabsTrigger value="assignments" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Target className="h-4 w-4 ml-1 hidden sm:inline" />
-                الإسنادات
-              </TabsTrigger>
-              <TabsTrigger value="subjects" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <BookOpen className="h-4 w-4 ml-1 hidden sm:inline" />
-                المواد
-              </TabsTrigger>
-              <TabsTrigger value="ranks" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Award className="h-4 w-4 ml-1 hidden sm:inline" />
-                الرتب
-              </TabsTrigger>
-              <TabsTrigger value="constraints" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Shield className="h-4 w-4 ml-1 hidden sm:inline" />
-                القيود
-              </TabsTrigger>
-              <TabsTrigger value="structure" className="text-xs py-2 data-[state=active]:bg-brand-navy data-[state=active]:text-white">
-                <Layers className="h-4 w-4 ml-1 hidden sm:inline" />
-                الهيكل
-              </TabsTrigger>
-            </TabsList>
+            {/* Section Headers */}
+            <div className="mb-4 space-y-4">
+              {/* القسم الأول: البيانات المتغيرة */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-blue-800">البيانات المتغيرة لبناء الجدول</h3>
+                    <p className="text-xs text-blue-600">Dynamic Timetable Inputs - المدخلات التشغيلية لمحرك الجدول</p>
+                  </div>
+                </div>
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto p-1 bg-white/50">
+                  <TabsTrigger value="overview" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-overview">
+                    <Calendar className="h-4 w-4 ml-1 hidden sm:inline" />
+                    نظرة عامة
+                  </TabsTrigger>
+                  <TabsTrigger value="work-days" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-work-days">
+                    <CalendarDays className="h-4 w-4 ml-1 hidden sm:inline" />
+                    أيام العمل
+                  </TabsTrigger>
+                  <TabsTrigger value="time" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-time">
+                    <Timer className="h-4 w-4 ml-1 hidden sm:inline" />
+                    التوقيت
+                  </TabsTrigger>
+                  <TabsTrigger value="classes" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-classes">
+                    <GraduationCap className="h-4 w-4 ml-1 hidden sm:inline" />
+                    الفصول
+                  </TabsTrigger>
+                  <TabsTrigger value="teachers" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-teachers">
+                    <Users className="h-4 w-4 ml-1 hidden sm:inline" />
+                    المعلمون
+                  </TabsTrigger>
+                  <TabsTrigger value="assignments" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-assignments">
+                    <Target className="h-4 w-4 ml-1 hidden sm:inline" />
+                    الإسنادات
+                  </TabsTrigger>
+                  <TabsTrigger value="constraints" className="text-xs py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-constraints">
+                    <Shield className="h-4 w-4 ml-1 hidden sm:inline" />
+                    القيود
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              
+              {/* القسم الثاني: البيانات الرسمية الثابتة */}
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                    <School className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-emerald-800">البيانات الأساسية الثابتة</h3>
+                    <p className="text-xs text-emerald-600">Official Static Reference Data - بيانات وزارة التعليم الرسمية</p>
+                  </div>
+                  <Badge className="mr-auto bg-emerald-100 text-emerald-700 border-emerald-300">
+                    <Shield className="h-3 w-3 ml-1" />
+                    للقراءة فقط
+                  </Badge>
+                </div>
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-2 h-auto p-1 bg-white/50 max-w-md">
+                  <TabsTrigger value="official-curriculum" className="text-xs py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white" data-testid="tab-official-curriculum">
+                    <BookOpen className="h-4 w-4 ml-1 hidden sm:inline" />
+                    المنهج الرسمي
+                  </TabsTrigger>
+                  <TabsTrigger value="structure" className="text-xs py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white" data-testid="tab-structure">
+                    <Layers className="h-4 w-4 ml-1 hidden sm:inline" />
+                    الهيكل الأكاديمي
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
             
             {/* ================= TAB: نظرة عامة ================= */}
             <TabsContent value="overview" className="space-y-6">
