@@ -403,7 +403,7 @@ export const TeacherAssignmentsPage = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{isRTL ? 'عدد الحصص الأسبوعية' : 'Weekly Sessions'}</Label>
+                      <Label>{isRTL ? 'النصاب الأسبوعي' : 'Weekly Sessions'}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -596,7 +596,7 @@ export const TeacherAssignmentsPage = () => {
                           <TableRow>
                             <TableHead className="ps-4">{isRTL ? 'الفصل' : 'Class'}</TableHead>
                             <TableHead>{isRTL ? 'المادة' : 'Subject'}</TableHead>
-                            <TableHead>{isRTL ? 'الحصص الأسبوعية' : 'Weekly Sessions'}</TableHead>
+                            <TableHead>{isRTL ? 'النصاب الأسبوعي' : 'Weekly Sessions'}</TableHead>
                             <TableHead>{isRTL ? 'الفصل الدراسي' : 'Semester'}</TableHead>
                             <TableHead className="w-12"></TableHead>
                           </TableRow>

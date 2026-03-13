@@ -563,7 +563,7 @@ const SubjectsSection = ({ subjects, grades, loading, onAddSubject, onDeleteSubj
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-right block">{isRTL ? 'عدد الحصص الأسبوعية' : 'Weekly Periods'}</Label>
+                <Label className="text-right block">{isRTL ? 'النصاب الأسبوعي' : 'Weekly Periods'}</Label>
                 <Input 
                   type="number"
                   min="1"
