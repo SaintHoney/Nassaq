@@ -66,14 +66,15 @@ function SchoolSettingsPagePro() {
   const [expandedTracks, setExpandedTracks] = useState({});
   const [expandedGrades, setExpandedGrades] = useState({});
   
+  // Subjects for assignment
+  const [subjects, setSubjects] = useState([]);
+  const [draggingSubject, setDraggingSubject] = useState(null);
+  const [assignmentSaving, setAssignmentSaving] = useState(false);
+  
   // Modal States
-  const [showAddTeacher, setShowAddTeacher] = useState(false);
-  const [showAddClass, setShowAddClass] = useState(false);
   const [showEditSchool, setShowEditSchool] = useState(false);
   
   // Form States
-  const [newTeacher, setNewTeacher] = useState({ name: '', email: '', phone: '', specialization: '' });
-  const [newClass, setNewClass] = useState({ name: '', grade: '', section: '', capacity: 30 });
   const [editedSchoolInfo, setEditedSchoolInfo] = useState({});
   
   // Work Days State
