@@ -152,6 +152,15 @@ const StudentHomeworkPage = () => {
                   </p>
                 </div>
               </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={fetchHomework}
+                disabled={loading}
+                data-testid="refresh-homework-btn"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              </Button>
             </div>
           </CardContent>
         </Card>
