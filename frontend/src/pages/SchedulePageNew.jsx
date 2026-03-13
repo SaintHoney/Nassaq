@@ -776,7 +776,7 @@ export default function SchedulePageNew() {
                 </div>
               </CardContent>
             </Card>
-          ) : null}
+          )}
 
           {/* Subject Legend */}
           <Card className="border-2 border-muted">
