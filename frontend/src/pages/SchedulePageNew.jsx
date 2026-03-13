@@ -213,7 +213,7 @@ export default function SchedulePageNew() {
     } finally {
       setLoading(false);
     }
-  }, [schoolId, api, selectedSchedule, selectedClass, selectedTeacher]);
+  }, [schoolId, api, selectedSchedule, selectedClass, selectedTeacher, selectedSmartTimetable]);
 
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
