@@ -2883,17 +2883,20 @@ export default function SchoolSettingsPagePro() {
             {/* تم نقل المواد والرتب إلى تبويب المنهج الرسمي - لتجنب التكرار */}
             
             {/* ================= TAB: القيود الإدارية ================= */}
-            <TabsContent value="constraints" className="space-y-4">
-              <Card className="border-2 border-rose-200">
-                <CardHeader>
+            <TabsContent value="constraints" className="space-y-6" data-testid="constraints-tab-content">
+              {/* Header */}
+              <Card className="border-2 border-rose-200 bg-gradient-to-r from-rose-50 to-pink-50">
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
-                        <Shield className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg">
+                        <Shield className="h-7 w-7 text-white" />
                       </div>
                       <div>
-                        <CardTitle>القيود الإدارية</CardTitle>
-                        <CardDescription>{constraints.length} قيد إداري للجدولة</CardDescription>
+                        <h2 className="text-xl font-bold text-rose-800">نظام قيود الجدول المدرسي</h2>
+                        <p className="text-sm text-rose-600">
+                          Timetable Constraints System - القيود الإلزامية والتفضيلية لمحرك الجدولة
+                        </p>
                       </div>
                     </div>
                     <Button 
@@ -2902,11 +2905,165 @@ export default function SchoolSettingsPagePro() {
                       data-testid="add-constraint-btn"
                     >
                       <Plus className="h-4 w-4 ml-2" />
-                      إضافة قيد
+                      إضافة قيد جديد
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Hard Constraints - القيود الإلزامية */}
+              <Card className="border-2 border-red-300">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+                      <Ban className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-red-800 flex items-center gap-2">
+                        القيود الإلزامية
+                        <Badge className="bg-red-100 text-red-700 border-red-300">Hard Constraints</Badge>
+                      </CardTitle>
+                      <CardDescription className="text-red-600">
+                        لا يمكن خرقها إطلاقاً - أي انتهاك يمنع تعيين الحصة
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* قائمة القيود الإلزامية الثابتة */}
+                    {[
+                      { id: 'no-teacher-conflict', name: 'لا يمكن تعيين معلم لحصتين في نفس الوقت', icon: Users, locked: true },
+                      { id: 'no-class-conflict', name: 'لا يمكن تعيين فصل لحصتين في نفس الوقت', icon: GraduationCap, locked: true },
+                      { id: 'no-subject-overlap', name: 'لا يمكن تعيين أكثر من مادة لنفس الفصل في نفس الحصة', icon: BookOpen, locked: true },
+                      { id: 'within-school-day', name: 'لا يمكن وضع حصة خارج أوقات اليوم الدراسي', icon: Clock, locked: true },
+                      { id: 'respect-breaks', name: 'لا يمكن وضع حصة داخل فترات الاستراحة أو الصلاة', icon: Coffee, locked: true },
+                      { id: 'max-daily-periods', name: 'لا يمكن تجاوز الحد الأقصى للحصص اليومية للمعلم', icon: Calendar, locked: true },
+                      { id: 'max-weekly-periods', name: 'لا يمكن تجاوز النصاب الأسبوعي للمعلم', icon: CalendarDays, locked: true },
+                      { id: 'teacher-subject-match', name: 'لا يمكن إسناد مادة إلى معلم غير مؤهل لها', icon: Target, locked: true },
+                      { id: 'weekly-periods-match', name: 'يجب احترام عدد الحصص الأسبوعية المطلوبة لكل مادة', icon: Grid3X3, locked: true },
+                      { id: 'respect-unavailability', name: 'لا يمكن وضع حصة في فترة غير متاحة للمعلم أو الفصل', icon: Ban, locked: true },
+                      { id: 'no-disabled-slots', name: 'لا يمكن استخدام فترات زمنية معطلة أو مغلقة', icon: AlertCircle, locked: true },
+                      { id: 'room-requirements', name: 'يجب احترام متطلبات نوع الغرفة (مختبر، حاسب...)', icon: Building2, locked: true },
+                    ].map((constraint) => (
+                      <div 
+                        key={constraint.id}
+                        className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-red-100 hover:border-red-200 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                            <constraint.icon className="h-5 w-5 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">{constraint.name}</p>
+                            <p className="text-xs text-red-500">Hard Constraint - لا يمكن تعطيله</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-red-100 text-red-700">
+                            <Shield className="h-3 w-3 ml-1" />
+                            مقفل
+                          </Badge>
+                          <Switch checked={true} disabled className="data-[state=checked]:bg-red-500" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Soft Constraints - القيود التفضيلية */}
+              <Card className="border-2 border-amber-300">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-amber-800 flex items-center gap-2">
+                        القيود التفضيلية
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-300">Soft Constraints</Badge>
+                      </CardTitle>
+                      <CardDescription className="text-amber-600">
+                        يُفضل احترامها قدر الإمكان - تؤثر على جودة الجدول (Score)
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* القيود التفضيلية من قاعدة البيانات + الثابتة */}
+                    {[
+                      { id: 'distribute-subjects', name: 'توزيع حصص المادة على أكثر من يوم', description: 'تجنب تكديس حصص نفس المادة في يوم واحد', weight: 8, editable: true },
+                      { id: 'minimize-teacher-gaps', name: 'تقليل الفجوات في جدول المعلم', description: 'تقليل الحصص الفارغة بين حصص المعلم', weight: 7, editable: true },
+                      { id: 'minimize-class-gaps', name: 'تقليل الفجوات في جدول الفصل', description: 'تقليل الحصص الفارغة للطلاب', weight: 7, editable: true },
+                      { id: 'heavy-subjects-morning', name: 'المواد الثقيلة في أول اليوم', description: 'تجنب وضع الرياضيات والعلوم في آخر اليوم', weight: 6, editable: true },
+                      { id: 'core-subjects-first', name: 'المواد الأساسية في أول الفترات', description: 'تفضيل الفترات الأولى للمواد الأساسية', weight: 5, editable: true },
+                      { id: 'no-consecutive-same', name: 'عدم تكرار نفس المادة متتالياً', description: 'إلا عند الحاجة (حصص مدمجة)', weight: 4, editable: true },
+                      { id: 'balance-weekly-load', name: 'موازنة الحمل التدريسي', description: 'توزيع متوازن بين أيام الأسبوع', weight: 5, editable: true },
+                      { id: 'teacher-preferences', name: 'تفضيلات المعلم الزمنية', description: 'احترام الأوقات المفضلة للمعلم', weight: 3, editable: true },
+                      { id: 'reserve-slots', name: 'إبقاء فترات احتياطية', description: 'للبدائل والطوارئ', weight: 2, editable: true },
+                    ].map((constraint) => (
+                      <div 
+                        key={constraint.id}
+                        className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-amber-100 hover:border-amber-200 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                            <Star className="h-5 w-5 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">{constraint.name}</p>
+                            <p className="text-xs text-amber-600">{constraint.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">الوزن</p>
+                            <Badge className="bg-amber-100 text-amber-800">{constraint.weight}/10</Badge>
+                          </div>
+                          <Switch 
+                            checked={true} 
+                            className="data-[state=checked]:bg-amber-500"
+                          />
+                          {constraint.editable && (
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Edit2 className="h-4 w-4 text-amber-600" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Custom Constraints - القيود المخصصة من المدير */}
+              <Card className="border-2 border-purple-200">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                        <Settings className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-purple-800">قيود مخصصة للمدرسة</CardTitle>
+                        <CardDescription className="text-purple-600">
+                          قيود إضافية أضافها مدير المدرسة - {constraints.length} قيد
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => setAddConstraintOpen(true)}
+                      variant="outline"
+                      className="border-purple-400 text-purple-700 hover:bg-purple-100"
+                    >
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة قيد مخصص
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4">
                   {constraints.length > 0 ? (
                     <div className="space-y-3">
                       {constraints.map((constraint, index) => (
@@ -2924,18 +3081,32 @@ export default function SchoolSettingsPagePro() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Shield className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                      <p className="text-lg font-medium">لا يوجد قيود إدارية</p>
-                      <Button 
-                        className="mt-4 bg-rose-600 hover:bg-rose-700"
-                        onClick={() => setAddConstraintOpen(true)}
-                      >
-                        <Plus className="h-4 w-4 ml-2" />
-                        إضافة قيد جديد
-                      </Button>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Settings className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">لا يوجد قيود مخصصة</p>
+                      <p className="text-sm mt-1">يمكنك إضافة قيود خاصة بمدرستك</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* ملاحظة توضيحية */}
+              <Card className="border-2 border-gray-200 bg-gray-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-gray-700">كيف يستخدم محرك الجدول هذه القيود؟</p>
+                      <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
+                        <li><span className="text-red-600 font-medium">القيود الإلزامية:</span> يتم التحقق منها أولاً - أي انتهاك يرفض التعيين فوراً</li>
+                        <li><span className="text-amber-600 font-medium">القيود التفضيلية:</span> تُستخدم لحساب جودة الحل (Score) - الوزن الأعلى = أهمية أكبر</li>
+                        <li><span className="text-purple-600 font-medium">القيود المخصصة:</span> قيود إضافية حسب احتياجات مدرستك</li>
+                      </ul>
+                      <p className="text-sm text-gray-500 mt-3">
+                        يختار النظام الجدول صاحب أعلى Score مع احترام جميع القيود الإلزامية.
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
