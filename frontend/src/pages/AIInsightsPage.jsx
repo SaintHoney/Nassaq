@@ -48,6 +48,26 @@ import {
 
 export const AIInsightsPage = () => {
   const { user, api } = useAuth();
+  
+  // Add custom keyframes for brain animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes brainPulse {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); }
+        50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+      }
+      @keyframes brainGlow {
+        0% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)) drop-shadow(0 0 10px rgba(159,122,234,0.3)); }
+        100% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.7)) drop-shadow(0 0 20px rgba(56,178,172,0.5)); }
+      }
+      .brain-animated {
+        animation: brainPulse 2s ease-in-out infinite, brainGlow 3s ease-in-out infinite alternate;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
   const { isRTL, toggleTheme, toggleLanguage, isDark } = useTheme();
   
   // State
