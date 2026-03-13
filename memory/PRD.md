@@ -1418,3 +1418,47 @@ teacher_class_assignments:
 - `/app/frontend/src/components/timetable/TimetableInsightsPanel.jsx` (إعادة تصميم)
 - `/app/frontend/src/components/timetable/TimetableVersionManager.jsx` (إعادة تصميم)
 - `/app/frontend/src/components/timetable/index.js` (تحديث exports)
+
+---
+
+### 13 مارس 2026 - إصلاح مشاكل حفظ الإعدادات + تفعيل أزرار الاستراحات وعدم التوفر
+
+#### المشاكل التي تم إصلاحها:
+
+**1. مشكلة حفظ العام والفصل الدراسي وأيام العمل والتوقيت:**
+- **السبب:** كان `saveAllSettings` يرسل كائن `settings` كاملاً مع `timingSettings`، مما يسبب تداخل البيانات القديمة مع الجديدة
+- **الحل:** تعديل دالة `saveAllSettings` لإرسال الحقول المطلوبة فقط بدلاً من `...settings`
+- **الملف:** `/app/frontend/src/pages/SchoolSettingsPagePro.jsx`
+
+**2. مشكلة أزرار تبويب الاستراحات والصلاة:**
+- **السبب:** الأزرار لم يكن لها `onClick` handlers
+- **الحل:** إضافة Modal جديد لإضافة/تعديل الفترات + handlers للتعديل والحذف
+- **الميزات المفعّلة:**
+  - زر "إضافة فترة" يفتح Modal
+  - أيقونة التعديل تفتح Modal مع البيانات الحالية
+  - أيقونة الحذف تطلب تأكيد وتحذف الفترة
+
+**3. مشكلة أزرار تبويب عدم التوفر:**
+- **السبب:** الأزرار لم يكن لها `onClick` handlers
+- **الحل:** إضافة Modal جديد لإضافة فترات عدم التوفر للمعلمين والفصول
+- **الميزات المفعّلة:**
+  - زر "إضافة" في كارد المعلمين يفتح Modal
+  - زر "إضافة" في كارد الفصول يفتح Modal
+  - زر الحذف يحذف الفترة
+
+**4. تحديث كارت "بيانات الجدول جاهزة جزئياً":**
+- تغيير التدرج اللوني ليستخدم Brand Colors (navy -> turquoise)
+- تغيير زر "إنشاء الجدول" إلى "الذهاب للجدول" مع توجيه لـ `/principal/timetable`
+
+**5. إضافة رابط لصفحة إسناد المعلمين للفصول:**
+- في تبويب "إسناد المعلمين" تم إضافة بانر أصفر مع زر "فتح صفحة الإسناد"
+- يوجه المستخدم لصفحة `/school/teacher-class-assignments`
+
+#### الملفات المعدلة:
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx`
+  - إصلاح دالة `saveAllSettings`
+  - إضافة Modal states: `showBreakModal`, `showUnavailabilityModal`, `editingBreak`, `unavailabilityType`
+  - إضافة handlers: `handleAddBreak`, `handleEditBreak`, `handleDeleteBreak`, `handleSaveBreak`, `handleAddUnavailability`, `handleSaveUnavailability`, `handleDeleteUnavailability`
+  - إضافة Modals للاستراحات وعدم التوفر
+  - تحديث تصميم كارت الجاهزية
+
