@@ -2187,6 +2187,7 @@ export default function SchoolSettingsPagePro() {
                   setEditStageOpen(true);
                 }}
                 onDeleteStage={handleDeleteStage}
+                onToggleStage={handleToggleStage}
                 onAddGrade={(stageId) => {
                   setNewGrade({ name: '', name_en: '', stage_id: stageId });
                   setAddGradeOpen(true);
