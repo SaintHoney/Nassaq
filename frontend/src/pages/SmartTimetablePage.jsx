@@ -270,17 +270,19 @@ export default function SmartTimetablePage() {
     
     setLoading(true);
     try {
-      const [timetablesRes, classesRes, teachersRes, settingsRes] = await Promise.all([
+      const [timetablesRes, classesRes, teachersRes, settingsRes, subjectsRes] = await Promise.all([
         api.get(`/smart-scheduling/timetables/${schoolId}`).catch(() => ({ data: { timetables: [] } })),
         api.get(`/classes?school_id=${schoolId}`).catch(() => ({ data: [] })),
         api.get(`/teachers?school_id=${schoolId}`).catch(() => ({ data: [] })),
         api.get(`/school/settings`).catch(() => ({ data: { settings: {} } })),
+        api.get(`/teachers/options/subjects`).catch(() => ({ data: [] })),
       ]);
       
       setTimetables(timetablesRes.data?.timetables || []);
       setClasses(classesRes.data || []);
       setTeachers(teachersRes.data || []);
       setSettings(settingsRes.data?.settings || {});
+      setSubjects(subjectsRes.data || []);
       
       // Auto-select latest published or draft timetable
       const allTimetables = timetablesRes.data?.timetables || [];
