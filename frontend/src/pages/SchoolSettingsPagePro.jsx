@@ -1192,27 +1192,77 @@ function SchoolSettingsPagePro() {
                 
                 {/* ======= TAB: إسناد المعلمين ======= */}
                 <TabsContent value="teacher-assignments" className="space-y-6">
+                  {/* Sub-Tab Selector */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setAssignmentSubTab('subjects')}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        assignmentSubTab === 'subjects'
+                          ? 'border-brand-purple bg-brand-purple/5 shadow-md'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          assignmentSubTab === 'subjects' ? 'bg-brand-purple text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          <BookOpen className="h-5 w-5" />
+                        </div>
+                        <div className="text-right">
+                          <h4 className={`font-bold ${assignmentSubTab === 'subjects' ? 'text-brand-purple' : 'text-slate-700'}`}>
+                            إسناد المواد
+                          </h4>
+                          <p className="text-xs text-slate-500">{assignments.length} إسناد</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => setAssignmentSubTab('classes')}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        assignmentSubTab === 'classes'
+                          ? 'border-brand-turquoise bg-brand-turquoise/5 shadow-md'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          assignmentSubTab === 'classes' ? 'bg-brand-turquoise text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          <GraduationCap className="h-5 w-5" />
+                        </div>
+                        <div className="text-right">
+                          <h4 className={`font-bold ${assignmentSubTab === 'classes' ? 'text-brand-turquoise-dark' : 'text-slate-700'}`}>
+                            إسناد الفصول
+                          </h4>
+                          <p className="text-xs text-slate-500">{classAssignments.length} إسناد</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  {/* ===== إسناد المواد ===== */}
+                  {assignmentSubTab === 'subjects' && (
+                    <>
                   {/* Header Card */}
-                  <Card className="bg-gradient-to-l from-brand-navy/10 to-brand-turquoise/5 border-brand-navy/20">
+                  <Card className="bg-gradient-to-l from-brand-purple/10 to-brand-purple/5 border-brand-purple/20">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-brand-navy flex items-center justify-center">
-                            <Link2 className="h-6 w-6 text-white" />
+                          <div className="w-10 h-10 rounded-xl bg-brand-purple flex items-center justify-center">
+                            <BookOpen className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-brand-navy">ربط المعلمين بالمواد</h3>
-                            <p className="text-sm text-brand-navy/60">
+                            <h3 className="text-lg font-bold text-brand-purple">ربط المعلمين بالمواد</h3>
+                            <p className="text-xs text-brand-purple/60">
                               {teachers.length} معلم • {subjects.length} مادة • {assignments.length} إسناد
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-brand-turquoise/10 text-brand-turquoise border-brand-turquoise/30">
-                            <Zap className="h-3 w-3 ml-1" />
-                            سحب وإفلات
-                          </Badge>
-                        </div>
+                        <Badge variant="outline" className="bg-brand-purple/10 text-brand-purple border-brand-purple/30 text-xs">
+                          <Zap className="h-3 w-3 ml-1" />
+                          سحب وإفلات
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
