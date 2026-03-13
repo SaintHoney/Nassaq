@@ -609,7 +609,12 @@ export const SchoolReportsPage = () => {
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {behaviorData.map((item, index) => (
+                    {[
+                      { type: 'positive', type_ar: 'إيجابي', count: behaviorData.find(b => b.type === 'positive')?.count || 0 },
+                      { type: 'negative', type_ar: 'سلبي', count: behaviorData.find(b => b.type === 'negative')?.count || 0 },
+                      { type: 'warning', type_ar: 'تحذير', count: behaviorData.find(b => b.type === 'warning')?.count || 0 },
+                      { type: 'appreciation', type_ar: 'تقدير', count: behaviorData.find(b => b.type === 'appreciation')?.count || 0 },
+                    ].map((item, index) => (
                       <Card key={index} className="card-nassaq">
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
@@ -618,18 +623,6 @@ export const SchoolReportsPage = () => {
                                 {isRTL ? item.type_ar : item.type}
                               </p>
                               <p className="text-3xl font-bold mt-1">{item.count}</p>
-                              <div className={`flex items-center gap-1 mt-2 text-sm ${
-                                item.change > 0 
-                                  ? item.type === 'negative' || item.type === 'warning' ? 'text-red-600' : 'text-green-600'
-                                  : item.type === 'negative' || item.type === 'warning' ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                                {item.change > 0 ? (
-                                  <ArrowUpRight className="h-4 w-4" />
-                                ) : (
-                                  <ArrowDownRight className="h-4 w-4" />
-                                )}
-                                <span>{Math.abs(item.change)}%</span>
-                              </div>
                             </div>
                             <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
                               item.type === 'positive' ? 'bg-green-500' :
@@ -639,7 +632,7 @@ export const SchoolReportsPage = () => {
                               {item.type === 'positive' && <CheckCircle className="h-7 w-7 text-white" />}
                               {item.type === 'negative' && <XCircle className="h-7 w-7 text-white" />}
                               {item.type === 'warning' && <AlertTriangle className="h-7 w-7 text-white" />}
-                              {item.type === 'recognition' && <Award className="h-7 w-7 text-white" />}
+                              {item.type === 'appreciation' && <Award className="h-7 w-7 text-white" />}
                             </div>
                           </div>
                         </CardContent>
@@ -654,12 +647,43 @@ export const SchoolReportsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                    <p className="text-muted-foreground">
-                      {isRTL ? 'لا توجد ملاحظات سلوك مسجلة' : 'No behavior notes recorded'}
-                    </p>
-                  </div>
+                  {behaviorNotes.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                      <p className="text-muted-foreground">
+                        {isRTL ? 'لا توجد ملاحظات سلوك مسجلة' : 'No behavior notes recorded'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {behaviorNotes.map((note) => (
+                        <div key={note.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            note.type === 'positive' || note.type === 'appreciation' ? 'bg-green-100 text-green-600' :
+                            note.type === 'negative' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                          }`}>
+                            {note.type === 'positive' || note.type === 'appreciation' ? <CheckCircle className="h-5 w-5" /> :
+                             note.type === 'negative' ? <XCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{note.student_name}</p>
+                            <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{note.note}</p>
+                            <p className="text-xs text-muted-foreground/60 mt-1">
+                              {note.date ? new Date(note.date).toLocaleDateString('ar-SA') : ''}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className={`text-xs ${
+                            note.type === 'positive' || note.type === 'appreciation' ? 'bg-green-100 text-green-700' :
+                            note.type === 'negative' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {note.type === 'positive' ? 'إيجابي' : 
+                             note.type === 'negative' ? 'سلبي' : 
+                             note.type === 'warning' ? 'تحذير' : 'تقدير'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
                 </>
