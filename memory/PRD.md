@@ -742,3 +742,42 @@
 - `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - واجهات CRUD كاملة
 - `/app/backend/server.py` - APIs + Audit Logging + Dependency checks
 
+
+
+---
+
+## التحديثات - 13 مارس 2026
+
+### 1. تحسين تصميم الجدول المدرسي ✅
+- **Gradient Colors**: إضافة تدرجات ألوان جميلة لكروت الحصص
+  - لغتي/العربية: تدرج أخضر فيروزي (from-emerald-400 to-teal-500)
+  - الرياضيات: تدرج أزرق نيلي (from-blue-400 to-indigo-500)
+  - العلوم: تدرج بنفسجي (from-purple-400 to-violet-500)
+  - التربية الفنية: تدرج وردي (from-fuchsia-400 to-pink-500)
+  - الاستراحة: تدرج أصفر برتقالي
+- **تأثيرات بصرية**: ظل، hover scale، backdrop blur
+- **قراءة أفضل**: نص أبيض على خلفيات ملونة
+
+### 2. إصلاح خطأ إنشاء الفصل "Field Required" ✅
+- **المشكلة**: الـ frontend يرسل `name_ar` بينما الـ backend يتوقع `name`
+- **الحل**: تحديث `ClassWizardCreate` model في الـ backend:
+  - جعل `name` اختياري
+  - إضافة دعم `name_ar`
+  - جعل `grade` و `section` اختياريين مع قيم افتراضية
+  - استخراج رقم الصف من `grade_id` تلقائياً
+
+### 3. تحميل الجدول الذكي تلقائياً ✅
+- عند فتح صفحة الجدول، يتم اختيار آخر جدول ذكي تلقائياً
+- الحصص تظهر مباشرة دون الحاجة لاختيار يدوي
+- دعم `period_number` في دالة `getSessionForCell`
+
+### 4. تنظيف قاعدة البيانات ✅
+- حذف 11 مادة مكررة/اختبارية
+- إضافة 10 مواد أساسية (12 مادة إجمالاً للمدرسة)
+- حذف ملف `SmartTimetablePage.jsx` غير المستخدم
+- إزالة routes قديمة من `App.js`
+
+### الملفات المُحدّثة:
+- `/app/frontend/src/pages/SchedulePageNew.jsx` - تصميم Gradient + auto-load
+- `/app/backend/server.py` - إصلاح ClassWizardCreate model
+- `/app/frontend/src/App.js` - إزالة SmartTimetablePage
