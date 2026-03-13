@@ -231,8 +231,8 @@ export default function SchedulePageNew() {
   }, [user, fetchData]);
 
   useEffect(() => {
-    if (selectedSchedule) fetchSessions();
-  }, [selectedSchedule, fetchSessions]);
+    if (selectedSchedule || selectedSmartTimetable) fetchSessions();
+  }, [selectedSchedule, selectedSmartTimetable, fetchSessions]);
 
   // Generate schedule using Smart Scheduling Engine
   const handleGenerateSchedule = async () => {
