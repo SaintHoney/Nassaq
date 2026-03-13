@@ -933,8 +933,7 @@ export default function SchedulePageNew() {
                 </p>
               </CardContent>
             </Card>
-          ) : (
-            <Card className="border-2 border-brand-navy/20 overflow-hidden" data-testid="schedule-grid">
+          ) : !showFullTimetable ? (
               <CardHeader className="bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
