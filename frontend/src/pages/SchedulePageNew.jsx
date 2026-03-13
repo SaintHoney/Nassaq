@@ -1033,6 +1033,16 @@ export default function SchedulePageNew() {
               <Button variant="outline" onClick={() => setGenerationResultOpen(false)}>
                 إغلاق
               </Button>
+              <Button 
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                onClick={() => {
+                  setGenerationResultOpen(false);
+                  navigate('/admin/smart-timetable');
+                }}
+              >
+                <Eye className="h-4 w-4 ml-2" />
+                عرض الجدول الكامل
+              </Button>
               {parseFloat(generationStats?.success_rate) >= 100 && (
                 <Button 
                   className="bg-green-600 hover:bg-green-700"
