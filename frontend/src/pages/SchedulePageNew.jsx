@@ -1143,7 +1143,16 @@ export default function SchedulePageNew() {
         </AlertDialog>
 
         {/* Generation Result Dialog */}
-        <Dialog open={generationResultOpen} onOpenChange={setGenerationResultOpen}>
+        <Dialog open={generationResultOpen} onOpenChange={(open) => {
+          if (!open) {
+            // عند إغلاق النافذة، اعرض الجدول تلقائياً
+            setShowFullTimetable(true);
+            if (classes.length > 0) {
+              setSelectedViewClass(classes[0].id);
+            }
+          }
+          setGenerationResultOpen(open);
+        }}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-cairo flex items-center gap-2">
@@ -1189,42 +1198,6 @@ export default function SchedulePageNew() {
                   />
                 </div>
                 
-                {/* Actions for unplaced sessions */}
-                {(generationStats.unplaced_sessions || 0) > 0 && (
-                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <p className="font-medium text-amber-800 mb-3 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      إجراءات مقترحة
-                    </p>
-                    <div className="space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start border-amber-300 text-amber-700 hover:bg-amber-100"
-                        onClick={() => {
-                          setGenerationResultOpen(false);
-                          handleGenerateSchedule();
-                        }}
-                      >
-                        <Wand2 className="h-4 w-4 ml-2" />
-                        إعادة جدولة الحصص الغير مجدولة
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start border-amber-300 text-amber-700 hover:bg-amber-100"
-                        onClick={() => {
-                          setGenerationResultOpen(false);
-                        }}
-                      >
-                        <List className="h-4 w-4 ml-2" />
-                        عرض الحصص الغير مجدولة
-                      </Button>
-                    </div>
-                    <p className="text-xs text-amber-600 mt-3">
-                      قد تكون هناك قيود تمنع جدولة بعض الحصص. تحقق من إعدادات القيود الإدارية.
-                    </p>
-                  </div>
-                )}
-                
                 {/* Success Message */}
                 {parseFloat(generationStats.success_rate) >= 100 && (
                   <div className="p-4 bg-green-50 rounded-xl border border-green-200">
@@ -1233,41 +1206,34 @@ export default function SchedulePageNew() {
                       تم جدولة جميع الحصص بنجاح!
                     </p>
                     <p className="text-sm text-green-600 mt-1">
-                      يمكنك الآن نشر الجدول ليتمكن جميع المستخدمين من رؤيته.
+                      سيتم عرض الجدول مباشرة عند إغلاق هذه النافذة.
+                    </p>
+                  </div>
+                )}
+                
+                {/* Warning for unplaced */}
+                {(generationStats.unplaced_sessions || 0) > 0 && (
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <p className="text-sm text-amber-700 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      بعض الحصص لم تُجدول. قد تحتاج لمراجعة القيود الإدارية.
                     </p>
                   </div>
                 )}
               </div>
             )}
             
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setGenerationResultOpen(false)}>
+            <DialogFooter>
+              <Button 
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => setGenerationResultOpen(false)}
+                data-testid="close-result-btn"
+              >
                 إغلاق
               </Button>
-              <Button 
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                onClick={() => {
-                  setGenerationResultOpen(false);
-                  // عرض الجدول في نفس الصفحة بدلاً من التنقل
-                  setShowFullTimetable(true);
-                  // تعيين أول فصل
-                  if (classes.length > 0) {
-                    setSelectedViewClass(classes[0].id);
-                  }
-                }}
-                data-testid="view-full-timetable-btn"
-              >
-                <Eye className="h-4 w-4 ml-2" />
-                عرض الجدول الكامل
-              </Button>
-              {parseFloat(generationStats?.success_rate) >= 100 && (
-                <Button 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    setGenerationResultOpen(false);
-                    setPublishDialogOpen(true);
-                  }}
-                >
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
                   <Send className="h-4 w-4 ml-2" />
                   نشر الجدول
                 </Button>
