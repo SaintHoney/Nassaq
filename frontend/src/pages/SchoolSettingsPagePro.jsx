@@ -1114,10 +1114,10 @@ export default function SchoolSettingsPagePro() {
   
   // Effect for official curriculum filters
   useEffect(() => {
-    if (selectedOfficialStage || selectedOfficialTrack) {
+    if ((selectedOfficialStage || selectedOfficialTrack) && api) {
       fetchOfficialGrades(selectedOfficialStage, selectedOfficialTrack);
     }
-  }, [selectedOfficialStage, selectedOfficialTrack]);
+  }, [selectedOfficialStage, selectedOfficialTrack, api]);
   
   // Effect for grade curriculum
   useEffect(() => {
