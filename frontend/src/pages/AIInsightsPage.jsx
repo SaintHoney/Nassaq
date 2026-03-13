@@ -256,7 +256,9 @@ export const AIInsightsPage = () => {
                       </defs>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Brain className="h-10 w-10 text-brand-gold" />
+                      <Brain className="h-10 w-10 text-white animate-pulse drop-shadow-lg" style={{
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, glow 3s ease-in-out infinite alternate'
+                      }} />
                     </div>
                   </div>
                 </div>
