@@ -145,8 +145,142 @@ const DaysGrid = ({ workDays = [], weekendDays = [], onToggle, editable = false 
 };
 
 // ============================================
-// مكون عرض الفترة الزمنية
+// مكون عرض الفترة الزمنية مع التعديل المباشر (Inline Edit)
 // ============================================
+const TimeSlotInlineEdit = ({ slot, index, allSlots, onTimeChange, onSave, isSaving }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedStartTime, setEditedStartTime] = useState(slot.start_time);
+  const [error, setError] = useState('');
+  
+  const getSlotStyle = (type) => {
+    switch(type) {
+      case 'break': return 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-800';
+      case 'prayer': return 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800';
+      default: return 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 text-blue-800';
+    }
+  };
+  
+  const getSlotIcon = (type) => {
+    switch(type) {
+      case 'break': return <Coffee className="h-4 w-4" />;
+      case 'prayer': return <Moon className="h-4 w-4" />;
+      default: return <BookOpen className="h-4 w-4" />;
+    }
+  };
+
+  const getSlotLabel = (type) => {
+    switch(type) {
+      case 'break': return 'استراحة';
+      case 'prayer': return 'صلاة';
+      default: return 'حصة';
+    }
+  };
+  
+  // Validate time format and logic
+  const validateTime = (newStartTime) => {
+    if (!newStartTime || !/^\d{2}:\d{2}$/.test(newStartTime)) {
+      return 'صيغة الوقت غير صحيحة';
+    }
+    
+    // Check if start time is after previous slot's end time
+    if (index > 0) {
+      const prevSlot = allSlots[index - 1];
+      if (prevSlot && newStartTime < prevSlot.end_time) {
+        return `يجب أن يبدأ بعد ${prevSlot.end_time}`;
+      }
+    }
+    
+    return '';
+  };
+  
+  // Handle blur/enter to save
+  const handleSave = () => {
+    const validationError = validateTime(editedStartTime);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError('');
+    setIsEditing(false);
+    onTimeChange(index, editedStartTime);
+  };
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setEditedStartTime(slot.start_time);
+      setIsEditing(false);
+      setError('');
+    }
+  };
+  
+  return (
+    <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${getSlotStyle(slot.type || 'period')} hover:shadow-md transition-all group relative`}>
+      {/* Saving indicator */}
+      {isSaving && (
+        <div className="absolute top-2 left-2">
+          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+        </div>
+      )}
+      
+      <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm">
+          {slot.type === 'period' ? (
+            <span className="font-bold text-lg text-blue-600">{slot.slot_number || index + 1}</span>
+          ) : (
+            getSlotIcon(slot.type)
+          )}
+        </div>
+        <div>
+          <p className="font-bold text-base">{slot.name_ar || slot.name}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline" className="text-xs">
+              {slot.duration || slot.duration_minutes} دقيقة
+            </Badge>
+            <Badge variant="secondary" className="text-xs">
+              {getSlotLabel(slot.type)}
+            </Badge>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <div className="text-left bg-white px-3 py-2 rounded-lg shadow-sm min-w-[180px]">
+          <p className="text-xs text-muted-foreground mb-1">من - إلى</p>
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <Input
+                type="time"
+                value={editedStartTime}
+                onChange={(e) => setEditedStartTime(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+                className={`w-24 h-8 text-center font-mono font-bold ${error ? 'border-red-500' : ''}`}
+                autoFocus
+                data-testid={`time-slot-${index}-start`}
+              />
+              <span className="text-muted-foreground">-</span>
+              <span className="font-mono font-bold text-muted-foreground">{slot.end_time}</span>
+            </div>
+          ) : (
+            <div 
+              className="font-mono font-bold text-lg cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-1"
+              onClick={() => setIsEditing(true)}
+              title="انقر للتعديل المباشر"
+            >
+              <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-50" />
+              {slot.start_time} <span className="text-muted-foreground mx-1">-</span> {slot.end_time}
+            </div>
+          )}
+          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Legacy component for backward compatibility
 const TimeSlotItem = ({ slot, index, onEdit, onDelete }) => {
   const getSlotStyle = (type) => {
     switch(type) {
