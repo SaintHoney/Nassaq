@@ -270,7 +270,7 @@ export const Sidebar = ({ children }) => {
       {
         icon: Calendar,
         label: isRTL ? 'الجدول المدرسي' : 'School Schedule',
-        href: '/school/schedule',
+        href: '/principal/timetable',
         roles: ['school_principal', 'school_sub_admin'],
       },
       // 3. Users & Classes Management
