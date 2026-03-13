@@ -684,6 +684,93 @@ export default function SchoolSettingsPagePro() {
     prayerDuration: 20,
   });
   
+  // State for auto-calculated time preview
+  const [calculatedSlots, setCalculatedSlots] = useState([]);
+  const [showCalculatedPreview, setShowCalculatedPreview] = useState(false);
+  
+  // Function to calculate time slots automatically
+  const calculateTimeSlots = (startTime, periodsPerDay, periodDuration, breakDuration, prayerDuration) => {
+    const slots = [];
+    const [hours, minutes] = startTime.split(':').map(Number);
+    let currentTime = hours * 60 + minutes;
+    
+    const formatTime = (totalMinutes) => {
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+    
+    let periodCount = 0;
+    let slotNumber = 0;
+    
+    while (periodCount < periodsPerDay) {
+      slotNumber++;
+      periodCount++;
+      
+      // Add regular period
+      slots.push({
+        slot_number: slotNumber,
+        type: 'period',
+        name_ar: `الحصة ${periodCount}`,
+        name_en: `Period ${periodCount}`,
+        start_time: formatTime(currentTime),
+        end_time: formatTime(currentTime + periodDuration),
+        duration: periodDuration,
+      });
+      currentTime += periodDuration;
+      
+      // Add break after 3rd period
+      if (periodCount === 3 && breakDuration > 0) {
+        slotNumber++;
+        slots.push({
+          slot_number: slotNumber,
+          type: 'break',
+          name_ar: 'استراحة',
+          name_en: 'Break',
+          start_time: formatTime(currentTime),
+          end_time: formatTime(currentTime + breakDuration),
+          duration: breakDuration,
+        });
+        currentTime += breakDuration;
+      }
+      
+      // Add prayer break after 5th or 6th period
+      if ((periodCount === 5 || periodCount === 6) && prayerDuration > 0 && !slots.some(s => s.type === 'prayer')) {
+        slotNumber++;
+        slots.push({
+          slot_number: slotNumber,
+          type: 'prayer',
+          name_ar: 'صلاة الظهر',
+          name_en: 'Dhuhr Prayer',
+          start_time: formatTime(currentTime),
+          end_time: formatTime(currentTime + prayerDuration),
+          duration: prayerDuration,
+        });
+        currentTime += prayerDuration;
+      }
+    }
+    
+    // Calculate end time
+    const calculatedEnd = formatTime(currentTime);
+    
+    return { slots, endTime: calculatedEnd };
+  };
+  
+  // Handler for auto-calculate button
+  const handleAutoCalculate = () => {
+    const { slots, endTime } = calculateTimeSlots(
+      editedDayTimes.dayStart,
+      editedDayTimes.periodsPerDay,
+      editedDayTimes.periodDuration,
+      editedDayTimes.breakDuration,
+      editedDayTimes.prayerDuration
+    );
+    setCalculatedSlots(slots);
+    setEditedDayTimes(prev => ({ ...prev, dayEnd: endTime }));
+    setShowCalculatedPreview(true);
+    toast.success('تم حساب التوزيع الزمني بنجاح');
+  };
+  
   // Data States
   const [schoolInfo, setSchoolInfo] = useState({});
   const [settings, setSettings] = useState({});
