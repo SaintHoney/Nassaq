@@ -14719,16 +14719,24 @@ async def get_school_info(
     if not school:
         return {}
     
+    # Get school settings too
+    settings = await db.school_settings.find_one({"school_id": school_id}, {"_id": 0})
+    
     return {
         "id": school.get("id"),
         "name": school.get("name"),
         "name_ar": school.get("name_ar", school.get("name")),
+        "school_name_ar": school.get("name_ar", school.get("name")),
         "name_en": school.get("name_en"),
         "type": school.get("type"),
         "stage": school.get("stage"),
         "address": school.get("address"),
         "phone": school.get("phone"),
-        "email": school.get("email")
+        "email": school.get("email"),
+        "settings": settings,
+        "academicYear": settings.get("academic_year") if settings else None,
+        "currentSemester": settings.get("current_semester") if settings else None,
+        "workingDays": settings.get("working_days") if settings else None,
     }
 
 @api_router.get("/school/settings")
