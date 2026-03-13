@@ -183,6 +183,50 @@ export const CommunicationCenterPage = () => {
     }));
   };
 
+  const handleSendScheduledNow = async (messageId) => {
+    try {
+      await api.post(`/communication/${messageId}/send-now`);
+      toast.success(isRTL ? 'تم إرسال الرسالة بنجاح' : 'Message sent successfully');
+      fetchData();
+      setScheduledMessagesOpen(false);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message');
+    }
+  };
+
+  const handleUpdateScheduledMessage = async () => {
+    if (!selectedMessage) return;
+    
+    try {
+      await api.put(`/communication/${selectedMessage.id}`, {
+        title: selectedMessage.title,
+        content: selectedMessage.content,
+        audience: selectedMessage.audience,
+        scheduled_at: selectedMessage.scheduled_at
+      });
+      toast.success(isRTL ? 'تم تحديث الرسالة المجدولة' : 'Scheduled message updated');
+      fetchData();
+      setEditScheduledOpen(false);
+      setSelectedMessage(null);
+    } catch (error) {
+      console.error('Failed to update message:', error);
+      toast.error(isRTL ? 'فشل تحديث الرسالة' : 'Failed to update message');
+    }
+  };
+
+  const handleMarkAsRead = async (messageId) => {
+    try {
+      await api.put(`/communication/${messageId}/read`);
+      // Update local state
+      setReceivedMessages(prev => 
+        prev.map(m => m.id === messageId ? { ...m, is_read: true } : m)
+      );
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const config = {
       sent: { label: isRTL ? 'مرسلة' : 'Sent', variant: 'default' },
