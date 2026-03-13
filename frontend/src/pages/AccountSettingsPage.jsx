@@ -368,14 +368,26 @@ export const AccountSettingsPage = () => {
                     </Badge>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLogoutDialog(true)}
-                  className="rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4 me-2" />
-                  {isRTL ? 'تسجيل خروج' : 'Logout'}
-                </Button>
+                <div className="flex gap-2">
+                  {userRoles.length > 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowRoleSwitchDialog(true)}
+                      className="rounded-xl text-brand-turquoise hover:text-brand-turquoise hover:bg-brand-turquoise/10"
+                    >
+                      <RefreshCw className="h-4 w-4 me-2" />
+                      {isRTL ? 'تبديل المستخدم' : 'Switch Role'}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowLogoutDialog(true)}
+                    className="rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4 me-2" />
+                    {isRTL ? 'تسجيل خروج' : 'Logout'}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
