@@ -4270,10 +4270,21 @@ async def get_class_teachers_options(current_user: dict = Depends(get_current_us
     
     teachers = await db.teachers.find(
         {"school_id": school_id, "is_active": True} if school_id else {"is_active": True},
-        {"_id": 0, "id": 1, "full_name": 1, "specialization": 1, "email": 1}
+        {"_id": 0}
     ).to_list(200)
     
-    return {"teachers": teachers}
+    # Map to expected format
+    result_teachers = []
+    for t in teachers:
+        result_teachers.append({
+            "teacher_id": t.get("teacher_id") or t.get("id", ""),
+            "full_name_ar": t.get("full_name_ar") or t.get("full_name", ""),
+            "full_name_en": t.get("full_name_en", ""),
+            "specialization": t.get("specialization", ""),
+            "email": t.get("email", "")
+        })
+    
+    return {"teachers": result_teachers}
 
 @api_router.get("/classes/options/students")
 async def get_class_students_options(current_user: dict = Depends(get_current_user)):
