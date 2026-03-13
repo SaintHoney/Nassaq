@@ -156,6 +156,8 @@ export default function SchedulePageNew() {
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [generationStep, setGenerationStep] = useState(''); // Current generation step
   const [unplacedSessions, setUnplacedSessions] = useState([]);
+  const [smartTimetables, setSmartTimetables] = useState([]); // Smart Scheduling timetables
+  const [selectedSmartTimetable, setSelectedSmartTimetable] = useState(null);
   
   const schoolId = user?.tenant_id;
 
