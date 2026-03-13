@@ -65,6 +65,7 @@ import { CommunicationNotificationsPage } from "./pages/CommunicationNotificatio
 import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
 // TeacherRequestsPage removed - now integrated in UsersManagement
 import TenantsManagement from "./pages/TenantsManagement";
+import TeacherClassAssignmentPage from "./pages/TeacherClassAssignmentPage";
 
 // School Principal Pages
 import SchoolSettingsPagePro from "./pages/SchoolSettingsPagePro";
