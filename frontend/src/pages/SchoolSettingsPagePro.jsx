@@ -286,6 +286,24 @@ function SchoolSettingsPagePro() {
     setSoftConstraints(prev => prev.map(c => c.id === id ? { ...c, enabled: !c.enabled } : c));
     setHasChanges(true);
   };
+  
+  // Navigate to specific tab for fixing issues
+  const navigateToFix = (category) => {
+    setActiveSection('dynamic');
+    const tabMapping = {
+      'academic_context': 'academic-year',
+      'school_days': 'workdays',
+      'day_structure': 'timings',
+      'classes': 'classes',
+      'teachers': 'teacher-assignments',
+      'teacher_assignments': 'teacher-assignments',
+      'constraints': 'constraints'
+    };
+    const tab = tabMapping[category] || 'academic-year';
+    setActiveTab(tab);
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // ============================================
   // Dynamic Section Tabs Configuration
