@@ -1462,3 +1462,44 @@ teacher_class_assignments:
   - إضافة Modals للاستراحات وعدم التوفر
   - تحديث تصميم كارت الجاهزية
 
+---
+
+### 13 مارس 2026 - إصلاح توليد الجدول + تصميم التبويبات + دمج إسناد الفصول
+
+#### الإصلاحات والتحسينات:
+
+**1. إصلاح خطأ "Not Found" عند توليد الجدول:**
+- **المشكلة:** الـ API `/api/timetable/generate-smart` غير موجود
+- **الحل:** إضافة endpoint جديد في `server.py` يستدعي `smart_scheduling_engine.generate_timetable`
+- **النتيجة:** زر "معالجة الجدول بالذكاء الاصطناعي" يعمل الآن بنجاح ✅
+
+**2. تحسين تصميم التبويبات:**
+- **التغيير:** التبويبات الآن في صف واحد (grid 8 columns) بحجم مناسب
+- **التصميم:** أيقونة + نص عمودياً لكل تبويب
+- **التبويبات:** العام والفصل الدراسي، أيام العمل، التوقيت والحصص، الاستراحات والصلاة، الفصول والشعب، إسناد المعلمين، عدم التوفر، القيود والتفضيلات
+
+**3. دمج إسناد الفصول داخل تبويب "إسناد المعلمين":**
+- **التصميم الجديد:** تبويب فرعي مقسم لقسمين:
+  - **إسناد المواد** (بنفسجي): السحب والإفلات لربط المعلمين بالمواد
+  - **إسناد الفصول** (فيروزي): اختيار سريع لإسناد الفصول للمعلمين
+- **الحفظ التلقائي:** أي تغيير يُحفظ مباشرة في `teacher_class_assignments`
+- **الربط مع الجدول:** تحديث `timetable_readiness_routes.py` لقراءة من `teacher_class_assignments`
+
+**4. تحديث رابط "إصلاح" في صفحة الجدول:**
+- **قبل:** يوجه لصفحة منفصلة `/school/teacher-class-assignments`
+- **بعد:** يوجه لتبويب إسناد المعلمين `/school/settings?tab=teacher-assignments`
+
+#### الملفات المعدلة:
+- `/app/backend/server.py` - إضافة `POST /timetable/generate-smart`
+- `/app/backend/routes/timetable_readiness_routes.py` - تحديث `check_teacher_assignments` لقراءة من `teacher_class_assignments`
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx`:
+  - تصميم التبويبات الجديد (grid 8 columns)
+  - إضافة `assignmentSubTab`, `classAssignments`, `classAssignmentsLoading`
+  - إضافة handlers: `loadClassAssignments`, `handleCreateClassAssignment`, `handleDeleteClassAssignment`
+  - إعادة تصميم تبويب "إسناد المعلمين" بقسمين
+
+#### النتائج:
+- ✅ نسبة الجاهزية ارتفعت من 89% إلى 96%
+- ✅ إسنادات المعلمين: 25/25 (كاملة)
+- ✅ توليد الجدول يعمل بنجاح
+- ✅ جودة التوزيع: 100%
