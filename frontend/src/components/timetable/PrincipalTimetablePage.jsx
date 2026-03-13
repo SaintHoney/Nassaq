@@ -45,7 +45,8 @@ const API_BASE = process.env.REACT_APP_BACKEND_URL;
 const PrincipalTimetablePage = () => {
   const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
-  const token = localStorage.getItem('token');
+  // Try both token storage keys
+  const token = localStorage.getItem('nassaq_token') || localStorage.getItem('token');
   const userName = localStorage.getItem('user_name') || '';
 
   // ============================================
