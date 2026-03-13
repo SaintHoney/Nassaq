@@ -1756,6 +1756,7 @@ function SchoolSettingsPagePro() {
               </Tabs>
             </div>
           )}
+          </div>
         </div>
       </div>
       
