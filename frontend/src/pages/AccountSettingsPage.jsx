@@ -418,12 +418,26 @@ export const AccountSettingsPage = () => {
                       {getInitials(profile.full_name)}
                     </AvatarFallback>
                   </Avatar>
-                  <Button
-                    size="icon"
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-brand-turquoise hover:bg-brand-turquoise/90"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
+                  <label htmlFor="avatar-upload">
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={saving}
+                      data-testid="avatar-upload-input"
+                    />
+                    <Button
+                      size="icon"
+                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-brand-turquoise hover:bg-brand-turquoise/90 cursor-pointer"
+                      asChild
+                    >
+                      <span>
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                      </span>
+                    </Button>
+                  </label>
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold font-cairo">{profile.full_name}</h2>
