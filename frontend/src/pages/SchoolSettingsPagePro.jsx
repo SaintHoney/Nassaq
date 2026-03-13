@@ -1896,14 +1896,6 @@ export default function SchoolSettingsPagePro() {
                         <span className="text-sm text-muted-foreground">{settings.weekendDays?.length || 2} أيام عطلة</span>
                       </div>
                     </div>
-                    
-                    {/* تفاصيل إضافية */}
-                    <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                      <p className="text-xs text-green-700 flex items-center gap-2">
-                        <Info className="h-4 w-4" />
-                        أيام الدراسة: {settings.workingDays?.join(' • ') || 'الأحد • الإثنين • الثلاثاء • الأربعاء • الخميس'}
-                      </p>
-                    </div>
                   </CardContent>
                 </Card>
                 
