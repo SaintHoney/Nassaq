@@ -106,7 +106,7 @@ async def get_curriculum_stats():
     الحصول على إحصائيات المنهج الرسمي
     Get official curriculum statistics
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     stages = await db.official_curriculum_stages.count_documents({})
@@ -135,7 +135,7 @@ async def get_stages():
     الحصول على جميع المراحل الدراسية
     Get all official stages
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     stages = await db.official_curriculum_stages.find(
@@ -151,7 +151,7 @@ async def get_tracks(stage_id: Optional[str] = None):
     الحصول على جميع المسارات التعليمية
     Get all official tracks, optionally filtered by stage
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     query = {}
@@ -174,7 +174,7 @@ async def get_grades(
     الحصول على جميع الصفوف والسنوات
     Get all official grades, optionally filtered by stage and/or track
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     query = {}
@@ -212,7 +212,7 @@ async def get_subjects(category: Optional[str] = None):
     الحصول على جميع المواد الدراسية
     Get all official subjects, optionally filtered by category
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     query = {}
@@ -232,7 +232,7 @@ async def get_subject_categories():
     الحصول على تصنيفات المواد
     Get all subject categories
     """
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
     categories = await db.official_curriculum_subjects.distinct("category")
