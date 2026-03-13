@@ -272,7 +272,7 @@ function SchoolSettingsPagePro() {
   const addTeacher = async () => {
     try {
       // Get school_id from current user context
-      const schoolId = currentUser?.tenant_id || currentUser?.school_id || 'SCH-001';
+      const schoolId = user?.tenant_id || user?.school_id || 'SCH-001';
       const teacherData = {
         full_name: newTeacher.name,
         email: newTeacher.email,
@@ -302,7 +302,7 @@ function SchoolSettingsPagePro() {
   const addClass = async () => {
     try {
       // Get school_id from current user context
-      const schoolId = currentUser?.tenant_id || currentUser?.school_id || 'SCH-001';
+      const schoolId = user?.tenant_id || user?.school_id || 'SCH-001';
       const classData = {
         name: newClass.name,
         grade_level: newClass.grade,
