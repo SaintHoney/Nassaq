@@ -60,7 +60,7 @@
     },
     "admin_bulk_route_removed": {
       "status": "PASSED",
-      "evidence": "Navigating to /admin/bulk redirects to home page (https://nassaq-school-12.preview.emergentagent.com/)"
+      "evidence": "Navigating to /admin/bulk redirects to home page (https://nassaq-school-13.preview.emergentagent.com/)"
     },
     "sidebar_import_export_link_removed": {
       "status": "PASSED",
