@@ -1065,69 +1065,196 @@ function SchoolSettingsPagePro() {
                 
                 {/* ======= TAB: إسناد المعلمين ======= */}
                 <TabsContent value="teacher-assignments" className="space-y-6">
-                  <Card className="bg-white shadow-sm">
-                    <CardHeader>
+                  {/* Header Card */}
+                  <Card className="bg-gradient-to-l from-brand-navy/10 to-brand-turquoise/5 border-brand-navy/20">
+                    <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-xl flex items-center gap-2">
-                            <Link2 className="h-5 w-5 text-[#1C3D74]" />
-                            ربط المعلمين بالمواد
-                          </CardTitle>
-                          <CardDescription>{teachers.length} معلم • {assignments.length} إسناد</CardDescription>
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-brand-navy flex items-center justify-center">
+                            <Link2 className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-brand-navy">ربط المعلمين بالمواد</h3>
+                            <p className="text-sm text-brand-navy/60">
+                              {teachers.length} معلم • {subjects.length} مادة • {assignments.length} إسناد
+                            </p>
+                          </div>
                         </div>
-                        <Button onClick={() => setShowAddTeacher(true)} className="bg-[#1C3D74]" data-testid="add-teacher-btn">
-                          <Plus className="h-4 w-4 ml-2" />
-                          إضافة معلم
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-brand-turquoise/10 text-brand-turquoise border-brand-turquoise/30">
+                            <Zap className="h-3 w-3 ml-1" />
+                            سحب وإفلات
+                          </Badge>
+                        </div>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      {teachers.length === 0 ? (
-                        <div className="text-center py-12">
-                          <Users className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                          <p className="text-lg text-slate-500 mb-4">لا يوجد معلمين مسجلين</p>
-                          <Button onClick={() => setShowAddTeacher(true)} variant="outline">
-                            <Plus className="h-4 w-4 ml-2" />
-                            إضافة معلم جديد
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">اسم المعلم</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">البريد</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">التخصص</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">المواد المسندة</th>
-                                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-600">إجراءات</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {teachers.map((teacher, idx) => (
-                                <tr key={teacher.id || idx} className="border-b hover:bg-slate-50">
-                                  <td className="py-3 px-4 font-medium">{teacher.name || teacher.name_ar || '-'}</td>
-                                  <td className="py-3 px-4 text-slate-600">{teacher.email || '-'}</td>
-                                  <td className="py-3 px-4 text-slate-600">{teacher.specialization || '-'}</td>
-                                  <td className="py-3 px-4">
-                                    <Badge variant="secondary" className="bg-[#1C3D74]/10 text-[#1C3D74]">
-                                      {assignments.filter(a => a.teacher_id === teacher.id).length} مواد
-                                    </Badge>
-                                  </td>
-                                  <td className="py-3 px-4 text-center">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Edit2 className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-red-600" onClick={() => deleteTeacher(teacher.id)}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
+                  
+                  {/* Instructions */}
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-blue-800">طريقة الاستخدام</p>
+                        <p className="text-sm text-blue-700 mt-1">
+                          اسحب أي مادة من قائمة المواد على اليسار وأفلتها داخل صندوق المعلم المطلوب لإسنادها له.
+                          يمكنك إسناد نفس المادة لأكثر من معلم.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Main Content - Drag & Drop Interface */}
+                  <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Subjects List (Draggable) */}
+                    <Card className="lg:col-span-1 bg-white shadow-sm border-brand-purple/20">
+                      <CardHeader className="bg-brand-purple/5 pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2 text-brand-purple">
+                          <BookOpen className="h-5 w-5" />
+                          المواد الدراسية
+                        </CardTitle>
+                        <CardDescription>{subjects.length} مادة متاحة للإسناد</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-[500px]">
+                          <div className="p-3 space-y-2">
+                            {subjects.map((subject) => (
+                              <div
+                                key={subject.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, subject)}
+                                onDragEnd={handleDragEnd}
+                                className={`p-3 rounded-lg border cursor-grab active:cursor-grabbing transition-all
+                                  ${draggingSubject?.id === subject.id 
+                                    ? 'bg-brand-purple/20 border-brand-purple shadow-lg scale-105' 
+                                    : 'bg-white border-slate-200 hover:border-brand-purple/50 hover:shadow-sm'
+                                  }`}
+                                data-testid={`draggable-subject-${subject.id}`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-lg bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
+                                    <BookOpen className="h-4 w-4 text-brand-purple" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-slate-800 truncate text-sm">{subject.name_ar}</p>
+                                    <p className="text-xs text-slate-500 truncate">{subject.name_en || subject.category}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Teachers List (Drop Zones) */}
+                    <Card className="lg:col-span-2 bg-white shadow-sm border-brand-navy/20">
+                      <CardHeader className="bg-brand-navy/5 pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2 text-brand-navy">
+                          <Users className="h-5 w-5" />
+                          المعلمون
+                        </CardTitle>
+                        <CardDescription>أفلت المواد هنا لإسنادها للمعلمين</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-[500px]">
+                          <div className="p-3 space-y-4">
+                            {teachers.length === 0 ? (
+                              <div className="text-center py-12">
+                                <Users className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                                <p className="text-lg text-slate-500 mb-2">لا يوجد معلمين مسجلين</p>
+                                <p className="text-sm text-slate-400">يمكنك إضافة المعلمين من صفحة إدارة المستخدمين</p>
+                              </div>
+                            ) : (
+                              teachers.map((teacher) => {
+                                const teacherAssignments = getTeacherAssignments(teacher.id);
+                                return (
+                                  <div
+                                    key={teacher.id}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDropOnTeacher(e, teacher)}
+                                    className={`p-4 rounded-xl border-2 transition-all
+                                      ${draggingSubject 
+                                        ? 'border-dashed border-brand-turquoise bg-brand-turquoise/5' 
+                                        : 'border-slate-200 bg-white'
+                                      }`}
+                                    data-testid={`teacher-drop-zone-${teacher.id}`}
+                                  >
+                                    {/* Teacher Header */}
+                                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-brand-navy flex items-center justify-center">
+                                          <span className="text-white font-bold text-sm">
+                                            {(teacher.full_name || teacher.name || '?')[0]}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <p className="font-bold text-slate-800">{teacher.full_name || teacher.name || '-'}</p>
+                                          <p className="text-xs text-slate-500">{teacher.specialization || teacher.email || '-'}</p>
+                                        </div>
+                                      </div>
+                                      <Badge className="bg-brand-navy/10 text-brand-navy">
+                                        {teacherAssignments.length} مادة
+                                      </Badge>
+                                    </div>
+                                    
+                                    {/* Assigned Subjects */}
+                                    <div className="min-h-[60px]">
+                                      {teacherAssignments.length === 0 ? (
+                                        <div className={`text-center py-4 rounded-lg transition-colors
+                                          ${draggingSubject ? 'bg-brand-turquoise/10' : 'bg-slate-50'}`}
+                                        >
+                                          <p className="text-sm text-slate-400">
+                                            {draggingSubject ? 'أفلت المادة هنا' : 'لا توجد مواد مسندة'}
+                                          </p>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-wrap gap-2">
+                                          {teacherAssignments.map((assignment) => {
+                                            const subject = getSubjectById(assignment.subject_id);
+                                            return (
+                                              <div
+                                                key={assignment.id}
+                                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-turquoise/10 border border-brand-turquoise/30 group"
+                                              >
+                                                <span className="text-sm font-medium text-brand-turquoise-dark">
+                                                  {subject?.name_ar || assignment.subject_name || assignment.subject_id}
+                                                </span>
+                                                <button
+                                                  onClick={() => removeAssignment(assignment.id)}
+                                                  className="w-5 h-5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                  title="إلغاء الإسناد"
+                                                >
+                                                  <X className="h-3 w-3" />
+                                                </button>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {/* Info Banner */}
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-amber-700">
+                          لإضافة معلمين جدد، استخدم صفحة <span className="font-medium">إدارة المستخدمين والفصول</span>.
+                          المواد المعروضة هي المواد الرسمية من المنهج الوزاري.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </TabsContent>
                 
                 {/* ======= TAB: عدم التوفر ======= */}
