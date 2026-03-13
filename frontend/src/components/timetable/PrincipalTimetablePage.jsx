@@ -183,7 +183,7 @@ const PrincipalTimetablePage = () => {
 
   const fetchTimeSlots = useCallback(async () => {
     try {
-      const data = await fetchWithAuth('/api/school-settings/time-slots');
+      const data = await fetchWithAuth('/api/time-slots');
       setTimeSlots(data.time_slots || data || []);
     } catch (error) {
       console.error('Error fetching time slots:', error);
