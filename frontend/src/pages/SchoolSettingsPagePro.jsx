@@ -130,9 +130,9 @@ function SchoolSettingsPagePro() {
         officialStatsRes, officialStagesRes, officialTracksRes, officialRankLoadsRes
       ] = await Promise.all([
         api.get('/school/settings').catch(() => ({ data: {} })),
-        api.get('/school/teachers').catch(() => ({ data: [] })),
-        api.get('/school/classes').catch(() => ({ data: [] })),
-        api.get('/school/assignments').catch(() => ({ data: [] })),
+        api.get('/teachers').catch(() => ({ data: [] })),
+        api.get('/classes').catch(() => ({ data: [] })),
+        api.get('/teacher-assignments').catch(() => ({ data: [] })),
         api.get('/school/constraints').catch(() => ({ data: [] })),
         api.get('/timetable-readiness/check').catch(() => ({ data: null })),
         api.get('/school/info').catch(() => ({ data: {} })),
