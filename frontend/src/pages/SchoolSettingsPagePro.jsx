@@ -1281,30 +1281,6 @@ function SchoolSettingsPagePro() {
                     </div>
                   </div>
                   
-                  {/* Link to Teacher-Class Assignment Page */}
-                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start gap-3">
-                        <GraduationCap className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium text-amber-800">إسناد المعلمين للفصول</p>
-                          <p className="text-sm text-amber-700 mt-1">
-                            لربط المعلمين بالفصول الدراسية (مسؤولية الفصل)، استخدم صفحة إسناد المعلمين للفصول.
-                          </p>
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                        onClick={() => navigate('/school/teacher-class-assignments')}
-                        data-testid="go-to-class-assignments-btn"
-                      >
-                        <Users className="h-4 w-4 ml-2" />
-                        فتح صفحة الإسناد
-                      </Button>
-                    </div>
-                  </div>
-                  
                   {/* Main Content - Drag & Drop Interface */}
                   <div className="grid lg:grid-cols-3 gap-6">
                     {/* Subjects List (Draggable) */}
