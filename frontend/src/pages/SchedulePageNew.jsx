@@ -1234,13 +1234,6 @@ export default function SchedulePageNew() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-                  <Send className="h-4 w-4 ml-2" />
-                  نشر الجدول
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Session Detail Dialog */}
         <Dialog open={sessionDetailOpen} onOpenChange={setSessionDetailOpen}>
