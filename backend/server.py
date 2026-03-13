@@ -3758,26 +3758,39 @@ async def get_teacher(teacher_id: str, current_user: dict = Depends(get_current_
 @api_router.put("/teachers/{teacher_id}")
 async def update_teacher(
     teacher_id: str,
-    teacher_data: TeacherCreate,
+    teacher_data: TeacherUpdate,
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
 ):
     """Update teacher"""
+    # Build update dict with only provided fields
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if teacher_data.full_name is not None:
+        update_fields["full_name"] = teacher_data.full_name
+    if teacher_data.full_name_en is not None:
+        update_fields["full_name_en"] = teacher_data.full_name_en
+    if teacher_data.email is not None:
+        update_fields["email"] = teacher_data.email
+    if teacher_data.phone is not None:
+        update_fields["phone"] = teacher_data.phone
+    if teacher_data.specialization is not None:
+        update_fields["specialization"] = teacher_data.specialization
+    if teacher_data.years_of_experience is not None:
+        update_fields["years_of_experience"] = teacher_data.years_of_experience
+    if teacher_data.qualification is not None:
+        update_fields["qualification"] = teacher_data.qualification
+    if teacher_data.gender is not None:
+        update_fields["gender"] = teacher_data.gender
+    if teacher_data.is_active is not None:
+        update_fields["is_active"] = teacher_data.is_active
+    
     result = await db.teachers.update_one(
         {"id": teacher_id},
-        {"$set": {
-            "full_name": teacher_data.full_name,
-            "full_name_en": teacher_data.full_name_en,
-            "phone": teacher_data.phone,
-            "specialization": teacher_data.specialization,
-            "years_of_experience": teacher_data.years_of_experience,
-            "qualification": teacher_data.qualification,
-            "gender": teacher_data.gender,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_fields}
     )
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="المعلم غير موجود")
-    return {"message": "تم تحديث بيانات المعلم"}
+    return {"message": "تم تحديث بيانات المعلم", "success": True}
 
 @api_router.delete("/teachers/{teacher_id}")
 async def delete_teacher(
