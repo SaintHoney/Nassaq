@@ -830,6 +830,10 @@ export default function SchoolSettingsPagePro() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [lastSync, setLastSync] = useState(null);
   
+  // Timetable Readiness State
+  const [readinessData, setReadinessData] = useState(null);
+  const [readinessLoading, setReadinessLoading] = useState(false);
+  
   // Subject CRUD States
   const [addSubjectOpen, setAddSubjectOpen] = useState(false);
   const [editSubjectOpen, setEditSubjectOpen] = useState(false);
