@@ -448,14 +448,20 @@ async def check_teachers(school_id: str) -> CategoryReadiness:
 
 
 async def check_teacher_assignments(school_id: str) -> CategoryReadiness:
-    """Check teacher-subject assignments"""
+    """Check teacher-subject assignments AND teacher-class assignments"""
     issues = []
     score = 0
     max_score = 25
     
-    # Get teacher assignments
-    assignments = await db.teacher_assignments.find(
+    # Get teacher-subject assignments
+    subject_assignments = await db.teacher_assignments.find(
         {"school_id": school_id, "is_active": {"$ne": False}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get teacher-class assignments (from new table)
+    class_assignments = await db.teacher_class_assignments.find(
+        {"school_id": school_id},
         {"_id": 0}
     ).to_list(1000)
     
@@ -465,7 +471,8 @@ async def check_teacher_assignments(school_id: str) -> CategoryReadiness:
         {"_id": 0}
     ).to_list(500)
     
-    if len(assignments) >= 1:
+    # Check subject assignments
+    if len(subject_assignments) >= 1:
         score += 15
     else:
         issues.append(ReadinessIssue(
@@ -478,9 +485,9 @@ async def check_teacher_assignments(school_id: str) -> CategoryReadiness:
             fix_action="ربط المعلمين بالمواد والفصول"
         ))
     
-    # Check if all classes have assignments
+    # Check if all classes have teacher-class assignments
     class_ids = set(c.get("id") for c in classes if c.get("id"))
-    assigned_class_ids = set(a.get("class_id") for a in assignments if a.get("class_id"))
+    assigned_class_ids = set(a.get("class_id") for a in class_assignments if a.get("class_id"))
     unassigned_classes = class_ids - assigned_class_ids
     
     if len(unassigned_classes) == 0 and len(class_ids) > 0:
