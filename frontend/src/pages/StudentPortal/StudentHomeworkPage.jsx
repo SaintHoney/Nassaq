@@ -223,11 +223,12 @@ const StudentHomeworkPage = () => {
                           <div
                             key={item.id}
                             className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
+                            data-testid={`homework-item-${item.id}`}
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <BookOpen className="h-4 w-4 text-purple-600" />
-                                <span className="font-medium text-sm">{item.subject}</span>
+                                <span className="font-medium text-sm">{item.subject_name || item.subject}</span>
                               </div>
                               <Badge variant="outline" className={getStatusColor(item.status)}>
                                 {getStatusLabel(item.status)}
@@ -236,6 +237,13 @@ const StudentHomeworkPage = () => {
                             
                             <h3 className="font-bold mb-1">{item.title}</h3>
                             <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
+                            
+                            {/* Teacher name */}
+                            {item.teacher_name && (
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {isRTL ? 'المعلم:' : 'Teacher:'} {item.teacher_name}
+                              </p>
+                            )}
                             
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
@@ -251,12 +259,21 @@ const StudentHomeworkPage = () => {
                                   {getDaysRemaining(item.due_date)}
                                 </span>
                               )}
-                              {status === 'completed' && item.grade && (
+                              {(status === 'completed' || item.status === 'graded') && item.grade !== null && item.grade !== undefined && (
                                 <Badge className="bg-green-100 text-green-700 border-0">
-                                  {isRTL ? 'الدرجة:' : 'Grade:'} {item.grade}%
+                                  {isRTL ? 'الدرجة:' : 'Grade:'} {item.grade}{item.max_grade ? `/${item.max_grade}` : '%'}
                                 </Badge>
                               )}
                             </div>
+                            
+                            {/* Feedback if available */}
+                            {item.feedback && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                                <p className="text-xs text-blue-700">
+                                  <strong>{isRTL ? 'ملاحظات المعلم:' : 'Teacher feedback:'}</strong> {item.feedback}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
