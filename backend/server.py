@@ -15029,35 +15029,36 @@ async def update_school_settings_full(
     # Accept both formats: { settings: {...} } or direct { key: value }
     settings_data = data.get("settings", data)
     
-    # Prepare update data
+    # Prepare update data - save to root level AND nested settings
     update_data = {
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # Map frontend field names to database field names
+    # Map frontend field names to both locations (root and nested settings)
     field_mappings = {
-        "academicYear": "settings.academic_year",
-        "currentSemester": "settings.current_semester",
-        "dayStart": "settings.school_day_start",
-        "dayEnd": "settings.school_day_end",
-        "periodsPerDay": "settings.periods_per_day",
-        "periodDuration": "settings.period_duration_minutes",
-        "breakDuration": "settings.break_duration_minutes",
-        "workingDays": "settings.working_days",
-        "weekendDays": "settings.weekend_days",
+        "academicYear": ("settings.academic_year", "academic_year"),
+        "currentSemester": ("settings.current_semester", "current_semester"),
+        "dayStart": ("settings.school_day_start", "school_day_start"),
+        "dayEnd": ("settings.school_day_end", "school_day_end"),
+        "periodsPerDay": ("settings.periods_per_day", "periods_per_day"),
+        "periodDuration": ("settings.period_duration_minutes", "period_duration_minutes"),
+        "breakDuration": ("settings.break_duration_minutes", "break_duration_minutes"),
+        "workingDays": ("settings.working_days", "working_days_ar"),
+        "weekendDays": ("settings.weekend_days", "weekend_days_ar"),
         # Also support direct settings.* keys
-        "school_day_start": "settings.school_day_start",
-        "school_day_end": "settings.school_day_end",
-        "periods_per_day": "settings.periods_per_day",
-        "period_duration_minutes": "settings.period_duration_minutes",
-        "break_duration_minutes": "settings.break_duration_minutes",
-        "prayer_duration_minutes": "settings.prayer_duration_minutes",
-        "time_slots": "settings.time_slots",
+        "school_day_start": ("settings.school_day_start", "school_day_start"),
+        "school_day_end": ("settings.school_day_end", "school_day_end"),
+        "periods_per_day": ("settings.periods_per_day", "periods_per_day"),
+        "period_duration_minutes": ("settings.period_duration_minutes", "period_duration_minutes"),
+        "break_duration_minutes": ("settings.break_duration_minutes", "break_duration_minutes"),
+        "prayer_duration_minutes": ("settings.prayer_duration_minutes", "prayer_duration_minutes"),
+        "time_slots": ("settings.time_slots", "time_slots"),
     }
     
-    for frontend_key, db_key in field_mappings.items():
+    for frontend_key, (nested_key, root_key) in field_mappings.items():
         if frontend_key in settings_data:
-            update_data[db_key] = settings_data[frontend_key]
+            update_data[nested_key] = settings_data[frontend_key]
+            update_data[root_key] = settings_data[frontend_key]
     
     # Update school_settings collection
     await db.school_settings.update_one(
