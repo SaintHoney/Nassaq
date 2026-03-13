@@ -1019,7 +1019,7 @@ function SchoolSettingsPagePro() {
                           </CardTitle>
                           <CardDescription>حدد أوقات الاستراحات وفترات الصلاة</CardDescription>
                         </div>
-                        <Button variant="outline" className="gap-2">
+                        <Button variant="outline" className="gap-2" onClick={handleAddBreak} data-testid="add-break-btn">
                           <Plus className="h-4 w-4" />
                           إضافة فترة
                         </Button>
@@ -1043,8 +1043,12 @@ function SchoolSettingsPagePro() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm"><Edit2 className="h-4 w-4" /></Button>
-                              <Button variant="ghost" size="sm" className="text-red-500"><Trash2 className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditBreak(breakTime)} data-testid={`edit-break-${breakTime.id}`}>
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleDeleteBreak(breakTime.id)} data-testid={`delete-break-${breakTime.id}`}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         ))}
