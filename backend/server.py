@@ -4826,7 +4826,7 @@ class TimeSlotResponse(BaseModel):
 class TeacherAssignmentCreate(BaseModel):
     school_id: str
     teacher_id: str
-    class_id: str
+    class_id: Optional[str] = None  # Made optional for general subject assignment
     subject_id: str
     weekly_sessions: int = 4
     academic_year: str = "2026-2027"
