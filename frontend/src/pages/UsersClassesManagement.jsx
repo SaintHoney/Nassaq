@@ -510,33 +510,43 @@ export default function UsersClassesManagement() {
                      : selectedItemType === 'teacher' ? `/teachers/${selectedItem.id}` 
                      : `/classes/${selectedItem.id}`;
       
-      // Prepare update data based on type
+      // Prepare update data based on type - only include non-empty values
       let updateData = {};
       if (selectedItemType === 'student') {
-        updateData = {
-          full_name: editFormData.full_name || editFormData.full_name_ar,
-          email: editFormData.email,
-          phone: editFormData.phone,
-          class_id: editFormData.class_id,
-          gender: editFormData.gender,
-          is_active: editFormData.is_active
-        };
+        const name = editFormData.full_name || editFormData.full_name_ar;
+        if (name) updateData.full_name = name;
+        // Only include email if it's a valid email format
+        if (editFormData.email && editFormData.email.includes('@')) {
+          updateData.email = editFormData.email;
+        }
+        if (editFormData.phone) updateData.phone = editFormData.phone;
+        if (editFormData.class_id) updateData.class_id = editFormData.class_id;
+        if (editFormData.gender) updateData.gender = editFormData.gender;
+        if (typeof editFormData.is_active === 'boolean') updateData.is_active = editFormData.is_active;
       } else if (selectedItemType === 'teacher') {
-        updateData = {
-          full_name: editFormData.full_name || editFormData.full_name_ar,
-          email: editFormData.email,
-          phone: editFormData.phone,
-          specialization: editFormData.specialization,
-          is_active: editFormData.is_active
-        };
+        const name = editFormData.full_name || editFormData.full_name_ar;
+        if (name) updateData.full_name = name;
+        if (editFormData.email && editFormData.email.includes('@')) {
+          updateData.email = editFormData.email;
+        }
+        if (editFormData.phone) updateData.phone = editFormData.phone;
+        if (editFormData.specialization) updateData.specialization = editFormData.specialization;
+        if (typeof editFormData.is_active === 'boolean') updateData.is_active = editFormData.is_active;
       } else if (selectedItemType === 'class') {
-        updateData = {
-          name: editFormData.name || editFormData.name_ar,
-          grade_level: editFormData.grade_level || editFormData.grade,
-          section: editFormData.section,
-          capacity: editFormData.capacity,
-          is_active: editFormData.is_active
-        };
+        const name = editFormData.name || editFormData.name_ar;
+        if (name) updateData.name = name;
+        const grade = editFormData.grade_level || editFormData.grade;
+        if (grade) updateData.grade_level = grade;
+        if (editFormData.section) updateData.section = editFormData.section;
+        if (editFormData.capacity) updateData.capacity = editFormData.capacity;
+        if (typeof editFormData.is_active === 'boolean') updateData.is_active = editFormData.is_active;
+      }
+      
+      // Ensure we have at least one field to update
+      if (Object.keys(updateData).length === 0) {
+        toast.error(isRTL ? 'لا توجد تغييرات للحفظ' : 'No changes to save');
+        setEditLoading(false);
+        return;
       }
       
       await api.put(endpoint, updateData);
