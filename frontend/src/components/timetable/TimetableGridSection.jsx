@@ -343,7 +343,96 @@ const TimetableGridSection = ({
     );
   }
 
-  // No Filter Selected
+  // No Filter Selected - Show all sessions in a different view
+  if (!selectedFilter && sessions.length > 0) {
+    // Show condensed view of all sessions
+    return (
+      <Card className="border-2 border-brand-navy/20 overflow-hidden" data-testid="timetable-grid">
+        <CardHeader className="bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-brand-navy" />
+              <div>
+                <CardTitle className="text-lg">الجدول الأسبوعي (كل الحصص)</CardTitle>
+                <CardDescription>
+                  {sessions.length} حصة مجدولة - اختر فصلاً أو معلماً لعرض تفصيلي
+                </CardDescription>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 overflow-x-auto">
+          <table className="w-full border-collapse min-w-[900px]">
+            <thead>
+              <tr className="bg-muted/30">
+                <th className="p-3 text-center font-bold w-[100px] text-sm rounded-tr-xl">
+                  الحصة
+                </th>
+                {days.map((day, idx) => (
+                  <th 
+                    key={day.key} 
+                    className={`p-3 text-center ${idx === days.length - 1 ? 'rounded-tl-xl' : ''}`}
+                  >
+                    <Badge variant="outline" className="text-xs bg-white shadow-sm">
+                      {day.ar || day.label}
+                    </Badge>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleSlots.map((slot, idx) => (
+                <tr key={slot.id || idx} className="border-b hover:bg-muted/10">
+                  <td className="p-2 text-center border-l">
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-bold text-brand-navy">
+                        {slot.label || `حصة ${slot.number || idx + 1}`}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {slot.startTime || slot.start_time} - {slot.endTime || slot.end_time}
+                      </span>
+                    </div>
+                  </td>
+                  {days.map((day) => {
+                    const daySessions = sessions.filter(s => {
+                      const dayMatch = s.day_of_week === day.key || s.day === day.key;
+                      const slotMatch = s.period_number === slot.number || s.period_number === (idx + 1);
+                      return dayMatch && slotMatch;
+                    });
+                    return (
+                      <td key={day.key} className="p-1 border-l min-w-[150px]">
+                        {daySessions.length > 0 ? (
+                          <div className="space-y-1">
+                            {daySessions.slice(0, 3).map(session => (
+                              <div 
+                                key={session.id}
+                                onClick={() => onSessionClick && onSessionClick(session)}
+                                className="p-1.5 rounded bg-brand-navy/10 text-xs cursor-pointer hover:bg-brand-navy/20"
+                              >
+                                <p className="font-medium truncate text-brand-navy">{session.subject_name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{session.teacher_name}</p>
+                              </div>
+                            ))}
+                            {daySessions.length > 3 && (
+                              <p className="text-[10px] text-center text-muted-foreground">+{daySessions.length - 3} أخرى</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="h-10" />
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // No Filter Selected and no sessions
   if (!selectedFilter) {
     return (
       <Card className="border-2 border-dashed border-muted-foreground/30">
