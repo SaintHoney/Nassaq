@@ -563,3 +563,189 @@ async def create_test_parent_account(db):
         )
     
     return user_doc
+
+
+# ============= HOMEWORK/ASSIGNMENTS APIs =============
+
+def setup_homework_routes(router, db, get_current_user, require_roles, UserRole):
+    """Setup homework routes for students"""
+    
+    @router.get("/assignments")
+    async def get_student_assignments(
+        status: Optional[str] = None,  # pending, submitted, graded, late
+        current_user: dict = Depends(require_roles([UserRole.STUDENT]))
+    ):
+        """
+        الحصول على واجبات الطالب
+        Get student assignments
+        """
+        student_id = current_user.get("student_id") or current_user.get("id")
+        school_id = current_user.get("tenant_id")
+        
+        # Get student info for class
+        student = await db.students.find_one({"id": student_id}, {"_id": 0})
+        if not student:
+            student = await db.students.find_one({"user_id": current_user.get("id")}, {"_id": 0})
+        
+        class_id = student.get("class_id") if student else None
+        grade_id = student.get("grade_id") or student.get("grade") if student else None
+        
+        # Build query for assignments
+        query = {"school_id": school_id, "is_active": True}
+        
+        if class_id:
+            query["$or"] = [
+                {"class_ids": class_id},
+                {"class_id": class_id},
+                {"grade_id": grade_id}
+            ]
+        
+        # Get assignments
+        assignments = await db.student_assignments.find(query, {"_id": 0}).sort("due_date", -1).to_list(100)
+        
+        # Get student submissions
+        submissions = await db.assignment_submissions.find(
+            {"student_id": student_id},
+            {"_id": 0}
+        ).to_list(500)
+        
+        submission_map = {s.get("assignment_id"): s for s in submissions}
+        
+        # Enrich assignments
+        result = []
+        now = datetime.now(timezone.utc)
+        
+        for a in assignments:
+            assignment_id = a.get("id")
+            submission = submission_map.get(assignment_id)
+            
+            # Determine status
+            due_date_str = a.get("due_date")
+            try:
+                if isinstance(due_date_str, str):
+                    due_date = datetime.fromisoformat(due_date_str.replace('Z', '+00:00'))
+                else:
+                    due_date = due_date_str
+            except:
+                due_date = now + timedelta(days=7)
+            
+            if submission:
+                if submission.get("grade") is not None:
+                    a_status = "graded"
+                else:
+                    a_status = "submitted"
+            elif due_date < now:
+                a_status = "late"
+            else:
+                a_status = "pending"
+            
+            if status and a_status != status:
+                continue
+            
+            # Get subject name
+            subject = await db.subjects.find_one({"id": a.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            if not subject:
+                subject = await db.reference_subjects.find_one({"id": a.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            
+            # Get teacher name
+            teacher = await db.teachers.find_one({"id": a.get("teacher_id")}, {"_id": 0, "full_name": 1, "full_name_ar": 1})
+            
+            result.append({
+                "id": assignment_id,
+                "title": a.get("title", ""),
+                "description": a.get("description", ""),
+                "subject_id": a.get("subject_id"),
+                "subject_name": subject.get("name_ar") if subject else "",
+                "teacher_id": a.get("teacher_id"),
+                "teacher_name": (teacher.get("full_name") or teacher.get("full_name_ar")) if teacher else "",
+                "due_date": due_date_str,
+                "max_grade": a.get("max_grade", 100),
+                "status": a_status,
+                "grade": submission.get("grade") if submission else None,
+                "feedback": submission.get("feedback") if submission else None,
+                "submission_date": submission.get("submitted_at") if submission else None,
+                "created_at": a.get("created_at")
+            })
+        
+        return {
+            "assignments": result,
+            "total": len(result),
+            "statistics": {
+                "pending": len([a for a in result if a["status"] == "pending"]),
+                "submitted": len([a for a in result if a["status"] == "submitted"]),
+                "graded": len([a for a in result if a["status"] == "graded"]),
+                "late": len([a for a in result if a["status"] == "late"])
+            }
+        }
+    
+    @router.post("/assignments/{assignment_id}/submit")
+    async def submit_assignment(
+        assignment_id: str,
+        content: str = None,
+        current_user: dict = Depends(require_roles([UserRole.STUDENT]))
+    ):
+        """
+        تسليم واجب
+        Submit an assignment
+        """
+        student_id = current_user.get("student_id") or current_user.get("id")
+        
+        # Check assignment exists
+        assignment = await db.student_assignments.find_one({"id": assignment_id}, {"_id": 0})
+        if not assignment:
+            raise HTTPException(status_code=404, detail="الواجب غير موجود")
+        
+        # Check not already submitted
+        existing = await db.assignment_submissions.find_one({
+            "assignment_id": assignment_id,
+            "student_id": student_id
+        })
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="تم تسليم هذا الواجب مسبقاً")
+        
+        # Create submission
+        submission_doc = {
+            "id": str(uuid.uuid4()),
+            "assignment_id": assignment_id,
+            "student_id": student_id,
+            "content": content or "",
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "is_late": datetime.now(timezone.utc) > datetime.fromisoformat(assignment.get("due_date", "2099-12-31").replace('Z', '+00:00')),
+            "grade": None,
+            "feedback": None
+        }
+        
+        await db.assignment_submissions.insert_one(submission_doc)
+        
+        return {
+            "success": True,
+            "submission_id": submission_doc["id"],
+            "message_ar": "تم تسليم الواجب بنجاح",
+            "message_en": "Assignment submitted successfully"
+        }
+    
+    @router.get("/assignments/{assignment_id}")
+    async def get_assignment_details(
+        assignment_id: str,
+        current_user: dict = Depends(require_roles([UserRole.STUDENT]))
+    ):
+        """تفاصيل الواجب"""
+        student_id = current_user.get("student_id") or current_user.get("id")
+        
+        assignment = await db.student_assignments.find_one({"id": assignment_id}, {"_id": 0})
+        if not assignment:
+            raise HTTPException(status_code=404, detail="الواجب غير موجود")
+        
+        # Get submission
+        submission = await db.assignment_submissions.find_one({
+            "assignment_id": assignment_id,
+            "student_id": student_id
+        }, {"_id": 0})
+        
+        return {
+            **assignment,
+            "submission": submission
+        }
+    
+    return router
