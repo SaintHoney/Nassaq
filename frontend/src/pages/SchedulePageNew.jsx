@@ -102,8 +102,8 @@ const SessionCard = ({ session, onClick }) => {
 // مكون الخلية الفارغة
 // ============================================
 const EmptyCell = () => (
-  <div className="p-3 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 h-full min-h-[80px] flex items-center justify-center">
-    <span className="text-gray-300 text-xs">فارغة</span>
+  <div className="p-3 rounded-xl bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-dashed border-gray-200 h-full min-h-[85px] flex items-center justify-center hover:border-gray-300 transition-colors">
+    <span className="text-gray-400 text-xs">فارغة</span>
   </div>
 );
 
@@ -111,14 +111,17 @@ const EmptyCell = () => (
 // مكون فترة الاستراحة/الصلاة
 // ============================================
 const BreakSlot = ({ type, name }) => (
-  <div className={`p-3 rounded-xl ${type === 'break' ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'} border-2 h-full min-h-[80px] flex items-center justify-center`}>
+  <div className={`p-3 rounded-xl ${type === 'break' 
+    ? 'bg-gradient-to-br from-amber-100 to-orange-100 border-amber-300' 
+    : 'bg-gradient-to-br from-emerald-100 to-teal-100 border-emerald-300'} 
+    border-2 h-full min-h-[85px] flex items-center justify-center shadow-sm`}>
     <div className="text-center">
       {type === 'break' ? (
-        <Coffee className={`h-5 w-5 mx-auto mb-1 text-amber-500`} />
+        <Coffee className="h-5 w-5 mx-auto mb-1 text-amber-600" />
       ) : (
-        <Moon className={`h-5 w-5 mx-auto mb-1 text-emerald-600`} />
+        <Moon className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
       )}
-      <p className={`text-xs font-medium ${type === 'break' ? 'text-amber-700' : 'text-emerald-700'}`}>
+      <p className={`text-xs font-bold ${type === 'break' ? 'text-amber-700' : 'text-emerald-700'}`}>
         {name || (type === 'break' ? 'استراحة' : 'صلاة')}
       </p>
     </div>
