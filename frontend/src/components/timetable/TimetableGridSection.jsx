@@ -453,13 +453,6 @@ const TimetableGridSection = ({
     );
   }
 
-  // Filter slots based on toggles
-  const visibleSlots = timeSlots.filter(slot => {
-    if (!showBreaks && isBreakSlot(slot)) return false;
-    if (!showPrayer && isPrayerSlot(slot)) return false;
-    return true;
-  });
-
   return (
     <Card className="border-2 border-brand-navy/20 overflow-hidden" data-testid="timetable-grid">
       <CardHeader className="bg-gradient-to-r from-brand-navy/5 to-brand-turquoise/5 pb-4">
