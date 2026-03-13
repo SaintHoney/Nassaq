@@ -1043,6 +1043,31 @@ export default function SchoolSettingsPagePro() {
       }, []);
       setSubjects(uniqueSubjects.slice(0, 20)); // Show first 20 unique
       
+      // Fetch Official Curriculum Data
+      try {
+        const [
+          officialStatsRes,
+          officialStagesRes,
+          officialTracksRes,
+          officialRankLoadsRes,
+          officialSubjectsRes
+        ] = await Promise.all([
+          api.get('/official-curriculum/stats').catch(() => ({ data: null })),
+          api.get('/official-curriculum/stages').catch(() => ({ data: [] })),
+          api.get('/official-curriculum/tracks').catch(() => ({ data: [] })),
+          api.get('/official-curriculum/teacher-rank-loads').catch(() => ({ data: [] })),
+          api.get('/official-curriculum/subjects').catch(() => ({ data: [] })),
+        ]);
+        
+        setOfficialCurriculumStats(officialStatsRes.data);
+        setOfficialStages(officialStagesRes.data || []);
+        setOfficialTracks(officialTracksRes.data || []);
+        setOfficialRankLoads(officialRankLoadsRes.data || []);
+        setOfficialSubjects(officialSubjectsRes.data || []);
+      } catch (e) {
+        console.error('Error fetching official curriculum:', e);
+      }
+      
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('خطأ في تحميل البيانات');
