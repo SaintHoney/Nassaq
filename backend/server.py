@@ -3200,7 +3200,8 @@ async def create_school_constraint(
         "created_by": current_user.get("id")
     }
     
-    await db.admin_constraints.insert_one(constraint_doc)
+    # Insert into school_constraints collection (not admin_constraints)
+    await db.school_constraints.insert_one(constraint_doc)
     
     # Remove _id from response
     if "_id" in constraint_doc:
