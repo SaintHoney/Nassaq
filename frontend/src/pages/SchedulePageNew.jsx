@@ -66,7 +66,7 @@ const getSubjectColor = (subjectName) => {
 };
 
 // ============================================
-// مكون كارت الحصة
+// مكون كارت الحصة مع Gradient
 // ============================================
 const SessionCard = ({ session, onClick }) => {
   const colors = getSubjectColor(session.subject_name);
@@ -74,23 +74,24 @@ const SessionCard = ({ session, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className={`p-3 rounded-xl ${colors.bg} ${colors.border} border-2 cursor-pointer
-        hover:shadow-lg hover:scale-[1.02] transition-all duration-200 h-full min-h-[80px]`}
+      className={`p-3 rounded-xl ${colors.bg} ${colors.border} border cursor-pointer
+        hover:shadow-xl hover:scale-[1.03] transition-all duration-300 h-full min-h-[85px]
+        shadow-md backdrop-blur-sm`}
       data-testid={`session-${session.id}`}
     >
       <div className="flex flex-col h-full justify-between">
         <div>
-          <p className={`font-bold text-sm ${colors.text} leading-tight`}>
+          <p className={`font-bold text-sm ${colors.text} leading-tight drop-shadow-sm`}>
             {session.subject_name?.split('/')[0]?.trim() || 'مادة'}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 truncate">
+          <p className={`text-xs ${colors.text} opacity-90 mt-1 truncate`}>
             {session.teacher_name || 'معلم'}
           </p>
         </div>
         <div className="mt-2">
-          <Badge variant="secondary" className="text-[10px] font-normal">
+          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} ${colors.text}`}>
             {session.class_name?.replace('الصف ', '')?.substring(0, 15) || 'فصل'}
-          </Badge>
+          </span>
         </div>
       </div>
     </div>
