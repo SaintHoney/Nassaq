@@ -2880,7 +2880,8 @@ class SubjectCreate(BaseModel):
 class SubjectResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    name: str
+    name: Optional[str] = None
+    name_ar: Optional[str] = None
     name_en: Optional[str] = None
     school_id: Optional[str] = None
     code: Optional[str] = None
