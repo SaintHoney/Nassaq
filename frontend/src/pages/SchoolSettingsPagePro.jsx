@@ -72,6 +72,10 @@ function SchoolSettingsPagePro() {
   
   // Modal States
   const [showEditSchool, setShowEditSchool] = useState(false);
+  const [showBreakModal, setShowBreakModal] = useState(false);
+  const [showUnavailabilityModal, setShowUnavailabilityModal] = useState(false);
+  const [editingBreak, setEditingBreak] = useState(null);
+  const [unavailabilityType, setUnavailabilityType] = useState('teacher'); // 'teacher' or 'class'
   
   // Form States
   const [editedSchoolInfo, setEditedSchoolInfo] = useState({});
