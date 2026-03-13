@@ -334,12 +334,13 @@ const TimetableViewControls = ({
           
           {/* Version Filter - Always Visible */}
           {versions.length > 0 && (
-            <Select value={selectedVersionId || ''} onValueChange={onVersionChange}>
+            <Select value={selectedVersionId || 'all'} onValueChange={(val) => onVersionChange(val === 'all' ? null : val)}>
               <SelectTrigger className="w-[180px]" data-testid="version-filter">
                 <SelectValue placeholder="اختر النسخة" />
               </SelectTrigger>
               <SelectContent>
-                {versions.map(v => (
+                <SelectItem value="all">كل النسخ</SelectItem>
+                {versions.filter(v => v.id || v.value).map(v => (
                   <SelectItem key={v.id || v.value} value={v.id || v.value}>
                     <div className="flex items-center gap-2">
                       <span>{v.versionName || v.name || v.label}</span>
