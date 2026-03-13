@@ -74,16 +74,30 @@ export default function PrincipalDashboard() {
         {/* Header */}
         <header className={`sticky ${isImpersonating ? 'top-[64px]' : 'top-0'} z-30 glass border-b border-border/50 px-6 py-4`}>
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-cairo text-2xl font-bold">
-                {isImpersonating && schoolContext 
-                  ? (isRTL ? `معاينة: ${schoolContext.school_name}` : `Previewing: ${schoolContext.school_name}`)
-                  : (isRTL ? `مرحباً، ${user?.full_name}` : `Welcome, ${user?.full_name}`)
-                }
-              </h1>
-              <p className="text-base text-muted-foreground font-tajawal">
-                {isRTL ? 'مركز القيادة' : 'Command Center'}
-              </p>
+            <div className="flex items-center gap-4">
+              {/* User Avatar */}
+              {user?.avatar_url && (
+                <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-brand-turquoise/30">
+                  <img 
+                    src={user.avatar_url} 
+                    alt={user?.full_name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <h1 className="font-cairo text-2xl font-bold">
+                  {isImpersonating && schoolContext 
+                    ? (isRTL ? `معاينة: ${schoolContext.school_name}` : `Previewing: ${schoolContext.school_name}`)
+                    : (isRTL 
+                        ? `مرحباً${user?.title && user?.title !== 'none' ? ` ${user.title}` : ''}، ${user?.full_name}` 
+                        : `Welcome${user?.title && user?.title !== 'none' ? ` ${user.title}` : ''}, ${user?.full_name}`)
+                  }
+                </h1>
+                <p className="text-base text-muted-foreground font-tajawal">
+                  {isRTL ? 'مركز القيادة' : 'Command Center'}
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
