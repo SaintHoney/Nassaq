@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,20 +15,23 @@ import {
   Users,
   Bell,
   Mail,
-  Search,
   Plus,
   RefreshCw,
-  AlertCircle,
   Inbox,
   CheckCircle,
   Clock,
-  Building2,
   GraduationCap,
   UserCheck,
   Loader2,
   Edit,
+  Eye,
+  Calendar,
+  Megaphone,
+  FileText,
+  Trash2,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +39,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '../components/ui/dialog';
 import {
   Select,
@@ -45,6 +47,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 const iconMap = {
   users: Users,
@@ -54,6 +66,8 @@ const iconMap = {
   clock: Clock,
   refresh: RefreshCw,
   mail: Mail,
+  calendar: Calendar,
+  megaphone: Megaphone,
 };
 
 export const CommunicationCenterPage = () => {
@@ -63,49 +77,51 @@ export const CommunicationCenterPage = () => {
   // State
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [stats, setStats] = useState({ sent: 0, scheduled: 0, drafts: 0, templates: 0 });
-  const [messages, setMessages] = useState([]);
-  const [templates, setTemplates] = useState([]);
-  const [audienceGroups, setAudienceGroups] = useState([]);
+  const [stats, setStats] = useState({ sent: 0, received: 0, scheduled: 0, templates: 0 });
+  const [sentMessages, setSentMessages] = useState([]);
   const [receivedMessages, setReceivedMessages] = useState([]);
   const [scheduledMessages, setScheduledMessages] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [audienceGroups, setAudienceGroups] = useState([]);
   
   // Dialogs
   const [sentMessagesOpen, setSentMessagesOpen] = useState(false);
   const [receivedMessagesOpen, setReceivedMessagesOpen] = useState(false);
   const [scheduledMessagesOpen, setScheduledMessagesOpen] = useState(false);
   const [editScheduledOpen, setEditScheduledOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [viewMessageOpen, setViewMessageOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [messageToDelete, setMessageToDelete] = useState(null);
   
   // New message form
-  const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [newMessage, setNewMessage] = useState({
     title: '',
     content: '',
     audience: '',
     scheduled_at: ''
   });
-  
-  // Search
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('compose');
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  // Fetch all data
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
       // Fetch stats
       const statsRes = await api.get('/communication/stats');
-      setStats(statsRes.data);
       
-      // Fetch sent messages
-      const messagesRes = await api.get('/communication?limit=50');
-      setMessages(messagesRes.data.messages || []);
+      // Fetch all messages (sent)
+      const messagesRes = await api.get('/communication?limit=100');
+      const allMessages = messagesRes.data.messages || [];
+      
+      // Filter sent and scheduled
+      const sent = allMessages.filter(m => m.status === 'sent');
+      const scheduled = allMessages.filter(m => m.status === 'scheduled');
+      
+      setSentMessages(sent);
+      setScheduledMessages(scheduled);
       
       // Fetch received messages
       try {
@@ -115,10 +131,6 @@ export const CommunicationCenterPage = () => {
         setReceivedMessages([]);
       }
       
-      // Fetch scheduled messages
-      const scheduled = (messagesRes.data.messages || []).filter(m => m.status === 'scheduled');
-      setScheduledMessages(scheduled);
-      
       // Fetch templates
       const templatesRes = await api.get('/communication/templates');
       setTemplates(templatesRes.data || []);
@@ -127,15 +139,27 @@ export const CommunicationCenterPage = () => {
       const audienceRes = await api.get('/communication/audience');
       setAudienceGroups(audienceRes.data || []);
       
+      // Update stats with correct counts
+      setStats({
+        sent: sent.length,
+        received: receivedMessages.length || statsRes.data?.received || 0,
+        scheduled: scheduled.length,
+        templates: templatesRes.data?.length || statsRes.data?.templates || 0
+      });
+      
     } catch (error) {
       console.error('Failed to fetch communication data:', error);
-      // Empty state - no fallback mock data
-      setAudienceGroups([]);
+      toast.error(isRTL ? 'فشل تحميل البيانات' : 'Failed to load data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, isRTL]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Send or schedule message
   const handleSendMessage = async (schedule = false) => {
     if (!newMessage.title || !newMessage.content || !newMessage.audience) {
       toast.error(isRTL ? 'يرجى تعبئة جميع الحقول المطلوبة' : 'Please fill all required fields');
@@ -155,18 +179,17 @@ export const CommunicationCenterPage = () => {
       
       const response = await api.post('/communication', payload);
       
-      toast.success(
-        isRTL 
-          ? (schedule ? 'تمت جدولة الرسالة بنجاح' : 'تم إرسال الرسالة بنجاح')
-          : (schedule ? 'Message scheduled successfully' : 'Message sent successfully')
-      );
+      if (response.data.status === 'sent' || !schedule) {
+        toast.success(isRTL ? 'تم إرسال الرسالة بنجاح ✓' : 'Message sent successfully ✓');
+      } else {
+        toast.success(isRTL ? 'تمت جدولة الرسالة بنجاح ✓' : 'Message scheduled successfully ✓');
+      }
       
       // Reset form
       setNewMessage({ title: '', content: '', audience: '', scheduled_at: '' });
-      setNewMessageOpen(false);
       
       // Refresh data
-      fetchData();
+      await fetchData();
       
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -176,50 +199,66 @@ export const CommunicationCenterPage = () => {
     }
   };
 
-  const handleTemplateSelect = (template) => {
-    setNewMessage(prev => ({
-      ...prev,
-      title: isRTL ? template.name : template.name_en,
-      content: template.content_template || ''
-    }));
-  };
-
+  // Send scheduled message now
   const handleSendScheduledNow = async (messageId) => {
     try {
+      setSending(true);
       await api.post(`/communication/${messageId}/send-now`);
-      toast.success(isRTL ? 'تم إرسال الرسالة بنجاح' : 'Message sent successfully');
-      fetchData();
+      toast.success(isRTL ? 'تم إرسال الرسالة بنجاح ✓' : 'Message sent successfully ✓');
       setScheduledMessagesOpen(false);
+      await fetchData();
     } catch (error) {
       console.error('Failed to send message:', error);
       toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message');
+    } finally {
+      setSending(false);
     }
   };
 
+  // Update scheduled message
   const handleUpdateScheduledMessage = async () => {
     if (!selectedMessage) return;
     
     try {
+      setSending(true);
       await api.put(`/communication/${selectedMessage.id}`, {
         title: selectedMessage.title,
         content: selectedMessage.content,
         audience: selectedMessage.audience,
         scheduled_at: selectedMessage.scheduled_at
       });
-      toast.success(isRTL ? 'تم تحديث الرسالة المجدولة' : 'Scheduled message updated');
-      fetchData();
+      toast.success(isRTL ? 'تم تحديث الرسالة المجدولة ✓' : 'Scheduled message updated ✓');
       setEditScheduledOpen(false);
       setSelectedMessage(null);
+      await fetchData();
     } catch (error) {
       console.error('Failed to update message:', error);
       toast.error(isRTL ? 'فشل تحديث الرسالة' : 'Failed to update message');
+    } finally {
+      setSending(false);
     }
   };
 
+  // Delete message
+  const handleDeleteMessage = async () => {
+    if (!messageToDelete) return;
+    
+    try {
+      await api.delete(`/communication/${messageToDelete.id}`);
+      toast.success(isRTL ? 'تم حذف الرسالة ✓' : 'Message deleted ✓');
+      setDeleteConfirmOpen(false);
+      setMessageToDelete(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      toast.error(isRTL ? 'فشل حذف الرسالة' : 'Failed to delete message');
+    }
+  };
+
+  // Mark message as read
   const handleMarkAsRead = async (messageId) => {
     try {
       await api.put(`/communication/${messageId}/read`);
-      // Update local state
       setReceivedMessages(prev => 
         prev.map(m => m.id === messageId ? { ...m, is_read: true } : m)
       );
@@ -228,18 +267,54 @@ export const CommunicationCenterPage = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const config = {
-      sent: { label: isRTL ? 'مرسلة' : 'Sent', variant: 'default' },
-      scheduled: { label: isRTL ? 'مجدولة' : 'Scheduled', variant: 'secondary' },
-      draft: { label: isRTL ? 'مسودة' : 'Draft', variant: 'outline' }
+  // Apply template
+  const handleTemplateSelect = (template) => {
+    setNewMessage(prev => ({
+      ...prev,
+      title: template.name || template.name_en,
+      content: template.content_template || ''
+    }));
+    setTemplatesOpen(false);
+    toast.success(isRTL ? 'تم تطبيق القالب' : 'Template applied');
+  };
+
+  // Get audience label
+  const getAudienceLabel = (audience) => {
+    const labels = {
+      all: isRTL ? 'الجميع' : 'Everyone',
+      teachers: isRTL ? 'المعلمين' : 'Teachers',
+      students: isRTL ? 'الطلاب' : 'Students',
+      parents: isRTL ? 'أولياء الأمور' : 'Parents'
     };
-    return config[status] || config.sent;
+    return labels[audience] || audience;
   };
 
   const getAudienceIcon = (iconName) => {
     return iconMap[iconName] || Users;
   };
+
+  // Format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <Sidebar>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-turquoise" />
+        </div>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar>
@@ -252,147 +327,51 @@ export const CommunicationCenterPage = () => {
                 {isRTL ? 'مركز التواصل' : 'Communication Center'}
               </h1>
               <p className="text-sm text-muted-foreground font-tajawal">
-                {isRTL ? 'إرسال الرسائل والإشعارات الجماعية' : 'Send messages and broadcast notifications'}
+                {isRTL ? 'إرسال الرسائل والإشعارات للمستخدمين' : 'Send messages and notifications to users'}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="rounded-xl" onClick={fetchData} disabled={loading}>
+              <Button 
+                variant="outline" 
+                className="rounded-xl" 
+                onClick={fetchData} 
+                disabled={loading}
+                data-testid="refresh-btn"
+              >
                 <RefreshCw className={`h-4 w-4 me-2 ${loading ? 'animate-spin' : ''}`} />
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
-              <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
-                <DialogTrigger asChild>
-                  <Button className="rounded-xl bg-brand-navy hover:bg-brand-navy/90" data-testid="new-message-btn">
-                    <Plus className="h-4 w-4 me-2" />
-                    {isRTL ? 'رسالة جديدة' : 'New Message'}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="font-cairo">
-                      {isRTL ? 'إنشاء رسالة جديدة' : 'Create New Message'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {isRTL ? 'أرسل رسالة إلى المستخدمين المحددين' : 'Send a message to selected users'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'الجمهور المستهدف' : 'Target Audience'} *</Label>
-                      <Select 
-                        value={newMessage.audience} 
-                        onValueChange={(v) => setNewMessage(prev => ({ ...prev, audience: v }))}
-                      >
-                        <SelectTrigger className="rounded-xl" data-testid="audience-select">
-                          <SelectValue placeholder={isRTL ? 'اختر الجمهور' : 'Select audience'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {audienceGroups.map((group) => {
-                            const Icon = getAudienceIcon(group.icon);
-                            return (
-                              <SelectItem key={group.id} value={group.id}>
-                                <div className="flex items-center gap-2">
-                                  <Icon className="h-4 w-4" />
-                                  <span>{isRTL ? group.name : group.name_en}</span>
-                                  <Badge variant="secondary" className="ms-2">{group.count}</Badge>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'عنوان الرسالة' : 'Message Title'} *</Label>
-                      <Input 
-                        value={newMessage.title}
-                        onChange={(e) => setNewMessage(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder={isRTL ? 'أدخل عنوان الرسالة...' : 'Enter message title...'} 
-                        className="rounded-xl"
-                        data-testid="message-title-input"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'نص الرسالة' : 'Message Content'} *</Label>
-                      <Textarea 
-                        value={newMessage.content}
-                        onChange={(e) => setNewMessage(prev => ({ ...prev, content: e.target.value }))}
-                        placeholder={isRTL ? 'اكتب رسالتك هنا...' : 'Write your message here...'} 
-                        className="rounded-xl min-h-[150px]"
-                        data-testid="message-content-input"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'جدولة (اختياري)' : 'Schedule (Optional)'}</Label>
-                      <Input 
-                        type="datetime-local"
-                        value={newMessage.scheduled_at}
-                        onChange={(e) => setNewMessage(prev => ({ ...prev, scheduled_at: e.target.value }))}
-                        className="rounded-xl"
-                        data-testid="schedule-input"
-                      />
-                    </div>
-                  </div>
-                  
-                  <DialogFooter className="gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="rounded-xl"
-                      onClick={() => setNewMessageOpen(false)}
-                    >
-                      {isRTL ? 'إلغاء' : 'Cancel'}
-                    </Button>
-                    {newMessage.scheduled_at && (
-                      <Button 
-                        variant="secondary"
-                        className="rounded-xl"
-                        onClick={() => handleSendMessage(true)}
-                        disabled={sending}
-                      >
-                        <Clock className="h-4 w-4 me-2" />
-                        {isRTL ? 'جدولة' : 'Schedule'}
-                      </Button>
-                    )}
-                    <Button 
-                      className="rounded-xl bg-brand-navy hover:bg-brand-navy/90"
-                      onClick={() => handleSendMessage(false)}
-                      disabled={sending}
-                      data-testid="send-message-btn"
-                    >
-                      {sending ? (
-                        <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4 me-2" />
-                      )}
-                      {isRTL ? 'إرسال الآن' : 'Send Now'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
         </header>
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Stats */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-brand-navy/50 transition-all" onClick={() => setSentMessagesOpen(true)}>
+            {/* Sent Messages Card */}
+            <Card 
+              className="card-nassaq cursor-pointer hover:ring-2 hover:ring-brand-navy/50 transition-all" 
+              onClick={() => setSentMessagesOpen(true)}
+              data-testid="sent-messages-card"
+            >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-brand-navy/10 flex items-center justify-center">
                   <Send className="h-6 w-6 text-brand-navy" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.sent}</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'رسائل مرسلة' : 'Messages Sent'}</p>
+                  <p className="text-2xl font-bold">{sentMessages.length}</p>
+                  <p className="text-sm text-muted-foreground">{isRTL ? 'رسائل مرسلة' : 'Sent Messages'}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-green-500/50 transition-all" onClick={() => setReceivedMessagesOpen(true)}>
+
+            {/* Received Messages Card */}
+            <Card 
+              className="card-nassaq cursor-pointer hover:ring-2 hover:ring-green-500/50 transition-all" 
+              onClick={() => setReceivedMessagesOpen(true)}
+              data-testid="received-messages-card"
+            >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
                   <Inbox className="h-6 w-6 text-green-600" />
@@ -403,47 +382,60 @@ export const CommunicationCenterPage = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-nassaq cursor-pointer hover:ring-2 hover:ring-yellow-500/50 transition-all" onClick={() => setScheduledMessagesOpen(true)}>
+
+            {/* Scheduled Messages Card */}
+            <Card 
+              className="card-nassaq cursor-pointer hover:ring-2 hover:ring-yellow-500/50 transition-all" 
+              onClick={() => setScheduledMessagesOpen(true)}
+              data-testid="scheduled-messages-card"
+            >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
                   <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.scheduled}</p>
+                  <p className="text-2xl font-bold">{scheduledMessages.length}</p>
                   <p className="text-sm text-muted-foreground">{isRTL ? 'مجدولة' : 'Scheduled'}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-nassaq">
+
+            {/* Templates Card */}
+            <Card 
+              className="card-nassaq cursor-pointer hover:ring-2 hover:ring-brand-purple/50 transition-all" 
+              onClick={() => setTemplatesOpen(true)}
+              data-testid="templates-card"
+            >
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-brand-purple/10 flex items-center justify-center">
-                  <Mail className="h-6 w-6 text-brand-purple" />
+                  <FileText className="h-6 w-6 text-brand-purple" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.templates || templates.length}</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'قوالب' : 'Templates'}</p>
+                  <p className="text-2xl font-bold">{templates.length}</p>
+                  <p className="text-sm text-muted-foreground">{isRTL ? 'قوالب جاهزة' : 'Templates'}</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content - Compose Message */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Compose Message */}
+            {/* Compose Card */}
             <Card className="card-nassaq lg:col-span-2">
               <CardHeader>
                 <CardTitle className="font-cairo flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-brand-turquoise" />
-                  {isRTL ? 'إنشاء رسالة سريعة' : 'Quick Compose'}
+                  {isRTL ? 'إنشاء رسالة جديدة' : 'Compose New Message'}
                 </CardTitle>
                 <CardDescription>
-                  {isRTL ? 'أرسل رسالة سريعة للمستخدمين' : 'Send a quick message to users'}
+                  {isRTL ? 'أرسل رسالة للمستخدمين في مدرستك' : 'Send a message to users in your school'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Audience Selection */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">
-                    {isRTL ? 'الجمهور المستهدف' : 'Target Audience'}
+                    {isRTL ? 'الجمهور المستهدف' : 'Target Audience'} *
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {audienceGroups.map((group) => {
@@ -469,30 +461,49 @@ export const CommunicationCenterPage = () => {
                   </div>
                 </div>
 
+                {/* Title */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">
-                    {isRTL ? 'عنوان الرسالة' : 'Message Title'}
+                    {isRTL ? 'عنوان الرسالة' : 'Message Title'} *
                   </Label>
                   <Input 
                     value={newMessage.title}
                     onChange={(e) => setNewMessage(prev => ({ ...prev, title: e.target.value }))}
                     placeholder={isRTL ? 'أدخل عنوان الرسالة...' : 'Enter message title...'} 
-                    className="rounded-xl" 
+                    className="rounded-xl"
+                    data-testid="message-title-input"
                   />
                 </div>
 
+                {/* Content */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">
-                    {isRTL ? 'نص الرسالة' : 'Message Content'}
+                    {isRTL ? 'نص الرسالة' : 'Message Content'} *
                   </Label>
                   <Textarea 
-                    placeholder={isRTL ? 'اكتب رسالتك هنا...' : 'Write your message here...'} 
-                    className="rounded-xl min-h-[150px]"
                     value={newMessage.content}
                     onChange={(e) => setNewMessage(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder={isRTL ? 'اكتب رسالتك هنا...' : 'Write your message here...'} 
+                    className="rounded-xl min-h-[150px]"
+                    data-testid="message-content-input"
                   />
                 </div>
 
+                {/* Schedule */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">
+                    {isRTL ? 'جدولة الإرسال (اختياري)' : 'Schedule Send (Optional)'}
+                  </Label>
+                  <Input 
+                    type="datetime-local"
+                    value={newMessage.scheduled_at}
+                    onChange={(e) => setNewMessage(prev => ({ ...prev, scheduled_at: e.target.value }))}
+                    className="rounded-xl"
+                    data-testid="schedule-input"
+                  />
+                </div>
+
+                {/* Actions */}
                 <div className="flex justify-end gap-3 pt-4">
                   <Button 
                     variant="outline" 
@@ -501,89 +512,102 @@ export const CommunicationCenterPage = () => {
                   >
                     {isRTL ? 'مسح' : 'Clear'}
                   </Button>
+                  {newMessage.scheduled_at && (
+                    <Button 
+                      variant="secondary"
+                      className="rounded-xl"
+                      onClick={() => handleSendMessage(true)}
+                      disabled={sending || !newMessage.title || !newMessage.content || !newMessage.audience}
+                      data-testid="schedule-btn"
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Clock className="h-4 w-4 me-2" />}
+                      {isRTL ? 'جدولة' : 'Schedule'}
+                    </Button>
+                  )}
                   <Button 
                     className="rounded-xl bg-brand-navy hover:bg-brand-navy/90"
                     onClick={() => handleSendMessage(false)}
                     disabled={sending || !newMessage.title || !newMessage.content || !newMessage.audience}
-                    data-testid="quick-send-btn"
+                    data-testid="send-now-btn"
                   >
-                    {sending ? (
-                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 me-2" />
-                    )}
+                    {sending ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Send className="h-4 w-4 me-2" />}
                     {isRTL ? 'إرسال الآن' : 'Send Now'}
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Quick Templates & Recent */}
+            {/* Templates & Recent */}
             <div className="space-y-6">
               {/* Quick Templates */}
               <Card className="card-nassaq">
                 <CardHeader>
-                  <CardTitle className="font-cairo text-lg">{isRTL ? 'قوالب سريعة' : 'Quick Templates'}</CardTitle>
+                  <CardTitle className="font-cairo text-lg flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-brand-purple" />
+                    {isRTL ? 'قوالب جاهزة' : 'Quick Templates'}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {templates.map((template) => {
-                    const Icon = iconMap[template.icon] || Bell;
-                    return (
-                      <Button 
-                        key={template.id} 
-                        variant="ghost" 
-                        className="w-full justify-start rounded-xl"
-                        onClick={() => handleTemplateSelect(template)}
-                        data-testid={`template-btn-${template.id}`}
-                      >
-                        <Icon className="h-4 w-4 me-2" />
-                        {isRTL ? template.name : template.name_en}
-                      </Button>
-                    );
-                  })}
+                  {templates.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {isRTL ? 'لا توجد قوالب' : 'No templates'}
+                    </p>
+                  ) : (
+                    templates.slice(0, 5).map((template) => {
+                      const Icon = iconMap[template.icon] || Bell;
+                      return (
+                        <Button 
+                          key={template.id} 
+                          variant="ghost" 
+                          className="w-full justify-start rounded-xl"
+                          onClick={() => handleTemplateSelect(template)}
+                          data-testid={`template-btn-${template.id}`}
+                        >
+                          <Icon className="h-4 w-4 me-2" />
+                          {isRTL ? template.name : template.name_en}
+                        </Button>
+                      );
+                    })
+                  )}
                 </CardContent>
               </Card>
 
               {/* Recent Messages */}
               <Card className="card-nassaq">
                 <CardHeader>
-                  <CardTitle className="font-cairo text-lg">{isRTL ? 'الرسائل الأخيرة' : 'Recent Messages'}</CardTitle>
+                  <CardTitle className="font-cairo text-lg">{isRTL ? 'آخر الرسائل' : 'Recent Messages'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {messages.length === 0 ? (
+                  {sentMessages.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      {isRTL ? 'لا توجد رسائل بعد' : 'No messages yet'}
+                      {isRTL ? 'لا توجد رسائل مرسلة' : 'No sent messages'}
                     </p>
                   ) : (
-                    messages.slice(0, 5).map((msg) => {
-                      const statusConfig = getStatusBadge(msg.status);
-                      return (
-                        <div key={msg.id} className="p-3 bg-muted/30 rounded-xl">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-sm font-medium line-clamp-1">{msg.title}</p>
-                            <Badge variant={statusConfig.variant} className="text-xs">
-                              {statusConfig.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {msg.audience === 'all' ? (isRTL ? 'الجميع' : 'Everyone') :
-                             msg.audience === 'teachers' ? (isRTL ? 'المعلمين' : 'Teachers') :
-                             msg.audience === 'students' ? (isRTL ? 'الطلاب' : 'Students') :
-                             msg.audience === 'parents' ? (isRTL ? 'أولياء الأمور' : 'Parents') :
-                             msg.audience}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(msg.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
-                          </p>
+                    sentMessages.slice(0, 3).map((msg) => (
+                      <div 
+                        key={msg.id} 
+                        className="p-3 bg-muted/30 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => { setSelectedMessage(msg); setViewMessageOpen(true); }}
+                      >
+                        <p className="text-sm font-medium line-clamp-1">{msg.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {getAudienceLabel(msg.audience)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(msg.sent_at || msg.created_at)}
+                          </span>
                         </div>
-                      );
-                    })
+                      </div>
+                    ))
                   )}
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
+
+        {/* ===== Dialogs ===== */}
 
         {/* Sent Messages Dialog */}
         <Dialog open={sentMessagesOpen} onOpenChange={setSentMessagesOpen}>
@@ -593,26 +617,28 @@ export const CommunicationCenterPage = () => {
                 <Send className="h-5 w-5 text-brand-navy" />
                 {isRTL ? 'الرسائل المرسلة' : 'Sent Messages'}
               </DialogTitle>
+              <DialogDescription>
+                {isRTL ? `${sentMessages.length} رسالة مرسلة` : `${sentMessages.length} sent messages`}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 mt-4">
-              {messages.filter(m => m.status === 'sent').length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {isRTL ? 'لا توجد رسائل مرسلة' : 'No sent messages'}
-                </p>
+              {sentMessages.length === 0 ? (
+                <div className="text-center py-12">
+                  <Send className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">{isRTL ? 'لا توجد رسائل مرسلة' : 'No sent messages'}</p>
+                </div>
               ) : (
-                messages.filter(m => m.status === 'sent').map((msg) => (
+                sentMessages.map((msg) => (
                   <div key={msg.id} className="p-4 bg-muted/30 rounded-xl">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium">{msg.title}</p>
-                      <Badge variant="success" className="text-xs">
-                        {isRTL ? 'مرسلة' : 'Sent'}
-                      </Badge>
+                      <Badge variant="default" className="bg-green-500">{isRTL ? 'مرسلة' : 'Sent'}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">{msg.content}</p>
                     <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                      <span>{isRTL ? 'الجمهور:' : 'Audience:'} {msg.audience === 'all' ? (isRTL ? 'الجميع' : 'All') : msg.audience}</span>
-                      <span>{isRTL ? 'المستلمون:' : 'Recipients:'} {msg.recipient_count || 0}</span>
-                      <span>{new Date(msg.sent_at || msg.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                      <span>{isRTL ? 'الجمهور:' : 'Audience:'} {getAudienceLabel(msg.audience)}</span>
+                      <span>{isRTL ? 'المستلمون:' : 'Recipients:'} {msg.recipient_count || msg.sent_count || 0}</span>
+                      <span>{formatDate(msg.sent_at || msg.created_at)}</span>
                     </div>
                   </div>
                 ))
@@ -629,32 +655,34 @@ export const CommunicationCenterPage = () => {
                 <Inbox className="h-5 w-5 text-green-600" />
                 {isRTL ? 'الرسائل المستلمة' : 'Received Messages'}
               </DialogTitle>
+              <DialogDescription>
+                {isRTL ? `${receivedMessages.length} رسالة مستلمة` : `${receivedMessages.length} received messages`}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 mt-4">
               {receivedMessages.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {isRTL ? 'لا توجد رسائل مستلمة' : 'No received messages'}
-                </p>
+                <div className="text-center py-12">
+                  <Inbox className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">{isRTL ? 'لا توجد رسائل مستلمة' : 'No received messages'}</p>
+                </div>
               ) : (
                 receivedMessages.map((msg) => (
                   <div 
                     key={msg.id} 
                     className={`p-4 rounded-xl cursor-pointer transition-colors ${
-                      msg.is_read ? 'bg-muted/30' : 'bg-blue-50 dark:bg-blue-950/30'
+                      msg.is_read ? 'bg-muted/30' : 'bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-500'
                     }`}
                     onClick={() => handleMarkAsRead(msg.id)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <p className={`font-medium ${!msg.is_read ? 'font-bold' : ''}`}>{msg.title}</p>
                       {!msg.is_read && (
-                        <Badge variant="default" className="text-xs bg-blue-500">
-                          {isRTL ? 'جديدة' : 'New'}
-                        </Badge>
+                        <Badge className="bg-blue-500">{isRTL ? 'جديدة' : 'New'}</Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{msg.content}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(msg.sent_at || msg.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                      {formatDate(msg.sent_at || msg.created_at)}
                     </p>
                   </div>
                 ))
@@ -671,46 +699,66 @@ export const CommunicationCenterPage = () => {
                 <Clock className="h-5 w-5 text-yellow-600" />
                 {isRTL ? 'الرسائل المجدولة' : 'Scheduled Messages'}
               </DialogTitle>
+              <DialogDescription>
+                {isRTL ? `${scheduledMessages.length} رسالة مجدولة` : `${scheduledMessages.length} scheduled messages`}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 mt-4">
               {scheduledMessages.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {isRTL ? 'لا توجد رسائل مجدولة' : 'No scheduled messages'}
-                </p>
+                <div className="text-center py-12">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">{isRTL ? 'لا توجد رسائل مجدولة' : 'No scheduled messages'}</p>
+                </div>
               ) : (
                 scheduledMessages.map((msg) => (
-                  <div key={msg.id} className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl">
+                  <div key={msg.id} className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl border border-yellow-200 dark:border-yellow-800">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium">{msg.title}</p>
-                      <Badge variant="outline" className="text-xs text-yellow-700 border-yellow-500">
+                      <Badge variant="outline" className="text-yellow-700 border-yellow-500">
                         <Clock className="h-3 w-3 me-1" />
                         {isRTL ? 'مجدولة' : 'Scheduled'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">{msg.content}</p>
-                    <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                      <span>{isRTL ? 'موعد الإرسال:' : 'Send at:'} {new Date(msg.scheduled_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <span>{isRTL ? 'الجمهور:' : 'Audience:'} {getAudienceLabel(msg.audience)}</span>
+                      <span>•</span>
+                      <span>{isRTL ? 'موعد الإرسال:' : 'Send at:'} {formatDate(msg.scheduled_at)}</span>
                     </div>
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex gap-2 mt-4">
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="flex-1"
                         onClick={() => {
-                          setSelectedMessage(msg);
+                          setSelectedMessage({...msg});
                           setEditScheduledOpen(true);
                         }}
+                        data-testid={`edit-scheduled-${msg.id}`}
                       >
                         <Edit className="h-4 w-4 me-1" />
                         {isRTL ? 'تعديل' : 'Edit'}
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="default"
-                        className="bg-green-600 hover:bg-green-700"
+                        className="flex-1 bg-green-600 hover:bg-green-700"
                         onClick={() => handleSendScheduledNow(msg.id)}
+                        disabled={sending}
+                        data-testid={`send-now-scheduled-${msg.id}`}
                       >
-                        <Send className="h-4 w-4 me-1" />
+                        {sending ? <Loader2 className="h-4 w-4 me-1 animate-spin" /> : <Send className="h-4 w-4 me-1" />}
                         {isRTL ? 'إرسال الآن' : 'Send Now'}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => {
+                          setMessageToDelete(msg);
+                          setDeleteConfirmOpen(true);
+                        }}
+                        data-testid={`delete-scheduled-${msg.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -731,10 +779,29 @@ export const CommunicationCenterPage = () => {
             {selectedMessage && (
               <div className="space-y-4 mt-4">
                 <div>
+                  <Label>{isRTL ? 'الجمهور المستهدف' : 'Target Audience'}</Label>
+                  <Select 
+                    value={selectedMessage.audience}
+                    onValueChange={(v) => setSelectedMessage({...selectedMessage, audience: v})}
+                  >
+                    <SelectTrigger className="rounded-xl mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {audienceGroups.map((group) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {isRTL ? group.name : group.name_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>{isRTL ? 'عنوان الرسالة' : 'Message Title'}</Label>
                   <Input
                     value={selectedMessage.title}
                     onChange={(e) => setSelectedMessage({...selectedMessage, title: e.target.value})}
+                    className="rounded-xl mt-1"
                   />
                 </div>
                 <div>
@@ -742,6 +809,7 @@ export const CommunicationCenterPage = () => {
                   <Textarea
                     value={selectedMessage.content}
                     onChange={(e) => setSelectedMessage({...selectedMessage, content: e.target.value})}
+                    className="rounded-xl mt-1"
                     rows={4}
                   />
                 </div>
@@ -751,21 +819,122 @@ export const CommunicationCenterPage = () => {
                     type="datetime-local"
                     value={selectedMessage.scheduled_at?.slice(0, 16) || ''}
                     onChange={(e) => setSelectedMessage({...selectedMessage, scheduled_at: e.target.value})}
+                    className="rounded-xl mt-1"
                   />
                 </div>
-                <div className="flex justify-end gap-2">
+                <DialogFooter className="gap-2">
                   <Button variant="outline" onClick={() => setEditScheduledOpen(false)}>
                     {isRTL ? 'إلغاء' : 'Cancel'}
                   </Button>
-                  <Button onClick={handleUpdateScheduledMessage}>
+                  <Button onClick={handleUpdateScheduledMessage} disabled={sending}>
+                    {sending ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <CheckCircle className="h-4 w-4 me-2" />}
                     {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
                   </Button>
-                </div>
+                </DialogFooter>
               </div>
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Templates Dialog */}
+        <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-cairo flex items-center gap-2">
+                <FileText className="h-5 w-5 text-brand-purple" />
+                {isRTL ? 'القوالب الجاهزة' : 'Message Templates'}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL ? 'اختر قالباً لتعبئة نموذج الرسالة تلقائياً' : 'Choose a template to auto-fill the message form'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {templates.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">{isRTL ? 'لا توجد قوالب' : 'No templates available'}</p>
+                </div>
+              ) : (
+                templates.map((template) => {
+                  const Icon = iconMap[template.icon] || Bell;
+                  return (
+                    <div 
+                      key={template.id}
+                      className="p-4 bg-muted/30 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors border border-transparent hover:border-brand-purple/30"
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-brand-purple/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-brand-purple" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{template.name}</p>
+                          <p className="text-xs text-muted-foreground">{template.name_en}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {template.content_template?.slice(0, 100)}...
+                      </p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Message Dialog */}
+        <Dialog open={viewMessageOpen} onOpenChange={setViewMessageOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-cairo">
+                {selectedMessage?.title}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedMessage && (
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{getAudienceLabel(selectedMessage.audience)}</Badge>
+                  <Badge variant="outline">{selectedMessage.recipient_count || 0} {isRTL ? 'مستلم' : 'recipients'}</Badge>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{selectedMessage.content}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'تاريخ الإرسال:' : 'Sent at:'} {formatDate(selectedMessage.sent_at || selectedMessage.created_at)}
+                </p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                {isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {isRTL 
+                  ? `هل أنت متأكد من حذف الرسالة "${messageToDelete?.title}"؟ لا يمكن التراجع عن هذا الإجراء.`
+                  : `Are you sure you want to delete "${messageToDelete?.title}"? This action cannot be undone.`
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteMessage}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                {isRTL ? 'حذف' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Sidebar>
   );
 };
+
+export default CommunicationCenterPage;
