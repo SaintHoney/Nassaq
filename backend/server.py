@@ -4293,11 +4293,24 @@ async def get_class_students_options(current_user: dict = Depends(get_current_us
     
     # Get students not assigned to any class
     students = await db.students.find(
-        {"school_id": school_id, "is_active": True, "class_id": None} if school_id else {"is_active": True, "class_id": None},
-        {"_id": 0, "id": 1, "full_name": 1, "student_number": 1, "grade": 1}
+        {"school_id": school_id, "is_active": True} if school_id else {"is_active": True},
+        {"_id": 0}
     ).to_list(500)
     
-    return {"students": students}
+    # Map to expected format
+    result_students = []
+    for s in students:
+        result_students.append({
+            "student_id": s.get("student_id") or s.get("id", ""),
+            "full_name_ar": s.get("full_name_ar") or s.get("full_name", ""),
+            "full_name_en": s.get("full_name_en", ""),
+            "student_number": s.get("student_number", ""),
+            "grade_id": s.get("grade_id", ""),
+            "grade": s.get("grade", ""),
+            "class_id": s.get("class_id")
+        })
+    
+    return {"students": result_students}
 
 @api_router.get("/classes/options/class-types")
 async def get_class_types_options(current_user: dict = Depends(get_current_user)):
