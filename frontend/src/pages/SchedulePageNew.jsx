@@ -748,7 +748,8 @@ export default function SchedulePageNew() {
                                 );
                               }
                               
-                              const session = getSessionForCell(day.key, slot.id, viewMode, currentFilter);
+                              // Pass both slot.id and slot_number for maximum compatibility
+                              const session = getSessionForCell(day.key, slot.id, viewMode, currentFilter, slot.slot_number);
                               
                               return (
                                 <td key={`${day.key}-${slot.id}`} className="p-2 border-e">
