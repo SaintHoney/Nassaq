@@ -4838,7 +4838,7 @@ class TeacherAssignmentResponse(BaseModel):
     school_id: str
     teacher_id: str
     teacher_name: Optional[str] = None
-    class_id: str
+    class_id: Optional[str] = None  # Made optional for general subject assignment
     class_name: Optional[str] = None
     subject_id: str
     subject_name: Optional[str] = None
