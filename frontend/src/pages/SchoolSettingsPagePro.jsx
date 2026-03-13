@@ -559,13 +559,13 @@ function SchoolSettingsPagePro() {
           {/* Readiness Status Card - بطاقة جاهزية الجدول */}
           {readinessData && (
             <Card className="mb-6 overflow-hidden border-0 shadow-lg" data-testid="readiness-card">
-              {/* Header Section */}
+              {/* Header Section - Brand Gradient */}
               <div className={`p-5 ${
                 readinessData.status === 'FULLY_READY' 
-                  ? 'bg-gradient-to-br from-emerald-600 to-emerald-700' 
+                  ? 'bg-gradient-to-br from-emerald-600 via-emerald-500 to-brand-turquoise' 
                   : readinessData.status === 'PARTIALLY_READY'
-                  ? 'bg-gradient-to-br from-amber-500 to-amber-600'
-                  : 'bg-gradient-to-br from-[#1C3D74] to-[#2a5096]'
+                  ? 'bg-gradient-to-br from-brand-navy via-[#2a5096] to-brand-turquoise/80'
+                  : 'bg-gradient-to-br from-[#1C3D74] via-[#2a5096] to-brand-turquoise/60'
               } text-white`}>
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-5">
