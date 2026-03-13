@@ -15,7 +15,7 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://smart-schedule-68.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://nassaq-system-2.preview.emergentagent.com')
 
 # Test credentials
 PRINCIPAL_EMAIL = "principal1@nassaq.com"
