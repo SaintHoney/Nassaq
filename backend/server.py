@@ -6664,6 +6664,330 @@ async def smart_delete_timetable(
 
 # ============== END SMART SCHEDULING ENGINE APIs ==============
 
+
+# ============== SMART TIMETABLE SESSION MANAGEMENT APIs ==============
+
+class UpdateSmartSessionRequest(BaseModel):
+    """طلب تعديل حصة في الجدول الذكي"""
+    teacher_id: Optional[str] = None
+    subject_id: Optional[str] = None
+    day_of_week: Optional[str] = None
+    period_number: Optional[int] = None
+
+
+class SwapSessionsRequest(BaseModel):
+    """طلب تبديل حصتين"""
+    session_id_1: str
+    session_id_2: str
+
+
+@api_router.put("/smart-scheduling/session/{session_id}")
+async def update_smart_session(
+    session_id: str,
+    request: UpdateSmartSessionRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    تعديل حصة في الجدول الذكي
+    Update a session in the smart timetable
+    """
+    # Get current session
+    session = await db.timetable_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    timetable_id = session.get("timetable_id")
+    school_id = session.get("school_id")
+    
+    # Build update
+    update_data = {"source_type": "hybrid_adjusted", "updated_at": datetime.now(timezone.utc).isoformat()}
+    conflicts = []
+    
+    new_day = request.day_of_week or session.get("day_of_week")
+    new_period = request.period_number or session.get("period_number")
+    new_teacher = request.teacher_id or session.get("teacher_id")
+    
+    # Check for conflicts if moving to new slot
+    if request.day_of_week or request.period_number:
+        # Check teacher conflict
+        teacher_conflict = await db.timetable_sessions.find_one({
+            "timetable_id": timetable_id,
+            "teacher_id": new_teacher,
+            "day_of_week": new_day,
+            "period_number": new_period,
+            "id": {"$ne": session_id}
+        }, {"_id": 0})
+        
+        if teacher_conflict:
+            conflicts.append({
+                "type": "teacher_overlap",
+                "message_ar": "المعلم لديه حصة أخرى في هذا الوقت",
+                "message_en": "Teacher has another session at this time"
+            })
+        
+        # Check class conflict
+        class_conflict = await db.timetable_sessions.find_one({
+            "timetable_id": timetable_id,
+            "class_id": session.get("class_id"),
+            "day_of_week": new_day,
+            "period_number": new_period,
+            "id": {"$ne": session_id}
+        }, {"_id": 0})
+        
+        if class_conflict:
+            conflicts.append({
+                "type": "class_overlap",
+                "message_ar": "الفصل لديه حصة أخرى في هذا الوقت",
+                "message_en": "Class has another session at this time"
+            })
+        
+        update_data["day_of_week"] = new_day
+        update_data["period_number"] = new_period
+    
+    if request.teacher_id:
+        update_data["teacher_id"] = request.teacher_id
+        
+        # Check teacher conflict with new teacher
+        if not request.day_of_week and not request.period_number:
+            teacher_conflict = await db.timetable_sessions.find_one({
+                "timetable_id": timetable_id,
+                "teacher_id": request.teacher_id,
+                "day_of_week": session.get("day_of_week"),
+                "period_number": session.get("period_number"),
+                "id": {"$ne": session_id}
+            }, {"_id": 0})
+            
+            if teacher_conflict:
+                conflicts.append({
+                    "type": "teacher_overlap",
+                    "message_ar": "المعلم الجديد لديه حصة أخرى في هذا الوقت",
+                    "message_en": "New teacher has another session at this time"
+                })
+    
+    if request.subject_id:
+        update_data["subject_id"] = request.subject_id
+    
+    # If there are critical conflicts, return warning but allow override
+    if conflicts:
+        return {
+            "success": False,
+            "session_id": session_id,
+            "conflicts": conflicts,
+            "message_ar": "يوجد تعارضات - يمكنك تأكيد التعديل أو إلغاؤه",
+            "message_en": "Conflicts detected - you can confirm or cancel"
+        }
+    
+    # Apply update
+    await db.timetable_sessions.update_one({"id": session_id}, {"$set": update_data})
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "conflicts": [],
+        "message_ar": "تم تعديل الحصة بنجاح",
+        "message_en": "Session updated successfully"
+    }
+
+
+@api_router.put("/smart-scheduling/session/{session_id}/force")
+async def force_update_smart_session(
+    session_id: str,
+    request: UpdateSmartSessionRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    تعديل حصة بالقوة (تجاهل التعارضات)
+    Force update a session (ignore conflicts)
+    """
+    session = await db.timetable_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    update_data = {"source_type": "hybrid_adjusted", "updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if request.day_of_week:
+        update_data["day_of_week"] = request.day_of_week
+    if request.period_number:
+        update_data["period_number"] = request.period_number
+    if request.teacher_id:
+        update_data["teacher_id"] = request.teacher_id
+    if request.subject_id:
+        update_data["subject_id"] = request.subject_id
+    
+    await db.timetable_sessions.update_one({"id": session_id}, {"$set": update_data})
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "message_ar": "تم تعديل الحصة بالقوة",
+        "message_en": "Session force updated"
+    }
+
+
+@api_router.post("/smart-scheduling/sessions/swap")
+async def swap_smart_sessions(
+    request: SwapSessionsRequest,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    تبديل حصتين
+    Swap two sessions
+    """
+    session1 = await db.timetable_sessions.find_one({"id": request.session_id_1}, {"_id": 0})
+    session2 = await db.timetable_sessions.find_one({"id": request.session_id_2}, {"_id": 0})
+    
+    if not session1 or not session2:
+        raise HTTPException(status_code=404, detail="إحدى الحصتين غير موجودة")
+    
+    # Swap day and period
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.timetable_sessions.update_one(
+        {"id": request.session_id_1},
+        {"$set": {
+            "day_of_week": session2.get("day_of_week"),
+            "period_number": session2.get("period_number"),
+            "source_type": "hybrid_adjusted",
+            "updated_at": now
+        }}
+    )
+    
+    await db.timetable_sessions.update_one(
+        {"id": request.session_id_2},
+        {"$set": {
+            "day_of_week": session1.get("day_of_week"),
+            "period_number": session1.get("period_number"),
+            "source_type": "hybrid_adjusted",
+            "updated_at": now
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message_ar": "تم تبديل الحصتين بنجاح",
+        "message_en": "Sessions swapped successfully"
+    }
+
+
+@api_router.delete("/smart-scheduling/session/{session_id}")
+async def delete_smart_session(
+    session_id: str,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    حذف حصة من الجدول
+    Delete a session from the timetable
+    """
+    session = await db.timetable_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="الحصة غير موجودة")
+    
+    await db.timetable_sessions.delete_one({"id": session_id})
+    
+    return {
+        "success": True,
+        "message_ar": "تم حذف الحصة بنجاح",
+        "message_en": "Session deleted successfully"
+    }
+
+
+@api_router.post("/smart-scheduling/session/add")
+async def add_smart_session(
+    timetable_id: str,
+    class_id: str,
+    subject_id: str,
+    teacher_id: str,
+    day_of_week: str,
+    period_number: int,
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    """
+    إضافة حصة يدوية للجدول
+    Add a manual session to the timetable
+    """
+    import uuid
+    
+    # Get timetable
+    timetable = await db.timetables.find_one({"id": timetable_id}, {"_id": 0})
+    if not timetable:
+        raise HTTPException(status_code=404, detail="الجدول غير موجود")
+    
+    school_id = timetable.get("school_id")
+    
+    # Get class info
+    cls = await db.classes.find_one({"id": class_id}, {"_id": 0})
+    grade_id = cls.get("grade_id", "") if cls else ""
+    
+    # Check for conflicts
+    conflicts = []
+    
+    # Teacher conflict
+    teacher_conflict = await db.timetable_sessions.find_one({
+        "timetable_id": timetable_id,
+        "teacher_id": teacher_id,
+        "day_of_week": day_of_week,
+        "period_number": period_number
+    }, {"_id": 0})
+    
+    if teacher_conflict:
+        conflicts.append({
+            "type": "teacher_overlap",
+            "message_ar": "المعلم لديه حصة أخرى في هذا الوقت"
+        })
+    
+    # Class conflict
+    class_conflict = await db.timetable_sessions.find_one({
+        "timetable_id": timetable_id,
+        "class_id": class_id,
+        "day_of_week": day_of_week,
+        "period_number": period_number
+    }, {"_id": 0})
+    
+    if class_conflict:
+        conflicts.append({
+            "type": "class_overlap",
+            "message_ar": "الفصل لديه حصة أخرى في هذا الوقت"
+        })
+    
+    if conflicts:
+        return {
+            "success": False,
+            "conflicts": conflicts,
+            "message_ar": "يوجد تعارضات - لا يمكن إضافة الحصة"
+        }
+    
+    # Create session
+    session_id = str(uuid.uuid4())
+    session_doc = {
+        "id": session_id,
+        "timetable_id": timetable_id,
+        "school_id": school_id,
+        "class_id": class_id,
+        "grade_id": grade_id,
+        "subject_id": subject_id,
+        "teacher_id": teacher_id,
+        "day_of_week": day_of_week,
+        "period_number": period_number,
+        "start_time": "",
+        "end_time": "",
+        "session_type": "class",
+        "source_type": "manual",
+        "status": "scheduled",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.timetable_sessions.insert_one(session_doc)
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "message_ar": "تم إضافة الحصة بنجاح",
+        "message_en": "Session added successfully"
+    }
+
+
+# ============== END SMART TIMETABLE SESSION MANAGEMENT ==============
+
 # ============== LEGACY ROUTES ==============
 @api_router.get("/")
 async def root():
