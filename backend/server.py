@@ -4564,25 +4564,35 @@ async def get_class(class_id: str, current_user: dict = Depends(get_current_user
 @api_router.put("/classes/{class_id}")
 async def update_class(
     class_id: str,
-    class_data: ClassCreate,
+    class_data: ClassUpdate,
     current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
 ):
     """Update class"""
+    # Build update dict with only provided fields
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if class_data.name is not None:
+        update_fields["name"] = class_data.name
+    if class_data.name_en is not None:
+        update_fields["name_en"] = class_data.name_en
+    if class_data.grade_level is not None:
+        update_fields["grade_level"] = class_data.grade_level
+    if class_data.section is not None:
+        update_fields["section"] = class_data.section
+    if class_data.capacity is not None:
+        update_fields["capacity"] = class_data.capacity
+    if class_data.homeroom_teacher_id is not None:
+        update_fields["homeroom_teacher_id"] = class_data.homeroom_teacher_id
+    if class_data.is_active is not None:
+        update_fields["is_active"] = class_data.is_active
+    
     result = await db.classes.update_one(
         {"id": class_id},
-        {"$set": {
-            "name": class_data.name,
-            "name_en": class_data.name_en,
-            "grade_level": class_data.grade_level,
-            "section": class_data.section,
-            "capacity": class_data.capacity,
-            "homeroom_teacher_id": class_data.homeroom_teacher_id,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_fields}
     )
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="الفصل غير موجود")
-    return {"message": "تم تحديث بيانات الفصل"}
+    return {"message": "تم تحديث بيانات الفصل", "success": True}
 
 @api_router.delete("/classes/{class_id}")
 async def delete_class(
