@@ -242,16 +242,26 @@ function SchoolSettingsPagePro() {
       const workingDays = Object.entries(workDays).filter(([_, active]) => active).map(([day]) => dayNames[day]);
       const weekendDays = Object.entries(workDays).filter(([_, active]) => !active).map(([day]) => dayNames[day]);
       
-      await api.put('/school/settings', { 
-        ...settings, 
-        ...timingSettings,
+      // Send only the required fields, not the entire settings object
+      const dataToSave = {
+        academicYear: timingSettings.academicYear,
+        currentSemester: timingSettings.currentSemester,
+        dayStart: timingSettings.dayStart,
+        dayEnd: timingSettings.dayEnd,
+        periodsPerDay: timingSettings.periodsPerDay,
+        periodDuration: timingSettings.periodDuration,
+        breakDuration: timingSettings.breakDuration,
+        breakAfterPeriod: timingSettings.breakAfterPeriod,
         workingDays, 
         weekendDays 
-      });
+      };
+      
+      await api.put('/school/settings', dataToSave);
       toast.success('تم حفظ جميع الإعدادات بنجاح');
       setHasChanges(false);
       fetchData();
     } catch (error) {
+      console.error('Save error:', error);
       toast.error('حدث خطأ في حفظ الإعدادات');
     } finally {
       setSaving(false);
