@@ -904,7 +904,7 @@ export default function SchedulePageNew() {
                 </div>
               </CardContent>
             </Card>
-          ) : null}
+          )}
 
           {/* Schedule Grid */}
           {!showFullTimetable && timeSlots.length === 0 ? (
