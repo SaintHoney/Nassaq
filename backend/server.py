@@ -14705,28 +14705,38 @@ async def update_school_settings_full(
     if not school_id:
         raise HTTPException(status_code=400, detail="School context required")
     
-    settings_data = data.get("settings", {})
+    # Accept both formats: { settings: {...} } or direct { key: value }
+    settings_data = data.get("settings", data)
     
     # Prepare update data
     update_data = {
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # Update main settings
-    if "school_day_start" in settings_data:
-        update_data["settings.school_day_start"] = settings_data["school_day_start"]
-    if "school_day_end" in settings_data:
-        update_data["settings.school_day_end"] = settings_data["school_day_end"]
-    if "periods_per_day" in settings_data:
-        update_data["settings.periods_per_day"] = settings_data["periods_per_day"]
-    if "period_duration_minutes" in settings_data:
-        update_data["settings.period_duration_minutes"] = settings_data["period_duration_minutes"]
-    if "break_duration_minutes" in settings_data:
-        update_data["settings.break_duration_minutes"] = settings_data["break_duration_minutes"]
-    if "prayer_duration_minutes" in settings_data:
-        update_data["settings.prayer_duration_minutes"] = settings_data["prayer_duration_minutes"]
-    if "time_slots" in settings_data:
-        update_data["settings.time_slots"] = settings_data["time_slots"]
+    # Map frontend field names to database field names
+    field_mappings = {
+        "academicYear": "settings.academic_year",
+        "currentSemester": "settings.current_semester",
+        "dayStart": "settings.school_day_start",
+        "dayEnd": "settings.school_day_end",
+        "periodsPerDay": "settings.periods_per_day",
+        "periodDuration": "settings.period_duration_minutes",
+        "breakDuration": "settings.break_duration_minutes",
+        "workingDays": "settings.working_days",
+        "weekendDays": "settings.weekend_days",
+        # Also support direct settings.* keys
+        "school_day_start": "settings.school_day_start",
+        "school_day_end": "settings.school_day_end",
+        "periods_per_day": "settings.periods_per_day",
+        "period_duration_minutes": "settings.period_duration_minutes",
+        "break_duration_minutes": "settings.break_duration_minutes",
+        "prayer_duration_minutes": "settings.prayer_duration_minutes",
+        "time_slots": "settings.time_slots",
+    }
+    
+    for frontend_key, db_key in field_mappings.items():
+        if frontend_key in settings_data:
+            update_data[db_key] = settings_data[frontend_key]
     
     # Update school_settings collection
     await db.school_settings.update_one(
