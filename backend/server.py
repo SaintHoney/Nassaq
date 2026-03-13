@@ -171,6 +171,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     full_name_en: Optional[str] = None
+    title: Optional[str] = None
     role: UserRole
     tenant_id: Optional[str] = None
     phone: Optional[str] = None
