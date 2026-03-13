@@ -3119,7 +3119,8 @@ export default function SchoolSettingsPagePro() {
                     <SelectValue placeholder="اختر المادة" />
                   </SelectTrigger>
                   <SelectContent>
-                    {referenceSubjects.slice(0, 30).map((s) => (
+                    {/* Use school subjects first, then reference subjects as fallback */}
+                    {(subjects.length > 0 ? subjects : referenceSubjects.slice(0, 30)).map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name_ar || s.name}
                       </SelectItem>
