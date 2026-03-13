@@ -502,14 +502,52 @@ export default function UsersClassesManagement() {
                      : selectedItemType === 'teacher' ? `/teachers/${selectedItem.id}` 
                      : `/classes/${selectedItem.id}`;
       
-      await api.put(endpoint, editFormData);
+      // Prepare update data based on type
+      let updateData = {};
+      if (selectedItemType === 'student') {
+        updateData = {
+          full_name: editFormData.full_name || editFormData.full_name_ar,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          class_id: editFormData.class_id,
+          gender: editFormData.gender,
+          is_active: editFormData.is_active
+        };
+      } else if (selectedItemType === 'teacher') {
+        updateData = {
+          full_name: editFormData.full_name || editFormData.full_name_ar,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          specialization: editFormData.specialization,
+          is_active: editFormData.is_active
+        };
+      } else if (selectedItemType === 'class') {
+        updateData = {
+          name: editFormData.name || editFormData.name_ar,
+          grade_level: editFormData.grade_level || editFormData.grade,
+          section: editFormData.section,
+          capacity: editFormData.capacity,
+          is_active: editFormData.is_active
+        };
+      }
+      
+      await api.put(endpoint, updateData);
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
       setEditDialogOpen(false);
       setSelectedItem(null);
       fetchAllData();
     } catch (error) {
       console.error('Save error:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'فشل الحفظ' : 'Save failed'));
+      // Handle error message properly - it might be an object
+      let errorMessage = isRTL ? 'فشل الحفظ' : 'Save failed';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setEditLoading(false);
     }
