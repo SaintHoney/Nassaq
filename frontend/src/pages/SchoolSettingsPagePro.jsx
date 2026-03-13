@@ -2034,58 +2034,102 @@ export default function SchoolSettingsPagePro() {
                       <div>
                         <CardTitle>التوزيع الزمني الكامل لليوم الدراسي</CardTitle>
                         <CardDescription>
-                          {settings.timeSlots?.length || 0} فترة زمنية ({settings.periodsPerDay} حصة + استراحة + صلاة)
+                          {inlineTimeSlots?.length || settings.time_slots?.length || 0} فترة زمنية • انقر على الوقت للتعديل المباشر
                         </CardDescription>
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setEditedDayTimes({
-                          dayStart: settings.dayStart || '07:00',
-                          dayEnd: settings.dayEnd || '13:15',
-                          periodsPerDay: settings.periodsPerDay || 7,
-                          periodDuration: settings.periodDuration || 45,
-                          breakDuration: settings.breakDuration || 20,
-                          prayerDuration: settings.prayerDuration || 20,
-                        });
-                        setEditDayTimesOpen(true);
-                      }}
-                      data-testid="edit-time-slots-btn"
-                    >
-                      <Edit2 className="h-4 w-4 ml-2" />
-                      تعديل التوزيع الزمني
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {savingInline && (
+                        <Badge className="bg-blue-100 text-blue-700 animate-pulse">
+                          <Loader2 className="h-3 w-3 animate-spin ml-1" />
+                          جاري الحفظ...
+                        </Badge>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleResetTimeSlots}
+                        className="border-amber-500 text-amber-700 hover:bg-amber-50"
+                        data-testid="reset-time-slots-btn"
+                      >
+                        <RefreshCw className="h-4 w-4 ml-1" />
+                        إعادة الضبط
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {settings.timeSlots && settings.timeSlots.length > 0 ? (
+                  {/* ملاحظة توضيحية */}
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 mb-4">
+                    <p className="text-sm text-purple-700 flex items-center gap-2">
+                      <Info className="h-4 w-4" />
+                      <span>
+                        <strong>التعديل المباشر:</strong> انقر على أي وقت لتعديله مباشرة. سيتم إعادة حساب جميع الفترات التالية تلقائياً والحفظ فوراً.
+                      </span>
+                    </p>
+                  </div>
+                  
+                  {(inlineTimeSlots?.length > 0 || settings.time_slots?.length > 0) ? (
                     <div className="space-y-3">
-                      {settings.timeSlots.map((slot, index) => (
-                        <TimeSlotItem key={index} slot={slot} index={index} />
+                      {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []).map((slot, index) => (
+                        <TimeSlotInlineEdit 
+                          key={slot.id || index} 
+                          slot={slot} 
+                          index={index}
+                          allSlots={inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []}
+                          onTimeChange={handleInlineTimeChange}
+                          isSaving={savingInline}
+                        />
                       ))}
+                      
+                      {/* ملخص اليوم الدراسي */}
+                      <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle2 className="h-6 w-6 text-green-600" />
+                            <div>
+                              <p className="font-bold text-green-800">ملخص اليوم الدراسي</p>
+                              <p className="text-sm text-green-600">
+                                من {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots)?.[0]?.start_time || '07:00'} 
+                                {' إلى '}
+                                {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots)?.[(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []).length - 1]?.end_time || '13:00'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-blue-600">
+                                {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []).filter(s => s.type === 'period' || !s.type).length}
+                              </p>
+                              <p className="text-xs text-muted-foreground">حصة</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-amber-600">
+                                {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []).filter(s => s.type === 'break').length}
+                              </p>
+                              <p className="text-xs text-muted-foreground">استراحة</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-green-600">
+                                {(inlineTimeSlots?.length > 0 ? inlineTimeSlots : settings.time_slots || []).filter(s => s.type === 'prayer').length}
+                              </p>
+                              <p className="text-xs text-muted-foreground">صلاة</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
                       <Timer className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p className="text-lg font-medium">لا يوجد توزيع زمني محدد</p>
-                      <p className="text-sm">يتم استخدام الإعدادات الافتراضية</p>
+                      <p className="text-sm">انقر على الزر أدناه لإنشاء التوزيع الزمني الافتراضي</p>
                       <Button 
                         className="mt-4" 
-                        onClick={() => {
-                          setEditedDayTimes({
-                            dayStart: '07:00',
-                            dayEnd: '13:15',
-                            periodsPerDay: 7,
-                            periodDuration: 45,
-                            breakDuration: 20,
-                            prayerDuration: 20,
-                          });
-                          setEditDayTimesOpen(true);
-                        }}
+                        onClick={handleResetTimeSlots}
                       >
                         <Plus className="h-4 w-4 ml-2" />
-                        إنشاء التوزيع الزمني
+                        إنشاء التوزيع الزمني الافتراضي
                       </Button>
                     </div>
                   )}
