@@ -843,6 +843,8 @@ const PrincipalTimetablePage = () => {
         onUnlock={(id) => console.log('Unlock session:', id)}
         onRegenerateRelated={(id) => console.log('Regenerate for session:', id)}
       />
+        </div>
+      </div>
     </div>
   );
 };
