@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://curriculum-hub-25.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://school-planner-pro.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "info@nassaqapp.com"
