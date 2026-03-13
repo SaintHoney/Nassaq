@@ -1357,3 +1357,64 @@ POST /api/timetable/publish/{version_id} - نشر النسخة
 - ✅ نسبة الجاهزية 89% تظهر في صفحة الجدول
 - ✅ البيانات تُحفظ وتُسترجع بشكل صحيح
 - ✅ أيام العمل تظهر بشكل صحيح (الأحد-الخميس)
+
+---
+
+### 13 مارس 2026 - إضافة نظام إسناد المعلمين للفصول + تحسين كروت الجدول
+
+#### الميزات الجديدة:
+
+**1. صفحة إسناد المعلمين للفصول (Teacher Class Assignment):**
+- **المسار:** `/school/teacher-class-assignments`
+- **الملف:** `/app/frontend/src/pages/TeacherClassAssignmentPage.jsx`
+- **الوظيفة:** ربط المعلمين بالفصول الدراسية باستخدام السحب والإفلات (Drag & Drop)
+- **المميزات:**
+  - قائمة المعلمين مع عدد الفصول المسندة لكل معلم
+  - قائمة الفصول مع حالة الإسناد (أخضر = مسند، أصفر = بدون إسناد)
+  - إحصائيات فورية (فصول مسندة / بدون إسناد)
+  - زر إزالة الإسناد
+  - تعليمات الاستخدام
+
+**2. APIs جديدة لإسناد المعلمين:**
+- `GET /api/teacher-class-assignments` - جلب جميع الإسنادات
+- `POST /api/teacher-class-assignments` - إنشاء إسناد جديد
+- `DELETE /api/teacher-class-assignments/{id}` - حذف إسناد
+- `GET /api/teacher-class-assignments/classes-without-teachers` - الفصول بدون معلمين
+- `GET /api/teacher-class-assignments/teacher/{teacher_id}` - إسنادات معلم محدد
+
+**3. جدول قاعدة البيانات الجديد:**
+```
+teacher_class_assignments:
+  - id (UUID)
+  - teacher_id
+  - class_id
+  - school_id
+  - academic_year_id
+  - created_at
+  - updated_at
+```
+
+**4. تحسين كارت "ملخص وتحليلات":**
+- تصميم أبسط وأوضح
+- جودة التوزيع (%) تظهر بشكل بارز في المنتصف
+- شبكة إحصائيات منظمة (2x2)
+- ألوان واضحة حسب الحالة
+
+**5. تحسين كارت "نسخ الجدول":**
+- تصميم مضغوط أكثر
+- قسم الأرشيف قابل للطي/التوسيع
+- أيقونات أصغر وأوضح
+- عرض أقصى 3 مسودات
+
+**6. ربط زر "إصلاح" بصفحة الإسنادات:**
+- تحذير "X فصل بدون إسنادات للمعلمين" يوجه لـ `/school/teacher-class-assignments`
+- تحديث ملف `/app/backend/routes/timetable_readiness_routes.py`
+
+#### الملفات المعدلة/المضافة:
+- `/app/frontend/src/pages/TeacherClassAssignmentPage.jsx` (جديد)
+- `/app/frontend/src/App.js` (إضافة route)
+- `/app/backend/server.py` (إضافة APIs)
+- `/app/backend/routes/timetable_readiness_routes.py` (تحديث fix_link)
+- `/app/frontend/src/components/timetable/TimetableInsightsPanel.jsx` (إعادة تصميم)
+- `/app/frontend/src/components/timetable/TimetableVersionManager.jsx` (إعادة تصميم)
+- `/app/frontend/src/components/timetable/index.js` (تحديث exports)
