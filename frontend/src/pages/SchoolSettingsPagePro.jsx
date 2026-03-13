@@ -273,51 +273,85 @@ function SchoolSettingsPagePro() {
     }
   };
   
-  const addTeacher = async () => {
+  // ============================================
+  // Teacher Assignment Drag & Drop Functions
+  // ============================================
+  
+  const handleDragStart = (e, subject) => {
+    setDraggingSubject(subject);
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', subject.id);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggingSubject(null);
+  };
+  
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+  
+  const handleDropOnTeacher = async (e, teacher) => {
+    e.preventDefault();
+    if (!draggingSubject) return;
+    
+    // Check if this assignment already exists for this teacher
+    const existingAssignment = assignments.find(
+      a => a.teacher_id === teacher.id && a.subject_id === draggingSubject.id
+    );
+    
+    if (existingAssignment) {
+      toast.error('هذه المادة مسندة بالفعل لهذا المعلم');
+      setDraggingSubject(null);
+      return;
+    }
+    
+    setAssignmentSaving(true);
     try {
-      // Get school_id from current user context
       const schoolId = user?.tenant_id || user?.school_id || 'SCH-001';
-      const teacherData = {
-        full_name: newTeacher.name,
-        email: newTeacher.email,
-        phone: newTeacher.phone,
-        specialization: newTeacher.specialization,
+      await api.post('/teacher-assignments', {
+        teacher_id: teacher.id,
+        subject_id: draggingSubject.id,
         school_id: schoolId
-      };
-      await api.post('/teachers', teacherData);
-      toast.success('تمت إضافة المعلم بنجاح');
-      setShowAddTeacher(false);
-      setNewTeacher({ name: '', email: '', phone: '', specialization: '' });
+      });
+      toast.success(`تم إسناد "${draggingSubject.name_ar}" إلى "${teacher.full_name || teacher.name}"`);
       fetchData();
     } catch (error) {
-      console.error('Add teacher error:', error);
-      let errorMessage = 'حدث خطأ في إضافة المعلم';
+      console.error('Assignment error:', error);
+      let errorMessage = 'حدث خطأ في إسناد المادة';
       if (error.response?.data?.detail) {
         if (typeof error.response.data.detail === 'string') {
           errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ');
         }
       }
       toast.error(errorMessage);
+    } finally {
+      setAssignmentSaving(false);
+      setDraggingSubject(null);
     }
   };
   
-  const addClass = async () => {
+  const removeAssignment = async (assignmentId) => {
+    if (!confirm('هل أنت متأكد من إلغاء هذا الإسناد؟')) return;
+    
     try {
-      // Get school_id from current user context
-      const schoolId = user?.tenant_id || user?.school_id || 'SCH-001';
-      const classData = {
-        name: newClass.name,
-        grade_level: newClass.grade,
-        section: newClass.section,
-        capacity: newClass.capacity || 30,
-        school_id: schoolId
-      };
-      await api.post('/classes', classData);
-      toast.success('تمت إضافة الفصل بنجاح');
-      setShowAddClass(false);
-      setNewClass({ name: '', grade: '', section: '', capacity: 30 });
+      await api.delete(`/teacher-assignments/${assignmentId}`);
+      toast.success('تم إلغاء الإسناد بنجاح');
+      fetchData();
+    } catch (error) {
+      console.error('Remove assignment error:', error);
+      toast.error('حدث خطأ في إلغاء الإسناد');
+    }
+  };
+  
+  const getTeacherAssignments = (teacherId) => {
+    return assignments.filter(a => a.teacher_id === teacherId);
+  };
+  
+  const getSubjectById = (subjectId) => {
+    return subjects.find(s => s.id === subjectId);
+  };
       fetchData();
     } catch (error) {
       console.error('Add class error:', error);
