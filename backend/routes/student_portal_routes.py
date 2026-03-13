@@ -409,6 +409,9 @@ def setup_student_portal_routes(db, get_current_user, require_roles, UserRole):
         
         return {"teachers": teachers}
     
+    # Setup homework routes
+    setup_homework_routes(router, db, get_current_user, require_roles, UserRole)
+    
     return router
 
 
