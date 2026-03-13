@@ -56,13 +56,15 @@ const PrincipalTimetablePage = () => {
   const schoolId = React.useMemo(() => {
     // 1. From school context (impersonation)
     if (schoolContext?.school_id) return schoolContext.school_id;
-    // 2. From user's roles
+    // 2. From user's tenant_id (most common for principals)
+    if (user?.tenant_id) return user.tenant_id;
+    // 3. From user's roles
     if (user?.roles) {
       for (const role of user.roles) {
         if (role.school_id) return role.school_id;
       }
     }
-    // 3. From localStorage (legacy)
+    // 4. From localStorage (legacy)
     return localStorage.getItem('school_id') || localStorage.getItem('nassaq_school_id');
   }, [user, schoolContext]);
 
