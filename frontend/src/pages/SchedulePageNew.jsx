@@ -923,7 +923,7 @@ export default function SchedulePageNew() {
                 </Link>
               </CardContent>
             </Card>
-          ) : !currentFilter ? (
+          ) : !showFullTimetable && !currentFilter ? (
             <Card className="border-2 border-dashed border-muted-foreground/30">
               <CardContent className="text-center py-16">
                 <Filter className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
