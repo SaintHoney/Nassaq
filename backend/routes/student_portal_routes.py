@@ -629,7 +629,7 @@ def setup_homework_routes(router, db, get_current_user, require_roles, UserRole)
                     due_date = datetime.fromisoformat(due_date_str.replace('Z', '+00:00'))
                 else:
                     due_date = due_date_str
-            except:
+            except Exception:
                 due_date = now + timedelta(days=7)
             
             if submission:
