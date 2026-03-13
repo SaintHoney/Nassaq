@@ -920,6 +920,21 @@ export default function SchedulePageNew() {
               setSelectedClass(classes[0].id);
               setViewMode('class');
             }
+            // جلب الحصص من الجدول الذكي الجديد
+            if (generationStats?.timetable_id) {
+              setSelectedSmartTimetable(generationStats.timetable_id);
+              // جلب الحصص مباشرة
+              api.get(`/smart-scheduling/timetable/${generationStats.timetable_id}/sessions`)
+                .then(res => {
+                  const sessionsData = res.data?.sessions || [];
+                  console.log('Fetched sessions after generation:', sessionsData.length);
+                  setSessions(sessionsData);
+                })
+                .catch(err => {
+                  console.error('Failed to fetch sessions:', err);
+                  toast.error('فشل جلب حصص الجدول');
+                });
+            }
           }
           setGenerationResultOpen(open);
         }}>
