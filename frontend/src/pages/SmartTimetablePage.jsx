@@ -150,9 +150,9 @@ const SessionCell = ({ session, showTeacher = true, compact = false, onEdit, edi
 };
 
 // ============================================
-// مكون جدول الفصل
+// مكون جدول الفصل (قابل للتعديل)
 // ============================================
-const ClassTimetableGrid = ({ className, sessions, periods, days, showTeacher = true }) => {
+const ClassTimetableGrid = ({ className, sessions, periods, days, showTeacher = true, editable = false, onEditSession }) => {
   const getSession = (day, period) => {
     return sessions.find(s => 
       s.day_of_week === day && s.period_number === period
@@ -186,6 +186,8 @@ const ClassTimetableGrid = ({ className, sessions, periods, days, showTeacher = 
                   <SessionCell 
                     session={getSession(day.key, period.number)} 
                     showTeacher={showTeacher}
+                    editable={editable}
+                    onEdit={onEditSession}
                   />
                 </td>
               ))}
