@@ -1,0 +1,46 @@
+[eslint] 
+src/components/dashboard/SchoolDashboardContent.jsx
+  Line 525:6:  React Hook useEffect has missing dependencies: 'fetchDashboardData', 'isImpersonating', and 'schoolContext.school_id'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/layout/Sidebar.jsx
+  Line 76:6:  React Hook useEffect has a missing dependency: 'fetchAvailableRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 83:6:  React Hook useEffect has a missing dependency: 'fetchAvailableRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/timetable/PrincipalTimetablePage.jsx
+  Line 170:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 181:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 205:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 214:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 234:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 245:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 254:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 287:6:  React Hook useCallback has a missing dependency: 'fetchWithAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/wizards/AddTeacherWizard.jsx
+  Line 625:6:  React Hook useEffect has a missing dependency: 'fetchOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/wizards/CreateClassWizard.jsx
+  Line 306:6:  React Hook useEffect has a missing dependency: 'fetchOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/wizards/CreateScheduleWizard.jsx
+  Line 75:6:  React Hook useEffect has a missing dependency: 'fetchOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/components/wizards/SendNotificationWizard.jsx
+  Line 73:6:  React Hook useEffect has a missing dependency: 'fetchOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/contexts/AuthContext.js
+  Line 64:6:  React Hook useCallback has a missing dependency: 'api'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AIInsightsPage.jsx
+  Line 145:6:  React Hook useEffect has missing dependencies: 'api' and 'isRTL'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AssessmentPage.jsx
+  Line 128:6:  React Hook useEffect has missing dependencies: 'fetchClasses' and 'fetchSubjects'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 135:6:  React Hook useEffect has a missing dependency: 'fetchAssessments'. Either include it or remove the dependency array                    react-hooks/exhaustive-deps
+  Line 337:6:  React Hook useEffect has a missing dependency: 'fetchClassOverview'. Either include it or remove the dependency array                  react-hooks/exhaustive-deps
+
+src/pages/AttendancePage.jsx
+  Line 128:6:  React Hook useEffect has missing dependencies: 'fetchClasses', 'fetchSubjects', and 'fetchTimeSlots'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 135:6:  React Hook useEffect has a missing dependency: 'fetchStudentsWithAttendance'. Either include it or remove the dependency array                       
+  768.01 kB  build/static/js/main.e61aa011.js
+  45.93 kB   build/static/js/239.5491b2ce.chunk.js
