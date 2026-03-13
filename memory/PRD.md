@@ -781,3 +781,56 @@
 - `/app/frontend/src/pages/SchedulePageNew.jsx` - تصميم Gradient + auto-load
 - `/app/backend/server.py` - إصلاح ClassWizardCreate model
 - `/app/frontend/src/App.js` - إزالة SmartTimetablePage
+
+
+---
+
+## التحديثات - 13 مارس 2026 (الجزء 2)
+
+### ✅ المهام المنجزة:
+
+#### 1. توحيد المصطلحات
+- استبدال "عدد الحصص الأسبوعية" بـ "النصاب الأسبوعي" في جميع الصفحات
+
+#### 2. تعديل أيقونة المخ
+- تغيير اللون إلى أبيض ناصع
+- إضافة تأثير Pulse + Glow متحرك
+
+#### 3. صفحة التقارير والتحليلات
+- ربط جميع الإحصائيات بقاعدة البيانات الحقيقية
+- إضافة API `/reports/school/behavior` للسلوك
+- إضافة API `/reports/school/top-classes` لأفضل الفصول
+- إضافة API `/reports/school/export` للتصدير
+- إزالة جميع البيانات الوهمية
+
+#### 4. تبويب الحضور
+- ربط الجدول بسجلات الحضور الفعلية
+
+#### 5. تبويب السلوك
+- كروت الإحصائيات (إيجابي/سلبي/تحذير/تقدير) مرتبطة بقاعدة البيانات
+- قسم "ملاحظات السلوك الأخيرة" يعرض بيانات حقيقية
+
+#### 6. صفحة مركز التواصل
+- تغيير اسم "الرسائل" إلى "الرسائل المستلمة"
+- إضافة نوافذ للكروت (مرسلة/مستلمة/مجدولة)
+- إضافة أزرار "تعديل" و "إرسال الآن" للرسائل المجدولة
+- إضافة APIs جديدة:
+  - `/communication/received` - الرسائل المستلمة
+  - `/communication/{id}/read` - تعيين الرسالة كمقروءة
+  - `/communication/{id}/send-now` - إرسال المجدولة فوراً
+  - `/communication/{id}` PUT - تعديل المجدولة
+  - `/communication/templates` - إنشاء قوالب
+
+#### 7. زر تبديل المستخدم
+- إضافة الزر في صفحة الإعدادات (يظهر فقط إذا كان للمستخدم أكثر من دور)
+- إضافة Dialog لعرض واختيار الأدوار
+- ربط بـ APIs الموجودة في `/user-roles`
+
+### الملفات المُحدّثة:
+- `/app/backend/server.py` - APIs التقارير والسلوك
+- `/app/backend/routes/communication_routes.py` - APIs مركز التواصل
+- `/app/frontend/src/pages/SchoolReportsPage.jsx` - التقارير
+- `/app/frontend/src/pages/CommunicationCenterPage.jsx` - مركز التواصل
+- `/app/frontend/src/pages/AccountSettingsPage.jsx` - تبديل المستخدم
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx` - توحيد المصطلحات
+- `/app/frontend/src/pages/AIInsightsPage.jsx` - أيقونة المخ
