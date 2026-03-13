@@ -14,6 +14,34 @@
 
 ## الميزات المُنجزة
 
+### إصلاحات حرجة - شبكة الجدول وإسناد الفصول ✅ (مارس 2026)
+
+**المشاكل المُصلحة:**
+
+1. ✅ **شبكة الجدول الدراسي لا تعرض البيانات بعد التوليد:**
+   - **السبب:** استخدام `visibleSlots` و `Calendar` قبل تعريفهما في `TimetableGridSection.jsx`
+   - **الإصلاح:** نقل تعريف `visibleSlots` قبل استخدامه، إضافة استيراد `Calendar` من lucide-react
+   - **النتيجة:** الجدول يعرض 60 حصة مجدولة بشكل صحيح مع 5 أيام عمل و7 حصص
+
+2. ✅ **نافذة التأكيد لا تعرض البيانات الفعلية:**
+   - **الموقع:** `TimetableModals.jsx` - `AITimetableGenerationModal`
+   - **الإصلاح:** التأكد من عرض `generationInputSummary` بشكل صحيح
+   - **النتيجة:** النافذة تعرض: 8 معلم، 8 فصل، 11 مادة، 40 حصة
+
+3. ✅ **إسناد الفصول للمعلمين يجب أن يستخدم السحب والإفلات:**
+   - **الموقع:** `SchoolSettingsPagePro.jsx`
+   - **الإصلاح:** إضافة استيرادات `@dnd-kit/core` (DndContext, DragOverlay, closestCenter, useSensor, useSensors, PointerSensor, useDraggable, useDroppable)
+   - **المكونات الجديدة:** `DraggableClassItem`, `DroppableTeacherBox`
+   - **النتيجة:** واجهة سحب وإفلات كاملة لإسناد الفصول للمعلمين
+
+**الملفات المُعدّلة:**
+- `/app/frontend/src/components/timetable/TimetableGridSection.jsx`
+- `/app/frontend/src/pages/SchoolSettingsPagePro.jsx`
+
+**نتيجة الاختبار:** 17/17 اختبار ناجح (100%)
+
+---
+
 ### مركز القيادة (Command Center) ✅ (محدّث مارس 2026)
 - أزرار موحدة: "طالب / طلاب"، "معلم / معلمين"، "فصل / فصول"
 - كروت مؤشرات الأداء (الطلاب، المعلمين، الفصول) قابلة للنقر
