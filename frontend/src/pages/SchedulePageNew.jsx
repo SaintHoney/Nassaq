@@ -282,13 +282,9 @@ export default function SchedulePageNew() {
         
         setGenerationStep('');
         setGenerateDialogOpen(false);
-        // لا نعرض نافذة النتيجة - ننتقل مباشرة لعرض الجدول
         
-        if (result.conflicts_count > 0) {
-          toast.warning(`تم إنشاء ${result.scheduled_sessions} حصة مع ${result.conflicts_count} تعارضات - اضغط "عرض الجدول" للمشاهدة`);
-        } else {
-          toast.success(`تم إنشاء ${result.scheduled_sessions} حصة بنجاح! اضغط "عرض الجدول" للمشاهدة`);
-        }
+        // عرض نافذة حالة التنفيذ
+        setGenerationResultOpen(true);
         
         // Set the new smart timetable as selected
         setSelectedSmartTimetable(result.timetable_id);
