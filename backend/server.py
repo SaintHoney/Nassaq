@@ -6563,6 +6563,51 @@ async def smart_generate_timetable(
     return result.model_dump()
 
 
+# --- Generate Timetable Smart API (Alternative endpoint for frontend) ---
+@api_router.post("/timetable/generate-smart")
+async def generate_timetable_smart(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    توليد الجدول الدراسي بالذكاء الاصطناعي - نقطة نهاية بديلة
+    Smart AI-Powered Timetable Generation - Alternative endpoint
+    """
+    try:
+        body = await request.json()
+        school_id = body.get("school_id")
+        use_baseline = body.get("use_baseline", False)
+        
+        if not school_id:
+            # Try to get from headers or user context
+            school_id = request.headers.get("X-School-Context") or current_user.get("tenant_id")
+        
+        if not school_id:
+            raise HTTPException(status_code=400, detail="school_id مطلوب")
+        
+        # Get school settings
+        settings = await db.school_settings.find_one({"school_id": school_id}, {"_id": 0})
+        if not settings:
+            raise HTTPException(status_code=404, detail="لم يتم العثور على إعدادات المدرسة")
+        
+        nested_settings = settings.get("settings", {})
+        academic_year = nested_settings.get("academic_year") or settings.get("academicYear") or settings.get("academic_year")
+        
+        # Generate timetable
+        result = await smart_scheduling_engine.generate_timetable(
+            school_id=school_id,
+            academic_year_id=academic_year,
+            term_id=None,
+            created_by=current_user.get("id", "system")
+        )
+        
+        return result.model_dump()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"فشل في توليد الجدول: {str(e)}")
+
+
 # --- Get School Timetables API ---
 @api_router.get("/smart-scheduling/timetables/{school_id}")
 async def smart_get_school_timetables(
