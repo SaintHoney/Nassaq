@@ -658,19 +658,19 @@ function SchoolSettingsPagePro() {
               onClick={() => { setActiveSection('static'); setActiveTab('curriculum'); }}
               className={`flex-1 p-4 rounded-xl border-2 transition-all duration-200 ${
                 activeSection === 'static' 
-                  ? 'border-emerald-600 bg-emerald-50 shadow-md' 
+                  ? 'border-brand-turquoise bg-brand-turquoise/10 shadow-md' 
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
               data-testid="section-static-btn"
             >
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  activeSection === 'static' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
+                  activeSection === 'static' ? 'bg-brand-turquoise text-white' : 'bg-slate-100 text-slate-500'
                 }`}>
                   <Lock className="h-6 w-6" />
                 </div>
                 <div className="text-right">
-                  <h3 className={`font-bold ${activeSection === 'static' ? 'text-emerald-700' : 'text-slate-700'}`}>
+                  <h3 className={`font-bold ${activeSection === 'static' ? 'text-brand-turquoise-dark' : 'text-slate-700'}`}>
                     البيانات الأساسية الثابتة
                   </h3>
                   <p className="text-sm text-slate-500">Official Static Reference Data</p>
