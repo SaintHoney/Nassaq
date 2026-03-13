@@ -4364,7 +4364,25 @@ async def create_class_wizard(
     
     # Get grade level info
     grade_level = await db.grade_levels.find_one({"id": data.grade_id}, {"_id": 0})
-    grade_name = grade_level.get("name") if grade_level else f"الصف {data.grade}"
+    
+    # Derive grade number from grade_level if not provided
+    grade_number = data.grade
+    if not grade_number and grade_level:
+        grade_number = grade_level.get("grade", 1)
+    elif not grade_number:
+        # Try to extract from grade_id
+        try:
+            grade_number = int(data.grade_id)
+        except:
+            grade_number = 1
+    
+    # Use name_ar if name is not provided
+    class_name = data.name or data.name_ar
+    if not class_name:
+        grade_name = grade_level.get("name_ar") if grade_level else f"الصف {grade_number}"
+        class_name = f"{grade_name} - {data.section or 'أ'}"
+    
+    grade_name = grade_level.get("name_ar") if grade_level else f"الصف {grade_number}"
     
     # Create class document
     class_doc = {
