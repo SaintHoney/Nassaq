@@ -14503,6 +14503,33 @@ async def get_school_id_from_context(current_user: dict, x_school_context: str =
 
 # ============== API ENDPOINTS ==============
 
+@api_router.get("/school/info")
+async def get_school_info(
+    current_user: dict = Depends(get_current_user),
+    x_school_context: str = Header(default=None, alias="X-School-Context")
+):
+    """Get school basic info - جلب معلومات المدرسة الأساسية"""
+    school_id = await get_school_id_from_context(current_user, x_school_context)
+    
+    if not school_id:
+        raise HTTPException(status_code=400, detail="School context required")
+    
+    school = await db.schools.find_one({"id": school_id}, {"_id": 0})
+    if not school:
+        return {}
+    
+    return {
+        "id": school.get("id"),
+        "name": school.get("name"),
+        "name_ar": school.get("name_ar", school.get("name")),
+        "name_en": school.get("name_en"),
+        "type": school.get("type"),
+        "stage": school.get("stage"),
+        "address": school.get("address"),
+        "phone": school.get("phone"),
+        "email": school.get("email")
+    }
+
 @api_router.get("/school/settings")
 async def get_school_settings(
     current_user: dict = Depends(get_current_user),
