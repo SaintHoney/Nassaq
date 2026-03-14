@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import {
   Home, Calendar, BookOpen, ClipboardCheck, FileText,
   Star, Users, MessageSquare, BarChart3, Settings, FolderOpen,
-  Bell, Globe
+  Bell
 } from 'lucide-react';
 
 const mobileNavItems = [
@@ -22,7 +22,7 @@ const mobileNavItems = [
 export function TeacherLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, api, isRTL, toggleLanguage } = useAuth();
+  const { user, api, isRTL } = useAuth();
   const [notifCount, setNotifCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
 
@@ -55,12 +55,6 @@ export function TeacherLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-2">
-              {toggleLanguage && (
-                <Button variant="ghost" size="sm" className="h-8 px-2" onClick={toggleLanguage}>
-                  <Globe className="h-4 w-4" />
-                </Button>
-              )}
-
               <Button
                 variant="ghost"
                 size="sm"

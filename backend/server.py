@@ -14326,6 +14326,17 @@ async def get_teacher_dashboard(
     recorded_class_ids = [a.get("class_id") for a in recorded_attendance]
     pending_attendance = len([c for c in class_ids if c not in recorded_class_ids])
     
+    # Pending assessments (assessments created by teacher that have no grades yet)
+    pending_assessments = 0
+    teacher_assessments = await db.assessments.find({
+        "teacher_id": actual_teacher_id,
+        "school_id": school_id
+    }, {"_id": 0, "id": 1}).to_list(100)
+    for asmt in teacher_assessments:
+        grade_count = await db.assessment_grades.count_documents({"assessment_id": asmt.get("id")})
+        if grade_count == 0:
+            pending_assessments += 1
+    
     # Recent activities
     recent_activities = await db.audit_log.find({
         "user_id": current_user.get("id"),
@@ -14362,8 +14373,8 @@ async def get_teacher_dashboard(
     next_session = None
     now_time = now.strftime("%H:%M")
     for lesson in today_lessons:
-        start = lesson.get("time", "")
-        end = lesson.get("end_time", "")
+        start = (lesson.get("time", "") or "")[:5]
+        end = (lesson.get("end_time", "") or "")[:5]
         if start and end and start <= now_time <= end:
             lesson["status"] = "current"
             current_session = lesson
@@ -14374,7 +14385,8 @@ async def get_teacher_dashboard(
             if next_session is None:
                 next_session = lesson
     if not current_session and not next_session and today_lessons:
-        next_session = today_lessons[0] if today_lessons[0].get("time", "") > now_time else None
+        first_start = (today_lessons[0].get("time", "") or "")[:5]
+        next_session = today_lessons[0] if first_start > now_time else None
     
     return {
         "teacher": {
@@ -14395,6 +14407,7 @@ async def get_teacher_dashboard(
             "my_students": total_students,
             "today_lessons": len(today_lessons),
             "pending_attendance": pending_attendance,
+            "pending_assessments": pending_assessments,
             "subjects_count": len(subject_ids),
             "weekly_sessions": sum(a.get("weekly_sessions", 0) for a in assignments),
             "unread_notifications": unread_notifications,
@@ -16288,16 +16301,32 @@ async def get_teacher_classes(
         
         next_session_info = None
         if teacher_doc:
-            ns = await db.schedule_sessions.find_one(
+            day_order = {"sunday": 0, "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4}
+            now = datetime.now()
+            current_day_idx = now.weekday()
+            sa_day_map = {6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+            today_sa_idx = sa_day_map.get(current_day_idx, 0)
+            now_time = now.strftime("%H:%M")
+            
+            upcoming = await db.schedule_sessions.find(
                 {"class_id": cls.get("id"), "teacher_id": actual_teacher_id, "status": "scheduled"},
                 {"_id": 0, "day_of_week": 1, "time_slot_id": 1}
-            )
-            if ns:
-                ts = await db.time_slots.find_one({"id": ns.get("time_slot_id")}, {"_id": 0, "start_time": 1})
-                next_session_info = {
-                    "day": ns.get("day_of_week", ""),
-                    "time": ts.get("start_time", "")[:5] if ts else ""
-                }
+            ).to_list(50)
+            
+            best = None
+            best_score = (999, "99:99")
+            for s in upcoming:
+                d_idx = day_order.get(s.get("day_of_week", ""), 99)
+                ts = await db.time_slots.find_one({"id": s.get("time_slot_id")}, {"_id": 0, "start_time": 1})
+                t = (ts.get("start_time", "") or "")[:5] if ts else ""
+                offset = (d_idx - today_sa_idx) % 7
+                if offset == 0 and t <= now_time:
+                    offset = 7
+                score = (offset, t)
+                if score < best_score:
+                    best_score = score
+                    best = {"day": s.get("day_of_week", ""), "time": t}
+            next_session_info = best
         
         enriched_classes.append({
             **cls,

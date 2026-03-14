@@ -76,7 +76,7 @@ export default function TeacherMainDashboard() {
           myStudents: data.stats.my_students || 0,
           todayLessons: data.stats.today_lessons || 0,
           pendingAttendance: data.stats.pending_attendance || 0,
-          pendingAssessments: 0,
+          pendingAssessments: data.stats.pending_assessments || 0,
           totalSessions: data.stats.weekly_sessions || 0,
           subjectsCount: data.stats.subjects_count || 0,
           unreadNotifications: data.stats.unread_notifications || 0,
@@ -541,11 +541,11 @@ export default function TeacherMainDashboard() {
                 </div>
                 <div className="p-4 rounded-lg bg-green-50 border border-green-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-green-800">{isRTL ? 'تقارير للمراجعة' : 'Reports to Review'}</span>
-                    <Badge className="bg-green-500">0</Badge>
+                    <span className="font-medium text-green-800">{isRTL ? 'إشعارات غير مقروءة' : 'Unread Notifications'}</span>
+                    <Badge className="bg-green-500">{stats.unreadNotifications}</Badge>
                   </div>
-                  <Button size="sm" variant="outline" className="w-full border-green-300 text-green-700" onClick={() => navigate('/teacher/reports')}>
-                    {isRTL ? 'عرض التقارير' : 'View Reports'}
+                  <Button size="sm" variant="outline" className="w-full border-green-300 text-green-700" onClick={() => navigate('/notifications')}>
+                    {isRTL ? 'عرض الإشعارات' : 'View Notifications'}
                   </Button>
                 </div>
               </div>
