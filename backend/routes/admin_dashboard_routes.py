@@ -156,10 +156,12 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
             ]
             platform_accounts = await db.users.count_documents({"role": {"$in": platform_roles}})
             
-            pending_requests = await db.registration_requests.count_documents({"status": "pending"})
-            pending_teacher_requests = await db.registration_requests.count_documents({
-                "status": "pending", "type": {"$in": ["independent_teacher", "teacher_registration"]}
-            })
+            pending_filter = {"status": "pending"}
+            if filtered_school_ids:
+                pending_filter["school_id"] = {"$in": filtered_school_ids}
+            elif school_id:
+                pending_filter["school_id"] = school_id
+            pending_requests = await db.registration_requests.count_documents(pending_filter)
             
             ai_enabled_schools = await db.schools.count_documents({**school_filter, "ai_enabled": True})
             if ai_enabled_schools == 0:

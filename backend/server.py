@@ -11017,7 +11017,16 @@ async def get_activity_summary(
     """Get quick summary of today's activity"""
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    yesterday = today - timedelta(days=1)
+    
+    if period == "week":
+        period_start = today - timedelta(days=today.weekday())
+    elif period == "month":
+        period_start = today.replace(day=1)
+    else:
+        period_start = today
+    
+    prev_duration = now - period_start if period_start < now else timedelta(days=1)
+    yesterday = period_start - prev_duration
     
     school_id_filter = None
     if city or region or school_type or status or school_ids:
@@ -11032,7 +11041,7 @@ async def get_activity_summary(
         filtered = await db.schools.find(sf, {"_id": 0, "id": 1}).to_list(1000)
         school_id_filter = [s["id"] for s in filtered]
     
-    today_query = {"timestamp": {"$gte": today.isoformat()}}
+    today_query = {"timestamp": {"$gte": period_start.isoformat()}}
     if school_id:
         today_query["school_id"] = school_id
     elif school_id_filter is not None:
@@ -11051,7 +11060,11 @@ async def get_activity_summary(
             "users": {"count": 0, "change": 0, "status": "normal"}
         }
     
-    yesterday_query = {"timestamp": {"$gte": yesterday.isoformat(), "$lt": today.isoformat()}}
+    yesterday_query = {"timestamp": {"$gte": yesterday.isoformat(), "$lt": period_start.isoformat()}}
+    if school_id:
+        yesterday_query["school_id"] = school_id
+    elif school_id_filter is not None:
+        yesterday_query["school_id"] = {"$in": school_id_filter}
     yesterday_lessons = await db.activity_logs.count_documents({**yesterday_query, "type": "lesson"}) or 1
     yesterday_attendance = await db.activity_logs.count_documents({**yesterday_query, "type": "attendance"}) or 1
     yesterday_grades = await db.activity_logs.count_documents({**yesterday_query, "type": "grade"}) or 1

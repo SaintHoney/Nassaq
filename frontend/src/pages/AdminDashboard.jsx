@@ -78,17 +78,6 @@ const SCHOOL_STAGES = [
   { value: 'high', label: 'ثانوي', label_en: 'High School' },
 ];
 
-const generateSparklineData = (baseValue, trend) => {
-  const data = [];
-  const base = Number(baseValue) || 0;
-  const offsets = trend === 'up' ? [0.85, 0.88, 0.90, 0.93, 0.95, 0.98, 1.0]
-    : trend === 'down' ? [1.0, 0.98, 0.96, 0.94, 0.92, 0.89, 0.87]
-    : [0.97, 0.99, 0.98, 1.0, 0.99, 0.98, 1.0];
-  for (let i = 0; i < 7; i++) {
-    data.push({ day: i + 1, value: Math.round(base * offsets[i]) });
-  }
-  return data;
-};
 
 // Enhanced Mini Sparkline Component - Professional Design
 const MiniSparkline = ({ data, trend = 'up', height = 36 }) => {
@@ -288,13 +277,13 @@ export const AdminDashboard = () => {
       const response = await api.get(url);
       setStats({
         ...response.data,
-        active_students: response.data.active_students || 0,
-        new_students_this_month: response.data.new_students_this_month || 0,
-        active_teachers: response.data.active_teachers || 0,
-        new_teachers_this_month: response.data.new_teachers_this_month || 0,
-        total_admins: response.data.total_admins || 0,
-        active_users_today: response.data.active_users_today || response.data.active_users || 0,
-        api_calls_today: response.data.api_calls_today || 0,
+        active_students: response.data.active_students ?? 0,
+        new_students_this_month: response.data.new_students_this_month ?? 0,
+        active_teachers: response.data.active_teachers ?? 0,
+        new_teachers_this_month: response.data.new_teachers_this_month ?? 0,
+        total_admins: response.data.total_admins ?? 0,
+        active_users_today: response.data.active_users_today ?? response.data.active_users ?? 0,
+        api_calls_today: response.data.api_calls_today ?? 0,
       });
       
       if (showToast) toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
@@ -441,15 +430,15 @@ export const AdminDashboard = () => {
       exportDate: new Date().toISOString(),
       filters: filters,
       stats: {
-        totalSchools: stats?.total_schools || 0,
-        activeSchools: stats?.active_schools || 0,
-        suspendedSchools: stats?.suspended_schools || 0,
-        pendingSchools: stats?.pending_schools || 0,
-        totalStudents: stats?.total_students || 0,
-        totalTeachers: stats?.total_teachers || 0,
-        totalAdmins: stats?.total_admins || 0,
-        activeUsersToday: stats?.active_users_today || 0,
-        apiCallsToday: stats?.api_calls_today || 0,
+        totalSchools: stats?.total_schools ?? 0,
+        activeSchools: stats?.active_schools ?? 0,
+        suspendedSchools: stats?.suspended_schools ?? 0,
+        pendingSchools: stats?.pending_schools ?? 0,
+        totalStudents: stats?.total_students ?? 0,
+        totalTeachers: stats?.total_teachers ?? 0,
+        totalAdmins: stats?.total_admins ?? 0,
+        activeUsersToday: stats?.active_users_today ?? 0,
+        apiCallsToday: stats?.api_calls_today ?? 0,
       }
     };
 
@@ -688,15 +677,15 @@ export const AdminDashboard = () => {
       icon: <Building2 className="h-6 w-6 text-brand-navy" />,
       iconBg: 'bg-brand-navy/10',
       title: isRTL ? 'المدارس المسجلة' : 'Registered Schools',
-      mainValue: commandCenterStats?.registered_schools || stats?.total_schools,
-      delta: { value: commandCenterStats?.schools_delta || 0, type: commandCenterStats?.schools_delta > 0 ? 'up' : commandCenterStats?.schools_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      mainValue: commandCenterStats?.registered_schools ?? stats?.total_schools ?? 0,
+      delta: { value: commandCenterStats?.schools_delta ?? 0, type: commandCenterStats?.schools_delta > 0 ? 'up' : commandCenterStats?.schools_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
       health: stats?.suspended_schools > 5 ? 'warning' : 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.registered_schools || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#1e3a5f',
       secondaryData: [
-        { label: isRTL ? 'نشطة' : 'Active', value: stats?.active_schools || 0, dotColor: 'bg-green-500' },
-        { label: isRTL ? 'موقوفة' : 'Suspended', value: stats?.suspended_schools || 0, dotColor: 'bg-red-500' },
-        { label: isRTL ? 'معلقة' : 'Pending', value: stats?.pending_schools || 0, dotColor: 'bg-yellow-500' },
+        { label: isRTL ? 'نشطة' : 'Active', value: stats?.active_schools ?? 0, dotColor: 'bg-green-500' },
+        { label: isRTL ? 'موقوفة' : 'Suspended', value: stats?.suspended_schools ?? 0, dotColor: 'bg-red-500' },
+        { label: isRTL ? 'معلقة' : 'Pending', value: stats?.pending_schools ?? 0, dotColor: 'bg-yellow-500' },
       ],
       navigateTo: '/admin/schools',
       clickable: true,
@@ -705,10 +694,10 @@ export const AdminDashboard = () => {
       icon: <GraduationCap className="h-6 w-6 text-brand-turquoise" />,
       iconBg: 'bg-brand-turquoise/10',
       title: isRTL ? 'الطلاب المسجلين' : 'Enrolled Students',
-      mainValue: commandCenterStats?.registered_students || stats?.total_students,
-      delta: { value: commandCenterStats?.students_delta || 0, type: commandCenterStats?.students_delta > 0 ? 'up' : commandCenterStats?.students_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      mainValue: commandCenterStats?.registered_students ?? stats?.total_students ?? 0,
+      delta: { value: commandCenterStats?.students_delta ?? 0, type: commandCenterStats?.students_delta > 0 ? 'up' : commandCenterStats?.students_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
       health: 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.registered_students || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#38b2ac',
       secondaryData: [],
       navigateTo: '/admin/schools',
@@ -718,10 +707,10 @@ export const AdminDashboard = () => {
       icon: <UserCheck className="h-6 w-6 text-brand-purple" />,
       iconBg: 'bg-brand-purple/10',
       title: isRTL ? 'المعلمين في المدارس' : 'Teachers in Schools',
-      mainValue: commandCenterStats?.teachers_in_schools || stats?.total_teachers,
-      delta: { value: commandCenterStats?.teachers_delta || 0, type: commandCenterStats?.teachers_delta > 0 ? 'up' : commandCenterStats?.teachers_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+      mainValue: commandCenterStats?.teachers_in_schools ?? stats?.total_teachers ?? 0,
+      delta: { value: commandCenterStats?.teachers_delta ?? 0, type: commandCenterStats?.teachers_delta > 0 ? 'up' : commandCenterStats?.teachers_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
       health: 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.teachers_in_schools || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#805ad5',
       secondaryData: [],
       navigateTo: '/admin/schools',
@@ -731,10 +720,10 @@ export const AdminDashboard = () => {
       icon: <Users className="h-6 w-6 text-orange-500" />,
       iconBg: 'bg-orange-500/10',
       title: isRTL ? 'المعلمين المستقلين' : 'Independent Teachers',
-      mainValue: commandCenterStats?.independent_teachers || 0,
+      mainValue: commandCenterStats?.independent_teachers ?? 0,
       delta: { value: 0, type: 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
       health: 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.independent_teachers || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#f97316',
       secondaryData: [],
       navigateTo: '/admin/users',
@@ -744,11 +733,11 @@ export const AdminDashboard = () => {
       icon: <Activity className="h-6 w-6 text-green-500" />,
       iconBg: 'bg-green-500/10',
       title: isRTL ? 'نسبة حضور الطلاب' : 'Student Attendance Rate',
-      mainValue: `${commandCenterStats?.student_attendance_rate || 0}%`,
+      mainValue: `${commandCenterStats?.student_attendance_rate ?? 0}%`,
       isPercentage: true,
-      delta: { value: commandCenterStats?.student_attendance_delta || 0, type: commandCenterStats?.student_attendance_delta > 0 ? 'up' : commandCenterStats?.student_attendance_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
+      delta: { value: commandCenterStats?.student_attendance_delta ?? 0, type: commandCenterStats?.student_attendance_delta > 0 ? 'up' : commandCenterStats?.student_attendance_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
       health: commandCenterStats?.student_attendance_rate > 85 ? 'normal' : 'warning',
-      sparklineData: generateSparklineData(commandCenterStats?.student_attendance_rate || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#22c55e',
       secondaryData: [],
       navigateTo: null, // غير قابل للنقر
@@ -758,11 +747,11 @@ export const AdminDashboard = () => {
       icon: <Activity className="h-6 w-6 text-blue-500" />,
       iconBg: 'bg-blue-500/10',
       title: isRTL ? 'نسبة حضور المعلمين' : 'Teacher Attendance Rate',
-      mainValue: `${commandCenterStats?.teacher_attendance_rate || 0}%`,
+      mainValue: `${commandCenterStats?.teacher_attendance_rate ?? 0}%`,
       isPercentage: true,
-      delta: { value: commandCenterStats?.teacher_attendance_delta || 0, type: commandCenterStats?.teacher_attendance_delta > 0 ? 'up' : commandCenterStats?.teacher_attendance_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
+      delta: { value: commandCenterStats?.teacher_attendance_delta ?? 0, type: commandCenterStats?.teacher_attendance_delta > 0 ? 'up' : commandCenterStats?.teacher_attendance_delta < 0 ? 'down' : 'stable', period: isRTL ? 'مقارنة بالأمس' : 'vs yesterday' },
       health: commandCenterStats?.teacher_attendance_rate > 90 ? 'normal' : 'warning',
-      sparklineData: generateSparklineData(commandCenterStats?.teacher_attendance_rate || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#3b82f6',
       secondaryData: [],
       navigateTo: null, // غير قابل للنقر
@@ -772,13 +761,13 @@ export const AdminDashboard = () => {
       icon: <Shield className="h-6 w-6 text-purple-500" />,
       iconBg: 'bg-purple-500/10',
       title: isRTL ? 'حسابات المنصة' : 'Platform Accounts',
-      mainValue: commandCenterStats?.platform_accounts || 0,
+      mainValue: commandCenterStats?.platform_accounts ?? 0,
       delta: { value: 0, type: 'stable', period: isRTL ? 'مستقر' : 'Stable' },
       health: 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.platform_accounts || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#a855f7',
       secondaryData: [
-        { label: isRTL ? 'مدير منصة' : 'Platform Admin', value: commandCenterStats?.platform_accounts || 0, dotColor: 'bg-purple-500' },
+        { label: isRTL ? 'مدير منصة' : 'Platform Admin', value: commandCenterStats?.platform_accounts ?? 0, dotColor: 'bg-purple-500' },
       ],
       navigateTo: '/admin/users',
       clickable: true,
@@ -787,10 +776,10 @@ export const AdminDashboard = () => {
       icon: <Clock className="h-6 w-6 text-amber-500" />,
       iconBg: 'bg-amber-500/10',
       title: isRTL ? 'طلبات معلقة' : 'Pending Requests',
-      mainValue: commandCenterStats?.pending_requests || 0,
+      mainValue: commandCenterStats?.pending_requests ?? 0,
       delta: { value: commandCenterStats?.pending_requests > 0 ? commandCenterStats?.pending_requests : 0, type: commandCenterStats?.pending_requests > 0 ? 'up' : 'stable', period: isRTL ? 'تحتاج مراجعة' : 'Needs review' },
       health: commandCenterStats?.pending_requests > 5 ? 'warning' : 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.pending_requests || 0, 'up'),
+      sparklineData: [],
       sparklineColor: '#f59e0b',
       secondaryData: [],
       navigateTo: '/admin/users',
@@ -800,10 +789,10 @@ export const AdminDashboard = () => {
       icon: <Sparkles className="h-6 w-6 text-cyan-500" />,
       iconBg: 'bg-cyan-500/10',
       title: isRTL ? 'مدارس تستخدم AI' : 'AI-Enabled Schools',
-      mainValue: commandCenterStats?.ai_enabled_schools || 0,
+      mainValue: commandCenterStats?.ai_enabled_schools ?? 0,
       delta: { value: 0, type: 'stable', period: isRTL ? 'مقارنة بالشهر الماضي' : 'vs last month' },
       health: 'normal',
-      sparklineData: generateSparklineData(commandCenterStats?.ai_enabled_schools || 0, 'stable'),
+      sparklineData: [],
       sparklineColor: '#06b6d4',
       secondaryData: [],
       navigateTo: '/admin/schools',
@@ -883,7 +872,7 @@ export const AdminDashboard = () => {
           <div className="flex items-end justify-between mb-2 lg:mb-3">
             <div>
               <p className="text-2xl lg:text-3xl font-bold">
-                {card.isPercentage ? card.mainValue : (card.mainValue?.toLocaleString() || 0)}
+                {card.isPercentage ? card.mainValue : (card.mainValue?.toLocaleString() ?? 0)}
               </p>
               {/* Delta Indicator */}
               <div className="flex items-center gap-1 lg:gap-1.5 mt-1">
