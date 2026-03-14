@@ -379,44 +379,114 @@ class TeacherManagementEngine:
     
     # ==================== Options/Lookups ====================
     
+    FULL_SUBJECTS = [
+        {"id": "subj-arabic", "name_ar": "لغتي / اللغة العربية", "name_en": "Arabic Language"},
+        {"id": "subj-math", "name_ar": "الرياضيات", "name_en": "Mathematics"},
+        {"id": "subj-science", "name_ar": "العلوم", "name_en": "Science"},
+        {"id": "subj-english", "name_ar": "اللغة الإنجليزية", "name_en": "English Language"},
+        {"id": "subj-islamic", "name_ar": "الدراسات الإسلامية", "name_en": "Islamic Studies"},
+        {"id": "subj-quran", "name_ar": "القرآن الكريم", "name_en": "Quran"},
+        {"id": "subj-tawheed", "name_ar": "التوحيد", "name_en": "Monotheism (Tawheed)"},
+        {"id": "subj-fiqh", "name_ar": "الفقه", "name_en": "Islamic Jurisprudence (Fiqh)"},
+        {"id": "subj-hadith", "name_ar": "الحديث والسيرة", "name_en": "Hadith & Seerah"},
+        {"id": "subj-tafseer", "name_ar": "التفسير", "name_en": "Quran Interpretation (Tafseer)"},
+        {"id": "subj-social", "name_ar": "الدراسات الاجتماعية", "name_en": "Social Studies"},
+        {"id": "subj-history", "name_ar": "التاريخ", "name_en": "History"},
+        {"id": "subj-geography", "name_ar": "الجغرافيا", "name_en": "Geography"},
+        {"id": "subj-physics", "name_ar": "الفيزياء", "name_en": "Physics"},
+        {"id": "subj-chemistry", "name_ar": "الكيمياء", "name_en": "Chemistry"},
+        {"id": "subj-biology", "name_ar": "الأحياء", "name_en": "Biology"},
+        {"id": "subj-computer", "name_ar": "الحاسب الآلي", "name_en": "Computer Science"},
+        {"id": "subj-digital", "name_ar": "المهارات الرقمية", "name_en": "Digital Skills"},
+        {"id": "subj-pe", "name_ar": "التربية البدنية والدفاع عن النفس", "name_en": "Physical Education"},
+        {"id": "subj-art", "name_ar": "التربية الفنية", "name_en": "Art Education"},
+        {"id": "subj-family", "name_ar": "التربية الأسرية", "name_en": "Family Education"},
+        {"id": "subj-skills", "name_ar": "المهارات الحياتية والأسرية", "name_en": "Life & Family Skills"},
+        {"id": "subj-vocational", "name_ar": "التربية المهنية", "name_en": "Vocational Education"},
+        {"id": "subj-critical", "name_ar": "التفكير الناقد", "name_en": "Critical Thinking"},
+        {"id": "subj-national", "name_ar": "الدراسات الوطنية", "name_en": "National Studies"},
+    ]
+
+    FULL_GRADES = [
+        {"id": "grade-1", "name_ar": "الصف الأول الابتدائي", "name_en": "Grade 1 (Primary)", "stage": "primary", "order": 1},
+        {"id": "grade-2", "name_ar": "الصف الثاني الابتدائي", "name_en": "Grade 2 (Primary)", "stage": "primary", "order": 2},
+        {"id": "grade-3", "name_ar": "الصف الثالث الابتدائي", "name_en": "Grade 3 (Primary)", "stage": "primary", "order": 3},
+        {"id": "grade-4", "name_ar": "الصف الرابع الابتدائي", "name_en": "Grade 4 (Primary)", "stage": "primary", "order": 4},
+        {"id": "grade-5", "name_ar": "الصف الخامس الابتدائي", "name_en": "Grade 5 (Primary)", "stage": "primary", "order": 5},
+        {"id": "grade-6", "name_ar": "الصف السادس الابتدائي", "name_en": "Grade 6 (Primary)", "stage": "primary", "order": 6},
+        {"id": "grade-7", "name_ar": "الصف الأول المتوسط", "name_en": "Grade 7 (Intermediate)", "stage": "intermediate", "order": 7},
+        {"id": "grade-8", "name_ar": "الصف الثاني المتوسط", "name_en": "Grade 8 (Intermediate)", "stage": "intermediate", "order": 8},
+        {"id": "grade-9", "name_ar": "الصف الثالث المتوسط", "name_en": "Grade 9 (Intermediate)", "stage": "intermediate", "order": 9},
+        {"id": "grade-10", "name_ar": "الصف الأول الثانوي", "name_en": "Grade 10 (Secondary)", "stage": "secondary", "order": 10},
+        {"id": "grade-11", "name_ar": "الصف الثاني الثانوي", "name_en": "Grade 11 (Secondary)", "stage": "secondary", "order": 11},
+        {"id": "grade-12", "name_ar": "الصف الثالث الثانوي", "name_en": "Grade 12 (Secondary)", "stage": "secondary", "order": 12},
+    ]
+
     async def get_subjects(self, tenant_id: str) -> List[Dict[str, Any]]:
-        """Get available subjects"""
-        subjects = await self.subjects_collection.find(
+        """Get available subjects - merges school-specific with full curriculum"""
+        school_subjects = await self.subjects_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
         ).to_list(100)
-        
-        if not subjects:
-            subjects = [
-                {"id": "math", "name_ar": "الرياضيات", "name_en": "Mathematics"},
-                {"id": "arabic", "name_ar": "اللغة العربية", "name_en": "Arabic Language"},
-                {"id": "english", "name_ar": "اللغة الإنجليزية", "name_en": "English Language"},
-                {"id": "science", "name_ar": "العلوم", "name_en": "Science"},
-                {"id": "social", "name_ar": "الدراسات الاجتماعية", "name_en": "Social Studies"},
-                {"id": "islamic", "name_ar": "التربية الإسلامية", "name_en": "Islamic Studies"},
-                {"id": "pe", "name_ar": "التربية البدنية", "name_en": "Physical Education"},
-                {"id": "art", "name_ar": "التربية الفنية", "name_en": "Art"},
-                {"id": "computer", "name_ar": "الحاسب الآلي", "name_en": "Computer Science"},
-            ]
-        return subjects
-    
+
+        official_subjects = await self.db.reference_subjects.find(
+            {"is_active": {"$ne": False}},
+            {"_id": 0}
+        ).to_list(100)
+
+        seen_ids = set()
+        merged = []
+        for s in school_subjects:
+            sid = s.get("id")
+            if sid and sid not in seen_ids:
+                seen_ids.add(sid)
+                merged.append(s)
+
+        for s in official_subjects:
+            sid = s.get("id")
+            if sid and sid not in seen_ids:
+                seen_ids.add(sid)
+                merged.append(s)
+
+        for s in self.FULL_SUBJECTS:
+            if s["id"] not in seen_ids:
+                seen_ids.add(s["id"])
+                merged.append(s)
+
+        return merged
+
     async def get_grades(self, tenant_id: str) -> List[Dict[str, Any]]:
-        """Get available grades"""
-        grades = await self.grades_collection.find(
+        """Get available grades - merges school-specific with full curriculum"""
+        school_grades = await self.grades_collection.find(
             {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0}
         ).to_list(100)
-        
-        if not grades:
-            grades = [
-                {"id": "grade_1", "name_ar": "الصف الأول", "name_en": "Grade 1"},
-                {"id": "grade_2", "name_ar": "الصف الثاني", "name_en": "Grade 2"},
-                {"id": "grade_3", "name_ar": "الصف الثالث", "name_en": "Grade 3"},
-                {"id": "grade_4", "name_ar": "الصف الرابع", "name_en": "Grade 4"},
-                {"id": "grade_5", "name_ar": "الصف الخامس", "name_en": "Grade 5"},
-                {"id": "grade_6", "name_ar": "الصف السادس", "name_en": "Grade 6"},
-            ]
-        return grades
+
+        official_grades = await self.db.academic_grades.find(
+            {"is_active": {"$ne": False}},
+            {"_id": 0}
+        ).to_list(100)
+
+        seen_ids = set()
+        merged = []
+        for g in school_grades:
+            gid = g.get("id")
+            if gid and gid not in seen_ids:
+                seen_ids.add(gid)
+                merged.append(g)
+
+        for g in official_grades:
+            gid = g.get("id")
+            if gid and gid not in seen_ids:
+                seen_ids.add(gid)
+                merged.append(g)
+
+        for g in self.FULL_GRADES:
+            if g["id"] not in seen_ids:
+                seen_ids.add(g["id"])
+                merged.append(g)
+
+        return merged
     
     async def get_academic_degrees(self) -> List[Dict[str, str]]:
         """Get list of academic degrees"""

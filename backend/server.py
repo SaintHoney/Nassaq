@@ -2896,9 +2896,11 @@ class SubjectResponse(BaseModel):
 # Teacher Wizard Options
 @api_router.get("/teachers/options/subjects")
 async def get_teacher_subjects_options(current_user: dict = Depends(get_current_user)):
-    """Get available subjects from reference database - unique subjects only"""
+    """Get available subjects - merges DB with full Saudi curriculum fallback"""
+    from engines.teacher_management_engine import TeacherManagementEngine
     
-    # Get subjects from reference_subjects collection first, then fallback to subjects
+    tenant_id = current_user.get("tenant_id", "")
+    
     subjects = await db.reference_subjects.find(
         {"is_active": True},
         {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1, "code": 1, "color": 1}
@@ -2906,24 +2908,36 @@ async def get_teacher_subjects_options(current_user: dict = Depends(get_current_
     
     if not subjects:
         subjects = await db.subjects.find(
-            {"is_active": True},
+            {"tenant_id": tenant_id, "is_active": {"$ne": False}},
             {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1, "code": 1, "color": 1}
         ).to_list(300)
     
-    # Remove duplicates by name_ar (keep first occurrence)
-    seen_names = set()
+    seen_ids = set()
     unique_subjects = []
     for s in subjects:
+        sid = s.get("id", "")
         name = s.get("name_ar", s.get("name", ""))
-        if name and name not in seen_names:
-            seen_names.add(name)
+        if name and sid not in seen_ids:
+            seen_ids.add(sid)
             unique_subjects.append({
-                "id": s.get("id"),
+                "id": sid,
                 "name": name,
                 "name_ar": name,
                 "name_en": s.get("name_en", ""),
                 "code": s.get("code", ""),
                 "color": s.get("color", "#3B82F6")
+            })
+    
+    for s in TeacherManagementEngine.FULL_SUBJECTS:
+        if s["id"] not in seen_ids:
+            seen_ids.add(s["id"])
+            unique_subjects.append({
+                "id": s["id"],
+                "name": s["name_ar"],
+                "name_ar": s["name_ar"],
+                "name_en": s.get("name_en", ""),
+                "code": "",
+                "color": "#3B82F6"
             })
     
     return {"subjects": unique_subjects}
@@ -3443,31 +3457,70 @@ async def get_school_constraints(
 
 @api_router.get("/teachers/options/grades")
 async def get_teacher_grades_options(current_user: dict = Depends(get_current_user)):
-    """Get available grade levels from reference database"""
+    """Get available grade levels - merges DB with full Saudi curriculum fallback"""
+    from engines.teacher_management_engine import TeacherManagementEngine
     
-    # Get grades from the reference academic_grades collection
+    tenant_id = current_user.get("tenant_id", "")
+    
     grades = await db.academic_grades.find(
         {"is_active": True},
         {"_id": 0}
     ).sort("order", 1).to_list(100)
     
-    # Get stages for grouping
     stages = await db.academic_stages.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(10)
     stages_map = {s["id"]: s for s in stages}
     
-    # Format for backward compatibility
+    seen_ids = set()
     formatted_grades = []
     for g in grades:
+        gid = g.get("id", "")
         stage = stages_map.get(g.get("stage_id"), {})
-        formatted_grades.append({
-            "id": g.get("id"),
-            "name": g.get("name_ar", ""),
-            "name_en": g.get("name_en", ""),
-            "grade": g.get("order", g.get("grade_level", 1)),
-            "stage": stage.get("name_ar", ""),
-            "stage_en": stage.get("name_en", ""),
-            "stage_id": g.get("stage_id")
-        })
+        if gid not in seen_ids:
+            seen_ids.add(gid)
+            formatted_grades.append({
+                "id": gid,
+                "name": g.get("name_ar", ""),
+                "name_ar": g.get("name_ar", ""),
+                "name_en": g.get("name_en", ""),
+                "grade": g.get("order", g.get("grade_level", 1)),
+                "stage": stage.get("name_ar", ""),
+                "stage_en": stage.get("name_en", ""),
+                "stage_id": g.get("stage_id")
+            })
+    
+    if not formatted_grades:
+        school_grades = await db.grades.find(
+            {"tenant_id": tenant_id, "is_active": {"$ne": False}},
+            {"_id": 0}
+        ).to_list(100)
+        for g in school_grades:
+            gid = g.get("id", "")
+            if gid and gid not in seen_ids:
+                seen_ids.add(gid)
+                formatted_grades.append({
+                    "id": gid,
+                    "name": g.get("name_ar", ""),
+                    "name_ar": g.get("name_ar", ""),
+                    "name_en": g.get("name_en", ""),
+                    "grade": g.get("order", 0),
+                    "stage": g.get("stage", ""),
+                    "stage_en": g.get("stage_en", ""),
+                    "stage_id": g.get("stage_id", "")
+                })
+    
+    for g in TeacherManagementEngine.FULL_GRADES:
+        if g["id"] not in seen_ids:
+            seen_ids.add(g["id"])
+            formatted_grades.append({
+                "id": g["id"],
+                "name": g["name_ar"],
+                "name_ar": g["name_ar"],
+                "name_en": g.get("name_en", ""),
+                "grade": g.get("order", 0),
+                "stage": g.get("stage", ""),
+                "stage_en": "",
+                "stage_id": ""
+            })
     
     return {"grades": formatted_grades}
 
