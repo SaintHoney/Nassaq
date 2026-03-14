@@ -408,13 +408,10 @@ class PostgresCollection:
         update_clause = self._build_update(update, params)
         if not update_clause:
             return UpdateResult(0, 0)
-        sql = f"UPDATE {self._table_name} SET {update_clause}{where_clause}"
-        sql_with_limit = sql
-        if where_clause:
-            sql_with_limit = (
-                f"UPDATE {self._table_name} SET {update_clause} "
-                f"WHERE _id = (SELECT _id FROM {self._table_name}{where_clause} LIMIT 1)"
-            )
+        sql_with_limit = (
+            f"UPDATE {self._table_name} SET {update_clause} "
+            f"WHERE _id = (SELECT _id FROM {self._table_name}{where_clause} LIMIT 1)"
+        )
         result = await self._db._execute(sql_with_limit, params)
         matched = int(result.split(" ")[-1]) if result else 0
         if matched == 0 and upsert:
