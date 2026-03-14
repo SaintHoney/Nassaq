@@ -78,14 +78,14 @@ const SCHOOL_STAGES = [
   { value: 'high', label: 'ثانوي', label_en: 'High School' },
 ];
 
-// Sparkline data generator for cards - Enhanced for clarity
 const generateSparklineData = (baseValue, trend) => {
   const data = [];
-  let value = baseValue * 0.85;
+  const base = Number(baseValue) || 0;
+  const offsets = trend === 'up' ? [0.85, 0.88, 0.90, 0.93, 0.95, 0.98, 1.0]
+    : trend === 'down' ? [1.0, 0.98, 0.96, 0.94, 0.92, 0.89, 0.87]
+    : [0.97, 0.99, 0.98, 1.0, 0.99, 0.98, 1.0];
   for (let i = 0; i < 7; i++) {
-    const change = trend === 'up' ? Math.random() * 0.05 + 0.01 : trend === 'down' ? -Math.random() * 0.03 - 0.01 : (Math.random() - 0.5) * 0.015;
-    value = value * (1 + change);
-    data.push({ day: i + 1, value: Math.round(value) });
+    data.push({ day: i + 1, value: Math.round(base * offsets[i]) });
   }
   return data;
 };
@@ -286,11 +286,11 @@ export const AdminDashboard = () => {
       const response = await api.get(url);
       setStats({
         ...response.data,
-        active_students: response.data.active_students || Math.floor(response.data.total_students * 0.97),
-        new_students_this_month: response.data.new_students_this_month || Math.floor(response.data.total_students * 0.024),
-        active_teachers: response.data.active_teachers || response.data.total_teachers - (response.data.teachers_without_rank || 0),
-        new_teachers_this_month: response.data.new_teachers_this_month || 85,
-        total_admins: response.data.total_admins || 245,
+        active_students: response.data.active_students || 0,
+        new_students_this_month: response.data.new_students_this_month || 0,
+        active_teachers: response.data.active_teachers || 0,
+        new_teachers_this_month: response.data.new_teachers_this_month || 0,
+        total_admins: response.data.total_admins || 0,
         active_users_today: response.data.active_users_today || response.data.active_users || 0,
         api_calls_today: response.data.api_calls_today || 0,
       });
@@ -389,15 +389,24 @@ export const AdminDashboard = () => {
     fetchActivityData();
   }, [fetchActivityData]);
 
-  // جلب إحصائيات مركز القيادة - Fetch Command Center Stats
   const fetchCommandCenterStats = useCallback(async () => {
     try {
-      const response = await api.get('/admin/command-center/stats');
+      const queryParams = new URLSearchParams();
+      if (filters.scope !== 'all') queryParams.append('scope', filters.scope);
+      if (filters.selectedSchool) queryParams.append('school_id', filters.selectedSchool);
+      if (filters.selectedSchools.length > 0) queryParams.append('school_ids', filters.selectedSchools.join(','));
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.region) queryParams.append('region', filters.region);
+      if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
+      if (filters.tenantStatus !== 'all') queryParams.append('status', filters.tenantStatus);
+      const queryString = queryParams.toString();
+      const url = `/admin/command-center/stats${queryString ? `?${queryString}` : ''}`;
+      const response = await api.get(url);
       setCommandCenterStats(response.data);
     } catch (error) {
       console.error('Error fetching command center stats:', error);
     }
-  }, [api]);
+  }, [api, filters]);
 
   // جلب إحصائيات الإشعارات
   const fetchNotificationStats = useCallback(async () => {
@@ -438,7 +447,7 @@ export const AdminDashboard = () => {
       const csvContent = [
         ['تقرير المؤشرات العامة للمنصة - NASSAQ Platform Report'],
         ['تاريخ التصدير', new Date().toLocaleDateString('ar-SA')],
-        ['التاريخ الهجري', getCurrentHijriDate().hijri],
+        ['التاريخ الهجري', getCurrentHijriDate().hijriFormatted],
         [''],
         ['المؤشر', 'القيمة'],
         ['إجمالي المدارس', data.stats.totalSchools],
@@ -485,7 +494,7 @@ export const AdminDashboard = () => {
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Export Date: ${new Date().toLocaleDateString('en-US')}`, 105, 45, { align: 'center' });
-        doc.text(`Hijri: ${getCurrentHijriDate().hijri}`, 105, 52, { align: 'center' });
+        doc.text(`Hijri: ${getCurrentHijriDate().hijriFormatted}`, 105, 52, { align: 'center' });
         
         // خط فاصل
         doc.setDrawColor(56, 178, 172); // brand-turquoise
@@ -964,8 +973,8 @@ export const AdminDashboard = () => {
               <h1 className="font-cairo text-lg font-bold text-foreground">
                 {isRTL ? 'مركز القيادة' : 'Command Center'}
               </h1>
-              <p className="text-xs text-muted-foreground">
-                {getCurrentHijriDate().hijri}
+              <p className="text-xs text-muted-foreground" dir="rtl">
+                {getCurrentHijriDate().hijriFormatted}
               </p>
             </div>
             
@@ -1077,8 +1086,8 @@ export const AdminDashboard = () => {
                   <div className="flex-1 flex items-center justify-center gap-2 bg-muted/30 px-3 py-2 rounded-xl" data-testid="date-display-mobile">
                     <Calendar className="h-4 w-4 text-brand-navy flex-shrink-0" />
                     <div className="text-center">
-                      <p className="font-cairo text-xs font-bold text-brand-navy">
-                        {getCurrentHijriDate().hijri}
+                      <p className="font-cairo text-xs font-bold text-brand-navy" dir="rtl">
+                        {getCurrentHijriDate().hijriFormatted}
                       </p>
                     </div>
                   </div>
@@ -1117,8 +1126,8 @@ export const AdminDashboard = () => {
                 <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl" data-testid="date-display">
                   <Calendar className="h-5 w-5 text-brand-navy" />
                   <div className="text-end">
-                    <p className="font-cairo text-lg font-bold text-brand-navy">
-                      {getCurrentHijriDate().hijri}
+                    <p className="font-cairo text-lg font-bold text-brand-navy" dir="rtl">
+                      {getCurrentHijriDate().hijriFormatted}
                     </p>
                     <p className="text-xs text-muted-foreground font-mono">
                       {getCurrentHijriDate().gregorian}
@@ -1142,8 +1151,8 @@ export const AdminDashboard = () => {
                 {/* التاريخ الهجري والميلادي */}
                 <div className="hidden md:flex items-center gap-2 bg-brand-navy/5 px-3 py-1.5 rounded-xl border border-brand-navy/10">
                   <Calendar className="h-4 w-4 text-brand-navy" />
-                  <span className="text-xs font-bold text-brand-navy">
-                    {commandCenterStats?.hijri_date || getCurrentHijriDate().hijri}
+                  <span className="text-xs font-bold text-brand-navy" dir="rtl">
+                    {commandCenterStats?.hijri_date || getCurrentHijriDate().hijriFormatted}
                   </span>
                   <span className="text-xs text-muted-foreground">|</span>
                   <span className="text-xs text-muted-foreground font-mono">
