@@ -4,7 +4,7 @@ import {
   School, Users, GraduationCap, BarChart3, CheckCircle, ArrowLeftRight,
   TrendingUp, BookOpen, Brain, Target, Bell, Settings, MapPin,
   Award, AlertTriangle, Activity, FileText, ChevronDown, ChevronUp,
-  UserCheck, ClipboardList
+  UserCheck, ClipboardList, MessageSquare, Send
 } from 'lucide-react';
 
 const TABS = [
@@ -18,6 +18,7 @@ const TABS = [
   { id: 'kpis', label: 'المؤشرات الاستراتيجية', icon: Target },
   { id: 'reports', label: 'التقارير', icon: FileText },
   { id: 'insights', label: 'رؤى ذكية', icon: Brain },
+  { id: 'communication', label: 'مركز التواصل', icon: MessageSquare },
   { id: 'notifications', label: 'الإشعارات', icon: Bell },
   { id: 'settings', label: 'الإعدادات', icon: Settings },
 ];
@@ -602,6 +603,57 @@ const MinistryDashboard = () => {
     </div>
   );
 
+  const renderCommunication = () => (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <h2 className="text-lg font-bold text-[#1C3D74] mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-[#46C1BE]" />
+          مركز التواصل
+        </h2>
+        <p className="text-sm text-slate-500 mb-6">التواصل المباشر مع إدارات المدارس والمسؤولين</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="p-4 border border-slate-200 rounded-xl hover:border-[#46C1BE] transition-colors">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#1C3D74] rounded-lg flex items-center justify-center">
+                <Send className="text-white w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#1C3D74]">تعميم لجميع المدارس</h3>
+                <p className="text-xs text-slate-500">إرسال رسالة لجميع مديري المدارس</p>
+              </div>
+            </div>
+            <button className="w-full py-2 bg-[#1C3D74] text-white text-sm rounded-lg hover:bg-[#162f5a] transition-colors opacity-60 cursor-not-allowed">
+              قريباً
+            </button>
+          </div>
+          <div className="p-4 border border-slate-200 rounded-xl hover:border-[#46C1BE] transition-colors">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#615090] rounded-lg flex items-center justify-center">
+                <MessageSquare className="text-white w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#1C3D74]">رسالة لمدرسة محددة</h3>
+                <p className="text-xs text-slate-500">تواصل مباشر مع إدارة مدرسة</p>
+              </div>
+            </div>
+            <button className="w-full py-2 bg-[#615090] text-white text-sm rounded-lg hover:bg-[#4e4073] transition-colors opacity-60 cursor-not-allowed">
+              قريباً
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            سجل المراسلات
+          </h3>
+          <p className="text-sm text-blue-600">سيتم عرض سجل المراسلات السابقة مع المدارس هنا عند تفعيل خدمة التواصل</p>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderNotifications = () => (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
       <h2 className="text-lg font-bold text-[#1C3D74] mb-4 flex items-center gap-2">
@@ -671,6 +723,7 @@ const MinistryDashboard = () => {
     kpis: renderKpis,
     reports: renderReports,
     insights: renderInsights,
+    communication: renderCommunication,
     notifications: renderNotifications,
     settings: renderSettings,
   };

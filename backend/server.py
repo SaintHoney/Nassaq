@@ -1418,8 +1418,7 @@ async def get_dashboard_stats(
     - status: 'all', 'active', 'suspended', 'setup', 'expired'
     """
     
-    if current_user["role"] == UserRole.PLATFORM_ADMIN.value:
-        # Build school filter query
+    if current_user["role"] in (UserRole.PLATFORM_ADMIN.value, UserRole.MINISTRY_REP.value):
         school_filter = {}
         student_filter = {}
         teacher_filter = {}
