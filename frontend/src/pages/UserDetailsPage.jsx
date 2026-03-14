@@ -297,12 +297,12 @@ export default function UserDetailsPage() {
   // Handle suspend toggle
   const handleSuspendToggle = async () => {
     try {
-      await api.patch(`/api/users/${userId}/status`, { is_active: !user.is_active });
+      await api.put(`/api/users/${userId}/status`, null, { params: { is_active: !user.is_active } });
       setUser(prev => ({ ...prev, is_active: !prev.is_active }));
       toast.success(user.is_active ? 'تم تعليق الحساب بنجاح' : 'تم تفعيل الحساب بنجاح');
     } catch (error) {
-      setUser(prev => ({ ...prev, is_active: !prev.is_active }));
-      toast.success(user.is_active ? 'تم تعليق الحساب بنجاح' : 'تم تفعيل الحساب بنجاح');
+      console.error('Error updating user status:', error);
+      toast.error(isRTL ? 'فشل في تحديث حالة الحساب' : 'Failed to update account status');
     }
     setShowSuspendDialog(false);
   };
@@ -314,8 +314,8 @@ export default function UserDetailsPage() {
       toast.success('تم أرشفة الحساب بنجاح');
       navigate('/admin/users');
     } catch (error) {
-      toast.success('تم أرشفة الحساب بنجاح');
-      navigate('/admin/users');
+      console.error('Error deleting user:', error);
+      toast.error(isRTL ? 'فشل في أرشفة الحساب' : 'Failed to archive account');
     }
   };
   
@@ -371,8 +371,8 @@ ${API_URL}/login
       setUser(prev => ({ ...prev, ...editForm }));
       toast.success('تم تحديث البيانات بنجاح');
     } catch (error) {
-      setUser(prev => ({ ...prev, ...editForm }));
-      toast.success('تم تحديث البيانات بنجاح');
+      console.error('Error updating user:', error);
+      toast.error(isRTL ? 'فشل في تحديث البيانات' : 'Failed to update user data');
     }
     setShowEditSheet(false);
   };
@@ -384,8 +384,8 @@ ${API_URL}/login
       setUser(prev => ({ ...prev, permissions: userPermissions }));
       toast.success('تم تحديث الصلاحيات بنجاح');
     } catch (error) {
-      setUser(prev => ({ ...prev, permissions: userPermissions }));
-      toast.success('تم تحديث الصلاحيات بنجاح');
+      console.error('Error updating permissions:', error);
+      toast.error(isRTL ? 'فشل في تحديث الصلاحيات' : 'Failed to update permissions');
     }
     setShowPermissionsSheet(false);
   };

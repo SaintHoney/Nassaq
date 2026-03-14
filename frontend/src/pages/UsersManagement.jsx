@@ -202,6 +202,8 @@ export default function UsersManagement() {
         filtered = filtered.filter(u => {
           if (selectedStatus === 'active') return u.is_active !== false;
           if (selectedStatus === 'suspended') return u.is_active === false;
+          if (selectedStatus === 'pending') return u.status === 'pending' || u.is_pending === true;
+          if (selectedStatus === 'archived') return u.status === 'archived' || u.is_archived === true;
           return true;
         });
       }
@@ -418,12 +420,12 @@ export default function UsersManagement() {
   
   const handleSuspendUser = async (user) => {
     try {
-      await api.patch(`/api/users/${user.id}/status`, { is_active: !user.is_active });
+      await api.put(`/api/users/${user.id}/status`, null, { params: { is_active: !user.is_active } });
       toast.success(user.is_active ? 'تم تعليق الحساب بنجاح' : 'تم تفعيل الحساب بنجاح');
       fetchUsers();
     } catch (error) {
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
-      toast.success(user.is_active ? 'تم تعليق الحساب بنجاح' : 'تم تفعيل الحساب بنجاح');
+      console.error('Error updating user status:', error);
+      toast.error(isRTL ? 'فشل في تحديث حالة الحساب' : 'Failed to update account status');
     }
     setShowSuspendConfirm(null);
   };
@@ -434,8 +436,8 @@ export default function UsersManagement() {
       toast.success('تم أرشفة الحساب بنجاح');
       fetchUsers();
     } catch (error) {
-      setUsers(prev => prev.filter(u => u.id !== user.id));
-      toast.success('تم أرشفة الحساب بنجاح');
+      console.error('Error deleting user:', error);
+      toast.error(isRTL ? 'فشل في أرشفة الحساب' : 'Failed to archive account');
     }
     setShowDeleteConfirm(null);
   };
