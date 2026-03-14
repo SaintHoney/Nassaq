@@ -3,7 +3,7 @@ User Roles Routes - مسارات أدوار المستخدمين
 APIs for user role switching and multi-role management
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -281,6 +281,72 @@ def setup_user_roles_routes(db, get_current_user, require_roles, UserRole, creat
             }
         except Exception as e:
             return {"history": []}
+    
+    @router.post("/impersonate")
+    async def impersonate_user(
+        request: Request,
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        """انتحال صفة مستخدم آخر (مدير المنصة فقط)"""
+        try:
+            body = await request.json()
+            target_user_id = body.get("target_user_id")
+            
+            if not target_user_id:
+                raise HTTPException(status_code=400, detail="يرجى تحديد المستخدم المراد الدخول بحسابه")
+            
+            target_user = await db.users.find_one({"id": target_user_id})
+            if not target_user:
+                raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+            
+            impersonator_id = current_user.get("id")
+            
+            token_data = {
+                "sub": target_user_id,
+                "role": target_user.get("role"),
+                "tenant_id": target_user.get("tenant_id"),
+                "is_impersonation": True,
+                "impersonator_id": impersonator_id,
+                "is_switched": True,
+                "original_user_id": impersonator_id,
+            }
+            
+            new_token = create_access_token(token_data)
+            
+            await db.audit_logs.insert_one({
+                "id": str(uuid.uuid4()),
+                "action": "user_impersonated",
+                "user_id": target_user_id,
+                "performed_by": impersonator_id,
+                "performed_by_name": current_user.get("full_name"),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "details": {
+                    "impersonator_id": impersonator_id,
+                    "impersonator_name": current_user.get("full_name"),
+                    "target_user_id": target_user_id,
+                    "target_user_name": target_user.get("full_name", target_user.get("name")),
+                    "target_role": target_user.get("role"),
+                }
+            })
+            
+            return {
+                "success": True,
+                "access_token": new_token,
+                "token_type": "bearer",
+                "role": target_user.get("role"),
+                "tenant_id": target_user.get("tenant_id"),
+                "user": {
+                    "id": target_user_id,
+                    "full_name": target_user.get("full_name", target_user.get("name")),
+                    "email": target_user.get("email"),
+                    "role": target_user.get("role"),
+                },
+                "message": f"تم الدخول كـ {target_user.get('full_name', target_user.get('name', ''))}"
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
     
     return router
 

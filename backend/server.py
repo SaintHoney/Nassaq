@@ -133,6 +133,7 @@ class UserRole(str, Enum):
     PARENT = "parent"
     DRIVER = "driver"
     GATEKEEPER = "gatekeeper"
+    PLATFORM_SUB_ADMIN = "platform_sub_admin"
     TESTING_ACCOUNT = "testing_account"
 
 class SchoolStatus(str, Enum):
@@ -364,6 +365,20 @@ async def get_current_user(
             user["id"] = str(user.get("_id", ""))
         if "_id" in user:
             del user["_id"]
+        
+        # Honor switched role/tenant from JWT (impersonation or role switching)
+        if payload.get("is_switched"):
+            user["_original_role"] = user.get("role")
+            user["_original_user_id"] = payload.get("original_user_id") or user.get("id")
+            if payload.get("role"):
+                user["role"] = payload["role"]
+            if payload.get("tenant_id"):
+                user["tenant_id"] = payload["tenant_id"]
+            user["is_impersonating"] = True
+        
+        if payload.get("is_impersonation"):
+            user["is_impersonating"] = True
+            user["_impersonator_id"] = payload.get("impersonator_id")
         
         # Add teacher_id if user is a teacher
         if user.get("role") == UserRole.TEACHER.value and not user.get("teacher_id"):
@@ -1394,7 +1409,17 @@ async def get_users(
         query["role"] = role
     
     users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
-    return [UserResponse(**u) for u in users]
+    result = []
+    for u in users:
+        try:
+            result.append(UserResponse(**u))
+        except Exception:
+            u["role"] = "testing_account"
+            try:
+                result.append(UserResponse(**u))
+            except Exception:
+                pass
+    return result
 
 @api_router.put("/users/{user_id}/status")
 async def update_user_status(

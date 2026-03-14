@@ -836,38 +836,50 @@ export const PlatformSettingsPage = () => {
     }
   };
   
-  // Fetch switchable roles for switch user dialog
+  const roleLabels = {
+    platform_admin: isRTL ? 'مدير المنصة' : 'Platform Admin',
+    school_principal: isRTL ? 'مدير المدرسة' : 'School Principal',
+    school_sub_admin: isRTL ? 'نائب المدير' : 'Sub Admin',
+    teacher: isRTL ? 'معلم' : 'Teacher',
+    student: isRTL ? 'طالب' : 'Student',
+    parent: isRTL ? 'ولي أمر' : 'Parent',
+    driver: isRTL ? 'سائق' : 'Driver',
+    gatekeeper: isRTL ? 'حارس بوابة' : 'Gatekeeper',
+    ministry_rep: isRTL ? 'ممثل وزارة' : 'Ministry Rep',
+  };
+  
+  const rolePaths = {
+    platform_admin: '/admin',
+    school_principal: '/principal',
+    teacher: '/teacher',
+    student: '/student',
+    parent: '/parent',
+    driver: '/driver',
+    gatekeeper: '/gatekeeper',
+    ministry_rep: '/ministry',
+  };
+
+  // Fetch users for impersonation dialog (platform admin only)
   const handleOpenSwitchUserDialog = async () => {
     setShowSwitchUserDialog(true);
     try {
-      const response = await api.get('/user-roles/my-roles');
-      const roles = response.data?.available_roles || response.data?.roles || [];
-      const roleLabels = {
-        platform_admin: isRTL ? 'مدير المنصة' : 'Platform Admin',
-        school_principal: isRTL ? 'مدير المدرسة' : 'School Principal',
-        school_sub_admin: isRTL ? 'نائب المدير' : 'Sub Admin',
-        teacher: isRTL ? 'معلم' : 'Teacher',
-        student: isRTL ? 'طالب' : 'Student',
-        parent: isRTL ? 'ولي أمر' : 'Parent',
-        driver: isRTL ? 'سائق' : 'Driver',
-        gatekeeper: isRTL ? 'حارس بوابة' : 'Gatekeeper',
-        ministry_rep: isRTL ? 'ممثل وزارة' : 'Ministry Rep',
-      };
-      const switchOptions = roles
-        .filter(r => !r.is_current)
-        .map(r => ({
-          id: `${r.role}__${r.tenant_id || 'default'}`,
-          label: `${roleLabels[r.role] || r.role_name_ar || r.role}${r.tenant_name ? ' - ' + r.tenant_name : ''}`,
-          role: r.role,
-          tenant_id: r.tenant_id
+      const response = await api.get('/users?limit=50');
+      const users = Array.isArray(response.data) ? response.data : (response.data?.users || []);
+      const options = users
+        .filter(u => u.id !== user?.id)
+        .map(u => ({
+          id: u.id,
+          label: `${u.full_name || u.name || u.email} (${roleLabels[u.role] || u.role})`,
+          role: u.role,
+          tenant_id: u.tenant_id
         }));
-      setSwitchableUsers(switchOptions);
+      setSwitchableUsers(options);
     } catch {
       setSwitchableUsers([]);
     }
   };
   
-  // Execute switch user
+  // Execute user impersonation
   const handleSwitchUser = async () => {
     if (!selectedSwitchUser) {
       toast.error(isRTL ? 'يرجى اختيار المستخدم' : 'Please select a user');
@@ -875,32 +887,22 @@ export const PlatformSettingsPage = () => {
     }
     try {
       const selected = switchableUsers.find(u => u.id === selectedSwitchUser);
-      if (selected) {
-        const response = await api.post('/user-roles/switch', {
-          target_role: selected.role,
-          target_tenant_id: selected.tenant_id
-        });
-        if (response.data?.access_token) {
-          await updateToken(response.data.access_token);
-          setShowSwitchUserDialog(false);
-          setSelectedSwitchUser('');
-          toast.success(isRTL ? `تم التبديل إلى ${selected.label}` : `Switched to ${selected.label}`);
-          const rolePaths = {
-            platform_admin: '/admin',
-            school_principal: '/principal',
-            teacher: '/teacher',
-            student: '/student',
-            parent: '/parent',
-            driver: '/driver',
-            gatekeeper: '/gatekeeper',
-            ministry_rep: '/ministry',
-          };
-          navigate(rolePaths[response.data.role] || '/admin');
-        }
+      if (!selected) return;
+      
+      const response = await api.post('/user-roles/impersonate', {
+        target_user_id: selected.id
+      });
+      
+      if (response.data?.access_token) {
+        await updateToken(response.data.access_token);
+        setShowSwitchUserDialog(false);
+        setSelectedSwitchUser('');
+        toast.success(isRTL ? `تم الدخول كـ ${selected.label}` : `Now viewing as ${selected.label}`);
+        navigate(rolePaths[response.data.role] || '/admin');
       }
     } catch (error) {
-      console.error('Switch user error:', error);
-      toast.error(isRTL ? 'فشل تبديل المستخدم' : 'Failed to switch user');
+      console.error('Impersonation error:', error);
+      toast.error(isRTL ? 'فشل الدخول بحساب المستخدم' : 'Failed to impersonate user');
     }
   };
   
