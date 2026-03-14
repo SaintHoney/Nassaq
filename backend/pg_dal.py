@@ -525,8 +525,8 @@ class PostgresCollection:
                 )
                 try:
                     await self._db._execute(sql)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Failed to create index {idx_name}: {e}")
         elif isinstance(keys, str):
             field_name = _sanitize_field(keys)
             idx_name = f"idx_{self._table_name}_{field_name}"
@@ -536,8 +536,8 @@ class PostgresCollection:
             )
             try:
                 await self._db._execute(sql)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to create index {idx_name}: {e}")
 
     async def aggregate(self, pipeline: list) -> list:
         await self._ensure_table()
