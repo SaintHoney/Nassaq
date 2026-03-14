@@ -53,9 +53,17 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL')
+if not mongo_url:
+    raise RuntimeError("MONGO_URL environment variable is not set. Set it in Replit Secrets or backend/.env")
+
+if "mongodb+srv://" in mongo_url or ".mongodb.net" in mongo_url:
+    logging.info("Connecting to cloud MongoDB (Atlas)...")
+else:
+    logging.info("Connecting to local MongoDB...")
+
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ.get('DB_NAME', 'nassaq_db')]
 
 # Initialize Audit Engine
 audit_engine = AuditLogEngine(db)
