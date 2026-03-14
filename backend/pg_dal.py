@@ -259,46 +259,48 @@ class PostgresCollection:
                     conditions.append("NOT (" + " AND ".join(neg_conds) + ")")
 
     def _build_update(self, update: dict, params: list) -> str:
-        parts = []
+        expr = "data"
+        D = "data"
+
         for op, fields in update.items():
             if op == "$set":
                 serialized = _deep_serialize(fields)
                 params.append(json.dumps(serialized))
-                parts.append(f"data = data || ${len(params)}::jsonb")
+                expr = f"({expr} || ${len(params)}::jsonb)"
             elif op == "$unset":
                 for field_name in fields:
-                    parts.append(f"data = data - '{field_name}'")
+                    expr = f"({expr} - '{field_name}')"
             elif op == "$inc":
                 for field_name, inc_val in fields.items():
-                    parts.append(
-                        f"data = jsonb_set(data, '{{{field_name}}}', "
-                        f"to_jsonb(COALESCE((data->>'{field_name}')::float, 0) + {float(inc_val)}))"
+                    expr = (
+                        f"jsonb_set({expr}, '{{{field_name}}}', "
+                        f"to_jsonb(COALESCE(({expr}->>'{field_name}')::float, 0) + {float(inc_val)}))"
                     )
             elif op == "$push":
                 for field_name, push_val in fields.items():
                     if isinstance(push_val, dict) and "$each" in push_val:
                         serialized = json.dumps(_deep_serialize(push_val["$each"]))
                         params.append(serialized)
-                        parts.append(
-                            f"data = jsonb_set(data, '{{{field_name}}}', "
-                            f"COALESCE(data->'{field_name}', '[]'::jsonb) || ${len(params)}::jsonb)"
+                        expr = (
+                            f"jsonb_set({expr}, '{{{field_name}}}', "
+                            f"COALESCE({expr}->'{field_name}', '[]'::jsonb) || ${len(params)}::jsonb)"
                         )
                     else:
                         serialized = json.dumps(_deep_serialize(push_val))
                         params.append(serialized)
-                        parts.append(
-                            f"data = jsonb_set(data, '{{{field_name}}}', "
-                            f"COALESCE(data->'{field_name}', '[]'::jsonb) || "
+                        expr = (
+                            f"jsonb_set({expr}, '{{{field_name}}}', "
+                            f"COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
                             f"jsonb_build_array(${len(params)}::jsonb))"
                         )
             elif op == "$pull":
                 for field_name, pull_val in fields.items():
                     serialized = json.dumps(_deep_serialize(pull_val))
                     params.append(serialized)
-                    parts.append(
-                        f"data = jsonb_set(data, '{{{field_name}}}', "
+                    expr = (
+                        f"jsonb_set({expr}, '{{{field_name}}}', "
                         f"(SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb) "
-                        f"FROM jsonb_array_elements(COALESCE(data->'{field_name}', '[]'::jsonb)) elem "
+                        f"FROM jsonb_array_elements(COALESCE({expr}->'{field_name}', '[]'::jsonb)) elem "
                         f"WHERE elem != ${len(params)}::jsonb))"
                     )
             elif op == "$addToSet":
@@ -307,26 +309,29 @@ class PostgresCollection:
                         for item in add_val["$each"]:
                             serialized = json.dumps(_deep_serialize(item))
                             params.append(serialized)
-                            parts.append(
-                                f"data = jsonb_set(data, '{{{field_name}}}', "
-                                f"CASE WHEN COALESCE(data->'{field_name}', '[]'::jsonb) @> "
+                            expr = (
+                                f"jsonb_set({expr}, '{{{field_name}}}', "
+                                f"CASE WHEN COALESCE({expr}->'{field_name}', '[]'::jsonb) @> "
                                 f"jsonb_build_array(${len(params)}::jsonb) "
-                                f"THEN data->'{field_name}' "
-                                f"ELSE COALESCE(data->'{field_name}', '[]'::jsonb) || "
+                                f"THEN {expr}->'{field_name}' "
+                                f"ELSE COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
                                 f"jsonb_build_array(${len(params)}::jsonb) END)"
                             )
                     else:
                         serialized = json.dumps(_deep_serialize(add_val))
                         params.append(serialized)
-                        parts.append(
-                            f"data = jsonb_set(data, '{{{field_name}}}', "
-                            f"CASE WHEN COALESCE(data->'{field_name}', '[]'::jsonb) @> "
+                        expr = (
+                            f"jsonb_set({expr}, '{{{field_name}}}', "
+                            f"CASE WHEN COALESCE({expr}->'{field_name}', '[]'::jsonb) @> "
                             f"jsonb_build_array(${len(params)}::jsonb) "
-                            f"THEN data->'{field_name}' "
-                            f"ELSE COALESCE(data->'{field_name}', '[]'::jsonb) || "
+                            f"THEN {expr}->'{field_name}' "
+                            f"ELSE COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
                             f"jsonb_build_array(${len(params)}::jsonb) END)"
                         )
-        return ", ".join(parts)
+
+        if expr == D:
+            return ""
+        return f"data = {expr}"
 
     async def find_one(self, filter_query: Optional[dict] = None,
                        projection: Optional[dict] = None) -> Optional[dict]:
