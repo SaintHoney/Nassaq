@@ -1531,7 +1531,10 @@ async def get_dashboard_stats(
         # Other counts
         total_classes = await db.classes.count_documents({} if not filtered_school_ids else {"school_id": {"$in": filtered_school_ids}})
         total_subjects = await db.subjects.count_documents({} if not filtered_school_ids else {"school_id": {"$in": filtered_school_ids}})
-        pending_requests = await db.registration_requests.count_documents({"status": "pending"})
+        pending_req_filter = {"status": "pending"}
+        if filtered_school_ids:
+            pending_req_filter["school_id"] = {"$in": filtered_school_ids}
+        pending_requests = await db.registration_requests.count_documents(pending_req_filter)
         
         # Additional stats with time filter
         teachers_without_classes = await db.teachers.count_documents({**teacher_filter, "assigned_classes": {"$size": 0}})
