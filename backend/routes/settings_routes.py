@@ -495,7 +495,7 @@ def setup_settings_routes(db, get_current_user, require_roles, UserRole):
             # Update user profile
             await db.users.update_one(
                 {"id": current_user.get("id")},
-                {"$set": {"profile_picture": data_url}}
+                {"$set": {"profile_picture": data_url, "avatar_url": data_url}}
             )
             
             return {"success": True, "profile_picture": data_url}
