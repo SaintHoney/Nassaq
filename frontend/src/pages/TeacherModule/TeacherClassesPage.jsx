@@ -44,7 +44,6 @@ export default function TeacherClassesPage() {
         const classesRes = await api.get('/classes');
         const myClasses = (classesRes.data || []).filter(c => classIds.includes(c.id));
         
-        // Enrich with assignment data
         const enrichedClasses = myClasses.map(cls => {
           const classAssignments = myAssignments.filter(a => a.class_id === cls.id);
           return {
@@ -52,8 +51,8 @@ export default function TeacherClassesPage() {
             subjects: classAssignments.map(a => a.subject_name || 'مادة'),
             weekly_periods: classAssignments.reduce((sum, a) => sum + (a.weekly_periods || 0), 0),
             student_count: cls.student_count || cls.students_count || 0,
-            progress: Math.floor(Math.random() * 40) + 60, // Placeholder
-            attendance_rate: Math.floor(Math.random() * 15) + 85 // Placeholder
+            progress: 0,
+            attendance_rate: 0
           };
         });
         

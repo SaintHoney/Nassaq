@@ -87,29 +87,6 @@ export default function TeacherMainDashboard() {
           message: a.message,
           time: a.time ? new Date(a.time).toLocaleDateString('ar-SA') : 'مؤخراً'
         })) || []);
-      } else {
-        // Fallback data
-        setStats({
-          myClasses: 5,
-          myStudents: 125,
-          todayLessons: 4,
-          pendingAttendance: 2,
-          pendingAssessments: 3,
-          totalSessions: 25,
-          subjectsCount: 3,
-          upcomingLessons: [
-            { time: '08:00', period: 1, subject: 'الرياضيات', class: 'الصف الأول أ' },
-            { time: '09:00', period: 2, subject: 'العلوم', class: 'الصف الثاني ب' },
-            { time: '10:30', period: 3, subject: 'اللغة العربية', class: 'الصف الأول ب' },
-            { time: '11:30', period: 4, subject: 'الرياضيات', class: 'الصف الثالث أ' },
-          ]
-        });
-
-        setRecentActivities([
-          { type: 'attendance', message: 'تم تسجيل حضور الصف الأول أ', time: 'منذ ساعة' },
-          { type: 'assessment', message: 'تم إضافة تقييم جديد للرياضيات', time: 'منذ 3 ساعات' },
-          { type: 'notification', message: 'اجتماع أولياء الأمور غداً', time: 'أمس' },
-        ]);
       }
 
     } catch (error) {

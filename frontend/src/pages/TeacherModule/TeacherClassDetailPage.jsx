@@ -52,14 +52,13 @@ export default function TeacherClassDetailPage() {
       const presentCount = attendanceRecords.filter(a => a.status === 'present').length;
       const attendanceRate = attendanceRecords.length > 0 
         ? (presentCount / attendanceRecords.length * 100) 
-        : 90;
+        : 0;
 
-      // Enrich students with stats
       const enrichedStudents = studentsList.map(student => ({
         ...student,
-        attendance_rate: Math.floor(Math.random() * 15 + 85),
-        average_grade: Math.floor(Math.random() * 30 + 60),
-        behavior_points: Math.floor(Math.random() * 50 - 10)
+        attendance_rate: student.attendance_rate || 0,
+        average_grade: student.average_grade || 0,
+        behavior_points: student.behavior_points || 0
       }));
 
       setClassData({
@@ -68,8 +67,8 @@ export default function TeacherClassDetailPage() {
         name: classRes?.data?.name || `الفصل`,
         student_count: studentsList.length,
         attendance_rate: Math.round(attendanceRate),
-        average_grade: 75 + Math.random() * 15,
-        curriculum_progress: 60 + Math.random() * 30
+        average_grade: 0,
+        curriculum_progress: 0
       });
       
       setStudents(enrichedStudents);

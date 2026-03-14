@@ -14173,6 +14173,13 @@ async def get_teacher_dashboard(
     - الحصص اليومية
     - الإحصائيات
     """
+    caller_role = current_user.get("role", "")
+    caller_id = current_user.get("id", "")
+    caller_teacher_id = current_user.get("teacher_id", "")
+    privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
+    if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
+    
     # First try to find in teachers collection by id
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
     
@@ -16172,6 +16179,13 @@ async def get_teacher_classes(
     Get all classes assigned to a teacher
     جلب جميع الفصول المسندة للمعلم
     """
+    caller_role = current_user.get("role", "")
+    caller_id = current_user.get("id", "")
+    caller_teacher_id = current_user.get("teacher_id", "")
+    privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
+    if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
+    
     # Get teacher assignments
     assignments = await db.teacher_assignments.find({
         "teacher_id": teacher_id,
@@ -16225,6 +16239,13 @@ async def get_teacher_schedule(
     Get teacher's schedule
     جلب جدول المعلم
     """
+    caller_role = current_user.get("role", "")
+    caller_id = current_user.get("id", "")
+    caller_teacher_id = current_user.get("teacher_id", "")
+    privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
+    if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
+    
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "school_id": 1})
     if not teacher:
         return []
