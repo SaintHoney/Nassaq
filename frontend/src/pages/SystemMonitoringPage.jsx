@@ -323,15 +323,19 @@ export const SystemMonitoringPage = () => {
       
       if (healthRes.status === 'fulfilled' && healthRes.value.data) {
         const h = healthRes.value.data;
-        setMetrics(prev => ({
-          ...prev,
-          cpu: h.cpu ?? prev.cpu,
-          memory: h.memory ?? prev.memory,
-          disk: h.disk ?? prev.disk,
-          network: h.network ?? prev.network,
-          activeUsers: h.active_users ?? prev.activeUsers,
-          errors: h.errors_today ?? prev.errors,
-        }));
+        if (h.status === 'unavailable') {
+          toast.error(isRTL ? 'تعذر الحصول على بيانات صحة النظام' : 'System health data unavailable');
+        } else {
+          setMetrics(prev => ({
+            ...prev,
+            cpu: h.cpu ?? prev.cpu,
+            memory: h.memory ?? prev.memory,
+            disk: h.disk ?? prev.disk,
+            network: h.network ?? prev.network,
+            activeUsers: h.active_users ?? prev.activeUsers,
+            errors: h.errors_today ?? prev.errors,
+          }));
+        }
       }
       if (errorsRes.status === 'fulfilled') setErrorLogs(errorsRes.value.data || []);
       if (jobsRes.status === 'fulfilled') setJobs(jobsRes.value.data || []);

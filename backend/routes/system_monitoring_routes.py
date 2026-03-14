@@ -55,16 +55,17 @@ def setup_system_monitoring_routes(db, get_current_user, require_roles, UserRole
             }
         except Exception as e:
             return {
-                "status": "healthy",
-                "cpu": 45,
-                "memory": 62,
-                "disk": 38,
-                "network": 22,
+                "status": "unavailable",
+                "cpu": None,
+                "memory": None,
+                "disk": None,
+                "network": None,
                 "db_connections": 0,
                 "active_users": 0,
                 "total_schools": 0,
                 "errors_today": 0,
                 "uptime_seconds": 0,
+                "error": str(e),
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
