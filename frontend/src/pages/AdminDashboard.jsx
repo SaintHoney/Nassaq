@@ -252,11 +252,13 @@ export const AdminDashboard = () => {
       'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
     ];
     
+    const toArabicNumerals = (str) => String(str).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+
     return {
       hijri: `${hijri.year}/${String(hijri.month).padStart(2, '0')}/${String(hijri.day).padStart(2, '0')} هـ`,
-      hijriFormatted: `${hijri.day} ${hijriMonthNames[hijri.month]} ${hijri.year} هـ`,
+      hijriFormatted: `${toArabicNumerals(hijri.day)} ${hijriMonthNames[hijri.month]} ${toArabicNumerals(hijri.year)} هـ`,
       gregorian: today.toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/'),
-      gregorianFormatted: today.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }) // DD/MM/YYYY
+      gregorianFormatted: today.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' })
     };
   }, []);
 
@@ -323,8 +325,15 @@ export const AdminDashboard = () => {
   // Fetch Daily Activity Data - جلب بيانات النشاط اليومي
   const fetchActivityData = useCallback(async () => {
     try {
-      // جلب بيانات الرسم البياني
-      const chartResponse = await api.get(`/activity/daily?period=${activityPeriod}&view_by=${activityViewBy}`);
+      const queryParams = new URLSearchParams();
+      queryParams.append('period', activityPeriod);
+      queryParams.append('view_by', activityViewBy);
+      if (filters.school) queryParams.append('school_id', filters.school);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.region) queryParams.append('region', filters.region);
+      if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
+
+      const chartResponse = await api.get(`/activity/daily?${queryParams.toString()}`);
       let chartData = chartResponse.data?.chart_data;
       
       // تحويل البيانات حسب نوع العرض لضمان التوافق مع الرسم البياني
@@ -371,7 +380,7 @@ export const AdminDashboard = () => {
         users: { count: 0, change: 0, status: 'normal' }
       });
     }
-  }, [api, activityPeriod, activityViewBy]);
+  }, [api, activityPeriod, activityViewBy, filters]);
 
   // تحميل قائمة المدارس عند التحميل الأول
   useEffect(() => {

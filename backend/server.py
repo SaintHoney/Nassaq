@@ -11027,7 +11027,10 @@ async def get_daily_activity(
     current_user: dict = Depends(get_current_user),
     period: str = "today",
     view_by: str = "hour",
-    school_id: Optional[str] = None
+    school_id: Optional[str] = None,
+    city: Optional[str] = None,
+    region: Optional[str] = None,
+    school_type: Optional[str] = None
 ):
     """Get daily platform activity data for charts"""
     now = datetime.now(timezone.utc)
@@ -11044,9 +11047,23 @@ async def get_daily_activity(
     else:
         start_date = today
     
+    allowed_school_ids = None
+    if city or region or school_type:
+        school_filter = {}
+        if city:
+            school_filter["city"] = city
+        if region:
+            school_filter["region"] = region
+        if school_type:
+            school_filter["type"] = school_type
+        filtered_schools = await db.schools.find(school_filter, {"_id": 0, "id": 1}).to_list(1000)
+        allowed_school_ids = [s["id"] for s in filtered_schools]
+    
     query = {"timestamp": {"$gte": start_date.isoformat()}}
     if school_id:
         query["school_id"] = school_id
+    elif allowed_school_ids is not None:
+        query["school_id"] = {"$in": allowed_school_ids}
     
     logs = await db.activity_logs.find(query, {"_id": 0}).to_list(10000)
     
@@ -11081,24 +11098,6 @@ async def get_daily_activity(
                 "grades": hourly_data[hour]["grades"],
                 "users": hourly_data[hour]["user_activity"]
             })
-        
-        # إذا كانت البيانات فارغة، نُرجع بيانات تجريبية توضيحية
-        total_activity = sum(d["lessons"] + d["attendance"] + d["grades"] + d["users"] for d in chart_data)
-        if total_activity == 0:
-            import random
-            chart_data = []
-            base_lessons = [5, 25, 38, 42, 35, 28, 18, 8, 3, 0]
-            base_attendance = [45, 180, 95, 40, 25, 20, 15, 10, 5, 2]
-            base_grades = [3, 8, 15, 22, 18, 12, 8, 5, 2, 1]
-            base_users = [120, 450, 680, 720, 650, 580, 420, 280, 150, 80]
-            for i, hour in enumerate(range(7, 17)):
-                chart_data.append({
-                    "hour": f"{hour:02d}:00",
-                    "lessons": base_lessons[i] + random.randint(-3, 5),
-                    "attendance": base_attendance[i] + random.randint(-10, 20),
-                    "grades": base_grades[i] + random.randint(-2, 3),
-                    "users": base_users[i] + random.randint(-50, 100)
-                })
         
         return {"chart_data": chart_data, "period": period, "view_by": view_by}
     
@@ -11140,8 +11139,6 @@ async def get_daily_activity(
 @api_router.get("/activity/summary")
 async def get_activity_summary(current_user: dict = Depends(get_current_user)):
     """Get quick summary of today's activity"""
-    import random
-    
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
@@ -11152,34 +11149,12 @@ async def get_activity_summary(current_user: dict = Depends(get_current_user)):
     today_grades = await db.activity_logs.count_documents({**today_query, "type": "grade"})
     today_users = await db.activity_logs.count_documents({**today_query, "type": "user_activity"})
     
-    # إذا كانت البيانات فارغة، نُرجع بيانات تجريبية توضيحية
     if today_lessons + today_attendance + today_grades + today_users == 0:
-        today_lessons = random.randint(180, 220)
-        today_attendance = random.randint(400, 500)
-        today_grades = random.randint(80, 120)
-        today_users = random.randint(3800, 4500)
-        
         return {
-            "lessons": {
-                "count": today_lessons,
-                "change": round(random.uniform(8.0, 15.0), 1),
-                "status": "high"
-            },
-            "attendance": {
-                "count": today_attendance,
-                "change": round(random.uniform(-8.0, -2.0), 1),
-                "status": "low"
-            },
-            "grades": {
-                "count": today_grades,
-                "change": round(random.uniform(5.0, 12.0), 1),
-                "status": "normal"
-            },
-            "users": {
-                "count": today_users,
-                "change": round(random.uniform(12.0, 20.0), 1),
-                "status": "high"
-            }
+            "lessons": {"count": 0, "change": 0, "status": "normal"},
+            "attendance": {"count": 0, "change": 0, "status": "normal"},
+            "grades": {"count": 0, "change": 0, "status": "normal"},
+            "users": {"count": 0, "change": 0, "status": "normal"}
         }
     
     yesterday_query = {"timestamp": {"$gte": yesterday.isoformat(), "$lt": today.isoformat()}}

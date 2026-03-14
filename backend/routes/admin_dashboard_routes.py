@@ -147,9 +147,7 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
             platform_accounts = await db.users.count_documents({"role": {"$in": platform_roles}})
             
             pending_requests = await db.registration_requests.count_documents({"status": "pending"})
-            pending_teacher_requests = await db.registration_requests.count_documents({
-                "type": "independent_teacher", "status": "pending"
-            })
+            pending_teacher_requests = 0
             
             ai_enabled_schools = await db.schools.count_documents({**school_filter, "ai_enabled": True})
             if ai_enabled_schools == 0:
