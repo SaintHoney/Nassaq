@@ -176,6 +176,7 @@ export default function UsersManagement() {
         params: {
           search: searchQuery || undefined,
           role: selectedRole !== 'all' ? selectedRole : undefined,
+          status: selectedStatus !== 'all' ? selectedStatus : undefined,
         }
       });
       

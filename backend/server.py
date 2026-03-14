@@ -855,11 +855,13 @@ async def create_platform_user(
     # Validate allowed roles
     allowed_roles = [
         'platform_admin',
+        'platform_sub_admin',
         'platform_operations_manager',
         'platform_technical_admin', 
         'platform_support_specialist',
         'platform_data_analyst',
         'platform_security_officer',
+        'independent_teacher',
         'testing_account',
         'teacher'
     ]
@@ -945,12 +947,30 @@ async def get_platform_users(
     skip: int = 0,
     limit: int = 100,
     role: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    status: Optional[str] = None
 ):
     """
     Get list of all platform users for admin management
+    
+    Params:
+    - status: 'active', 'suspended', 'pending', 'archived', 'all' (default excludes archived)
     """
     query = {}
+    
+    if status and status != 'all':
+        if status == 'active':
+            query["is_active"] = True
+            query["is_archived"] = {"$ne": True}
+        elif status == 'suspended':
+            query["is_active"] = False
+            query["is_archived"] = {"$ne": True}
+        elif status == 'pending':
+            query["status"] = "pending"
+        elif status == 'archived':
+            query["is_archived"] = True
+    else:
+        query["is_archived"] = {"$ne": True}
     
     if role and role != 'all':
         query["role"] = role
@@ -992,11 +1012,13 @@ async def delete_platform_user(
     if user.get("role") == "platform_admin":
         raise HTTPException(status_code=400, detail="لا يمكن حذف مدير المنصة")
     
-    # Soft delete - just mark as inactive
+    # Soft delete - mark as inactive and archived
     await db.users.update_one(
         {"id": user_id},
         {"$set": {
             "is_active": False,
+            "status": "archived",
+            "is_archived": True,
             "deleted_at": datetime.now(timezone.utc).isoformat(),
             "deleted_by": current_user["id"]
         }}
