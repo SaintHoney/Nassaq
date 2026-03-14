@@ -1763,148 +1763,6 @@ async def get_super_admin_dashboard_stats(
         )
 
 # ============== COMMAND CENTER STATS ==============
-@api_router.get("/admin/command-center/stats")
-async def get_command_center_stats(
-    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
-):
-    """
-    Get comprehensive statistics for the Command Center dashboard.
-    All values are calculated dynamically from the database.
-    """
-    try:
-        now = datetime.now(timezone.utc)
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        last_month_start = (now - timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # === Core Counts from Database ===
-        registered_schools = await db.schools.count_documents({})
-        registered_students = await db.students.count_documents({})
-        teachers_in_schools = await db.teachers.count_documents({})
-        
-        # Independent teachers (not linked to a school)
-        independent_teachers = await db.teachers.count_documents({"school_id": None})
-        
-        # Platform accounts (admins)
-        platform_accounts = await db.users.count_documents({"role": "platform_admin"})
-        
-        # Pending requests
-        pending_requests = await db.registration_requests.count_documents({"status": "pending"})
-        
-        # AI-enabled schools
-        ai_enabled_schools = await db.schools.count_documents({"ai_enabled": True})
-        if ai_enabled_schools == 0:
-            # If no explicit ai_enabled field, count active schools as AI-enabled
-            ai_enabled_schools = await db.schools.count_documents({"status": "active"})
-        
-        # === Attendance Statistics ===
-        students_present_today = await db.attendance.count_documents({
-            "user_type": "student",
-            "status": "present",
-            "date": {"$gte": today_start.isoformat()[:10]}
-        })
-        students_total_today = await db.attendance.count_documents({
-            "user_type": "student",
-            "date": {"$gte": today_start.isoformat()[:10]}
-        })
-        
-        # Get teacher attendance from teacher_attendance collection (where it's actually stored)
-        teachers_present_today = await db.teacher_attendance.count_documents({
-            "status": "present",
-            "date": today_start.isoformat()[:10]
-        })
-        teachers_total_today = await db.teacher_attendance.count_documents({
-            "date": today_start.isoformat()[:10]
-        })
-        
-        # If no records in teacher_attendance, try attendance collection
-        if teachers_total_today == 0:
-            teachers_present_today = await db.attendance.count_documents({
-                "user_type": "teacher",
-                "status": "present",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-            teachers_total_today = await db.attendance.count_documents({
-                "user_type": "teacher",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-        
-        # Calculate attendance rates
-        student_attendance_rate = 0
-        if students_total_today > 0:
-            student_attendance_rate = round((students_present_today / students_total_today) * 100, 1)
-        elif registered_students > 0:
-            student_attendance_rate = 92  # Default estimate
-        
-        teacher_attendance_rate = 0
-        if teachers_total_today > 0:
-            teacher_attendance_rate = round((teachers_present_today / teachers_total_today) * 100, 1)
-        elif teachers_in_schools > 0:
-            teacher_attendance_rate = 95  # Default estimate
-        
-        # === Growth Deltas (Last Month) ===
-        schools_delta = await db.schools.count_documents({
-            "created_at": {"$gte": last_month_start.isoformat()}
-        })
-        students_delta = await db.students.count_documents({
-            "created_at": {"$gte": last_month_start.isoformat()}
-        })
-        teachers_delta = await db.teachers.count_documents({
-            "created_at": {"$gte": last_month_start.isoformat()}
-        })
-        
-        # Calculate delta percentages
-        schools_delta_pct = round((schools_delta / max(registered_schools - schools_delta, 1)) * 100, 1) if registered_schools > 0 else 0
-        students_delta_pct = round((students_delta / max(registered_students - students_delta, 1)) * 100, 1) if registered_students > 0 else 0
-        teachers_delta_pct = round((teachers_delta / max(teachers_in_schools - teachers_delta, 1)) * 100, 1) if teachers_in_schools > 0 else 0
-        
-        # === Dates ===
-        # Hijri date calculation (approximation)
-        hijri_date = now.strftime("%Y/%m/%d هـ")  # Simplified
-        gregorian_date = now.strftime("%Y-%m-%d")
-        
-        return {
-            "registered_schools": registered_schools,
-            "registered_students": registered_students,
-            "teachers_in_schools": teachers_in_schools,
-            "independent_teachers": independent_teachers,
-            "platform_accounts": platform_accounts,
-            "pending_requests": pending_requests,
-            "ai_enabled_schools": ai_enabled_schools,
-            "student_attendance_rate": student_attendance_rate,
-            "teacher_attendance_rate": teacher_attendance_rate,
-            "schools_delta": schools_delta_pct,
-            "students_delta": students_delta_pct,
-            "teachers_delta": teachers_delta_pct,
-            "student_attendance_delta": 0,
-            "teacher_attendance_delta": 0,
-            "hijri_date": hijri_date,
-            "gregorian_date": gregorian_date,
-            "last_updated": now.isoformat()
-        }
-        
-    except Exception as e:
-        print(f"Error fetching command center stats: {e}")
-        # Return zeros on error - no mock data
-        return {
-            "registered_schools": 0,
-            "registered_students": 0,
-            "teachers_in_schools": 0,
-            "independent_teachers": 0,
-            "platform_accounts": 0,
-            "pending_requests": 0,
-            "ai_enabled_schools": 0,
-            "student_attendance_rate": 0,
-            "teacher_attendance_rate": 0,
-            "schools_delta": 0,
-            "students_delta": 0,
-            "teachers_delta": 0,
-            "student_attendance_delta": 0,
-            "teacher_attendance_delta": 0,
-            "hijri_date": "",
-            "gregorian_date": "",
-            "last_updated": datetime.now(timezone.utc).isoformat()
-        }
-
 # ============== AI OPERATIONS ==============
 @api_router.post("/ai/diagnosis")
 async def ai_system_diagnosis(current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))):
@@ -11028,15 +10886,17 @@ async def get_daily_activity(
     period: str = "today",
     view_by: str = "hour",
     school_id: Optional[str] = None,
+    school_ids: Optional[str] = None,
     city: Optional[str] = None,
     region: Optional[str] = None,
-    school_type: Optional[str] = None
+    school_type: Optional[str] = None,
+    status: Optional[str] = None
 ):
     """Get daily platform activity data for charts"""
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
-    if period == "today":
+    if period == "today" or period == "live":
         start_date = today
     elif period == "24h":
         start_date = now - timedelta(hours=24)
@@ -11048,14 +10908,20 @@ async def get_daily_activity(
         start_date = today
     
     allowed_school_ids = None
-    if city or region or school_type:
+    if city or region or school_type or status or school_ids:
         school_filter = {}
         if city:
             school_filter["city"] = city
         if region:
             school_filter["region"] = region
         if school_type:
-            school_filter["type"] = school_type
+            school_filter["school_type"] = school_type
+        if status and status != 'all':
+            school_filter["status"] = status
+        if school_ids:
+            school_id_list = [s.strip() for s in school_ids.split(',') if s.strip()]
+            if school_id_list:
+                school_filter["id"] = {"$in": school_id_list}
         filtered_schools = await db.schools.find(school_filter, {"_id": 0, "id": 1}).to_list(1000)
         allowed_school_ids = [s["id"] for s in filtered_schools]
     

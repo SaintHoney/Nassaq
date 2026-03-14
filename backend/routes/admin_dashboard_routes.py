@@ -102,6 +102,16 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
             if status and status != 'all':
                 school_filter["status"] = status
             
+            date_start = today_start.isoformat()[:10]
+            if time_window:
+                if time_window in ('live', 'today'):
+                    date_start = today_start.isoformat()[:10]
+                elif time_window == 'week':
+                    week_start = now - timedelta(days=now.weekday())
+                    date_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                elif time_window == 'month':
+                    date_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+            
             filtered_school_ids = None
             if school_filter and not school_id:
                 filtered_schools = await db.schools.find(school_filter, {"id": 1})
@@ -130,12 +140,12 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
                 "$or": [{"tenant_id": None}, {"tenant_id": ""}]
             })
             
-            att_student_filter = {**attendance_filter, "user_type": "student", "date": {"$gte": today_start.isoformat()[:10]}}
+            att_student_filter = {**attendance_filter, "user_type": "student", "date": {"$gte": date_start}}
             total_student_attendance = await db.attendance.count_documents(att_student_filter)
             present_students = await db.attendance.count_documents({**att_student_filter, "status": "present"})
             student_attendance_rate = (present_students / total_student_attendance) * 100 if total_student_attendance > 0 else 0.0
             
-            att_teacher_filter = {**attendance_filter, "user_type": "teacher", "date": {"$gte": today_start.isoformat()[:10]}}
+            att_teacher_filter = {**attendance_filter, "user_type": "teacher", "date": {"$gte": date_start}}
             total_teacher_attendance = await db.attendance.count_documents(att_teacher_filter)
             present_teachers = await db.attendance.count_documents({**att_teacher_filter, "status": "present"})
             teacher_attendance_rate = (present_teachers / total_teacher_attendance) * 100 if total_teacher_attendance > 0 else 0.0
@@ -366,7 +376,11 @@ def get_hijri_date(date: datetime) -> str:
             'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
         ]
         
-        return f"{hijri_day} {hijri_months[hijri_month]} {hijri_year} هـ"
+        def to_arabic_numerals(s):
+            arabic_digits = '٠١٢٣٤٥٦٧٨٩'
+            return ''.join(arabic_digits[int(c)] if c.isdigit() else c for c in str(s))
+        
+        return f"{to_arabic_numerals(hijri_day)} {hijri_months[hijri_month]} {to_arabic_numerals(hijri_year)} هـ"
         
     except Exception:
         return ""

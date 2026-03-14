@@ -326,12 +326,14 @@ export const AdminDashboard = () => {
   const fetchActivityData = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams();
-      queryParams.append('period', activityPeriod);
+      queryParams.append('period', filters.timeWindow || activityPeriod);
       queryParams.append('view_by', activityViewBy);
-      if (filters.school) queryParams.append('school_id', filters.school);
+      if (filters.scope === 'single' && filters.selectedSchool) queryParams.append('school_id', filters.selectedSchool);
+      if (filters.scope === 'multi' && filters.selectedSchools.length > 0) queryParams.append('school_ids', filters.selectedSchools.join(','));
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.region) queryParams.append('region', filters.region);
       if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
+      if (filters.tenantStatus !== 'all') queryParams.append('status', filters.tenantStatus);
 
       const chartResponse = await api.get(`/activity/daily?${queryParams.toString()}`);
       let chartData = chartResponse.data?.chart_data;
@@ -408,6 +410,7 @@ export const AdminDashboard = () => {
       if (filters.region) queryParams.append('region', filters.region);
       if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
       if (filters.tenantStatus !== 'all') queryParams.append('status', filters.tenantStatus);
+      if (filters.timeWindow) queryParams.append('time_window', filters.timeWindow);
       const queryString = queryParams.toString();
       const url = `/admin/command-center/stats${queryString ? `?${queryString}` : ''}`;
       const response = await api.get(url);
