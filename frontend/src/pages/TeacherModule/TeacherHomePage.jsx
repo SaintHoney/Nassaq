@@ -131,8 +131,8 @@ export default function TeacherHomePage() {
           className: lesson.class_name || 'فصل',
           classId: lesson.class_id,
           subjectId: lesson.subject_id,
-          time: lesson.time || lesson.start_time || `${8 + idx}:00`,
-          endTime: lesson.end_time || `${9 + idx}:00`,
+          time: lesson.time || lesson.start_time || '',
+          endTime: lesson.end_time || '',
           period: lesson.period || lesson.slot_number || idx + 1
         }));
         

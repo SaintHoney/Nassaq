@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sidebar } from './Sidebar';
@@ -10,21 +11,6 @@ import {
   Bell, Globe
 } from 'lucide-react';
 
-const teacherNavItems = [
-  { path: '/teacher', label: 'الرئيسية', icon: Home },
-  { path: '/teacher/home', label: 'لوحة التحكم', icon: Home },
-  { path: '/teacher/schedule', label: 'الجدول', icon: Calendar },
-  { path: '/teacher/classes', label: 'فصولي', icon: BookOpen },
-  { path: '/teacher/attendance', label: 'الحضور', icon: ClipboardCheck },
-  { path: '/teacher/assessments', label: 'التقييمات', icon: FileText },
-  { path: '/teacher/behavior', label: 'السلوك', icon: Star },
-  { path: '/teacher/students', label: 'الطلاب', icon: Users },
-  { path: '/teacher/communication', label: 'التواصل', icon: MessageSquare },
-  { path: '/teacher/reports', label: 'التقارير', icon: BarChart3 },
-  { path: '/teacher/resources', label: 'المصادر', icon: FolderOpen },
-  { path: '/teacher/settings', label: 'الإعدادات', icon: Settings },
-];
-
 const mobileNavItems = [
   { path: '/teacher', label: 'الرئيسية', icon: Home },
   { path: '/teacher/schedule', label: 'الجدول', icon: Calendar },
@@ -36,7 +22,26 @@ const mobileNavItems = [
 export function TeacherLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isRTL, toggleLanguage } = useAuth();
+  const { user, api, isRTL, toggleLanguage } = useAuth();
+  const [notifCount, setNotifCount] = useState(0);
+  const [msgCount, setMsgCount] = useState(0);
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      const teacherId = user?.teacher_id || user?.id;
+      if (!teacherId) return;
+      const res = await api.get(`/teacher/dashboard/${teacherId}`);
+      const stats = res.data?.stats || {};
+      setNotifCount(stats.unread_notifications || 0);
+      setMsgCount(stats.unread_messages || 0);
+    } catch {}
+  }, [api, user]);
+
+  useEffect(() => {
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 60000);
+    return () => clearInterval(interval);
+  }, [fetchCounts]);
 
   return (
     <Sidebar>
@@ -63,6 +68,11 @@ export function TeacherLayout({ children }) {
                 onClick={() => navigate('/notifications')}
               >
                 <Bell className="h-4 w-4" />
+                {notifCount > 0 && (
+                  <Badge className="absolute -top-1 -end-1 h-4 min-w-[16px] px-1 text-[10px] bg-red-500 text-white border-0 flex items-center justify-center">
+                    {notifCount > 9 ? '9+' : notifCount}
+                  </Badge>
+                )}
               </Button>
 
               <Button
@@ -72,6 +82,11 @@ export function TeacherLayout({ children }) {
                 onClick={() => navigate('/teacher/communication')}
               >
                 <MessageSquare className="h-4 w-4" />
+                {msgCount > 0 && (
+                  <Badge className="absolute -top-1 -end-1 h-4 min-w-[16px] px-1 text-[10px] bg-brand-turquoise text-white border-0 flex items-center justify-center">
+                    {msgCount > 9 ? '9+' : msgCount}
+                  </Badge>
+                )}
               </Button>
 
               <button

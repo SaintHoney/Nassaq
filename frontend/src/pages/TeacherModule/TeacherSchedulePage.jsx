@@ -78,6 +78,15 @@ export default function TeacherSchedulePage() {
 
   const todayKey = DAYS[new Date().getDay() === 0 ? 0 : new Date().getDay() - 1]?.key;
 
+  const isCurrentPeriod = (dayKey, slot) => {
+    if (dayKey !== todayKey) return false;
+    const now = new Date();
+    const nowTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    const start = slot.start_time?.slice(0, 5) || '';
+    const end = slot.end_time?.slice(0, 5) || '';
+    return start && end && start <= nowTime && nowTime <= end;
+  };
+
   const handleStartClass = (session, slot) => {
     const lessonData = {
       lesson: { ...session, time: slot?.start_time?.slice(0, 5), end_time: slot?.end_time?.slice(0, 5) },
@@ -89,12 +98,17 @@ export default function TeacherSchedulePage() {
     navigate('/teacher/session/start', { state: lessonData });
   };
 
-  const getMonthWeeks = () => {
-    const weeks = [];
-    for (let w = 0; w < 4; w++) {
-      weeks.push({ week: w + 1, label: isRTL ? `الأسبوع ${w + 1}` : `Week ${w + 1}` });
-    }
-    return weeks;
+  const getMonthSummary = () => {
+    const summary = {};
+    DAYS.forEach(day => {
+      const daySessions = schedule.filter(s => s.day_of_week === day.key);
+      summary[day.key] = {
+        count: daySessions.length,
+        subjects: [...new Set(daySessions.map(s => s.subject_name))],
+        classes: [...new Set(daySessions.map(s => s.class_name))],
+      };
+    });
+    return summary;
   };
 
   const renderScheduleGrid = (daysToShow) => (
@@ -131,18 +145,23 @@ export default function TeacherSchedulePage() {
           <tbody>
             {timeSlots.map((slot, idx) => (
               <tr key={slot.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
-                <td className="p-3 border-b">
+                <td className={`p-3 border-b ${daysToShow.some(d => isCurrentPeriod(d.key, slot)) ? 'bg-green-50 font-bold' : ''}`}>
                   <div className="text-sm font-medium">{isRTL ? `الحصة ${slot.slot_number}` : `Period ${slot.slot_number}`}</div>
                   <div className="text-xs text-muted-foreground">
                     {slot.start_time?.slice(0, 5)} - {slot.end_time?.slice(0, 5)}
                   </div>
+                  {daysToShow.some(d => isCurrentPeriod(d.key, slot)) && (
+                    <Badge className="mt-1 bg-green-500 text-white text-[10px]">{isRTL ? 'الآن' : 'Now'}</Badge>
+                  )}
                 </td>
                 {daysToShow.map(day => {
                   const sessions = getSessionsForCell(day.key, slot.id);
+                  const currentPeriod = isCurrentPeriod(day.key, slot);
                   return (
                     <td 
                       key={`${day.key}-${slot.id}`} 
                       className={`p-2 border-b border-s min-h-[80px] ${
+                        currentPeriod ? 'bg-green-50 ring-2 ring-inset ring-green-400' :
                         day.key === todayKey ? 'bg-brand-turquoise/5' : ''
                       }`}
                     >
@@ -151,7 +170,9 @@ export default function TeacherSchedulePage() {
                           {sessions.map(session => (
                             <div
                               key={session.id}
-                              className={`p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getSubjectColor(session.subject_name)}`}
+                              className={`p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
+                                currentPeriod ? 'ring-2 ring-green-500 shadow-green-100 shadow-lg ' : ''
+                              }${getSubjectColor(session.subject_name)}`}
                               onClick={() => setSelectedSession({ ...session, slot })}
                               data-testid={`session-${session.id}`}
                             >
@@ -163,16 +184,21 @@ export default function TeacherSchedulePage() {
                                     <Users className="h-3 w-3" />
                                     <span className="truncate">{session.class_name}</span>
                                   </div>
+                                  <div className="flex items-center gap-1 text-xs opacity-60 mt-0.5">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{slot.start_time?.slice(0, 5)} - {slot.end_time?.slice(0, 5)}</span>
+                                    {session.room && <span className="ms-1">· {session.room}</span>}
+                                  </div>
                                 </div>
                               </div>
                               {day.key === todayKey && (
                                 <Button 
                                   size="sm" 
-                                  className="w-full mt-2 h-7 text-xs bg-brand-navy hover:bg-brand-navy/90"
+                                  className={`w-full mt-2 h-7 text-xs ${currentPeriod ? 'bg-green-600 hover:bg-green-700' : 'bg-brand-navy hover:bg-brand-navy/90'}`}
                                   onClick={(e) => { e.stopPropagation(); handleStartClass(session, slot); }}
                                 >
                                   <Play className="h-3 w-3 me-1" />
-                                  {isRTL ? 'ابدأ الحصة' : 'Start Class'}
+                                  {currentPeriod ? (isRTL ? 'الحصة الحالية' : 'Current Class') : (isRTL ? 'ابدأ الحصة' : 'Start Class')}
                                 </Button>
                               )}
                             </div>
@@ -271,12 +297,41 @@ export default function TeacherSchedulePage() {
             </Card>
           ) : view === 'monthly' ? (
             <div className="space-y-6">
-              {getMonthWeeks().map((week) => (
-                <div key={week.week}>
-                  <h3 className="font-cairo font-bold text-lg text-brand-navy mb-3">{week.label}</h3>
-                  {renderScheduleGrid(DAYS)}
+              <Card className="p-4">
+                <h3 className="font-cairo font-bold text-lg text-brand-navy mb-4">
+                  {isRTL ? 'ملخص الجدول الشهري' : 'Monthly Schedule Summary'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                  {DAYS.map(day => {
+                    const summary = getMonthSummary()[day.key];
+                    return (
+                      <div
+                        key={day.key}
+                        className={`p-4 rounded-xl border-2 ${
+                          day.key === todayKey ? 'border-brand-turquoise bg-brand-turquoise/5' : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`font-bold ${day.key === todayKey ? 'text-brand-turquoise' : 'text-brand-navy'}`}>
+                            {isRTL ? day.ar : day.en}
+                          </span>
+                          {day.key === todayKey && (
+                            <Badge className="bg-brand-turquoise text-white text-[10px]">{isRTL ? 'اليوم' : 'Today'}</Badge>
+                          )}
+                        </div>
+                        <p className="text-2xl font-bold text-brand-navy">{summary.count}</p>
+                        <p className="text-xs text-muted-foreground">{isRTL ? 'حصص' : 'sessions'}</p>
+                        <div className="mt-2 space-y-1">
+                          {summary.subjects.slice(0, 3).map((subj, i) => (
+                            <Badge key={i} variant="outline" className="text-[10px] me-1">{subj}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </Card>
+              {renderScheduleGrid(DAYS)}
             </div>
           ) : (
             renderScheduleGrid(view === 'weekly' ? DAYS : [DAYS.find(d => d.key === selectedDay)])
