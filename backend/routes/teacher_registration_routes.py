@@ -167,14 +167,19 @@ def create_teacher_registration_router(db, get_current_user, require_roles, User
         status: Optional[str] = None,
         limit: int = Query(default=100, le=500),
         skip: int = 0,
-        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
     ):
-        """جلب طلبات التسجيل المعلقة (Admin Only)"""
+        """جلب طلبات التسجيل المعلقة"""
         requests = await engine.get_pending_requests(
             status=status,
             limit=limit,
             skip=skip
         )
+        
+        if current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+            tenant_id = current_user.get("tenant_id")
+            if tenant_id:
+                requests = [r for r in requests if r.get("school_id") == tenant_id or r.get("tenant_id") == tenant_id]
         
         return {
             "requests": requests,
@@ -204,9 +209,13 @@ def create_teacher_registration_router(db, get_current_user, require_roles, User
     @router.post("/requests/{request_id}/approve")
     async def approve_request(
         request_id: str,
-        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
     ):
-        """قبول طلب التسجيل (Admin Only)"""
+        """قبول طلب التسجيل"""
+        if current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+            req = await db.teacher_registration_requests.find_one({"id": request_id}, {"_id": 0})
+            if req and req.get("school_id") != current_user.get("tenant_id") and req.get("tenant_id") != current_user.get("tenant_id"):
+                raise HTTPException(status_code=403, detail="لا يمكنك الوصول لهذا الطلب")
         try:
             result = await engine.approve_request(
                 request_id=request_id,
@@ -220,9 +229,13 @@ def create_teacher_registration_router(db, get_current_user, require_roles, User
     async def reject_request(
         request_id: str,
         data: RejectRequest,
-        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
     ):
-        """رفض طلب التسجيل (Admin Only)"""
+        """رفض طلب التسجيل"""
+        if current_user.get("role") != UserRole.PLATFORM_ADMIN.value:
+            req = await db.teacher_registration_requests.find_one({"id": request_id}, {"_id": 0})
+            if req and req.get("school_id") != current_user.get("tenant_id") and req.get("tenant_id") != current_user.get("tenant_id"):
+                raise HTTPException(status_code=403, detail="لا يمكنك الوصول لهذا الطلب")
         try:
             result = await engine.reject_request(
                 request_id=request_id,
