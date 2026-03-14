@@ -23,6 +23,18 @@ from datetime import datetime, date, timezone
 
 logger = logging.getLogger(__name__)
 
+_SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_.]*$')
+
+
+def _sanitize_field(name: str) -> str:
+    if not _SAFE_IDENTIFIER_RE.match(name):
+        raise ValueError(f"Invalid field name: {name!r}")
+    return name
+
+
+class DuplicateKeyError(Exception):
+    pass
+
 
 def _serialize_value(v: Any) -> Any:
     if isinstance(v, datetime):
@@ -92,7 +104,8 @@ class PostgresCursor:
             if field == "_id":
                 col_expr = "_id"
             else:
-                col_expr = f"data->>'{field}'"
+                safe_field = _sanitize_field(field)
+                col_expr = f"data->>'{safe_field}'"
             order = "ASC" if direction == 1 else "DESC"
             parts.append(f"{col_expr} {order}")
         return " ORDER BY " + ", ".join(parts)
@@ -174,35 +187,41 @@ class PostgresCollection:
                     params.append(str(value))
                     conditions.append(f"_id = ${len(params)}")
                 elif value is None:
+                    safe_key = _sanitize_field(key)
                     conditions.append(
-                        f"(data->>'{key}' IS NULL OR NOT (data ? '{key}'))"
+                        f"(data->>'{safe_key}' IS NULL OR NOT (data ? '{safe_key}'))"
                     )
                 elif isinstance(value, bool):
-                    params.append(json.dumps({key: value}))
+                    safe_key = _sanitize_field(key)
+                    params.append(json.dumps({safe_key: value}))
                     conditions.append(f"data @> ${len(params)}::jsonb")
                 elif isinstance(value, (int, float)):
-                    params.append(json.dumps({key: value}))
+                    safe_key = _sanitize_field(key)
+                    params.append(json.dumps({safe_key: value}))
                     conditions.append(f"data @> ${len(params)}::jsonb")
                 elif isinstance(value, list):
-                    params.append(json.dumps({key: value}))
+                    safe_key = _sanitize_field(key)
+                    params.append(json.dumps({safe_key: value}))
                     conditions.append(f"data @> ${len(params)}::jsonb")
                 else:
+                    safe_key = _sanitize_field(key)
                     params.append(str(value))
-                    conditions.append(f"data->>'{key}' = ${len(params)}")
+                    conditions.append(f"data->>'{safe_key}' = ${len(params)}")
 
     def _build_operator_condition(self, key: str, ops: dict, conditions: list, params: list):
+        safe_key = _sanitize_field(key) if key != "_id" else key
         for op, val in ops.items():
             if key == "_id":
                 field_expr = "_id"
             else:
-                field_expr = f"data->>'{key}'"
+                field_expr = f"data->>'{safe_key}'"
 
             if op == "$eq":
                 params.append(str(val))
                 conditions.append(f"{field_expr} = ${len(params)}")
             elif op == "$ne":
                 if val is None:
-                    conditions.append(f"(data ? '{key}' AND data->>'{key}' IS NOT NULL)")
+                    conditions.append(f"(data ? '{safe_key}' AND data->>'{safe_key}' IS NOT NULL)")
                 else:
                     params.append(str(val))
                     conditions.append(f"({field_expr} IS NULL OR {field_expr} != ${len(params)})")
@@ -245,11 +264,11 @@ class PostgresCollection:
                     conditions.append(f"{field_expr} ~ ${len(params)}")
             elif op == "$exists":
                 if val:
-                    conditions.append(f"data ? '{key}'")
+                    conditions.append(f"data ? '{safe_key}'")
                 else:
-                    conditions.append(f"NOT (data ? '{key}')")
+                    conditions.append(f"NOT (data ? '{safe_key}')")
             elif op == "$size":
-                conditions.append(f"jsonb_array_length(data->'{key}') = {int(val)}")
+                conditions.append(f"jsonb_array_length(data->'{safe_key}') = {int(val)}")
             elif op == "$options":
                 pass
             elif op == "$not":
@@ -264,68 +283,75 @@ class PostgresCollection:
 
         for op, fields in update.items():
             if op == "$set":
+                for k in fields:
+                    _sanitize_field(k)
                 serialized = _deep_serialize(fields)
                 params.append(json.dumps(serialized))
                 expr = f"({expr} || ${len(params)}::jsonb)"
             elif op == "$unset":
                 for field_name in fields:
-                    expr = f"({expr} - '{field_name}')"
+                    sf = _sanitize_field(field_name)
+                    expr = f"({expr} - '{sf}')"
             elif op == "$inc":
                 for field_name, inc_val in fields.items():
+                    sf = _sanitize_field(field_name)
                     expr = (
-                        f"jsonb_set({expr}, '{{{field_name}}}', "
-                        f"to_jsonb(COALESCE(({expr}->>'{field_name}')::float, 0) + {float(inc_val)}))"
+                        f"jsonb_set({expr}, '{{{sf}}}', "
+                        f"to_jsonb(COALESCE(({expr}->>'{sf}')::float, 0) + {float(inc_val)}))"
                     )
             elif op == "$push":
                 for field_name, push_val in fields.items():
+                    sf = _sanitize_field(field_name)
                     if isinstance(push_val, dict) and "$each" in push_val:
                         serialized = json.dumps(_deep_serialize(push_val["$each"]))
                         params.append(serialized)
                         expr = (
-                            f"jsonb_set({expr}, '{{{field_name}}}', "
-                            f"COALESCE({expr}->'{field_name}', '[]'::jsonb) || ${len(params)}::jsonb)"
+                            f"jsonb_set({expr}, '{{{sf}}}', "
+                            f"COALESCE({expr}->'{sf}', '[]'::jsonb) || ${len(params)}::jsonb)"
                         )
                     else:
                         serialized = json.dumps(_deep_serialize(push_val))
                         params.append(serialized)
                         expr = (
-                            f"jsonb_set({expr}, '{{{field_name}}}', "
-                            f"COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
+                            f"jsonb_set({expr}, '{{{sf}}}', "
+                            f"COALESCE({expr}->'{sf}', '[]'::jsonb) || "
                             f"jsonb_build_array(${len(params)}::jsonb))"
                         )
             elif op == "$pull":
                 for field_name, pull_val in fields.items():
+                    sf = _sanitize_field(field_name)
                     serialized = json.dumps(_deep_serialize(pull_val))
                     params.append(serialized)
                     expr = (
-                        f"jsonb_set({expr}, '{{{field_name}}}', "
+                        f"jsonb_set({expr}, '{{{sf}}}', "
                         f"(SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb) "
-                        f"FROM jsonb_array_elements(COALESCE({expr}->'{field_name}', '[]'::jsonb)) elem "
+                        f"FROM jsonb_array_elements(COALESCE({expr}->'{sf}', '[]'::jsonb)) elem "
                         f"WHERE elem != ${len(params)}::jsonb))"
                     )
             elif op == "$addToSet":
                 for field_name, add_val in fields.items():
+                    sf = _sanitize_field(field_name)
                     if isinstance(add_val, dict) and "$each" in add_val:
                         for item in add_val["$each"]:
                             serialized = json.dumps(_deep_serialize(item))
                             params.append(serialized)
                             expr = (
-                                f"jsonb_set({expr}, '{{{field_name}}}', "
-                                f"CASE WHEN COALESCE({expr}->'{field_name}', '[]'::jsonb) @> "
+                                f"jsonb_set({expr}, '{{{sf}}}', "
+                                f"CASE WHEN COALESCE({expr}->'{sf}', '[]'::jsonb) @> "
                                 f"jsonb_build_array(${len(params)}::jsonb) "
-                                f"THEN {expr}->'{field_name}' "
-                                f"ELSE COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
+                                f"THEN {expr}->'{sf}' "
+                                f"ELSE COALESCE({expr}->'{sf}', '[]'::jsonb) || "
                                 f"jsonb_build_array(${len(params)}::jsonb) END)"
                             )
                     else:
                         serialized = json.dumps(_deep_serialize(add_val))
                         params.append(serialized)
                         expr = (
-                            f"jsonb_set({expr}, '{{{field_name}}}', "
-                            f"CASE WHEN COALESCE({expr}->'{field_name}', '[]'::jsonb) @> "
+                            f"jsonb_set({expr}, '{{{sf}}}', "
+                            f"CASE WHEN COALESCE({expr}->'{sf}', '[]'::jsonb) @> "
                             f"jsonb_build_array(${len(params)}::jsonb) "
-                            f"THEN {expr}->'{field_name}' "
-                            f"ELSE COALESCE({expr}->'{field_name}', '[]'::jsonb) || "
+                            f"THEN {expr}->'{sf}' "
+                            f"ELSE COALESCE({expr}->'{sf}', '[]'::jsonb) || "
                             f"jsonb_build_array(${len(params)}::jsonb) END)"
                         )
 
@@ -355,11 +381,15 @@ class PostgresCollection:
         doc_id = str(doc.pop("_id", None) or self._generate_id())
         doc["_id"] = doc_id
         serialized = json.dumps(_deep_serialize(doc))
-        await self._db._execute(
-            f"INSERT INTO {self._table_name} (_id, data) VALUES ($1, $2::jsonb) "
-            f"ON CONFLICT (_id) DO UPDATE SET data = $2::jsonb",
-            [doc_id, serialized]
-        )
+        try:
+            await self._db._execute(
+                f"INSERT INTO {self._table_name} (_id, data) VALUES ($1, $2::jsonb)",
+                [doc_id, serialized]
+            )
+        except asyncpg.UniqueViolationError:
+            raise DuplicateKeyError(
+                f"Duplicate key error: _id '{doc_id}' already exists in {self._table_name}"
+            )
         return InsertOneResult(doc_id)
 
     async def insert_many(self, documents: List[dict]) -> "InsertManyResult":
@@ -443,16 +473,19 @@ class PostgresCollection:
                                   return_document: Optional[str] = None) -> Optional[dict]:
         await self._ensure_table()
         if return_document == "after":
-            await self.update_one(filter_query, update, upsert=upsert)
-            merged_filter = dict(filter_query)
-            if "$set" in update:
-                for k, v in update["$set"].items():
-                    if k in merged_filter:
-                        merged_filter[k] = v
-            return await self.find_one(filter_query)
+            doc_before = await self.find_one(filter_query)
+            result = await self.update_one(filter_query, update, upsert=upsert)
+            if doc_before:
+                return await self.find_one({"_id": doc_before["_id"]})
+            elif result.upserted_id:
+                return await self.find_one({"_id": result.upserted_id})
+            return None
         else:
             doc = await self.find_one(filter_query)
-            await self.update_one(filter_query, update, upsert=upsert)
+            if doc:
+                await self.update_one({"_id": doc["_id"]}, update)
+            elif upsert:
+                await self.update_one(filter_query, update, upsert=True)
             return doc
 
     async def find_one_and_delete(self, filter_query: dict) -> Optional[dict]:
@@ -463,7 +496,35 @@ class PostgresCollection:
         return doc
 
     async def create_index(self, keys, **kwargs):
-        pass
+        await self._ensure_table()
+        if isinstance(keys, list):
+            for key_spec in keys:
+                if isinstance(key_spec, tuple):
+                    field_name = _sanitize_field(key_spec[0])
+                elif isinstance(key_spec, str):
+                    field_name = _sanitize_field(key_spec)
+                else:
+                    continue
+                idx_name = f"idx_{self._table_name}_{field_name}"
+                sql = (
+                    f"CREATE INDEX IF NOT EXISTS {idx_name} ON {self._table_name} "
+                    f"USING GIN ((data->'{field_name}'))"
+                )
+                try:
+                    await self._db._execute(sql)
+                except Exception:
+                    pass
+        elif isinstance(keys, str):
+            field_name = _sanitize_field(keys)
+            idx_name = f"idx_{self._table_name}_{field_name}"
+            sql = (
+                f"CREATE INDEX IF NOT EXISTS {idx_name} ON {self._table_name} "
+                f"USING GIN ((data->'{field_name}'))"
+            )
+            try:
+                await self._db._execute(sql)
+            except Exception:
+                pass
 
     async def aggregate(self, pipeline: list) -> list:
         await self._ensure_table()
@@ -535,9 +596,10 @@ class PostgresCollection:
 
     async def distinct(self, field: str, filter_query: Optional[dict] = None) -> list:
         await self._ensure_table()
+        safe_field = _sanitize_field(field)
         filter_query = filter_query or {}
         where_clause, params = self._build_where(filter_query)
-        sql = f"SELECT DISTINCT data->>'{field}' as val FROM {self._table_name}{where_clause}"
+        sql = f"SELECT DISTINCT data->>'{safe_field}' as val FROM {self._table_name}{where_clause}"
         rows = await self._db._fetch(sql, params)
         return [r["val"] for r in rows if r["val"] is not None]
 
