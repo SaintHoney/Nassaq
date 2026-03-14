@@ -60,6 +60,8 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
         school_type: Optional[str] = None,
         scope: Optional[str] = None,
         time_window: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
         status: Optional[str] = None,
     ):
         """
@@ -103,6 +105,7 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
                 school_filter["status"] = status
             
             date_start = today_start.isoformat()[:10]
+            date_end = None
             if time_window:
                 if time_window in ('live', 'today'):
                     date_start = today_start.isoformat()[:10]
@@ -111,10 +114,14 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
                     date_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
                 elif time_window == 'month':
                     date_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                elif time_window == 'custom' and date_from:
+                    date_start = date_from[:10]
+                    if date_to:
+                        date_end = date_to[:10]
             
             filtered_school_ids = None
             if school_filter and not school_id:
-                filtered_schools = await db.schools.find(school_filter, {"id": 1})
+                filtered_schools = await db.schools.find(school_filter, {"id": 1}).to_list(1000)
                 filtered_school_ids = [s["id"] for s in filtered_schools]
                 if filtered_school_ids and not student_filter.get("school_id"):
                     student_filter["school_id"] = {"$in": filtered_school_ids}
@@ -140,12 +147,16 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
                 "$or": [{"tenant_id": None}, {"tenant_id": ""}]
             })
             
-            att_student_filter = {**attendance_filter, "user_type": "student", "date": {"$gte": date_start}}
+            date_query = {"$gte": date_start}
+            if date_end:
+                date_query["$lte"] = date_end
+            
+            att_student_filter = {**attendance_filter, "user_type": "student", "date": date_query}
             total_student_attendance = await db.attendance.count_documents(att_student_filter)
             present_students = await db.attendance.count_documents({**att_student_filter, "status": "present"})
             student_attendance_rate = (present_students / total_student_attendance) * 100 if total_student_attendance > 0 else 0.0
             
-            att_teacher_filter = {**attendance_filter, "user_type": "teacher", "date": {"$gte": date_start}}
+            att_teacher_filter = {**attendance_filter, "user_type": "teacher", "date": date_query}
             total_teacher_attendance = await db.attendance.count_documents(att_teacher_filter)
             present_teachers = await db.attendance.count_documents({**att_teacher_filter, "status": "present"})
             teacher_attendance_rate = (present_teachers / total_teacher_attendance) * 100 if total_teacher_attendance > 0 else 0.0

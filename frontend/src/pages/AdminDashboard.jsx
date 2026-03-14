@@ -399,6 +399,10 @@ export const AdminDashboard = () => {
       if (filters.schoolType) queryParams.append('school_type', filters.schoolType);
       if (filters.tenantStatus !== 'all') queryParams.append('status', filters.tenantStatus);
       if (filters.timeWindow) queryParams.append('time_window', filters.timeWindow);
+      if (filters.timeWindow === 'custom') {
+        if (filters.customDateFrom) queryParams.append('date_from', filters.customDateFrom);
+        if (filters.customDateTo) queryParams.append('date_to', filters.customDateTo);
+      }
       const queryString = queryParams.toString();
       const url = `/admin/command-center/stats${queryString ? `?${queryString}` : ''}`;
       const response = await api.get(url);
