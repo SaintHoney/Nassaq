@@ -59,23 +59,16 @@ def create_get_current_user(db):
             if not user_id:
                 raise HTTPException(status_code=401, detail="Invalid token")
             
-            # Try to find by _id (ObjectId) first, then by id (UUID)
-            from bson import ObjectId
-            user = None
-            try:
-                user = await db.users.find_one({"_id": ObjectId(user_id)})
-            except:
-                pass
-            
+            user = await db.users.find_one({"id": user_id})
             if not user:
-                user = await db.users.find_one({"id": user_id})
+                user = await db.users.find_one({"_id": user_id})
             
             if not user:
                 raise HTTPException(status_code=401, detail="User not found")
             
-            # Convert _id to string id for consistency
+            if "id" not in user or not user.get("id"):
+                user["id"] = str(user.get("_id", ""))
             if "_id" in user:
-                user["id"] = str(user["_id"])
                 del user["_id"]
             
             return user

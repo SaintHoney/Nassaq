@@ -15,7 +15,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Header, 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from pg_dal import PostgresDB
 import os
 import logging
 from pathlib import Path
@@ -30,7 +30,6 @@ import qrcode
 import io
 import base64
 from enum import Enum
-import certifi
 
 # Import Audit Engine
 from engines.audit_engine import AuditLogEngine, AuditAction, AuditSeverity
@@ -53,21 +52,12 @@ from engines.smart_scheduling_engine import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-if not mongo_url:
-    raise RuntimeError("MONGO_URL environment variable is not set. Set it in Replit Secrets or backend/.env")
+# PostgreSQL connection via DAL
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    raise RuntimeError("DATABASE_URL environment variable is not set. Provision a PostgreSQL database in Replit.")
 
-is_atlas = "mongodb+srv://" in mongo_url or ".mongodb.net" in mongo_url
-
-if is_atlas:
-    logging.info("Connecting to cloud MongoDB (Atlas)...")
-    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
-else:
-    logging.info("Connecting to local MongoDB...")
-    client = AsyncIOMotorClient(mongo_url)
-
-db = client[os.environ.get('DB_NAME', 'nassaq_db')]
+db = PostgresDB(database_url)
 
 # Initialize Audit Engine
 audit_engine = AuditLogEngine(db)
@@ -363,25 +353,16 @@ async def get_current_user(
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        # Try to find by _id (ObjectId) first, then by id (UUID)
-        from bson import ObjectId
-        user = None
-        try:
-            user = await db.users.find_one({"_id": ObjectId(user_id)})
-        except:
-            pass
-        
+        user = await db.users.find_one({"id": user_id})
         if not user:
-            user = await db.users.find_one({"id": user_id})
+            user = await db.users.find_one({"_id": user_id})
         
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         
-        # Convert _id to string id for consistency
-        # Only use _id as id if the user doesn't have a separate 'id' field (UUID)
+        if "id" not in user or not user.get("id"):
+            user["id"] = str(user.get("_id", ""))
         if "_id" in user:
-            if "id" not in user or not user.get("id"):
-                user["id"] = str(user["_id"])
             del user["_id"]
         
         # Add teacher_id if user is a teacher
@@ -16910,6 +16891,11 @@ app.include_router(api_router)
 
 
 @app.on_event("startup")
+async def startup_connect_db():
+    await db.connect()
+    logging.info("PostgreSQL connection pool established")
+
+@app.on_event("startup")
 async def seed_essential_accounts():
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
@@ -16996,7 +16982,7 @@ async def seed_essential_accounts():
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    await db.disconnect()
 
 import pathlib
 _frontend_build = pathlib.Path(__file__).parent.parent / "frontend" / "build"
