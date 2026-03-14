@@ -11556,7 +11556,7 @@ async def get_analytics_overview(
             "total_teachers": total_teachers,
             "total_users": total_users,
             "active_users": active_users,
-            "growth_rate": 12.5  # Placeholder
+            "growth_rate": round(((total_schools - (total_schools - active_schools)) / max(total_schools, 1)) * 100, 1) if total_schools > 0 else 0
         },
         "monthly_data": monthly_data,
         "city_distribution": [
@@ -18110,26 +18110,6 @@ async def list_recent_reports(
     reports = await db.generated_reports.find(
         query, {"_id": 0}
     ).sort("created_at", -1).limit(20).to_list(20)
-    if not reports:
-        now = datetime.now(timezone.utc)
-        auto_reports = [
-            {"id": "auto-1", "name": "تقرير المدارس الشهري", "name_en": "Monthly Schools Report",
-             "type": "school", "date": (now - timedelta(days=2)).isoformat(),
-             "status": "ready", "format": "pdf"},
-            {"id": "auto-2", "name": "تقرير الحضور الأسبوعي", "name_en": "Weekly Attendance Report",
-             "type": "attendance", "date": (now - timedelta(days=5)).isoformat(),
-             "status": "ready", "format": "csv"},
-            {"id": "auto-3", "name": "تقرير أداء المعلمين", "name_en": "Teacher Performance Report",
-             "type": "teacher", "date": (now - timedelta(days=7)).isoformat(),
-             "status": "ready", "format": "pdf"},
-            {"id": "auto-4", "name": "تقرير الدرجات الفصلي", "name_en": "Semester Grades Report",
-             "type": "academic", "date": (now - timedelta(days=10)).isoformat(),
-             "status": "ready", "format": "pdf"},
-            {"id": "auto-5", "name": "تقرير السلوك", "name_en": "Behavior Report",
-             "type": "behavior", "date": (now - timedelta(days=14)).isoformat(),
-             "status": "ready", "format": "csv"},
-        ]
-        return {"reports": auto_reports}
     return {"reports": reports}
 
 @api_router.post("/analytics/reports/generate")
