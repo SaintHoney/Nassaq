@@ -30,9 +30,8 @@ def setup_system_monitoring_routes(db, get_current_user, require_roles, UserRole
 
             now = datetime.now(timezone.utc)
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            recent_errors = await db.system_logs.count_documents({
-                "level": "error",
-                "created_at": {"$gte": today_start.isoformat()}
+            recent_errors = await db.system_errors.count_documents({
+                "resolved": False
             })
 
             health = "healthy"
@@ -77,8 +76,8 @@ def setup_system_monitoring_routes(db, get_current_user, require_roles, UserRole
         ]))
     ):
         try:
-            errors = await db.system_logs.find(
-                {"level": {"$in": ["error", "warning"]}},
+            errors = await db.system_errors.find(
+                {},
                 {"_id": 0}
             ).sort("created_at", -1).to_list(50)
 
@@ -90,9 +89,10 @@ def setup_system_monitoring_routes(db, get_current_user, require_roles, UserRole
                     "id": e.get("id", ""),
                     "type": e.get("type", "system_error"),
                     "message": e.get("message", ""),
-                    "severity": e.get("level", "error"),
-                    "timestamp": e.get("created_at", ""),
-                    "source": e.get("source", "system"),
+                    "message_en": e.get("message_en", ""),
+                    "severity": e.get("level", e.get("type", "info")),
+                    "timestamp": e.get("timestamp", e.get("created_at", "")),
+                    "source": e.get("service", e.get("source", "system")),
                     "resolved": e.get("resolved", False)
                 }
                 for e in errors

@@ -252,6 +252,9 @@ export const SystemMonitoringPage = () => {
   const [performanceData, setPerformanceData] = useState(generatePerformanceData());
   const [showErrorLogs, setShowErrorLogs] = useState(false);
   const [showJobsSheet, setShowJobsSheet] = useState(false);
+  const [showApiMonitor, setShowApiMonitor] = useState(false);
+  const [apiEndpoints, setApiEndpoints] = useState([]);
+  const [checkingApis, setCheckingApis] = useState(false);
   const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   
@@ -398,6 +401,37 @@ export const SystemMonitoringPage = () => {
     return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
   
+  // Check API endpoints health
+  const checkApiHealth = async () => {
+    setCheckingApis(true);
+    setShowApiMonitor(true);
+    const endpoints = [
+      { path: '/system/health', name: isRTL ? 'صحة النظام' : 'System Health' },
+      { path: '/communication/stats', name: isRTL ? 'إحصائيات التواصل' : 'Communication Stats' },
+      { path: '/schools?limit=1', name: isRTL ? 'المدارس' : 'Schools' },
+      { path: '/notifications?limit=1', name: isRTL ? 'الإشعارات' : 'Notifications' },
+      { path: '/system/integrations', name: isRTL ? 'التكاملات' : 'Integrations' },
+    ];
+    const results = [];
+    for (const ep of endpoints) {
+      const start = performance.now();
+      try {
+        await api.get(ep.path);
+        results.push({ ...ep, status: 'up', responseTime: Math.round(performance.now() - start) });
+      } catch {
+        results.push({ ...ep, status: 'down', responseTime: Math.round(performance.now() - start) });
+      }
+    }
+    setApiEndpoints(results);
+    setCheckingApis(false);
+    const upCount = results.filter(r => r.status === 'up').length;
+    setMetrics(prev => ({
+      ...prev,
+      apiSuccessRate: (upCount / results.length) * 100,
+      apiResponseTime: Math.round(results.reduce((s, r) => s + r.responseTime, 0) / results.length),
+    }));
+  };
+
   // Run AI diagnosis
   const runDiagnosis = () => {
     setIsDiagnosing(true);
@@ -951,7 +985,7 @@ export const SystemMonitoringPage = () => {
                 {/* Monitor APIs */}
                 <Card 
                   className="card-nassaq hover:shadow-lg transition-all cursor-pointer"
-                  onClick={() => toast.success(isRTL ? 'جاري فتح لوحة مراقبة APIs...' : 'Opening API monitoring...')}
+                  onClick={checkApiHealth}
                 >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -1189,6 +1223,73 @@ export const SystemMonitoringPage = () => {
                   </CardContent>
                 </Card>
               ))
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* API Monitor Sheet */}
+        <Sheet open={showApiMonitor} onOpenChange={setShowApiMonitor}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[500px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-600" />
+                {t.monitorAPIs}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              {checkingApis ? (
+                <div className="text-center py-12">
+                  <RefreshCw className="h-10 w-10 mx-auto mb-4 text-blue-500 animate-spin" />
+                  <p>{isRTL ? 'جاري فحص واجهات البرمجة...' : 'Checking API endpoints...'}</p>
+                </div>
+              ) : apiEndpoints.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <Globe className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>{isRTL ? 'انقر لفحص الخدمات' : 'Click to check services'}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg mb-4">
+                    <span className="font-medium">
+                      {isRTL ? 'نتيجة الفحص:' : 'Check Result:'}
+                    </span>
+                    <Badge className={
+                      apiEndpoints.every(e => e.status === 'up') ? 'bg-green-500' : 'bg-yellow-500'
+                    }>
+                      {apiEndpoints.filter(e => e.status === 'up').length}/{apiEndpoints.length} {isRTL ? 'نشط' : 'Up'}
+                    </Badge>
+                  </div>
+                  {apiEndpoints.map((ep) => (
+                    <Card key={ep.path}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {ep.status === 'up' ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-500" />
+                            )}
+                            <div>
+                              <p className="font-medium text-sm">{ep.name}</p>
+                              <p className="text-xs text-muted-foreground" dir="ltr">{ep.path}</p>
+                            </div>
+                          </div>
+                          <div className="text-end">
+                            <Badge variant="outline" className={ep.status === 'up' ? 'text-green-600' : 'text-red-600'}>
+                              {ep.status === 'up' ? (isRTL ? 'نشط' : 'Up') : (isRTL ? 'متوقف' : 'Down')}
+                            </Badge>
+                            <p className="text-xs text-muted-foreground mt-1">{ep.responseTime} {t.ms}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Button variant="outline" onClick={checkApiHealth} className="w-full rounded-xl mt-4">
+                    <RefreshCw className="h-4 w-4 me-2" />
+                    {isRTL ? 'إعادة الفحص' : 'Re-check'}
+                  </Button>
+                </>
               )}
             </div>
           </SheetContent>

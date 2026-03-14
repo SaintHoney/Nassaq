@@ -13789,45 +13789,6 @@ async def get_academic_structure(
     return structure
 
 
-# ============== SYSTEM MONITORING APIs ==============
-@api_router.get("/system/errors")
-async def get_system_errors(
-    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
-):
-    errors = await db.system_errors.find({}, {"_id": 0}).to_list(50)
-    if not errors:
-        errors = [
-            {"id": "err-001", "type": "warning", "message": "ارتفاع استخدام الذاكرة", "message_en": "High memory usage", "timestamp": datetime.now(timezone.utc).isoformat(), "resolved": False, "service": "backend"},
-            {"id": "err-002", "type": "info", "message": "تحديث قاعدة البيانات مكتمل", "message_en": "Database update complete", "timestamp": datetime.now(timezone.utc).isoformat(), "resolved": True, "service": "database"}
-        ]
-    return errors
-
-@api_router.get("/system/jobs")
-async def get_system_jobs(
-    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
-):
-    jobs = await db.system_jobs.find({}, {"_id": 0}).to_list(50)
-    if not jobs:
-        jobs = [
-            {"id": "job-001", "name": "نسخ احتياطي يومي", "name_en": "Daily Backup", "status": "completed", "last_run": datetime.now(timezone.utc).isoformat(), "schedule": "0 2 * * *", "duration_ms": 12500},
-            {"id": "job-002", "name": "تحديث الإحصائيات", "name_en": "Stats Update", "status": "running", "last_run": datetime.now(timezone.utc).isoformat(), "schedule": "*/15 * * * *", "duration_ms": 3200},
-            {"id": "job-003", "name": "تنظيف السجلات القديمة", "name_en": "Old Logs Cleanup", "status": "scheduled", "last_run": datetime.now(timezone.utc).isoformat(), "schedule": "0 3 * * 0", "duration_ms": 8700}
-        ]
-    return jobs
-
-@api_router.get("/system/alerts")
-async def get_system_alerts(
-    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
-):
-    alerts = await db.system_alerts.find({}, {"_id": 0}).to_list(50)
-    if not alerts:
-        alerts = [
-            {"id": "alert-001", "severity": "low", "title": "تحديث متاح", "title_en": "Update Available", "message": "يتوفر تحديث جديد للنظام", "created_at": datetime.now(timezone.utc).isoformat(), "acknowledged": False},
-            {"id": "alert-002", "severity": "info", "title": "النسخ الاحتياطي ناجح", "title_en": "Backup Successful", "message": "تم إنشاء نسخة احتياطية بنجاح", "created_at": datetime.now(timezone.utc).isoformat(), "acknowledged": True}
-        ]
-    return alerts
-
-
 # ============== SYSTEM RULES APIs ==============
 @api_router.get("/system/rules")
 async def get_system_rules(
