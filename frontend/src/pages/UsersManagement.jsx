@@ -1874,7 +1874,7 @@ export default function UsersManagement() {
                       const phone = document.getElementById('edit-user-phone')?.value;
                       
                       try {
-                        await api.patch(`/api/users/${showEditUser.id}`, {
+                        await api.put(`/api/users/${showEditUser.id}`, {
                           full_name: name,
                           email: email,
                           phone: phone
@@ -1883,13 +1883,8 @@ export default function UsersManagement() {
                         fetchUsers();
                         setShowEditUser(null);
                       } catch (error) {
-                        toast.success('تم تحديث بيانات المستخدم بنجاح');
-                        setUsers(prev => prev.map(u => 
-                          u.id === showEditUser.id 
-                            ? { ...u, full_name: name, email, phone } 
-                            : u
-                        ));
-                        setShowEditUser(null);
+                        console.error('Error updating user:', error);
+                        toast.error(isRTL ? 'فشل في تحديث بيانات المستخدم' : 'Failed to update user data');
                       }
                     }}
                   >
