@@ -4,7 +4,9 @@ Smart Multi-Tenant School Management System
 ## Architecture
 - **Frontend**: React (CRA + CRACO), port 5000 (dev), located in `frontend/`
 - **Backend**: FastAPI (Python), port 8001 (dev) / port 5000 (production), located in `backend/`
-- **Database**: MongoDB, running locally at `localhost:27017`, data at `/home/runner/data/mongodb`
+- **Database**: PostgreSQL (Replit built-in) via `DATABASE_URL`, with MongoDB-compatible DAL (`backend/pg_dal.py`)
+  - Migration in progress: `pg_dal.py` provides a MongoDB-like API over PostgreSQL JSONB
+  - Each MongoDB collection maps to a PostgreSQL table with `_id TEXT PK` + `data JSONB`
 
 ## Running the App (Development)
 - **Frontend**: `cd frontend && yarn start` → port 5000
