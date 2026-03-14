@@ -698,37 +698,50 @@ def setup_security_routes(db, get_current_user, require_roles, UserRole):
             c = pdf_canvas.Canvas(buf, pagesize=A4)
             w, h = A4
 
-            c.setFont(font_name, 20)
-            c.drawString(50, h - 50, "NASSAQ Security Report")
-            c.setFont(font_name, 11)
-            c.drawString(50, h - 75, f"Generated: {now.strftime('%Y-%m-%d %H:%M UTC')}")
+            def draw_rtl(canvas, x_right, y, text, font=font_name, size=11):
+                canvas.setFont(font, size)
+                text_width = canvas.stringWidth(text, font, size)
+                canvas.drawString(x_right - text_width, y, text)
+
+            right_margin = w - 50
+
+            draw_rtl(c, right_margin, h - 50, "NASSAQ - تقرير الأمان", size=20)
+            draw_rtl(c, right_margin, h - 75, f"تاريخ الإنشاء: {now.strftime('%Y-%m-%d %H:%M UTC')}", size=11)
 
             y = h - 120
-            c.setFont(font_name, 14)
-            c.drawString(50, y, "Summary")
+            draw_rtl(c, right_margin, y, "ملخص المقاييس الأمنية", size=14)
             y -= 25
-            c.setFont(font_name, 11)
             stats = [
-                f"Total Accounts: {total_users}",
-                f"Active Accounts: {active_users}",
-                f"Locked Accounts: {locked_users}",
-                f"Failed Logins (24h): {failed_24h}",
+                f"إجمالي الحسابات: {total_users}",
+                f"الحسابات النشطة: {active_users}",
+                f"الحسابات المقفلة: {locked_users}",
+                f"محاولات الدخول الفاشلة (24 ساعة): {failed_24h}",
             ]
             for s in stats:
-                c.drawString(70, y, s)
+                draw_rtl(c, right_margin - 20, y, s)
                 y -= 18
 
             y -= 15
-            c.setFont(font_name, 14)
-            c.drawString(50, y, "Recent Audit Events")
+            draw_rtl(c, right_margin, y, "أحدث الأحداث الأمنية", size=14)
             y -= 25
-            c.setFont(font_name, 9)
+            action_labels = {
+                "auth.login": "تسجيل دخول",
+                "login_failed": "دخول فاشل",
+                "failed_login": "دخول فاشل",
+                "account_locked": "قفل حساب",
+                "account_unlocked": "فتح حساب",
+                "force_password_change": "فرض تغيير كلمة المرور",
+                "all_sessions_terminated": "إنهاء جميع الجلسات",
+                "alert_dismissed": "تجاهل تنبيه",
+                "alert_escalated": "تصعيد تنبيه",
+            }
             for log in recent_logs[:15]:
                 action = log.get("action", "-")
+                action_ar = action_labels.get(action, action)
                 ts = log.get("timestamp", "-")
                 who = log.get("performed_by_name", log.get("performed_by", "-"))
-                line = f"{ts[:19]}  |  {action}  |  {who}"
-                c.drawString(60, y, line[:100])
+                line = f"{who}  |  {action_ar}  |  {ts[:19]}"
+                draw_rtl(c, right_margin - 10, y, line[:100], size=9)
                 y -= 14
                 if y < 60:
                     c.showPage()

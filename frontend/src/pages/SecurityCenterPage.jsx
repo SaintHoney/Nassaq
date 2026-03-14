@@ -1280,6 +1280,68 @@ export default function SecurityCenterPage() {
           </DialogContent>
         </Dialog>
         
+        {/* Alert Details Sheet */}
+        <Sheet open={showAlertDetailsSheet} onOpenChange={setShowAlertDetailsSheet}>
+          <SheetContent side={isRTL ? 'left' : 'right'} className="w-[400px] sm:w-[500px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                {selectedAlert && (() => { const pi = getAlertPriorityInfo(selectedAlert.type); const PI = pi.icon; return <PI className="h-5 w-5" />; })()}
+                {isRTL ? 'تفاصيل التنبيه' : 'Alert Details'}
+              </SheetTitle>
+            </SheetHeader>
+            {selectedAlert && (
+              <div className="py-6 space-y-6">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">{isRTL ? selectedAlert.title_ar : selectedAlert.title_en}</h3>
+                  <p className="text-sm text-muted-foreground">{isRTL ? selectedAlert.description_ar : selectedAlert.description_en}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-muted/30 rounded-xl">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'الأولوية' : 'Priority'}</p>
+                    <Badge variant={selectedAlert.type === 'high' ? 'destructive' : selectedAlert.type === 'medium' ? 'default' : 'secondary'}>
+                      {selectedAlert.type === 'high' ? t.highPriority : selectedAlert.type === 'medium' ? t.mediumPriority : t.lowPriority}
+                    </Badge>
+                  </div>
+                  <div className="p-3 bg-muted/30 rounded-xl">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'الحالة' : 'Status'}</p>
+                    <Badge variant="outline">{selectedAlert.status}</Badge>
+                  </div>
+                  <div className="p-3 bg-muted/30 rounded-xl col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'الوقت' : 'Timestamp'}</p>
+                    <p className="text-sm font-medium">{formatDateTime(selectedAlert.timestamp)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={async () => {
+                      try {
+                        await api.post(`/security/alerts/${selectedAlert.id}/dismiss`);
+                        toast.success(isRTL ? 'تم تجاهل التنبيه' : 'Alert dismissed');
+                        setShowAlertDetailsSheet(false);
+                        fetchAlerts();
+                      } catch { toast.error(isRTL ? 'فشل تجاهل التنبيه' : 'Failed to dismiss'); }
+                    }}
+                  >{t.dismiss}</Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={async () => {
+                      try {
+                        await api.post(`/security/alerts/${selectedAlert.id}/escalate`);
+                        toast.success(isRTL ? 'تم تصعيد التنبيه' : 'Alert escalated');
+                        setShowAlertDetailsSheet(false);
+                        fetchAlerts();
+                      } catch { toast.error(isRTL ? 'فشل تصعيد التنبيه' : 'Failed to escalate'); }
+                    }}
+                  >{t.escalate}</Button>
+                </div>
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+
         {/* AI Report Dialog */}
         <Dialog open={showAIReportDialog} onOpenChange={setShowAIReportDialog}>
           <DialogContent className="max-w-lg">
