@@ -30,6 +30,7 @@ import qrcode
 import io
 import base64
 from enum import Enum
+import certifi
 
 # Import Audit Engine
 from engines.audit_engine import AuditLogEngine, AuditAction, AuditSeverity
@@ -57,12 +58,15 @@ mongo_url = os.environ.get('MONGO_URL')
 if not mongo_url:
     raise RuntimeError("MONGO_URL environment variable is not set. Set it in Replit Secrets or backend/.env")
 
-if "mongodb+srv://" in mongo_url or ".mongodb.net" in mongo_url:
+is_atlas = "mongodb+srv://" in mongo_url or ".mongodb.net" in mongo_url
+
+if is_atlas:
     logging.info("Connecting to cloud MongoDB (Atlas)...")
+    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 else:
     logging.info("Connecting to local MongoDB...")
+    client = AsyncIOMotorClient(mongo_url)
 
-client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'nassaq_db')]
 
 # Initialize Audit Engine
