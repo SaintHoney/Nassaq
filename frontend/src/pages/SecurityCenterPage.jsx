@@ -658,11 +658,11 @@ export default function SecurityCenterPage() {
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between mb-3">
                       <UserCheck className="h-8 w-8 text-green-600" />
-                      <Badge variant="outline" className="text-green-600">{((metrics.protectedAccounts / metrics.totalAccounts) * 100).toFixed(0)}%</Badge>
+                      <Badge variant="outline" className="text-green-600">{metrics.totalAccounts ? ((metrics.protectedAccounts / metrics.totalAccounts) * 100).toFixed(0) : 0}%</Badge>
                     </div>
                     <h3 className="font-bold text-2xl">{metrics.protectedAccounts.toLocaleString()}</h3>
                     <p className="text-sm text-muted-foreground">{t.protectedAccounts}</p>
-                    <Progress value={(metrics.protectedAccounts / metrics.totalAccounts) * 100} className="mt-2 h-2" />
+                    <Progress value={metrics.totalAccounts ? (metrics.protectedAccounts / metrics.totalAccounts) * 100 : 0} className="mt-2 h-2" />
                   </CardContent>
                 </Card>
                 <Card className="hover:shadow-lg transition-all">
