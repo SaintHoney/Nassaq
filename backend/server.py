@@ -14332,20 +14332,68 @@ async def get_teacher_dashboard(
         "school_id": school_id
     }, {"_id": 0}).sort("timestamp", -1).limit(5).to_list(5)
     
+    # Notification and message counts
+    unread_notifications = await db.notifications.count_documents({
+        "recipient_id": current_user.get("id"),
+        "is_read": False
+    })
+    unread_messages = await db.messages.count_documents({
+        "recipient_id": current_user.get("id"),
+        "is_read": False
+    })
+    
+    # Hijri date
+    now = datetime.now()
+    try:
+        import hijri_converter
+        h = hijri_converter.Gregorian(now.year, now.month, now.day).to_hijri()
+        hijri_months = ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"]
+        hijri_date = f"{h.day} {hijri_months[h.month - 1]} {h.year}"
+    except Exception:
+        hijri_date = now.strftime("%Y-%m-%d")
+    
+    # School name
+    school_doc = await db.schools.find_one({"id": school_id}, {"_id": 0, "name": 1, "name_en": 1, "stage": 1})
+    school_name = school_doc.get("name", "") if school_doc else ""
+    school_stage = school_doc.get("stage", "") if school_doc else ""
+    
+    # Current/next session detection
+    current_session = None
+    next_session = None
+    now_time = now.strftime("%H:%M")
+    for lesson in today_lessons:
+        start = lesson.get("time", "")
+        end = lesson.get("end_time", "")
+        if start and end and start <= now_time <= end:
+            current_session = lesson
+        elif start and start > now_time and next_session is None:
+            next_session = lesson
+    if not current_session and not next_session and today_lessons:
+        next_session = today_lessons[0] if today_lessons[0].get("time", "") > now_time else None
+    
     return {
         "teacher": {
             "id": teacher.get("id"),
             "name": teacher.get("full_name"),
             "rank": teacher.get("rank"),
-            "school_id": school_id
+            "school_id": school_id,
+            "school_name": school_name,
+            "stage": school_stage
         },
+        "hijri_date": hijri_date,
+        "school_name": school_name,
+        "stage": school_stage,
+        "current_session": current_session,
+        "next_session": next_session,
         "stats": {
             "my_classes": len(class_ids),
             "my_students": total_students,
             "today_lessons": len(today_lessons),
             "pending_attendance": pending_attendance,
             "subjects_count": len(subject_ids),
-            "weekly_sessions": sum(a.get("weekly_sessions", 0) for a in assignments)
+            "weekly_sessions": sum(a.get("weekly_sessions", 0) for a in assignments),
+            "unread_notifications": unread_notifications,
+            "unread_messages": unread_messages
         },
         "today_schedule": today_lessons,
         "classes": [{"id": c.get("id"), "name": c.get("name"), "students": c.get("student_count", 0)} for c in classes],
@@ -16186,9 +16234,17 @@ async def get_teacher_classes(
     if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
     
+    # Resolve teacher_id: if not found directly, try user_id mapping
+    actual_teacher_id = teacher_id
+    teacher_doc = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "id": 1})
+    if not teacher_doc:
+        teacher_doc = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0, "id": 1})
+        if teacher_doc:
+            actual_teacher_id = teacher_doc.get("id", teacher_id)
+    
     # Get teacher assignments
     assignments = await db.teacher_assignments.find({
-        "teacher_id": teacher_id,
+        "teacher_id": actual_teacher_id,
         "is_active": True
     }, {"_id": 0}).to_list(100)
     
@@ -16224,7 +16280,7 @@ async def get_teacher_classes(
             "subjects": subject_names,
             "weekly_periods": sum(a.get("weekly_sessions", 0) for a in class_assignments),
             "attendance_rate": att_rate,
-            "progress": 65
+            "progress": 0
         })
     
     return enriched_classes
@@ -16246,9 +16302,13 @@ async def get_teacher_schedule(
     if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
     
-    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "school_id": 1})
+    # Resolve teacher_id: try direct, then user_id mapping
+    teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "school_id": 1, "id": 1})
+    if not teacher:
+        teacher = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0, "school_id": 1, "id": 1})
     if not teacher:
         return []
+    actual_schedule_teacher_id = teacher.get("id", teacher_id)
     
     school_id = teacher.get("school_id")
     
@@ -16264,7 +16324,7 @@ async def get_teacher_schedule(
     # Get sessions
     sessions = await db.schedule_sessions.find({
         "schedule_id": schedule.get("id"),
-        "teacher_id": teacher_id,
+        "teacher_id": actual_schedule_teacher_id,
         "status": "scheduled"
     }, {"_id": 0}).to_list(100)
     

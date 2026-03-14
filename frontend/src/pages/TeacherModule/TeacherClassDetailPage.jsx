@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sidebar } from '../../components/layout/Sidebar';
+import { TeacherLayout } from '../../components/layout/TeacherLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -94,7 +94,7 @@ export default function TeacherClassDetailPage() {
   };
 
   return (
-    <Sidebar>
+    <TeacherLayout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
         <div className="sticky top-0 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b p-4">
@@ -403,6 +403,6 @@ export default function TeacherClassDetailPage() {
         )}
       </div>
       <HakimAssistant />
-    </Sidebar>
+    </TeacherLayout>
   );
 }

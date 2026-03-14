@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sidebar } from '../../components/layout/Sidebar';
+import { TeacherLayout } from '../../components/layout/TeacherLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -45,10 +45,17 @@ export default function TeacherMainDashboard() {
     pendingAssessments: 0,
     upcomingLessons: [],
     totalSessions: 0,
-    subjectsCount: 0
+    subjectsCount: 0,
+    unreadNotifications: 0,
+    unreadMessages: 0
   });
   const [recentActivities, setRecentActivities] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [hijriDate, setHijriDate] = useState('');
+  const [schoolName, setSchoolName] = useState('');
+  const [schoolStage, setSchoolStage] = useState('');
+  const [currentSession, setCurrentSession] = useState(null);
+  const [nextSession, setNextSession] = useState(null);
 
   const teacherId = user?.teacher_id || user?.id;
 
@@ -70,15 +77,25 @@ export default function TeacherMainDashboard() {
           pendingAssessments: 0,
           totalSessions: data.stats.weekly_sessions || 0,
           subjectsCount: data.stats.subjects_count || 0,
+          unreadNotifications: data.stats.unread_notifications || 0,
+          unreadMessages: data.stats.unread_messages || 0,
           upcomingLessons: data.today_schedule?.map(lesson => ({
             time: lesson.time,
             period: lesson.period,
-            subject: lesson.subject,
+            subject: lesson.subject || lesson.subject_name,
             class: lesson.class_name,
-            class_id: lesson.class_id
+            class_id: lesson.class_id,
+            subject_id: lesson.subject_id,
+            end_time: lesson.end_time,
+            schedule_session_id: lesson.schedule_session_id || lesson.id
           })) || []
         });
         
+        setHijriDate(data.hijri_date || '');
+        setSchoolName(data.school_name || '');
+        setSchoolStage(data.stage || '');
+        setCurrentSession(data.current_session || null);
+        setNextSession(data.next_session || null);
         setClasses(data.classes || []);
         
         setRecentActivities(data.recent_activities?.map(a => ({
@@ -171,6 +188,22 @@ export default function TeacherMainDashboard() {
       bgColor: 'bg-orange-100',
       path: '/teacher/attendance'
     },
+    { 
+      icon: Bell, 
+      label: isRTL ? 'إشعارات' : 'Notifications', 
+      value: stats.unreadNotifications, 
+      color: 'text-red-600', 
+      bgColor: 'bg-red-100',
+      path: '/notifications'
+    },
+    { 
+      icon: MessageSquare, 
+      label: isRTL ? 'رسائل' : 'Messages', 
+      value: stats.unreadMessages, 
+      color: 'text-teal-600', 
+      bgColor: 'bg-teal-100',
+      path: '/teacher/communication'
+    },
   ];
 
   const sidebarLinks = [
@@ -183,8 +216,7 @@ export default function TeacherMainDashboard() {
   ];
 
   return (
-    <Sidebar>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
+    <TeacherLayout>
         <div className="p-4 md:p-6 space-y-6">
           
           {/* Welcome Card */}
@@ -205,7 +237,8 @@ export default function TeacherMainDashboard() {
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
-                      {isRTL ? 'لوحة المعلم' : 'Teacher Dashboard'}
+                      {schoolName || (isRTL ? 'المدرسة' : 'School')}
+                      {schoolStage ? ` · ${schoolStage}` : ''}
                     </p>
                   </div>
                 </div>
@@ -230,10 +263,10 @@ export default function TeacherMainDashboard() {
                     <Calendar className="h-5 w-5 text-brand-navy" />
                     <div className="text-end">
                       <p className="font-cairo text-lg font-bold text-brand-navy">
-                        {getCurrentHijriDate().hijri}
+                        {hijriDate || getCurrentHijriDate().hijri}
                       </p>
                       <p className="text-xs text-muted-foreground font-mono">
-                        {getCurrentHijriDate().gregorian}
+                        {new Date().toLocaleDateString('en-GB')}
                       </p>
                     </div>
                   </div>
@@ -263,7 +296,7 @@ export default function TeacherMainDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {statsCards.map((stat, index) => (
               <Card 
                 key={index} 
@@ -284,6 +317,55 @@ export default function TeacherMainDashboard() {
               </Card>
             ))}
           </div>
+
+          {/* Current / Next Session Panel */}
+          {(currentSession || nextSession) && (
+            <Card className={`border-2 ${currentSession ? 'border-green-400 bg-green-50/50' : 'border-brand-turquoise bg-brand-turquoise/5'}`}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${currentSession ? 'bg-green-500' : 'bg-brand-turquoise'} text-white`}>
+                      <Play className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <Badge className={`mb-1 ${currentSession ? 'bg-green-500' : 'bg-brand-turquoise'}`}>
+                        {currentSession ? (isRTL ? 'الحصة الحالية' : 'Current Session') : (isRTL ? 'الحصة التالية' : 'Next Session')}
+                      </Badge>
+                      <h3 className="font-cairo font-bold text-xl text-brand-navy">
+                        {(currentSession || nextSession)?.subject || (currentSession || nextSession)?.subject_name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {(currentSession || nextSession)?.class_name} · {isRTL ? 'الحصة' : 'Period'} {(currentSession || nextSession)?.slot_number || (currentSession || nextSession)?.period}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-center">
+                      <p className="font-mono font-bold text-lg text-brand-navy">{(currentSession || nextSession)?.time}</p>
+                      <p className="text-xs text-muted-foreground">{(currentSession || nextSession)?.end_time}</p>
+                    </div>
+                    <Button
+                      className={`h-12 px-6 ${currentSession ? 'bg-green-500 hover:bg-green-600' : 'bg-brand-turquoise hover:bg-brand-turquoise/90'}`}
+                      onClick={() => {
+                        const session = currentSession || nextSession;
+                        const lessonData = {
+                          lesson: session,
+                          schedule_session_id: session?.schedule_session_id || session?.id,
+                          class_id: session?.class_id,
+                          subject_id: session?.subject_id
+                        };
+                        sessionStorage.setItem('current_lesson', JSON.stringify(lessonData));
+                        navigate('/teacher/session/start', { state: lessonData });
+                      }}
+                    >
+                      <Play className="h-5 w-5 me-2" />
+                      {isRTL ? 'ابدأ الحصة' : 'Start Class'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -452,8 +534,7 @@ export default function TeacherMainDashboard() {
           </Card>
 
         </div>
-      </div>
       <HakimAssistant />
-    </Sidebar>
+    </TeacherLayout>
   );
 }

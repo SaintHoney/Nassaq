@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sidebar } from '../../components/layout/Sidebar';
+import { TeacherLayout } from '../../components/layout/TeacherLayout';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -182,7 +182,7 @@ export default function TeacherHomePage() {
   };
 
   return (
-    <Sidebar>
+    <TeacherLayout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Pull to refresh indicator */}
         {refreshing && (
@@ -397,6 +397,6 @@ export default function TeacherHomePage() {
         </div>
       </div>
       <HakimAssistant />
-    </Sidebar>
+    </TeacherLayout>
   );
 }

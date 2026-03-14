@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sidebar } from '../../components/layout/Sidebar';
+import { TeacherLayout } from '../../components/layout/TeacherLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -34,32 +34,8 @@ export default function TeacherClassesPage() {
       setClasses(response.data || []);
     } catch (error) {
       console.error('Error fetching classes:', error);
-      // Fallback to assignments
-      try {
-        const assignmentsRes = await api.get('/teacher-assignments');
-        const myAssignments = (assignmentsRes.data || []).filter(a => a.teacher_id === teacherId);
-        
-        // Get unique classes
-        const classIds = [...new Set(myAssignments.map(a => a.class_id))];
-        const classesRes = await api.get('/classes');
-        const myClasses = (classesRes.data || []).filter(c => classIds.includes(c.id));
-        
-        const enrichedClasses = myClasses.map(cls => {
-          const classAssignments = myAssignments.filter(a => a.class_id === cls.id);
-          return {
-            ...cls,
-            subjects: classAssignments.map(a => a.subject_name || 'مادة'),
-            weekly_periods: classAssignments.reduce((sum, a) => sum + (a.weekly_periods || 0), 0),
-            student_count: cls.student_count || cls.students_count || 0,
-            progress: 0,
-            attendance_rate: 0
-          };
-        });
-        
-        setClasses(enrichedClasses);
-      } catch (err) {
-        toast.error(isRTL ? 'خطأ في تحميل الفصول' : 'Error loading classes');
-      }
+      toast.error(isRTL ? 'خطأ في تحميل الفصول' : 'Error loading classes');
+      setClasses([]);
     } finally {
       setLoading(false);
     }
@@ -75,7 +51,7 @@ export default function TeacherClassesPage() {
   );
 
   return (
-    <Sidebar>
+    <TeacherLayout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
         <div className="sticky top-0 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b p-4">
@@ -270,6 +246,6 @@ export default function TeacherClassesPage() {
         </div>
       </div>
       <HakimAssistant />
-    </Sidebar>
+    </TeacherLayout>
   );
 }
