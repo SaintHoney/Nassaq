@@ -14357,7 +14357,7 @@ async def get_teacher_dashboard(
     school_name = school_doc.get("name", "") if school_doc else ""
     school_stage = school_doc.get("stage", "") if school_doc else ""
     
-    # Current/next session detection
+    # Current/next session detection + per-session status
     current_session = None
     next_session = None
     now_time = now.strftime("%H:%M")
@@ -14365,9 +14365,14 @@ async def get_teacher_dashboard(
         start = lesson.get("time", "")
         end = lesson.get("end_time", "")
         if start and end and start <= now_time <= end:
+            lesson["status"] = "current"
             current_session = lesson
-        elif start and start > now_time and next_session is None:
-            next_session = lesson
+        elif end and now_time > end:
+            lesson["status"] = "completed"
+        else:
+            lesson["status"] = "upcoming"
+            if next_session is None:
+                next_session = lesson
     if not current_session and not next_session and today_lessons:
         next_session = today_lessons[0] if today_lessons[0].get("time", "") > now_time else None
     

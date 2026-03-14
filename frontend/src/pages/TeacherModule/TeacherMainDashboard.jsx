@@ -417,11 +417,9 @@ export default function TeacherMainDashboard() {
                   </div>
                 ) : (
                   stats.upcomingLessons.map((lesson, index) => {
-                    const now = new Date();
-                    const nowTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                    const isCurrent = lesson.time && lesson.end_time && lesson.time <= nowTime && nowTime <= lesson.end_time;
-                    const isCompleted = lesson.end_time && nowTime > lesson.end_time;
-                    const isUpcoming = !isCurrent && !isCompleted;
+                    const isCurrent = lesson.status === 'current';
+                    const isCompleted = lesson.status === 'completed';
+                    const isUpcoming = lesson.status === 'upcoming' || (!isCurrent && !isCompleted);
                     
                     return (
                       <div 
