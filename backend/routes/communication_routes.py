@@ -45,19 +45,41 @@ def create_communication_routes(db, get_current_user, require_roles, UserRole):
         if school_id:
             query["school_id"] = school_id
         
-        # Count messages
         total_sent = await db.messages.count_documents({**query, "status": "sent"})
         total_scheduled = await db.messages.count_documents({**query, "status": "scheduled"})
         total_drafts = await db.messages.count_documents({**query, "status": "draft"})
+        total_failed = await db.messages.count_documents({**query, "status": "failed"})
         
-        # Count templates
-        total_templates = await db.message_templates.count_documents(query)
+        total_notifications = 0
+        unread_notifications = 0
+        try:
+            total_notifications = await db.notifications.count_documents(query)
+            unread_notifications = await db.notifications.count_documents({**query, "read_by": {"$size": 0}})
+        except Exception:
+            pass
+        
+        user_role = current_user.get("role", "")
+        audience_filter = ["all"]
+        if user_role in ["teacher", "independent_teacher", "school_teacher"]:
+            audience_filter.append("teachers")
+        elif user_role == "student":
+            audience_filter.append("students")
+        elif user_role == "parent":
+            audience_filter.append("parents")
+        received_query = {**query, "status": "sent", "audience": {"$in": audience_filter}}
+        received = await db.messages.count_documents(received_query)
         
         return {
+            "total_notifications": total_notifications,
+            "unread_notifications": unread_notifications,
+            "sent_messages": total_sent,
+            "received_messages": received,
+            "scheduled_messages": total_scheduled,
+            "failed_messages": total_failed,
             "sent": total_sent,
             "scheduled": total_scheduled,
             "drafts": total_drafts,
-            "templates": total_templates
+            "templates": await db.message_templates.count_documents(query)
         }
     
     @router.post("")

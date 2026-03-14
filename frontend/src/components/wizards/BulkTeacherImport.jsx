@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -36,6 +36,7 @@ import {
   Users,
   FileText,
   Sparkles,
+  Building2,
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
@@ -56,7 +57,7 @@ const REQUIRED_FIELDS = [
 ];
 
 // Step 1: Upload File
-const UploadStep = ({ onFileSelect, isRTL }) => {
+const UploadStep = ({ onFileSelect, isRTL, schools, selectedSchool, onSchoolChange }) => {
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 0) {
       onFileSelect(acceptedFiles[0]);
@@ -74,7 +75,6 @@ const UploadStep = ({ onFileSelect, isRTL }) => {
   });
 
   const downloadTemplate = () => {
-    // Create CSV template
     const headers = REQUIRED_FIELDS.map(f => isRTL ? f.label_ar : f.label_en).join(',');
     const example = 'أحمد محمد العمري,ذكر,1029384756,0500000000,teacher@school.com,الرياضيات,ابتدائي,الرابع;الخامس,معلم متقدم,الرياض';
     const csvContent = `${headers}\n${example}`;
@@ -99,7 +99,31 @@ const UploadStep = ({ onFileSelect, isRTL }) => {
         </p>
       </div>
 
-      {/* Required Fields Info */}
+      {schools.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              {isRTL ? 'اختر المدرسة' : 'Select School'} *
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <select
+              value={selectedSchool}
+              onChange={(e) => onSchoolChange(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-background text-foreground"
+            >
+              <option value="">{isRTL ? '-- اختر المدرسة --' : '-- Select School --'}</option>
+              {schools.map(school => (
+                <option key={school.id} value={school.id}>
+                  {isRTL ? school.name : (school.name_en || school.name)} ({school.code})
+                </option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -123,7 +147,6 @@ const UploadStep = ({ onFileSelect, isRTL }) => {
         </CardContent>
       </Card>
 
-      {/* Drop Zone */}
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
@@ -145,7 +168,6 @@ const UploadStep = ({ onFileSelect, isRTL }) => {
         </p>
       </div>
 
-      {/* Download Template Button */}
       <div className="flex justify-center">
         <Button variant="outline" onClick={downloadTemplate} className="rounded-xl">
           <Download className="h-4 w-4 me-2" />
@@ -366,7 +388,7 @@ const ResultsStep = ({ results, isRTL, onClose }) => (
 // Main Bulk Import Wizard
 export const BulkTeacherImport = ({ open, onClose }) => {
   const { isRTL } = useTheme();
-  const { token, api } = useAuth();
+  const { token, api, user } = useAuth();
   
   const [step, setStep] = useState(1);
   const [file, setFile] = useState(null);
@@ -375,13 +397,33 @@ export const BulkTeacherImport = ({ open, onClose }) => {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState({ total: 0, created: 0, failed: 0 });
+  const [schools, setSchools] = useState([]);
+  const [selectedSchool, setSelectedSchool] = useState('');
+
+  useEffect(() => {
+    if (open && user?.role === 'platform_admin') {
+      api.get('/schools?limit=200').then(res => {
+        const list = res.data?.schools || res.data || [];
+        setSchools(Array.isArray(list) ? list : []);
+      }).catch(() => setSchools([]));
+    } else if (open && user?.tenant_id) {
+      setSelectedSchool(user.tenant_id);
+    }
+  }, [open, api, user]);
 
   const handleFileSelect = async (selectedFile) => {
+    if (schools.length > 0 && !selectedSchool) {
+      toast.error(isRTL ? 'يرجى اختيار المدرسة أولاً' : 'Please select a school first');
+      return;
+    }
+
     setFile(selectedFile);
     
-    // Parse file (simplified - in real app, use xlsx library)
     const formData = new FormData();
     formData.append('file', selectedFile);
+    if (selectedSchool) {
+      formData.append('school_id', selectedSchool);
+    }
     
     try {
       const response = await api.post('/teachers/bulk/parse', formData, {
@@ -392,7 +434,6 @@ export const BulkTeacherImport = ({ open, onClose }) => {
       setErrors(response.data.errors || []);
       setStep(2);
     } catch (error) {
-      // Show error - no mock data
       console.error('Error parsing file:', error);
       setParsedData([]);
       setErrors([{ row: 0, field: 'file', message: isRTL ? 'فشل في قراءة الملف. يرجى التحقق من صيغة الملف.' : 'Failed to parse file. Please check file format.' }]);
@@ -410,7 +451,11 @@ export const BulkTeacherImport = ({ open, onClose }) => {
 
     for (let i = 0; i < validData.length; i++) {
       try {
-        await api.post('/teachers/bulk/create-single', validData[i]);
+        const payload = { ...validData[i] };
+        if (selectedSchool) {
+          payload.school_id = selectedSchool;
+        }
+        await api.post('/teachers/bulk/create-single', payload);
         created++;
       } catch {
         failed++;
@@ -430,6 +475,9 @@ export const BulkTeacherImport = ({ open, onClose }) => {
     setErrors([]);
     setProgress(0);
     setResults({ total: 0, created: 0, failed: 0 });
+    if (user?.role === 'platform_admin') {
+      setSelectedSchool('');
+    }
   };
 
   const handleClose = () => {
@@ -456,7 +504,15 @@ export const BulkTeacherImport = ({ open, onClose }) => {
         </DialogHeader>
 
         <div className="py-4">
-          {step === 1 && <UploadStep onFileSelect={handleFileSelect} isRTL={isRTL} />}
+          {step === 1 && (
+            <UploadStep
+              onFileSelect={handleFileSelect}
+              isRTL={isRTL}
+              schools={schools}
+              selectedSchool={selectedSchool}
+              onSchoolChange={setSelectedSchool}
+            />
+          )}
           {step === 2 && <PreviewStep data={parsedData} errors={errors} isRTL={isRTL} />}
           {step === 3 && <ImportStep progress={progress} total={parsedData.length} created={results.created} failed={results.failed} isRTL={isRTL} />}
           {step === 4 && <ResultsStep results={results} isRTL={isRTL} onClose={handleClose} />}

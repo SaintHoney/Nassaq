@@ -1986,27 +1986,91 @@ async def chat_with_hakim(message: HakimMessage, current_user: dict = Depends(ge
         if not llm_key:
             raise HTTPException(status_code=500, detail="AI service not configured")
         
-        system_prompt = """أنت حكيم، المساعد الذكي لمنصة نَسَّق لإدارة المدارس.
+        user_role = current_user.get("role", "")
+        user_name = current_user.get("full_name", "")
+        tenant_id = current_user.get("tenant_id")
+        
+        is_platform_role = user_role in [
+            UserRole.PLATFORM_ADMIN.value,
+            UserRole.PLATFORM_OPERATIONS_MANAGER.value,
+            UserRole.PLATFORM_TECHNICAL_ADMIN.value,
+            UserRole.PLATFORM_DATA_ANALYST.value,
+            UserRole.PLATFORM_SECURITY_OFFICER.value,
+            UserRole.PLATFORM_SUPPORT_SPECIALIST.value,
+        ]
+
+        school_name = ""
+        if tenant_id:
+            school = await db.schools.find_one({"id": tenant_id})
+            if school:
+                school_name = school.get("name", "")
+
+        if is_platform_role:
+            total_schools = await db.schools.count_documents({})
+            active_schools = await db.schools.count_documents({"status": "active"})
+            total_students = await db.students.count_documents({})
+            total_teachers = await db.teachers.count_documents({})
+            total_users = await db.users.count_documents({})
+            platform_context = f"""
+بيانات المنصة الحالية:
+- عدد المدارس: {total_schools} (نشطة: {active_schools})
+- عدد الطلاب: {total_students}
+- عدد المعلمين: {total_teachers}
+- إجمالي المستخدمين: {total_users}
+
+المستخدم الحالي:
+- الاسم: {user_name}
+- الدور: {user_role}
+- مدير المنصة
+"""
+        elif tenant_id:
+            school_students = await db.students.count_documents({"school_id": tenant_id})
+            school_teachers = await db.teachers.count_documents({"school_id": tenant_id})
+            platform_context = f"""
+بيانات المدرسة الحالية ({school_name}):
+- عدد الطلاب: {school_students}
+- عدد المعلمين: {school_teachers}
+
+المستخدم الحالي:
+- الاسم: {user_name}
+- الدور: {user_role}
+- المدرسة: {school_name}
+"""
+        else:
+            platform_context = f"""
+المستخدم الحالي:
+- الاسم: {user_name}
+- الدور: {user_role}
+"""
+
+        system_prompt = f"""أنت حكيم، المساعد الذكي لمنصة نَسَّق (NASSAQ) لإدارة المدارس في المملكة العربية السعودية.
+
+{platform_context}
 
 مهمتك:
 - مساعدة المستخدمين في فهم النظام وميزاته
 - الإجابة على الأسئلة المتعلقة بإدارة المدارس والعمليات التعليمية
-- تقديم توصيات ذكية بناءً على البيانات المتاحة
+- تقديم توصيات ذكية بناءً على البيانات المتاحة أعلاه
 - شرح كيفية استخدام الميزات المختلفة في النظام
 - المساعدة في إدارة الجداول الدراسية وتوزيع الحصص
+- تقديم إحصائيات دقيقة من بيانات المنصة عند السؤال
 
-خبراتك في الجدولة:
-- إنشاء جداول دراسية متوازنة ومحسّنة
-- توزيع الحصص على المعلمين بشكل عادل
-- كشف التعارضات في الجداول
-- اقتراح حلول للتعارضات
-- تحسين استغلال الوقت والموارد
+صفحات المنصة المتاحة:
+- مركز القيادة (لوحة التحكم الرئيسية)
+- إدارة المدارس والمستخدمين
+- الجدول المدرسي (إنشاء وتوليد تلقائي)
+- التواصل والإشعارات (رسائل جماعية)
+- التقارير والتحليلات (تصدير PDF/CSV)
+- مركز الأمان (سجلات الدخول والتنبيهات)
+- مراقبة النظام (صحة الخوادم)
+- الإعدادات (إعدادات المنصة)
 
 أسلوبك:
 - ودود ومهني
 - واضح ومختصر
 - داعم وإيجابي
 - تستخدم اللغة العربية الفصحى
+- تقدم أرقام وإحصائيات حقيقية من بيانات المنصة
 
 قدم إجابات مفيدة وعملية للمستخدمين."""
 
@@ -13990,6 +14054,10 @@ settings_router = setup_settings_routes(db, get_current_user, require_roles, Use
 from routes.user_roles_routes import setup_user_roles_routes
 user_roles_router = setup_user_roles_routes(db, get_current_user, require_roles, UserRole, create_access_token)
 
+# Import and create system monitoring routes (System Monitoring Dashboard)
+from routes.system_monitoring_routes import setup_system_monitoring_routes
+system_monitoring_router = setup_system_monitoring_routes(db, get_current_user, require_roles, UserRole)
+
 # Import and create WebSocket routes (Real-time Notifications)
 from routes.websocket_routes import create_websocket_routes, get_connection_manager, send_realtime_notification
 
@@ -14035,6 +14103,7 @@ api_router.include_router(security_router)
 api_router.include_router(settings_router)
 api_router.include_router(user_roles_router)
 api_router.include_router(websocket_router)
+api_router.include_router(system_monitoring_router)
 api_router.include_router(bulk_routes)
 api_router.include_router(student_portal_routes)
 api_router.include_router(parent_portal_routes)

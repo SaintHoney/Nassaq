@@ -2,7 +2,7 @@
 NASSAQ - Bulk Teacher Import Routes
 API endpoints for bulk importing teachers
 """
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from typing import Optional, List
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -22,6 +22,7 @@ class TeacherBulkData(BaseModel):
     grades: Optional[str] = None
     rank: Optional[str] = None
     address: Optional[str] = None
+    school_id: Optional[str] = None
 
 
 class ParseResult(BaseModel):
@@ -38,10 +39,16 @@ def create_bulk_teacher_routes(db, get_current_user, require_roles, UserRole, ha
     @router.post("/parse", response_model=ParseResult)
     async def parse_teacher_file(
         file: UploadFile = File(...),
+        school_id: Optional[str] = Form(None),
         current_user: dict = Depends(require_roles([UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_ADMIN, UserRole.PLATFORM_ADMIN]))
     ):
         """Parse uploaded file and return validated data"""
-        school_id = current_user.get("tenant_id")
+        effective_school_id = current_user.get("tenant_id")
+        if not effective_school_id and school_id and current_user.get("role") == UserRole.PLATFORM_ADMIN.value:
+            sch = await db.schools.find_one({"id": school_id})
+            if sch:
+                effective_school_id = school_id
+        school_id = effective_school_id
         
         try:
             content = await file.read()
@@ -134,6 +141,10 @@ def create_bulk_teacher_routes(db, get_current_user, require_roles, UserRole, ha
     ):
         """Create a single teacher from bulk import data"""
         school_id = current_user.get("tenant_id")
+        if not school_id and teacher_data.school_id and current_user.get("role") == UserRole.PLATFORM_ADMIN.value:
+            sch = await db.schools.find_one({"id": teacher_data.school_id})
+            if sch:
+                school_id = teacher_data.school_id
         
         # Check duplicate email
         existing = await db.teachers.find_one({"email": teacher_data.email, "school_id": school_id})

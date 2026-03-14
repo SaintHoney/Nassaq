@@ -310,13 +310,26 @@ export const SystemMonitoringPage = () => {
   const fetchMonitoringData = useCallback(async () => {
     try {
       setLoadingData(true);
-      const [errorsRes, jobsRes, integrationsRes, alertsRes] = await Promise.allSettled([
+      const [healthRes, errorsRes, jobsRes, integrationsRes, alertsRes] = await Promise.allSettled([
+        api.get('/system/health'),
         api.get('/system/errors'),
         api.get('/system/jobs'),
-        api.get('/integrations'),
+        api.get('/system/integrations'),
         api.get('/system/alerts'),
       ]);
       
+      if (healthRes.status === 'fulfilled' && healthRes.value.data) {
+        const h = healthRes.value.data;
+        setMetrics(prev => ({
+          ...prev,
+          cpu: h.cpu ?? prev.cpu,
+          memory: h.memory ?? prev.memory,
+          disk: h.disk ?? prev.disk,
+          network: h.network ?? prev.network,
+          activeUsers: h.active_users ?? prev.activeUsers,
+          errors: h.errors_today ?? prev.errors,
+        }));
+      }
       if (errorsRes.status === 'fulfilled') setErrorLogs(errorsRes.value.data || []);
       if (jobsRes.status === 'fulfilled') setJobs(jobsRes.value.data || []);
       if (integrationsRes.status === 'fulfilled') {
