@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { toast } from 'sonner';
 import {
   Users, BookOpen, Calendar, GraduationCap, Clock,
-  Play, ChevronLeft, RefreshCw, Loader2
+  Play, RefreshCw, Loader2
 } from 'lucide-react';
 import { HakimAssistant } from '../../components/hakim/HakimAssistant';
 
@@ -36,48 +36,21 @@ const getTimeUntilLesson = (lessonTime) => {
   const lessonDate = new Date();
   lessonDate.setHours(hours, minutes, 0, 0);
   
-  // Calculate end time (assume 45 minute lesson)
   const lessonEndDate = new Date(lessonDate);
   lessonEndDate.setMinutes(lessonEndDate.getMinutes() + 45);
+  
+  const graceEnd = new Date(lessonEndDate);
+  graceEnd.setMinutes(graceEnd.getMinutes() + 15);
   
   const diff = lessonDate - now;
   const diffMinutes = Math.floor(diff / 60000);
   
-  // If lesson is currently happening (started but not ended)
   if (diff < 0 && now < lessonEndDate) return { status: 'ongoing', minutes: Math.abs(diffMinutes) };
-  
-  // If lesson ended but it's the same day - show as "ready" so teacher can still start late
-  if (diff < 0) return { status: 'ready', minutes: Math.abs(diffMinutes), recentlyEnded: true };
-  
-  // Lesson hasn't started yet
+  if (diff < 0 && now < graceEnd) return { status: 'ready', minutes: Math.abs(diffMinutes), recentlyEnded: true };
+  if (diff < 0) return { status: 'ended', minutes: Math.abs(diffMinutes) };
   if (diffMinutes <= 10) return { status: 'ready', minutes: diffMinutes };
   if (diffMinutes <= 30) return { status: 'soon', minutes: diffMinutes };
   return { status: 'upcoming', minutes: diffMinutes };
-};
-
-const getLessonCardStyle = (timeStatus, isFirst = false) => {
-  if (isFirst) {
-    if (timeStatus?.status === 'ended') {
-      return 'border-gray-300 bg-gray-100 opacity-60';
-    }
-    return 'border-0 !bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200 [background:linear-gradient(to_bottom_right,#10b981,#059669)]';
-  }
-  
-  // Other lessons
-  if (!timeStatus) return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white';
-  
-  switch (timeStatus.status) {
-    case 'ongoing':
-    case 'ready':
-      return 'border-0 [background:linear-gradient(to_bottom_right,#10b981,#059669)] text-white shadow-lg shadow-emerald-200';
-    case 'soon':
-    case 'upcoming':
-      return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white shadow-lg shadow-blue-200';
-    case 'ended':
-      return 'border-gray-300 bg-gray-100 opacity-60';
-    default:
-      return 'border-0 [background:linear-gradient(to_bottom_right,#3b82f6,#2563eb)] text-white';
-  }
 };
 
 export default function TeacherHomePage() {
@@ -283,16 +256,13 @@ export default function TeacherHomePage() {
               <div className="space-y-3">
                 {todayLessons.map((lesson, index) => {
                   const timeStatus = getTimeUntilLesson(lesson.time);
-                  const isFirstLesson = index === 0;
-                  const isCurrentLesson = isFirstLesson && timeStatus?.status !== 'ended';
                   const isEnded = timeStatus?.status === 'ended';
-                  // White text for colored cards (green for first, blue for others, unless ended)
+                  const isCurrentLesson = (timeStatus?.status === 'ongoing' || timeStatus?.status === 'ready');
                   const isWhiteText = !isEnded;
                   
-                  // Inline style for gradient background
                   const cardBackground = isEnded 
                     ? {} 
-                    : isFirstLesson 
+                    : isCurrentLesson 
                       ? { background: 'linear-gradient(to bottom right, #10b981, #059669)' }
                       : { background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)' };
                   
@@ -309,11 +279,11 @@ export default function TeacherHomePage() {
                         {/* Status Badge - Top Right */}
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            {isFirstLesson && timeStatus?.status !== 'ended' ? (
+                            {isCurrentLesson ? (
                               <Badge className="bg-white/20 text-white border-0 animate-pulse">
                                 الحصة الحالية
                               </Badge>
-                            ) : !isFirstLesson && timeStatus?.status !== 'ended' ? (
+                            ) : !isEnded ? (
                               <Badge className="bg-white/20 text-white border-0">
                                 الحصة القادمة
                               </Badge>
@@ -352,7 +322,7 @@ export default function TeacherHomePage() {
                         )}
                         
                         {/* Manage Lesson Button for upcoming */}
-                        {!isCurrentLesson && timeStatus?.status !== 'ended' && index > 0 && (
+                        {!isCurrentLesson && !isEnded && (
                           <Button 
                             variant="ghost"
                             className={`w-full mt-2 ${isWhiteText ? 'text-white/80 hover:text-white hover:bg-white/10' : ''}`}
