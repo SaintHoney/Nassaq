@@ -285,18 +285,19 @@ export default function SecurityCenterPage() {
   const [availableRoles, setAvailableRoles] = useState([]);
   const [lockReason, setLockReason] = useState('suspicious');
   
+  const [metricsLoading, setMetricsLoading] = useState(true);
   const [metrics, setMetrics] = useState({
-    securityScore: 87,
-    protectedAccounts: 1240,
-    totalAccounts: 1425,
-    applicationSecurity: 93,
-    failedLogins24h: 15,
-    lockedAccounts: 3,
-    encryptedData: 100,
+    securityScore: 0,
+    protectedAccounts: 0,
+    totalAccounts: 0,
+    applicationSecurity: 0,
+    failedLogins24h: 0,
+    lockedAccounts: 0,
+    encryptedData: 0,
     passwordPolicyStrength: 'strong',
-    lastBackup: '2026-03-09T06:00:00Z',
-    totalBackups: 12,
-    loggingCoverage: 100,
+    lastBackup: new Date().toISOString(),
+    totalBackups: 0,
+    loggingCoverage: 0,
   });
   
   const getScoreColor = (score) => {
@@ -345,9 +346,56 @@ export default function SecurityCenterPage() {
     return types[type] || types.low;
   };
   
-  const handleRefresh = () => {
+  const fetchDashboard = async () => {
+    setMetricsLoading(true);
+    try {
+      const res = await api.get('/security/dashboard');
+      const d = res.data;
+      setMetrics({
+        securityScore: d.securityScore ?? 0,
+        protectedAccounts: d.protectedAccounts ?? 0,
+        totalAccounts: d.totalAccounts ?? 0,
+        applicationSecurity: d.applicationSecurity ?? 0,
+        failedLogins24h: d.failedLogins24h ?? 0,
+        lockedAccounts: d.lockedAccounts ?? 0,
+        encryptedData: d.encryptedData ?? 100,
+        passwordPolicyStrength: d.passwordPolicyStrength ?? 'strong',
+        lastBackup: d.lastBackup ?? new Date().toISOString(),
+        totalBackups: d.totalBackups ?? 0,
+        loggingCoverage: d.loggingCoverage ?? 0,
+      });
+      if (d.scoreFactors) setScoreFactors(d.scoreFactors);
+    } finally {
+      setMetricsLoading(false);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    const res = await api.get('/security/alerts');
+    setSecurityAlerts(res.data || []);
+  };
+
+  const fetchLogs = async () => {
+    const res = await api.get('/security/logs?limit=100');
+    setSecurityEvents(res.data?.events || []);
+  };
+
+  useEffect(() => {
+    fetchDashboard().catch(e => console.error('Dashboard fetch error:', e));
+    fetchAlerts().catch(e => console.error('Alerts fetch error:', e));
+    fetchLogs().catch(e => console.error('Logs fetch error:', e));
+  }, []);
+
+  const handleRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed'); }, 1500);
+    try {
+      await Promise.all([fetchDashboard(), fetchAlerts(), fetchLogs()]);
+      toast.success(isRTL ? 'تم تحديث البيانات' : 'Data refreshed');
+    } catch {
+      toast.error(isRTL ? 'فشل تحديث البيانات' : 'Failed to refresh');
+    } finally {
+      setRefreshing(false);
+    }
   };
   
   // ============= NEW SECURITY API FUNCTIONS =============
@@ -464,8 +512,7 @@ export default function SecurityCenterPage() {
     }
   };
   
-  // Load roles on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     fetchRoles();
   }, []);
   
@@ -494,31 +541,23 @@ export default function SecurityCenterPage() {
   
   // ============= END NEW SECURITY API FUNCTIONS =============
 
-  const handleDownloadReport = () => {
+  const handleDownloadReport = async () => {
     setLoading(true);
-    // إنشاء تقرير أمان حقيقي
-    const report = {
-      generated_at: new Date().toISOString(),
-      security_score: metrics.securityScore,
-      metrics: metrics,
-      alerts: securityAlerts,
-      recent_events: securityEvents.slice(0, 20),
-      recommendations: [
-        'تفعيل المصادقة الثنائية لجميع المستخدمين',
-        'مراجعة الحسابات غير النشطة',
-        'تحديث سياسات كلمات المرور',
-        'فحص سجلات الدخول المشبوهة',
-      ],
-    };
-    
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `security_report_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    
-    setLoading(false);
-    toast.success(isRTL ? 'تم تحميل تقرير الأمان' : 'Security report downloaded');
+    try {
+      const res = await api.get('/security/export/pdf', { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `security_report_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast.success(isRTL ? 'تم تحميل تقرير الأمان (PDF)' : 'Security report downloaded (PDF)');
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error(isRTL ? 'فشل تحميل التقرير' : 'Failed to download report');
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleGenerateAIReport = () => {
@@ -793,9 +832,9 @@ export default function SecurityCenterPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm"><Eye className="h-4 w-4 me-1" />{t.viewDetails}</Button>
-                            <Button variant="outline" size="sm">{t.dismiss}</Button>
-                            <Button variant="destructive" size="sm">{t.escalate}</Button>
+                            <Button variant="outline" size="sm" onClick={() => { setSelectedAlert(alert); setShowAlertDetailsSheet(true); }}><Eye className="h-4 w-4 me-1" />{t.viewDetails}</Button>
+                            <Button variant="outline" size="sm" onClick={async () => { try { await api.post(`/security/alerts/${alert.id}/dismiss`); toast.success(isRTL ? 'تم تجاهل التنبيه' : 'Alert dismissed'); fetchAlerts(); } catch { toast.error(isRTL ? 'فشل تجاهل التنبيه' : 'Failed to dismiss alert'); } }}>{t.dismiss}</Button>
+                            <Button variant="destructive" size="sm" onClick={async () => { try { await api.post(`/security/alerts/${alert.id}/escalate`); toast.success(isRTL ? 'تم تصعيد التنبيه' : 'Alert escalated'); fetchAlerts(); } catch { toast.error(isRTL ? 'فشل تصعيد التنبيه' : 'Failed to escalate alert'); } }}>{t.escalate}</Button>
                           </div>
                         </div>
                       </CardContent>
@@ -822,7 +861,7 @@ export default function SecurityCenterPage() {
                     <SelectItem value="account_locked">{t.accountLocked}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline"><Download className="h-4 w-4 me-2" />{t.export}</Button>
+                <Button variant="outline" onClick={async () => { try { const res = await api.get('/security/export/csv', { responseType: 'blob' }); const blob = new Blob([res.data], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `security_logs_${new Date().toISOString().split('T')[0]}.csv`; link.click(); URL.revokeObjectURL(link.href); toast.success(isRTL ? 'تم تصدير السجلات (CSV)' : 'Logs exported (CSV)'); } catch { toast.error(isRTL ? 'فشل تصدير السجلات' : 'Failed to export logs'); } }}><Download className="h-4 w-4 me-2" />{t.export}</Button>
               </div>
               <Card>
                 <CardContent className="p-0">
