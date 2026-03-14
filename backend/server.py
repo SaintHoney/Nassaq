@@ -16746,6 +16746,17 @@ async def change_user_password(
 
 # ============== TEACHER SESSION ENGINE APIs ==============
 
+def _resolve_teacher_id(current_user: dict) -> str:
+    return current_user.get("teacher_id") or current_user["id"]
+
+async def _verify_session_owner(session_id: str, current_user: dict):
+    session = await db.class_sessions.find_one({"id": session_id}, {"_id": 0, "teacher_id": 1})
+    if not session:
+        raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
+    tid = _resolve_teacher_id(current_user)
+    if session.get("teacher_id") != tid:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لهذه الجلسة")
+
 @api_router.post("/session/start")
 async def start_class_session(
     data: dict = Body(...),
@@ -16754,15 +16765,10 @@ async def start_class_session(
     """
     بدء حصة جديدة
     Start a new class session
-    
-    Required fields:
-    - schedule_session_id: ID from schedule_sessions
-    - teacher_id: Teacher ID
-    - class_id: Class ID
-    - subject_id: Subject ID
     """
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.start_session(
-        teacher_id=data.get("teacher_id") or current_user.get("teacher_id") or current_user["id"],
+        teacher_id=teacher_id,
         schedule_session_id=data.get("schedule_session_id"),
         class_id=data.get("class_id"),
         subject_id=data.get("subject_id")
@@ -16810,6 +16816,7 @@ async def get_session_info(
     current_user: dict = Depends(get_current_user)
 ):
     """Get session information"""
+    await _verify_session_owner(session_id, current_user)
     session = await db.class_sessions.find_one({"id": session_id}, {"_id": 0})
     if not session:
         raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
@@ -16837,6 +16844,7 @@ async def get_session_students(
     جلب قائمة الطلاب للحصة مع حالة الحضور
     Get students list with attendance status for session
     """
+    await _verify_session_owner(session_id, current_user)
     students = await session_engine.get_session_students(session_id)
     return {
         "session_id": session_id,
@@ -16856,13 +16864,15 @@ async def update_student_attendance(
     تحديث حالة حضور طالب
     Update student attendance status
     """
+    await _verify_session_owner(session_id, current_user)
     from engines.session_engine import AttendanceStatus
     status = AttendanceStatus(data.get("status", "present"))
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.update_attendance(
         session_id=session_id,
         student_id=student_id,
         status=status,
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 
@@ -16876,9 +16886,11 @@ async def approve_session_attendance(
     اعتماد الحضور
     Approve and finalize attendance
     """
+    await _verify_session_owner(session_id, current_user)
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.approve_attendance(
         session_id=session_id,
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 
@@ -16893,6 +16905,7 @@ async def set_session_mode(
     تحديد نمط التفاعل (متابعة واجب / مراجعة / امتحان مفاجئ)
     Set interaction mode (homework / review / quiz)
     """
+    await _verify_session_owner(session_id, current_user)
     mode = data.get("mode", "review")
     result = await session_engine.set_interaction_mode(session_id, mode)
     return result
@@ -16907,6 +16920,7 @@ async def select_random_student(
     اختيار طالب عشوائي
     Select random student using fair algorithm
     """
+    await _verify_session_owner(session_id, current_user)
     result = await session_engine.select_random_student(session_id)
     return result
 
@@ -16921,12 +16935,14 @@ async def record_student_answer(
     تسجيل إجابة الطالب
     Record student answer (correct/wrong/no_answer)
     """
+    await _verify_session_owner(session_id, current_user)
     from engines.session_engine import AnswerResult
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.record_answer(
         session_id=session_id,
         student_id=data.get("student_id"),
         result=AnswerResult(data.get("result", "correct")),
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 
@@ -16941,12 +16957,14 @@ async def record_student_participation(
     تسجيل مشاركة الطالب
     Record student participation
     """
+    await _verify_session_owner(session_id, current_user)
     from engines.session_engine import ParticipationType
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.record_participation(
         session_id=session_id,
         student_id=data.get("student_id"),
         participation_type=ParticipationType(data.get("type", "active")),
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 
@@ -16961,14 +16979,16 @@ async def record_student_behaviour(
     تسجيل سلوك الطالب
     Record student behaviour (positive/negative/skill)
     """
+    await _verify_session_owner(session_id, current_user)
     from engines.session_engine import BehaviourCategory
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.record_behaviour(
         session_id=session_id,
         student_id=data.get("student_id"),
         category=BehaviourCategory(data.get("category", "positive")),
         behaviour_type=data.get("behaviour_type"),
         details=data.get("details"),
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 
@@ -16983,6 +17003,7 @@ async def update_seating_order(
     حفظ ترتيب جلوس الطلاب
     Save student seating order
     """
+    await _verify_session_owner(session_id, current_user)
     result = await session_engine.update_seating_order(
         session_id=session_id,
         student_order=data.get("student_order", [])
@@ -16999,9 +17020,11 @@ async def end_class_session(
     إنهاء الحصة
     End class session and get summary
     """
+    await _verify_session_owner(session_id, current_user)
+    teacher_id = _resolve_teacher_id(current_user)
     result = await session_engine.end_session(
         session_id=session_id,
-        teacher_id=current_user.get("teacher_id") or current_user["id"]
+        teacher_id=teacher_id
     )
     return result
 

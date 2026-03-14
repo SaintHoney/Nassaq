@@ -55,9 +55,16 @@ export default function SessionTeachPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
+  const restoredSession = (() => {
+    try {
+      const saved = sessionStorage.getItem('active_teach_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  })();
+
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(location.state?.sessionId);
-  const [sessionInfo, setSessionInfo] = useState(location.state?.sessionInfo);
+  const [sessionId, setSessionId] = useState(location.state?.sessionId || restoredSession?.sessionId);
+  const [sessionInfo, setSessionInfo] = useState(location.state?.sessionInfo || restoredSession?.sessionInfo);
   const [students, setStudents] = useState([]);
   const [interactionMode, setInteractionMode] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -69,7 +76,12 @@ export default function SessionTeachPage() {
 
   const teacherId = user?.teacher_id || user?.id;
 
-  // Redirect if no session
+  useEffect(() => {
+    if (sessionId && sessionInfo) {
+      sessionStorage.setItem('active_teach_session', JSON.stringify({ sessionId, sessionInfo }));
+    }
+  }, [sessionId, sessionInfo]);
+
   useEffect(() => {
     if (!sessionId) {
       toast.error('لم يتم العثور على جلسة نشطة');
@@ -114,12 +126,11 @@ export default function SessionTeachPage() {
   const selectRandomStudent = async () => {
     setLoading(true);
     
-    // Play drum roll sound effect
     try {
       const drumRoll = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdGmBenZxeHt9gYKAf35+gYOFhYSCgH59fYCDhYaGhYOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+gIKEhYaFhIOBf35+');
       drumRoll.volume = 0.2;
       drumRoll.play().catch(() => {});
-    } catch {}
+    } catch (e) { /* Audio may be blocked by browser autoplay policy */ }
     
     // Visual flashing effect - faster spinning through students
     let flashCount = 0;
@@ -158,12 +169,11 @@ export default function SessionTeachPage() {
           participation_count: selected.participation_count
         });
         
-        // Play selection sound
         try {
           const selectSound = new Audio('data:audio/wav;base64,UklGRigBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQBAACAf4B/gH+Af4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpubnJucnJycnJycm5ubmpqamZiXl5aVlJSTkpGQj46NjIuKiYiHhoWEg4KBgH+Af4B/gH+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbm5ycnJycnJybm5uampmYl5eWlZSUk5KRkI+OjYyLiomIh4aFhIOCgYB/gH+Af4B/');
           selectSound.volume = 0.4;
           selectSound.play().catch(() => {});
-        } catch {}
+        } catch (e) { /* Audio may be blocked by browser autoplay policy */ }
         
         // Small confetti burst on selection
         confetti({
@@ -227,7 +237,7 @@ export default function SessionTeachPage() {
           const successSound = new Audio('data:audio/wav;base64,UklGRigBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQBAACAf4B/gH9/f3+Af4GAgoKDhISFhoeIiYqLjI2OkJGSk5SVl5iZmpydnp+goaKjpKWmp6ipqqutrq+wsrO0tba3uLm6u7y9vr/AwMHCwsPDxMTFxcXGxsbGxsbGxsbGxsXFxcXExMPDwsLBwMC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZyampmalZSSkJCOjYuKiYiHhYSDgoF/fn17enl4d3Z1dHNycXBwb29ubm5ubm5ub29vb3BwcHFxcnJzc3R0dXZ2d3h5ent8fH1+f4A=');
           successSound.volume = 0.4;
           successSound.play().catch(() => {});
-        } catch {}
+        } catch (e) { /* Audio may be blocked by browser autoplay policy */ }
         
         toast.success(`🎉 +${response.data?.score_change || 5} نقاط! أحسنت!`);
       } else if (result === 'wrong') {
@@ -309,6 +319,7 @@ export default function SessionTeachPage() {
     try {
       const response = await api.post(`/session/${sessionId}/end`);
       setSessionSummary(response.data);
+      sessionStorage.removeItem('active_teach_session');
       toast.success('تم إنهاء الحصة بنجاح');
     } catch (error) {
       toast.error('خطأ في إنهاء الحصة');
