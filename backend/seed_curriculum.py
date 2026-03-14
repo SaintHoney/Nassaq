@@ -936,11 +936,6 @@ async def seed_driver_gatekeeper_data(db):
     import uuid
     from datetime import datetime, timezone, timedelta
     
-    existing_drivers = await db.users.count_documents({"role": "driver"})
-    if existing_drivers > 0:
-        print(f"Driver/Gatekeeper data already seeded ({existing_drivers} drivers)")
-        return
-    
     now = datetime.now(timezone.utc)
     
     try:
@@ -1000,72 +995,79 @@ async def seed_driver_gatekeeper_data(db):
         await db.bus_routes.update_one({"id": route["id"]}, {"$set": route}, upsert=True)
     print(f"Seeded {len(bus_routes)} bus routes")
     
-    bus_attendance_records = []
-    for day_offset in range(5):
-        date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
-        for route in bus_routes:
-            for sid in route["student_ids"]:
-                bus_attendance_records.append({
-                    "id": str(uuid.uuid4()),
-                    "driver_id": route["driver_id"],
-                    "route_id": route["id"],
-                    "student_id": sid,
-                    "status": "boarded",
-                    "direction": "to_school",
-                    "date": date,
-                    "time": f"06:{30 + int(sid[-3:]) % 25:02d}:00",
-                    "school_id": route["school_id"],
-                    "created_at": (now - timedelta(days=day_offset)).isoformat()
-                })
-                bus_attendance_records.append({
-                    "id": str(uuid.uuid4()),
-                    "driver_id": route["driver_id"],
-                    "route_id": route["id"],
-                    "student_id": sid,
-                    "status": "boarded",
-                    "direction": "from_school",
-                    "date": date,
-                    "time": f"13:{30 + int(sid[-3:]) % 25:02d}:00",
-                    "school_id": route["school_id"],
-                    "created_at": (now - timedelta(days=day_offset)).isoformat()
-                })
-    for rec in bus_attendance_records:
-        await db.bus_attendance.insert_one(rec)
-    print(f"Seeded {len(bus_attendance_records)} bus attendance records")
+    existing_attendance = await db.bus_attendance.count_documents({})
+    if existing_attendance > 0:
+        print(f"Bus attendance already seeded ({existing_attendance} records)")
+    else:
+        bus_attendance_records = []
+        for day_offset in range(5):
+            date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
+            for route in bus_routes:
+                for sid in route["student_ids"]:
+                    bus_attendance_records.append({
+                        "id": str(uuid.uuid4()),
+                        "driver_id": route["driver_id"],
+                        "route_id": route["id"],
+                        "student_id": sid,
+                        "status": "boarded",
+                        "direction": "to_school",
+                        "date": date,
+                        "time": f"06:{30 + int(sid[-3:]) % 25:02d}:00",
+                        "school_id": route["school_id"],
+                        "created_at": (now - timedelta(days=day_offset)).isoformat()
+                    })
+                    bus_attendance_records.append({
+                        "id": str(uuid.uuid4()),
+                        "driver_id": route["driver_id"],
+                        "route_id": route["id"],
+                        "student_id": sid,
+                        "status": "boarded",
+                        "direction": "from_school",
+                        "date": date,
+                        "time": f"13:{30 + int(sid[-3:]) % 25:02d}:00",
+                        "school_id": route["school_id"],
+                        "created_at": (now - timedelta(days=day_offset)).isoformat()
+                    })
+        for rec in bus_attendance_records:
+            await db.bus_attendance.insert_one(rec)
+        print(f"Seeded {len(bus_attendance_records)} bus attendance records")
 
-    gate_logs = []
-    for day_offset in range(5):
-        date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
-        for i in range(1, 11):
-            student_id = f"STD-{i:03d}"
-            gate_logs.append({
-                "id": str(uuid.uuid4()),
-                "person_id": student_id,
-                "person_name": f"طالب {i}",
-                "person_type": "student",
-                "type": "entry",
-                "is_late": i > 8,
-                "date": date,
-                "time": f"07:{15+i:02d}:00",
-                "school_id": "SCH-001",
-                "recorded_by": "GK-001",
-                "created_at": (now - timedelta(days=day_offset)).isoformat()
-            })
-            gate_logs.append({
-                "id": str(uuid.uuid4()),
-                "person_id": student_id,
-                "person_name": f"طالب {i}",
-                "person_type": "student",
-                "type": "exit",
-                "is_late": False,
-                "date": date,
-                "time": f"13:{30+i:02d}:00",
-                "school_id": "SCH-001",
-                "recorded_by": "GK-001",
-                "created_at": (now - timedelta(days=day_offset)).isoformat()
-            })
-    
-    for log in gate_logs:
-        await db.gate_logs.insert_one(log)
-    print(f"Seeded {len(gate_logs)} gate logs")
+    existing_gate_logs = await db.gate_logs.count_documents({})
+    if existing_gate_logs > 0:
+        print(f"Gate logs already seeded ({existing_gate_logs} records)")
+    else:
+        gate_logs = []
+        for day_offset in range(5):
+            date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
+            for i in range(1, 11):
+                student_id = f"STD-{i:03d}"
+                gate_logs.append({
+                    "id": str(uuid.uuid4()),
+                    "person_id": student_id,
+                    "person_name": f"طالب {i}",
+                    "person_type": "student",
+                    "type": "entry",
+                    "is_late": i > 8,
+                    "date": date,
+                    "time": f"07:{15+i:02d}:00",
+                    "school_id": "SCH-001",
+                    "recorded_by": "GK-001",
+                    "created_at": (now - timedelta(days=day_offset)).isoformat()
+                })
+                gate_logs.append({
+                    "id": str(uuid.uuid4()),
+                    "person_id": student_id,
+                    "person_name": f"طالب {i}",
+                    "person_type": "student",
+                    "type": "exit",
+                    "is_late": False,
+                    "date": date,
+                    "time": f"13:{30+i:02d}:00",
+                    "school_id": "SCH-001",
+                    "recorded_by": "GK-001",
+                    "created_at": (now - timedelta(days=day_offset)).isoformat()
+                })
+        for log in gate_logs:
+            await db.gate_logs.insert_one(log)
+        print(f"Seeded {len(gate_logs)} gate logs")
 
