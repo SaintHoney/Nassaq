@@ -89,6 +89,7 @@ export default function TeacherMainDashboard() {
             class_id: lesson.class_id,
             subject_id: lesson.subject_id,
             end_time: lesson.end_time,
+            status: lesson.status,
             schedule_session_id: lesson.schedule_session_id || lesson.id
           })) || []
         });
