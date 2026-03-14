@@ -8080,6 +8080,89 @@ async def create_bulk_attendance(
         "class_id": bulk_data.class_id
     }
 
+@api_router.get("/classes/{class_id}/students")
+async def get_class_students_list(
+    class_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin', 'platform_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    tenant_id = current_user.get('tenant_id')
+    cls = await db.classes.find_one({"id": class_id})
+    if cls and tenant_id and cls.get("school_id") != tenant_id and cls.get("tenant_id") != tenant_id:
+        raise HTTPException(status_code=403, detail="Not authorized for this class")
+    students = await db.students.find({"class_id": class_id}, {"_id": 0}).to_list(100)
+    return students
+
+@api_router.get("/attendance")
+async def get_attendance_filtered(
+    class_id: Optional[str] = None,
+    student_id: Optional[str] = None,
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin', 'platform_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    query = {}
+    if class_id:
+        query["class_id"] = class_id
+    if student_id:
+        query["student_id"] = student_id
+    if date:
+        query["date"] = date
+    tenant_id = current_user.get('tenant_id')
+    if tenant_id:
+        query["school_id"] = tenant_id
+    records = await db.attendance.find(query, {"_id": 0}).to_list(500)
+    return records
+
+@api_router.post("/attendance/batch")
+async def create_batch_attendance(
+    body: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user['role'] not in ['teacher', 'school_principal', 'school_sub_admin', 'platform_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized to record attendance")
+    records = body.get("records", [])
+    created = 0
+    updated = 0
+    for rec in records:
+        student_id = rec.get("student_id")
+        class_id = rec.get("class_id")
+        date_str = rec.get("date")
+        status = rec.get("status", "present")
+        notes = rec.get("notes")
+        existing = await db.attendance.find_one({
+            "student_id": student_id,
+            "class_id": class_id,
+            "date": date_str
+        })
+        if existing:
+            await db.attendance.update_one(
+                {"id": existing["id"]},
+                {"$set": {"status": status, "notes": notes,
+                          "recorded_by": current_user["id"],
+                          "recorded_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            updated += 1
+        else:
+            doc = {
+                "id": str(uuid.uuid4()),
+                "student_id": student_id,
+                "class_id": class_id,
+                "teacher_id": rec.get("teacher_id", current_user["id"]),
+                "date": date_str,
+                "status": status,
+                "notes": notes,
+                "school_id": current_user.get("tenant_id"),
+                "user_type": "student",
+                "recorded_by": current_user["id"],
+                "recorded_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.attendance.insert_one(doc)
+            created += 1
+    return {"created": created, "updated": updated, "total": len(records)}
+
 @api_router.get("/attendance/class/{class_id}", response_model=List[AttendanceResponse])
 async def get_class_attendance(
     class_id: str,
@@ -10655,27 +10738,24 @@ async def get_school_dashboard(
     total_teachers = await db.teachers.count_documents({"school_id": school_id, "is_active": True})
     total_classes = await db.classes.count_documents({"school_id": school_id, "is_active": True})
     
-    # Get today's attendance - using 'type' field
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
     student_attendance = await db.attendance.find({
         "school_id": school_id,
         "date": today,
-        "type": "student"
+        "$or": [{"type": "student"}, {"user_type": "student"}, {"student_id": {"$exists": True, "$ne": None}}]
     }, {"_id": 0}).to_list(10000)
     
-    # Get teacher attendance from teacher_attendance collection (where it's actually stored)
     teacher_attendance_records = await db.teacher_attendance.find({
         "school_id": school_id,
         "date": today
     }, {"_id": 0}).to_list(1000)
     
-    # If no records in teacher_attendance, fallback to attendance collection
     if not teacher_attendance_records:
         teacher_attendance_records = await db.attendance.find({
             "school_id": school_id,
             "date": today,
-            "type": "teacher"
+            "$or": [{"type": "teacher"}, {"user_type": "teacher"}]
         }, {"_id": 0}).to_list(1000)
     
     # Calculate attendance stats - REAL DATA
@@ -10721,16 +10801,15 @@ async def get_school_dashboard(
         {"$group": {"_id": "$teacher_id", "count": {"$sum": 1}}},
         {"$match": {"count": {"$gt": 2}}}
     ]
-    frequent_absences = await db.teacher_attendance.aggregate(frequent_absence_pipeline).to_list(100)
+    frequent_absences = await db.teacher_attendance.aggregate(frequent_absence_pipeline)
     
-    # Fallback to attendance collection if no data
     if not frequent_absences:
         frequent_absence_pipeline_old = [
-            {"$match": {"school_id": school_id, "type": "teacher", "status": "absent", "date": {"$gte": thirty_days_ago}}},
+            {"$match": {"school_id": school_id, "$or": [{"type": "teacher"}, {"user_type": "teacher"}], "status": "absent", "date": {"$gte": thirty_days_ago}}},
             {"$group": {"_id": "$teacher_id", "count": {"$sum": 1}}},
             {"$match": {"count": {"$gt": 2}}}
         ]
-        frequent_absences = await db.attendance.aggregate(frequent_absence_pipeline_old).to_list(100)
+        frequent_absences = await db.attendance.aggregate(frequent_absence_pipeline_old)
     
     teachers_frequent_absence = len(frequent_absences)
     
@@ -11498,7 +11577,7 @@ async def get_analytics_overview(
         {"$sort": {"count": -1}},
         {"$limit": 5}
     ]
-    city_distribution = await db.schools.aggregate(pipeline).to_list(10)
+    city_distribution = await db.schools.aggregate(pipeline)
     
     return {
         "stats": {
@@ -16047,9 +16126,10 @@ async def get_teacher_classes(
         # Get student count
         student_count = await db.students.count_documents({"class_id": cls.get("id")})
         
-        # Get subject names
         subject_ids = [a.get("subject_id") for a in class_assignments if a.get("subject_id")]
         subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "name_ar": 1, "name_en": 1}).to_list(20)
+        if not subjects:
+            subjects = await db.official_curriculum_subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "name_ar": 1, "name_en": 1}).to_list(20)
         subject_names = [s.get("name_ar") or s.get("name_en") or "مادة" for s in subjects]
         
         enriched_classes.append({
@@ -16126,14 +16206,25 @@ async def get_teacher_assessments(
     جلب تقييمات المعلم
     """
     assessments = await db.assessments.find({
-        "teacher_id": teacher_id
+        "$or": [{"teacher_id": teacher_id}, {"created_by": teacher_id}]
     }, {"_id": 0}).sort("created_at", -1).to_list(100)
     
-    # Enrich with class names
     for assessment in assessments:
-        if assessment.get("class_id"):
-            cls = await db.classes.find_one({"id": assessment.get("class_id")}, {"_id": 0, "name": 1})
+        class_id = assessment.get("class_id")
+        if not class_id:
+            sids = assessment.get("section_ids", [])
+            if sids:
+                class_id = sids[0]
+                assessment["class_id"] = class_id
+        if class_id:
+            cls = await db.classes.find_one({"id": class_id}, {"_id": 0, "name": 1})
             assessment["class_name"] = cls.get("name") if cls else ""
+        subj_id = assessment.get("subject_id")
+        if subj_id and not assessment.get("subject_name"):
+            subj_doc = await db.subjects.find_one({"id": subj_id})
+            if not subj_doc:
+                subj_doc = await db.official_curriculum_subjects.find_one({"id": subj_id})
+            assessment["subject_name"] = subj_doc.get("name_ar", subj_id) if subj_doc else subj_id
     
     return assessments
 
@@ -16144,7 +16235,9 @@ async def get_assessment_grades(
     current_user: dict = Depends(get_current_user)
 ):
     """Get grades for an assessment"""
-    grades = await db.grades.find({"assessment_id": assessment_id}, {"_id": 0}).to_list(200)
+    grades = await db.assessment_grades.find({"assessment_id": assessment_id}, {"_id": 0}).to_list(200)
+    if not grades:
+        grades = await db.grades.find({"assessment_id": assessment_id}, {"_id": 0}).to_list(200)
     return grades
 
 
@@ -16156,20 +16249,24 @@ async def save_assessment_grades(
 ):
     """Save grades for assessment - حفظ درجات التقييم"""
     grades = data.get("grades", [])
+    assessment = await db.assessments.find_one({"id": assessment_id})
+    max_score = assessment.get("max_score", 100) if assessment else 100
     
     for grade in grades:
+        score = grade.get("score", 0)
         grade_record = {
             "id": str(uuid.uuid4()),
             "assessment_id": assessment_id,
             "student_id": grade.get("student_id"),
-            "score": grade.get("score"),
+            "score": score,
+            "max_score": max_score,
+            "percentage": round((score / max_score * 100), 1) if max_score > 0 else 0,
             "notes": grade.get("notes"),
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "graded_at": datetime.now(timezone.utc).isoformat(),
             "graded_by": current_user["id"]
         }
         
-        # Upsert grade
-        await db.grades.update_one(
+        await db.assessment_grades.update_one(
             {"assessment_id": assessment_id, "student_id": grade.get("student_id")},
             {"$set": grade_record},
             upsert=True
@@ -16242,6 +16339,15 @@ async def get_behavior_records(
         query["student_id"] = student_id
     
     records = await db.behavior.find(query, {"_id": 0}).sort("date", -1).to_list(200)
+    if not records:
+        records = await db.behavior_records.find(query, {"_id": 0}).sort("date", -1).to_list(200)
+        for r in records:
+            bt_id = r.get("behavior_type_id")
+            if bt_id:
+                bt = await db.behavior_types.find_one({"id": bt_id})
+                if bt:
+                    r["behavior_type"] = bt.get("name_ar", "")
+                    r["type"] = bt.get("category", r.get("type", "positive"))
     return records
 
 
@@ -16923,6 +17029,88 @@ async def get_teacher_assignments(
     return result
 
 
+# ============== BEHAVIOR ENDPOINTS ==============
+class BehaviorRecordRequest(BaseModel):
+    student_id: str
+    behavior_type_id: str
+    type: str
+    description: str
+    class_id: Optional[str] = None
+    session_id: Optional[str] = None
+    points: Optional[int] = None
+    date: Optional[str] = None
+
+@api_router.get("/behavior/types")
+async def get_behavior_types(
+    current_user: dict = Depends(get_current_user)
+):
+    tenant_id = current_user.get("tenant_id")
+    filt = {"tenant_id": tenant_id} if tenant_id else {}
+    types_cursor = db.behavior_types.find(filt)
+    results = await types_cursor.to_list(200)
+    for r in results:
+        r.pop("_id", None)
+    return {"behavior_types": results}
+
+@api_router.post("/behavior/record")
+async def record_behavior_incident(
+    data: BehaviorRecordRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    teacher_id = current_user.get("teacher_id") or current_user.get("id")
+    tenant_id = current_user.get("tenant_id", "SCH-001")
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    bt = await db.behavior_types.find_one({"id": data.behavior_type_id})
+    points = data.points if data.points is not None else (bt.get("default_points", 0) if bt else 0)
+
+    record_id = str(uuid.uuid4())
+    record_doc = {
+        "id": record_id,
+        "student_id": data.student_id,
+        "teacher_id": teacher_id,
+        "behavior_type_id": data.behavior_type_id,
+        "type": data.type,
+        "description": data.description,
+        "date": data.date or now_iso[:10],
+        "session_id": data.session_id,
+        "class_id": data.class_id,
+        "points": points,
+        "tenant_id": tenant_id,
+        "created_at": now_iso,
+    }
+    await db.behavior_records.insert_one(record_doc)
+
+    if points > 0:
+        await db.students.update_one({"id": data.student_id}, {"$inc": {"xp_points": points}})
+    elif points < 0:
+        await db.students.update_one({"id": data.student_id}, {"$inc": {"behavior_score": points}})
+
+    record_doc.pop("_id", None)
+    return {"message": "تم تسجيل السلوك بنجاح", "record": record_doc}
+
+@api_router.get("/behavior/student/{student_id}")
+async def get_student_behavior_history(
+    student_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    records_cursor = db.behavior_records.find({"student_id": student_id}).sort("created_at", -1)
+    records = await records_cursor.to_list(100)
+    for r in records:
+        r.pop("_id", None)
+
+    student = await db.students.find_one({"id": student_id})
+    behavior_score = student.get("behavior_score", 100) if student else 100
+    xp_points = student.get("xp_points", 0) if student else 0
+
+    return {
+        "student_id": student_id,
+        "behavior_score": behavior_score,
+        "xp_points": xp_points,
+        "total_records": len(records),
+        "records": records,
+    }
+
 # Re-include api_router to pick up school settings routes
 app.include_router(api_router)
 
@@ -17019,12 +17207,14 @@ async def seed_essential_accounts():
 
 @app.on_event("startup")
 async def seed_curriculum_and_demo_data():
-    from seed_curriculum import seed_official_curriculum, seed_demo_school_data
+    from seed_curriculum import seed_official_curriculum, seed_demo_school_data, seed_demo_operational_data
     try:
         curriculum_result = await seed_official_curriculum(db)
         logger.info(f"Curriculum seeding: {curriculum_result}")
         demo_result = await seed_demo_school_data(db, hash_password)
         logger.info(f"Demo data seeding: {demo_result}")
+        ops_result = await seed_demo_operational_data(db)
+        logger.info(f"Operational data seeding: {ops_result}")
     except Exception as e:
         logger.error(f"Seed error: {e}")
 

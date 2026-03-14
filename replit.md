@@ -51,7 +51,24 @@ Smart Multi-Tenant School Management System
 - Bell schedules: 2 templates (Primary/Intermediate 45min, Secondary 50min)
 - Academic year: 1446-1447H with 3 terms
 - Demo school data for SCH-001: 10 teachers, 30 students, 6 classes, 30 parent accounts
+- Operational demo data: 10+ days of attendance, 6+ assessments with grades, 20+ behavior incidents, teacher assignments
 - All curriculum data auto-seeded on startup via `backend/seed_curriculum.py`
+
+## Data Architecture Notes
+- `pg_dal.py` `aggregate()` is `async def` returning a list directly — do NOT chain `.to_list()` on it
+- Seed data uses `assessment_grades` collection (not `grades`) for student grades
+- Seed data uses `behavior_records` collection (not `behavior`) for behavior incidents
+- Subject data lives in `official_curriculum_subjects` (not `subjects` which is empty)
+- Assessments store teacher via `created_by` field (not `teacher_id`); class via `section_ids` (not `class_id`)
+- Teacher-class links are in `teacher_assignments` table with `is_active: True`
+
+## API Endpoints (Key)
+- Student portal: `/api/student-portal/dashboard|grades|attendance` (routes/student_portal_routes.py)
+- Parent portal: `/api/parent-portal/dashboard|child/{id}/grades|child/{id}/attendance` (routes/parent_portal_routes.py)
+- Teacher: `/api/teacher/classes/{id}`, `/api/teacher/assessments/{id}`, `/api/classes/{id}/students`
+- Attendance: `GET /api/attendance?class_id=&date=`, `POST /api/attendance/batch`, `POST /api/attendance/bulk`
+- Behavior: `GET /api/behavior?class_id=`, `POST /api/behavior`
+- Admin: `/api/dashboard/stats`, `/api/school/dashboard`
 
 ## Important Notes
 - `emergentintegrations` package is not publicly available; it is used lazily (inside a function) for LLM features only

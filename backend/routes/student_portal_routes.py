@@ -59,19 +59,25 @@ def setup_student_portal_routes(db, get_current_user, require_roles, UserRole):
                             "end_time": entry.get("end_time")
                         })
         
-        # Get recent grades
         recent_grades = []
-        grades_cursor = db.grades.find({
+        ag_cursor = db.assessment_grades.find({
             "student_id": student_id
-        }).sort("date", -1).limit(5)
-        async for grade in grades_cursor:
+        }).sort("graded_at", -1).limit(5)
+        async for grade in ag_cursor:
+            assessment = await db.assessments.find_one({"id": grade.get("assessment_id")})
+            subject_id = assessment.get("subject_id") if assessment else None
+            subject = None
+            if subject_id:
+                subject = await db.subjects.find_one({"id": subject_id})
+                if not subject:
+                    subject = await db.official_curriculum_subjects.find_one({"id": subject_id})
             recent_grades.append({
-                "subject": grade.get("subject"),
+                "subject": subject.get("name_ar", subject_id) if subject else (subject_id or "غير محدد"),
                 "score": grade.get("score"),
                 "max_score": grade.get("max_score"),
                 "percentage": grade.get("percentage"),
-                "assessment_type": grade.get("assessment_type"),
-                "date": grade.get("date")
+                "assessment_type": assessment.get("assessment_type") if assessment else "quiz",
+                "date": grade.get("graded_at", "")[:10] if grade.get("graded_at") else ""
             })
         
         # Calculate attendance stats
@@ -88,17 +94,28 @@ def setup_student_portal_routes(db, get_current_user, require_roles, UserRole):
             "read_status": False
         })
         
-        # Calculate GPA/average
-        all_grades = await db.grades.find({"student_id": student_id}).to_list(1000)
+        all_grades = await db.assessment_grades.find({"student_id": student_id}).to_list(1000)
         total_score = sum(g.get("percentage", 0) for g in all_grades)
         avg_score = total_score / len(all_grades) if all_grades else 0
         
+        grade_name = None
+        class_name_val = None
+        if student:
+            grade_id = student.get("grade_id") or student.get("grade")
+            if grade_id:
+                grade_doc = await db.official_curriculum_grades.find_one({"id": grade_id})
+                grade_name = grade_doc.get("name_ar", grade_id) if grade_doc else grade_id
+            cls_id = student.get("class_id")
+            if cls_id:
+                cls_doc = await db.classes.find_one({"id": cls_id})
+                class_name_val = cls_doc.get("name", cls_id) if cls_doc else cls_id
+
         return {
             "student": {
                 "id": student.get("id") if student else student_id,
                 "name": student.get("full_name") if student else current_user.get("full_name"),
-                "grade": student.get("grade") if student else None,
-                "class_name": student.get("class_name") if student else None,
+                "grade": grade_name,
+                "class_name": class_name_val,
                 "school_name": current_user.get("school_name")
             },
             "today_schedule": sorted(schedule_entries, key=lambda x: x.get("start_time", "")),
@@ -127,57 +144,61 @@ def setup_student_portal_routes(db, get_current_user, require_roles, UserRole):
         """درجات الطالب"""
         student_id = current_user.get("student_id") or current_user.get("id")
         
-        query = {"student_id": student_id}
-        if subject:
-            query["subject"] = subject
-        if assessment_type:
-            query["assessment_type"] = assessment_type
-        
-        grades = await db.grades.find(query).sort("date", -1).to_list(500)
-        
-        # Group by subject
-        subjects_data = {}
-        for grade in grades:
-            subj = grade.get("subject", "غير محدد")
-            if subj not in subjects_data:
-                subjects_data[subj] = {
-                    "subject": subj,
-                    "grades": [],
-                    "total_score": 0,
-                    "total_max": 0,
-                    "count": 0
-                }
-            
-            subjects_data[subj]["grades"].append({
-                "id": grade.get("id"),
-                "score": grade.get("score"),
-                "max_score": grade.get("max_score"),
-                "percentage": grade.get("percentage"),
-                "assessment_type": grade.get("assessment_type"),
-                "date": grade.get("date"),
-                "notes": grade.get("notes")
+        ag_query = {"student_id": student_id}
+        raw_grades = await db.assessment_grades.find(ag_query).sort("graded_at", -1).to_list(500)
+
+        enriched = []
+        for g in raw_grades:
+            a = await db.assessments.find_one({"id": g.get("assessment_id")})
+            if not a:
+                continue
+            subj_id = a.get("subject_id")
+            subj_doc = None
+            if subj_id:
+                subj_doc = await db.subjects.find_one({"id": subj_id})
+                if not subj_doc:
+                    subj_doc = await db.official_curriculum_subjects.find_one({"id": subj_id})
+            subj_name = subj_doc.get("name_ar", subj_id) if subj_doc else (subj_id or "غير محدد")
+            a_type = a.get("assessment_type", "quiz")
+            if subject and subj_id != subject and subj_name != subject:
+                continue
+            if assessment_type and a_type != assessment_type:
+                continue
+            enriched.append({
+                "id": g.get("id"),
+                "subject": subj_name,
+                "subject_id": subj_id,
+                "score": g.get("score"),
+                "max_score": g.get("max_score"),
+                "percentage": g.get("percentage"),
+                "assessment_type": a_type,
+                "title": a.get("title", ""),
+                "date": g.get("graded_at", "")[:10] if g.get("graded_at") else "",
+                "notes": g.get("notes")
             })
+
+        subjects_data = {}
+        for grade in enriched:
+            subj = grade["subject"]
+            if subj not in subjects_data:
+                subjects_data[subj] = {"subject": subj, "grades": [], "total_score": 0, "total_max": 0, "count": 0}
+            subjects_data[subj]["grades"].append(grade)
             subjects_data[subj]["total_score"] += grade.get("score", 0)
             subjects_data[subj]["total_max"] += grade.get("max_score", 100)
             subjects_data[subj]["count"] += 1
-        
-        # Calculate averages
+
         for subj in subjects_data:
             data = subjects_data[subj]
-            if data["total_max"] > 0:
-                data["average"] = round((data["total_score"] / data["total_max"]) * 100, 1)
-            else:
-                data["average"] = 0
-        
-        # Overall stats
-        total_grades = len(grades)
-        overall_avg = sum(g.get("percentage", 0) for g in grades) / total_grades if total_grades > 0 else 0
-        
+            data["average"] = round((data["total_score"] / data["total_max"]) * 100, 1) if data["total_max"] > 0 else 0
+
+        total_grades = len(enriched)
+        overall_avg = sum(g.get("percentage", 0) for g in enriched) / total_grades if total_grades > 0 else 0
+
         return {
             "subjects": list(subjects_data.values()),
             "total_grades": total_grades,
             "overall_average": round(overall_avg, 1),
-            "assessment_types": list(set(g.get("assessment_type") for g in grades if g.get("assessment_type")))
+            "assessment_types": list(set(g.get("assessment_type") for g in enriched if g.get("assessment_type")))
         }
     
     # ============= ATTENDANCE =============

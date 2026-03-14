@@ -617,4 +617,246 @@ async def seed_demo_school_data(db, hash_password_fn):
     }})
 
     logger.info(f"Demo school data seeding complete for {school_id}: {inserted}")
-    return inserted
+
+
+async def seed_demo_operational_data(db):
+    import random
+    from datetime import date, timedelta
+
+    now = datetime.now(timezone.utc).isoformat()
+    tenant_id = "SCH-001"
+
+    class_teacher_subject = {
+        "CLS-001": {"teacher_id": "TCH-001", "subject_id": "SUB-ARABIC"},
+        "CLS-002": {"teacher_id": "TCH-002", "subject_id": "SUB-MATH"},
+        "CLS-003": {"teacher_id": "TCH-002", "subject_id": "SUB-MATH"},
+        "CLS-004": {"teacher_id": "TCH-004", "subject_id": "SUB-ENGLISH"},
+        "CLS-005": {"teacher_id": "TCH-003", "subject_id": "SUB-SCIENCE"},
+        "CLS-006": {"teacher_id": "TCH-005", "subject_id": "SUB-QURAN"},
+    }
+
+    ta_count = 0
+    for cls_id, info in class_teacher_subject.items():
+        existing_ta = await db.teacher_assignments.find_one({
+            "teacher_id": info["teacher_id"], "class_id": cls_id
+        })
+        if not existing_ta:
+            await db.teacher_assignments.insert_one({
+                "id": str(uuid.uuid4()),
+                "teacher_id": info["teacher_id"],
+                "class_id": cls_id,
+                "subject_id": info["subject_id"],
+                "school_id": tenant_id,
+                "tenant_id": tenant_id,
+                "is_active": True,
+                "weekly_sessions": 5,
+                "created_at": now,
+            })
+            ta_count += 1
+    logger.info(f"Seeded {ta_count} teacher assignments")
+
+    existing_att = await db.attendance.find_one({"tenant_id": tenant_id})
+    if existing_att:
+        logger.info("Operational demo data already seeded, skipping.")
+        return {"status": "already_seeded"}
+
+    class_students = {}
+    for i in range(1, 31):
+        cls_idx = (i - 1) // 5
+        cls_id = f"CLS-{cls_idx + 1:03d}"
+        class_students.setdefault(cls_id, []).append(f"STD-{i:03d}")
+
+    start_date = date(2026, 3, 1)
+    end_date = date(2026, 3, 14)
+    school_days = []
+    d = start_date
+    while d <= end_date:
+        if d.weekday() < 5:
+            school_days.append(d.isoformat())
+        d += timedelta(days=1)
+    today_str = date.today().isoformat()
+    if today_str not in school_days:
+        school_days.append(today_str)
+
+    statuses = ["present"] * 85 + ["absent"] * 8 + ["late"] * 5 + ["excused"] * 2
+    notes_map = {
+        "present": "",
+        "absent": "غائب بدون عذر",
+        "late": "تأخر عن الحصة",
+        "excused": "غياب بعذر طبي",
+    }
+
+    att_count = 0
+    for day in school_days:
+        for cls_id, students in class_students.items():
+            info = class_teacher_subject[cls_id]
+            for sid in students:
+                status = random.choice(statuses)
+                await db.attendance.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "student_id": sid,
+                    "class_id": cls_id,
+                    "subject_id": info["subject_id"],
+                    "teacher_id": info["teacher_id"],
+                    "date": day,
+                    "status": status,
+                    "user_type": "student",
+                    "notes": notes_map.get(status, ""),
+                    "recorded_by": info["teacher_id"],
+                    "recorded_at": now,
+                    "tenant_id": tenant_id,
+                    "school_id": tenant_id,
+                })
+                att_count += 1
+
+    for day in school_days:
+        for t_idx in range(1, 11):
+            tid = f"TCH-{t_idx:03d}"
+            t_status = random.choice(["present"] * 90 + ["absent"] * 7 + ["late"] * 3)
+            await db.teacher_attendance.insert_one({
+                "id": str(uuid.uuid4()),
+                "teacher_id": tid,
+                "date": day,
+                "status": t_status,
+                "type": "teacher",
+                "school_id": tenant_id,
+                "tenant_id": tenant_id,
+                "recorded_at": now,
+            })
+
+    assessments_def = [
+        {"class_id": "CLS-001", "subject_id": "SUB-ARABIC", "teacher_id": "TCH-001",
+         "quiz": {"title": "اختبار قصير - اللغة العربية", "max_score": 20, "passing_score": 10, "weight": 15},
+         "exam": {"title": "اختبار نهائي - اللغة العربية", "max_score": 100, "passing_score": 50, "weight": 40}},
+        {"class_id": "CLS-003", "subject_id": "SUB-MATH", "teacher_id": "TCH-002",
+         "quiz": {"title": "اختبار قصير - الرياضيات", "max_score": 20, "passing_score": 10, "weight": 15},
+         "exam": {"title": "اختبار نهائي - الرياضيات", "max_score": 100, "passing_score": 50, "weight": 40}},
+        {"class_id": "CLS-005", "subject_id": "SUB-SCIENCE", "teacher_id": "TCH-003",
+         "quiz": {"title": "اختبار قصير - العلوم", "max_score": 20, "passing_score": 10, "weight": 15},
+         "exam": {"title": "اختبار نهائي - العلوم", "max_score": 100, "passing_score": 50, "weight": 40}},
+    ]
+
+    assess_count = 0
+    grade_count = 0
+    for adef in assessments_def:
+        for atype_key in ("quiz", "exam"):
+            info = adef[atype_key]
+            a_id = str(uuid.uuid4())
+            await db.assessments.insert_one({
+                "id": a_id,
+                "tenant_id": tenant_id,
+                "subject_id": adef["subject_id"],
+                "section_ids": [adef["class_id"]],
+                "title": info["title"],
+                "assessment_type": atype_key,
+                "max_score": info["max_score"],
+                "passing_score": info["passing_score"],
+                "weight": info["weight"],
+                "is_published": True,
+                "is_graded": True,
+                "created_at": now,
+                "created_by": adef["teacher_id"],
+                "school_id": tenant_id,
+            })
+            assess_count += 1
+
+            for sid in class_students[adef["class_id"]]:
+                ms = info["max_score"]
+                score = round(random.uniform(ms * 0.35, ms), 1)
+                pct = round((score / ms) * 100, 1)
+                await db.assessment_grades.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "assessment_id": a_id,
+                    "student_id": sid,
+                    "score": score,
+                    "max_score": ms,
+                    "percentage": pct,
+                    "is_passing": score >= info["passing_score"],
+                    "graded_by": adef["teacher_id"],
+                    "graded_at": now,
+                    "tenant_id": tenant_id,
+                    "school_id": tenant_id,
+                })
+                grade_count += 1
+
+    behavior_types_data = [
+        {"id": "BT-001", "name_ar": "التزام وانضباط", "name_en": "Discipline & Commitment", "type": "positive", "default_points": 5, "category": "discipline"},
+        {"id": "BT-002", "name_ar": "مشاركة صفية", "name_en": "Class Participation", "type": "positive", "default_points": 3, "category": "academic"},
+        {"id": "BT-003", "name_ar": "مساعدة الزملاء", "name_en": "Helping Peers", "type": "positive", "default_points": 4, "category": "social"},
+        {"id": "BT-004", "name_ar": "تميز أكاديمي", "name_en": "Academic Excellence", "type": "positive", "default_points": 5, "category": "academic"},
+        {"id": "BT-005", "name_ar": "إخلال بالنظام", "name_en": "Disrupting Order", "type": "negative", "default_points": -5, "category": "discipline"},
+        {"id": "BT-006", "name_ar": "تأخر متكرر", "name_en": "Repeated Tardiness", "type": "negative", "default_points": -3, "category": "discipline"},
+        {"id": "BT-007", "name_ar": "عدم إحضار الواجب", "name_en": "Missing Homework", "type": "negative", "default_points": -2, "category": "academic"},
+        {"id": "BT-008", "name_ar": "سلوك عدواني", "name_en": "Aggressive Behavior", "type": "negative", "default_points": -10, "category": "social"},
+        {"id": "BT-009", "name_ar": "نظافة شخصية", "name_en": "Personal Hygiene", "type": "positive", "default_points": 2, "category": "personal"},
+        {"id": "BT-010", "name_ar": "قيادة وإبداع", "name_en": "Leadership & Creativity", "type": "positive", "default_points": 5, "category": "leadership"},
+    ]
+
+    for bt in behavior_types_data:
+        existing_bt = await db.behavior_types.find_one({"id": bt["id"]})
+        if not existing_bt:
+            await db.behavior_types.insert_one({**bt, "tenant_id": tenant_id, "is_active": True, "created_at": now})
+
+    behavior_incidents = [
+        {"student_id": "STD-001", "teacher_id": "TCH-001", "bt_id": "BT-001", "type": "positive", "desc": "التزام ممتاز بالحضور", "cls": "CLS-001", "pts": 5},
+        {"student_id": "STD-002", "teacher_id": "TCH-001", "bt_id": "BT-002", "type": "positive", "desc": "مشاركة فعالة في الدرس", "cls": "CLS-001", "pts": 3},
+        {"student_id": "STD-003", "teacher_id": "TCH-001", "bt_id": "BT-005", "type": "negative", "desc": "إزعاج أثناء الحصة", "cls": "CLS-001", "pts": -5},
+        {"student_id": "STD-005", "teacher_id": "TCH-001", "bt_id": "BT-004", "type": "positive", "desc": "أعلى درجة في الاختبار", "cls": "CLS-001", "pts": 5},
+        {"student_id": "STD-007", "teacher_id": "TCH-002", "bt_id": "BT-006", "type": "negative", "desc": "تأخر عن الحصة 3 مرات", "cls": "CLS-002", "pts": -3},
+        {"student_id": "STD-008", "teacher_id": "TCH-002", "bt_id": "BT-002", "type": "positive", "desc": "حل مسائل إضافية", "cls": "CLS-002", "pts": 3},
+        {"student_id": "STD-011", "teacher_id": "TCH-002", "bt_id": "BT-004", "type": "positive", "desc": "إبداع في حل المسائل", "cls": "CLS-003", "pts": 5},
+        {"student_id": "STD-012", "teacher_id": "TCH-002", "bt_id": "BT-007", "type": "negative", "desc": "عدم إحضار الواجب مرتين", "cls": "CLS-003", "pts": -2},
+        {"student_id": "STD-013", "teacher_id": "TCH-002", "bt_id": "BT-003", "type": "positive", "desc": "ساعد زميله في فهم الدرس", "cls": "CLS-003", "pts": 4},
+        {"student_id": "STD-016", "teacher_id": "TCH-004", "bt_id": "BT-001", "type": "positive", "desc": "حضور مبكر دائماً", "cls": "CLS-004", "pts": 5},
+        {"student_id": "STD-017", "teacher_id": "TCH-004", "bt_id": "BT-008", "type": "negative", "desc": "شجار مع زميل", "cls": "CLS-004", "pts": -10},
+        {"student_id": "STD-018", "teacher_id": "TCH-004", "bt_id": "BT-010", "type": "positive", "desc": "قاد مجموعة العمل بنجاح", "cls": "CLS-004", "pts": 5},
+        {"student_id": "STD-021", "teacher_id": "TCH-003", "bt_id": "BT-004", "type": "positive", "desc": "تفوق في تجربة المختبر", "cls": "CLS-005", "pts": 5},
+        {"student_id": "STD-022", "teacher_id": "TCH-003", "bt_id": "BT-002", "type": "positive", "desc": "مشاركة متميزة في النقاش", "cls": "CLS-005", "pts": 3},
+        {"student_id": "STD-023", "teacher_id": "TCH-003", "bt_id": "BT-005", "type": "negative", "desc": "عدم اتباع قواعد المختبر", "cls": "CLS-005", "pts": -5},
+        {"student_id": "STD-025", "teacher_id": "TCH-003", "bt_id": "BT-009", "type": "positive", "desc": "نظافة المختبر بعد التجربة", "cls": "CLS-005", "pts": 2},
+        {"student_id": "STD-026", "teacher_id": "TCH-005", "bt_id": "BT-001", "type": "positive", "desc": "حفظ ممتاز للسورة", "cls": "CLS-006", "pts": 5},
+        {"student_id": "STD-027", "teacher_id": "TCH-005", "bt_id": "BT-006", "type": "negative", "desc": "تأخر متكرر عن حصة القرآن", "cls": "CLS-006", "pts": -3},
+        {"student_id": "STD-028", "teacher_id": "TCH-005", "bt_id": "BT-003", "type": "positive", "desc": "ساعد زملاءه في المراجعة", "cls": "CLS-006", "pts": 4},
+        {"student_id": "STD-030", "teacher_id": "TCH-005", "bt_id": "BT-010", "type": "positive", "desc": "قاد حلقة التلاوة", "cls": "CLS-006", "pts": 5},
+    ]
+
+    behavior_count = 0
+    student_points = {}
+    for inc in behavior_incidents:
+        await db.behavior_records.insert_one({
+            "id": str(uuid.uuid4()),
+            "student_id": inc["student_id"],
+            "teacher_id": inc["teacher_id"],
+            "behavior_type_id": inc["bt_id"],
+            "type": inc["type"],
+            "description": inc["desc"],
+            "date": "2026-03-10",
+            "session_id": None,
+            "class_id": inc["cls"],
+            "points": inc["pts"],
+            "tenant_id": tenant_id,
+            "created_at": now,
+        })
+        behavior_count += 1
+        sp = student_points.setdefault(inc["student_id"], {"score": 100, "xp": 0})
+        if inc["pts"] > 0:
+            sp["xp"] += inc["pts"]
+        else:
+            sp["score"] += inc["pts"]
+
+    for sid, pts in student_points.items():
+        await db.students.update_one(
+            {"id": sid},
+            {"$set": {"behavior_score": max(0, pts["score"]), "xp_points": pts["xp"]}}
+        )
+
+    for sid_i in range(1, 31):
+        sid = f"STD-{sid_i:03d}"
+        if sid not in student_points:
+            await db.students.update_one(
+                {"id": sid},
+                {"$set": {"behavior_score": 100, "xp_points": 0}}
+            )
+
+    logger.info(f"Operational demo data seeded: attendance={att_count}, assessments={assess_count}, grades={grade_count}, behavior={behavior_count}")
+    return {"attendance": att_count, "assessments": assess_count, "grades": grade_count, "behavior": behavior_count}

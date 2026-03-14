@@ -12,6 +12,29 @@ import uuid
 def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
     """Setup parent portal routes"""
     
+    async def _verify_parent_child(db, current_user, child_id):
+        parent_id = current_user.get("id")
+        children_ids = current_user.get("children_ids", [])
+        if not children_ids:
+            parent_doc = await db.parents.find_one({"user_id": parent_id})
+            if parent_doc:
+                children_ids = parent_doc.get("student_ids", []) or parent_doc.get("children_ids", [])
+        if child_id in children_ids:
+            child = await db.students.find_one({"id": child_id})
+            if child:
+                return child
+        child = await db.students.find_one({
+            "id": child_id,
+            "$or": [
+                {"parent_id": parent_id},
+                {"parent_user_id": parent_id},
+                {"parent_phone": current_user.get("phone")}
+            ]
+        })
+        if not child:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
+        return child
+
     router = APIRouter(prefix="/parent-portal", tags=["Parent Portal"])
     
     # ============= DASHBOARD =============
@@ -23,49 +46,71 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         """لوحة تحكم ولي الأمر"""
         parent_id = current_user.get("id")
         
-        # Get children linked to this parent
-        children = await db.students.find({
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        }).to_list(20)
+        children_ids = current_user.get("children_ids", [])
+        if not children_ids:
+            parent_doc = await db.parents.find_one({"user_id": parent_id})
+            if parent_doc:
+                children_ids = parent_doc.get("student_ids", []) or parent_doc.get("children_ids", [])
+
+        children = []
+        if children_ids:
+            for cid in children_ids:
+                s = await db.students.find_one({"id": cid})
+                if s:
+                    children.append(s)
+        if not children:
+            children = await db.students.find({
+                "$or": [
+                    {"parent_id": parent_id},
+                    {"parent_user_id": parent_id},
+                    {"parent_phone": current_user.get("phone")}
+                ]
+            }).to_list(20)
         
         children_data = []
         for child in children:
             child_id = child.get("id")
             
-            # Get attendance stats
             total_days = await db.attendance.count_documents({"student_id": child_id})
             present_days = await db.attendance.count_documents({"student_id": child_id, "status": "present"})
             attendance_rate = (present_days / total_days * 100) if total_days > 0 else 100
             
-            # Get recent grades
-            recent_grades = await db.grades.find({"student_id": child_id}).sort("date", -1).limit(3).to_list(3)
+            recent_ag = await db.assessment_grades.find({"student_id": child_id}).sort("graded_at", -1).limit(3).to_list(3)
+            recent_grades_enriched = []
+            for g in recent_ag:
+                a = await db.assessments.find_one({"id": g.get("assessment_id")})
+                subj_id = a.get("subject_id") if a else None
+                subj_doc = None
+                if subj_id:
+                    subj_doc = await db.subjects.find_one({"id": subj_id})
+                    if not subj_doc:
+                        subj_doc = await db.official_curriculum_subjects.find_one({"id": subj_id})
+                recent_grades_enriched.append({
+                    "subject": subj_doc.get("name_ar", subj_id) if subj_doc else (subj_id or ""),
+                    "score": g.get("score"),
+                    "max_score": g.get("max_score"),
+                    "date": g.get("graded_at", "")[:10] if g.get("graded_at") else ""
+                })
             
-            # Calculate average
-            all_grades = await db.grades.find({"student_id": child_id}).to_list(500)
-            avg_score = sum(g.get("percentage", 0) for g in all_grades) / len(all_grades) if all_grades else 0
+            all_ag = await db.assessment_grades.find({"student_id": child_id}).to_list(500)
+            avg_score = sum(g.get("percentage", 0) for g in all_ag) / len(all_ag) if all_ag else 0
             
+            cls = await db.classes.find_one({"id": child.get("class_id")})
+            
+            grade_id = child.get("grade_id") or child.get("grade")
+            grade_doc = await db.official_curriculum_grades.find_one({"id": grade_id}) if grade_id else None
+            grade_name = grade_doc.get("name_ar", grade_id) if grade_doc else (grade_id or "")
+
             children_data.append({
                 "id": child_id,
                 "name": child.get("full_name"),
-                "grade": child.get("grade"),
-                "class_name": child.get("class_name"),
-                "school_name": child.get("school_name"),
+                "grade": grade_name,
+                "class_name": cls.get("name_ar", cls.get("name", "")) if cls else child.get("class_id", ""),
+                "school_name": "",
                 "profile_picture": child.get("profile_picture"),
                 "attendance_rate": round(attendance_rate, 1),
                 "average_score": round(avg_score, 1),
-                "recent_grades": [
-                    {
-                        "subject": g.get("subject"),
-                        "score": g.get("score"),
-                        "max_score": g.get("max_score"),
-                        "date": g.get("date")
-                    }
-                    for g in recent_grades
-                ]
+                "recent_grades": recent_grades_enriched
             })
         
         # Get unread notifications
@@ -101,17 +146,7 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         current_user: dict = Depends(require_roles([UserRole.PARENT]))
     ):
         """تفاصيل الابن"""
-        parent_id = current_user.get("id")
-        
-        # Verify parent-child relationship
-        child = await db.students.find_one({
-            "id": child_id,
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        })
+        child = await _verify_parent_child(db, current_user, child_id)
         
         if not child:
             raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
@@ -143,59 +178,50 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         """درجات الابن"""
         parent_id = current_user.get("id")
         
-        # Verify parent-child relationship
-        child = await db.students.find_one({
-            "id": child_id,
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        })
+        child = await _verify_parent_child(db, current_user, child_id)
         
-        if not child:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
-        
-        query = {"student_id": child_id}
-        if subject:
-            query["subject"] = subject
-        
-        grades = await db.grades.find(query).sort("date", -1).to_list(500)
-        
-        # Group by subject
-        subjects_data = {}
-        for grade in grades:
-            subj = grade.get("subject", "غير محدد")
-            if subj not in subjects_data:
-                subjects_data[subj] = {
-                    "subject": subj,
-                    "grades": [],
-                    "total_score": 0,
-                    "total_max": 0
-                }
-            
-            subjects_data[subj]["grades"].append({
-                "score": grade.get("score"),
-                "max_score": grade.get("max_score"),
-                "percentage": grade.get("percentage"),
-                "assessment_type": grade.get("assessment_type"),
-                "date": grade.get("date")
+        raw_grades = await db.assessment_grades.find({"student_id": child_id}).sort("graded_at", -1).to_list(500)
+
+        enriched = []
+        for g in raw_grades:
+            a = await db.assessments.find_one({"id": g.get("assessment_id")})
+            if not a:
+                continue
+            subj_id = a.get("subject_id")
+            subj_doc = None
+            if subj_id:
+                subj_doc = await db.subjects.find_one({"id": subj_id})
+                if not subj_doc:
+                    subj_doc = await db.official_curriculum_subjects.find_one({"id": subj_id})
+            subj_name = subj_doc.get("name_ar", subj_id) if subj_doc else (subj_id or "غير محدد")
+            a_type = a.get("assessment_type", "quiz")
+            if subject and subj_id != subject and subj_name != subject:
+                continue
+            enriched.append({
+                "score": g.get("score"),
+                "max_score": g.get("max_score"),
+                "percentage": g.get("percentage"),
+                "assessment_type": a_type,
+                "date": g.get("graded_at", "")[:10] if g.get("graded_at") else "",
+                "subject": subj_name
             })
+
+        subjects_data = {}
+        for grade in enriched:
+            subj = grade["subject"]
+            if subj not in subjects_data:
+                subjects_data[subj] = {"subject": subj, "grades": [], "total_score": 0, "total_max": 0}
+            subjects_data[subj]["grades"].append(grade)
             subjects_data[subj]["total_score"] += grade.get("score", 0)
             subjects_data[subj]["total_max"] += grade.get("max_score", 100)
-        
-        # Calculate averages
+
         for subj in subjects_data:
             data = subjects_data[subj]
-            if data["total_max"] > 0:
-                data["average"] = round((data["total_score"] / data["total_max"]) * 100, 1)
-            else:
-                data["average"] = 0
-        
-        # Overall average
-        total_grades = len(grades)
-        overall_avg = sum(g.get("percentage", 0) for g in grades) / total_grades if total_grades > 0 else 0
-        
+            data["average"] = round((data["total_score"] / data["total_max"]) * 100, 1) if data["total_max"] > 0 else 0
+
+        total_grades = len(enriched)
+        overall_avg = sum(g.get("percentage", 0) for g in enriched) / total_grades if total_grades > 0 else 0
+
         return {
             "child_name": child.get("full_name"),
             "subjects": list(subjects_data.values()),
@@ -213,20 +239,7 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         current_user: dict = Depends(require_roles([UserRole.PARENT]))
     ):
         """سجل حضور الابن"""
-        parent_id = current_user.get("id")
-        
-        # Verify parent-child relationship
-        child = await db.students.find_one({
-            "id": child_id,
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        })
-        
-        if not child:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
+        child = await _verify_parent_child(db, current_user, child_id)
         
         query = {"student_id": child_id}
         
@@ -279,20 +292,7 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         current_user: dict = Depends(require_roles([UserRole.PARENT]))
     ):
         """الجدول الدراسي للابن"""
-        parent_id = current_user.get("id")
-        
-        # Verify parent-child relationship
-        child = await db.students.find_one({
-            "id": child_id,
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        })
-        
-        if not child:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
+        child = await _verify_parent_child(db, current_user, child_id)
         
         school_id = child.get("school_id")
         
@@ -422,20 +422,7 @@ def setup_parent_portal_routes(db, get_current_user, require_roles, UserRole):
         current_user: dict = Depends(require_roles([UserRole.PARENT]))
     ):
         """معلمي الابن"""
-        parent_id = current_user.get("id")
-        
-        # Verify parent-child relationship
-        child = await db.students.find_one({
-            "id": child_id,
-            "$or": [
-                {"parent_id": parent_id},
-                {"parent_user_id": parent_id},
-                {"parent_phone": current_user.get("phone")}
-            ]
-        })
-        
-        if not child:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذا الطالب")
+        child = await _verify_parent_child(db, current_user, child_id)
         
         school_id = child.get("school_id")
         

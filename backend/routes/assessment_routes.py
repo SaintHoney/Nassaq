@@ -43,10 +43,10 @@ class AssessmentResponse(BaseModel):
     title_en: Optional[str] = None
     assessment_type: str
     max_score: float
-    passing_score: float
+    passing_score: Optional[float] = None
     weight: float
-    is_published: bool
-    is_graded: bool
+    is_published: bool = False
+    is_graded: bool = False
     created_at: str
     metadata: Optional[dict] = None
 
