@@ -17190,9 +17190,10 @@ async def get_driver_dashboard(
     tenant_id = current_user.get("tenant_id")
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
-    routes = await db.bus_routes.find({"driver_id": driver_id}, {"_id": 0}).to_list(20)
-    if not routes:
-        routes = await db.bus_routes.find({"school_id": tenant_id}, {"_id": 0}).to_list(20)
+    if current_user.get("role") == UserRole.PLATFORM_ADMIN.value:
+        routes = await db.bus_routes.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(20)
+    else:
+        routes = await db.bus_routes.find({"driver_id": driver_id}, {"_id": 0}).to_list(20)
     
     total_students_on_routes = 0
     for route in routes:
@@ -17297,16 +17298,32 @@ async def record_bus_attendance_bulk(
     current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN]))
 ):
     driver_id = current_user.get("id")
+    role = current_user.get("role")
     now = datetime.now(timezone.utc)
     records = data.get("records", [])
     saved = []
+
+    verified_routes = {}
     
     for r in records:
+        route_id = r.get("route_id")
+        student_id = r.get("student_id")
+
+        if role == "driver" and route_id:
+            if route_id not in verified_routes:
+                route = await db.bus_routes.find_one({"id": route_id, "driver_id": driver_id})
+                if not route:
+                    raise HTTPException(status_code=403, detail=f"ليس لديك صلاحية للمسار {route_id}")
+                verified_routes[route_id] = route
+            route = verified_routes[route_id]
+            if student_id and student_id not in route.get("student_ids", []):
+                raise HTTPException(status_code=400, detail=f"الطالب {student_id} غير مسجل في المسار {route_id}")
+
         record = {
             "id": str(uuid.uuid4()),
             "driver_id": driver_id,
-            "route_id": r.get("route_id"),
-            "student_id": r.get("student_id"),
+            "route_id": route_id,
+            "student_id": student_id,
             "status": r.get("status", "boarded"),
             "direction": r.get("direction", "to_school"),
             "date": now.strftime("%Y-%m-%d"),

@@ -1000,6 +1000,39 @@ async def seed_driver_gatekeeper_data(db):
         await db.bus_routes.update_one({"id": route["id"]}, {"$set": route}, upsert=True)
     print(f"Seeded {len(bus_routes)} bus routes")
     
+    bus_attendance_records = []
+    for day_offset in range(5):
+        date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
+        for route in bus_routes:
+            for sid in route["student_ids"]:
+                bus_attendance_records.append({
+                    "id": str(uuid.uuid4()),
+                    "driver_id": route["driver_id"],
+                    "route_id": route["id"],
+                    "student_id": sid,
+                    "status": "boarded",
+                    "direction": "to_school",
+                    "date": date,
+                    "time": f"06:{30 + int(sid[-3:]) % 25:02d}:00",
+                    "school_id": route["school_id"],
+                    "created_at": (now - timedelta(days=day_offset)).isoformat()
+                })
+                bus_attendance_records.append({
+                    "id": str(uuid.uuid4()),
+                    "driver_id": route["driver_id"],
+                    "route_id": route["id"],
+                    "student_id": sid,
+                    "status": "boarded",
+                    "direction": "from_school",
+                    "date": date,
+                    "time": f"13:{30 + int(sid[-3:]) % 25:02d}:00",
+                    "school_id": route["school_id"],
+                    "created_at": (now - timedelta(days=day_offset)).isoformat()
+                })
+    for rec in bus_attendance_records:
+        await db.bus_attendance.insert_one(rec)
+    print(f"Seeded {len(bus_attendance_records)} bus attendance records")
+
     gate_logs = []
     for day_offset in range(5):
         date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
