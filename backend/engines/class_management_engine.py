@@ -89,7 +89,7 @@ class ClassManagementEngine:
             # Update students with class assignment
             if request.student_ids:
                 await self.students_collection.update_many(
-                    {"student_id": {"$in": request.student_ids}},
+                    {"id": {"$in": request.student_ids}, "school_id": tenant_id},
                     {"$set": {"class_id": class_id, "updated_at": now.isoformat()}}
                 )
             
@@ -173,14 +173,23 @@ class ClassManagementEngine:
     
     async def get_students(self, tenant_id: str, grade_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get available students for class assignment"""
-        query = {"tenant_id": tenant_id, "is_deleted": {"$ne": True}}
+        query = {"school_id": tenant_id, "is_active": True}
         if grade_id:
-            query["grade_id"] = grade_id
+            query["$or"] = [{"grade_id": grade_id}, {"grade": grade_id}]
         
-        students = await self.students_collection.find(
+        raw_students = await self.students_collection.find(
             query,
-            {"_id": 0, "student_id": 1, "full_name_ar": 1, "full_name_en": 1, "grade_id": 1}
+            {"_id": 0, "id": 1, "full_name": 1, "full_name_en": 1, "grade_id": 1, "grade": 1}
         ).to_list(500)
+        
+        students = []
+        for s in raw_students:
+            students.append({
+                "student_id": s.get("id"),
+                "full_name_ar": s.get("full_name", ""),
+                "full_name_en": s.get("full_name_en", ""),
+                "grade_id": s.get("grade_id") or s.get("grade"),
+            })
         return students
     
     async def get_class_types(self) -> List[Dict[str, str]]:
