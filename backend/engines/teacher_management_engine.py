@@ -486,6 +486,7 @@ class TeacherManagementEngine:
                 seen_ids.add(g["id"])
                 merged.append(g)
 
+        merged.sort(key=lambda g: g.get("order", 0))
         return merged
     
     async def get_academic_degrees(self) -> List[Dict[str, str]]:

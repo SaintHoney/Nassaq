@@ -3522,6 +3522,7 @@ async def get_teacher_grades_options(current_user: dict = Depends(get_current_us
                 "stage_id": ""
             })
     
+    formatted_grades.sort(key=lambda g: g.get("grade", 0))
     return {"grades": formatted_grades}
 
 @api_router.get("/teachers/options/academic-degrees")
