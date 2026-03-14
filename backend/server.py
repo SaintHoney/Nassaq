@@ -17585,6 +17585,172 @@ async def get_compliance_report(
     return {"schools": compliance}
 
 
+@api_router.get("/ministry/teacher-performance")
+async def get_ministry_teacher_performance(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+    school_data = []
+    total_teachers = 0
+    total_avg_students = 0
+
+    for school in schools:
+        sid = school.get("id")
+        teachers = await db.teachers.find({"school_id": sid}, {"_id": 0}).to_list(500)
+        teacher_count = len(teachers)
+        total_teachers += teacher_count
+        student_count = await db.students.count_documents({"school_id": sid})
+        ratio = round(student_count / teacher_count, 1) if teacher_count else 0
+        total_avg_students += ratio
+
+        assignments = await db.teacher_assignments.find({"school_id": sid, "is_active": True}, {"_id": 0}).to_list(1000)
+        assigned = len(set(a.get("teacher_id") for a in assignments))
+
+        school_data.append({
+            "school_id": sid,
+            "school_name": school.get("name", school.get("name_ar", "")),
+            "teacher_count": teacher_count,
+            "student_teacher_ratio": ratio,
+            "assigned_teachers": assigned,
+            "unassigned_teachers": max(0, teacher_count - assigned),
+        })
+
+    return {
+        "total_teachers": total_teachers,
+        "avg_student_teacher_ratio": round(total_avg_students / len(schools), 1) if schools else 0,
+        "schools": school_data
+    }
+
+
+@api_router.get("/ministry/student-performance")
+async def get_ministry_student_performance(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+    school_data = []
+    total_students = 0
+    total_pass = 0
+    total_graded = 0
+
+    for school in schools:
+        sid = school.get("id")
+        student_count = await db.students.count_documents({"school_id": sid})
+        total_students += student_count
+
+        grades = await db.assessment_grades.find({"school_id": sid}, {"_id": 0, "score": 1, "max_score": 1}).to_list(10000)
+        avg_score = 0
+        pass_rate = 0
+        if grades:
+            scores = [(g.get("score", 0) / g.get("max_score", 100)) * 100 for g in grades if g.get("max_score")]
+            avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+            passing = len([s for s in scores if s >= 50])
+            pass_rate = round((passing / len(scores)) * 100, 1) if scores else 0
+            total_pass += passing
+            total_graded += len(scores)
+
+        behavior = await db.behavior_records.find({"school_id": sid}, {"_id": 0, "type": 1}).to_list(5000)
+        positive = len([b for b in behavior if b.get("type") == "positive"])
+        negative = len([b for b in behavior if b.get("type") == "negative"])
+
+        school_data.append({
+            "school_id": sid,
+            "school_name": school.get("name", school.get("name_ar", "")),
+            "student_count": student_count,
+            "avg_score": avg_score,
+            "pass_rate": pass_rate,
+            "positive_behavior": positive,
+            "negative_behavior": negative,
+        })
+
+    return {
+        "total_students": total_students,
+        "overall_pass_rate": round((total_pass / total_graded) * 100, 1) if total_graded else 0,
+        "schools": school_data
+    }
+
+
+@api_router.get("/ministry/academic-activity")
+async def get_ministry_academic_activity(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    from datetime import datetime, timedelta, timezone
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    total_assessments = await db.assessments.count_documents({})
+    total_attendance = await db.attendance.count_documents({})
+    total_behavior = await db.behavior_records.count_documents({})
+    total_grades = await db.assessment_grades.count_documents({})
+
+    recent_attendance = await db.attendance.count_documents({"date": {"$gte": week_ago}})
+    recent_behavior = await db.behavior_records.count_documents({"created_at": {"$gte": week_ago}})
+
+    all_grades = await db.assessment_grades.find({}, {"_id": 0, "subject_name": 1, "assessment_id": 1}).to_list(10000)
+    subject_counts = {}
+    for g in all_grades:
+        subj = g.get("subject_name")
+        if not subj:
+            ass = await db.assessments.find_one({"id": g.get("assessment_id")}, {"_id": 0, "subject_name": 1, "title": 1})
+            subj = (ass or {}).get("subject_name") or (ass or {}).get("title") or "غير محدد"
+        subject_counts[subj] = subject_counts.get(subj, 0) + 1
+    top_subjects = sorted(subject_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    return {
+        "total_assessments": total_assessments,
+        "total_attendance_records": total_attendance,
+        "total_behavior_records": total_behavior,
+        "total_grades_entered": total_grades,
+        "recent_attendance_7d": recent_attendance,
+        "recent_behavior_7d": recent_behavior,
+        "top_subjects": [{"subject": s[0], "count": s[1]} for s in top_subjects if s[0] != "غير محدد"],
+    }
+
+
+@api_router.get("/ministry/strategic-kpis")
+async def get_ministry_strategic_kpis(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    total_schools = await db.schools.count_documents({})
+    total_students = await db.students.count_documents({})
+    total_teachers = await db.teachers.count_documents({})
+    total_classes = await db.classes.count_documents({})
+
+    all_att = await db.attendance.find({}, {"_id": 0, "status": 1}).to_list(50000)
+    present = len([a for a in all_att if a.get("status") == "present"])
+    attendance_rate = round((present / len(all_att)) * 100, 1) if all_att else 0
+
+    grades = await db.assessment_grades.find({}, {"_id": 0, "score": 1, "max_score": 1}).to_list(50000)
+    if grades:
+        scores = [(g.get("score", 0) / g.get("max_score", 100)) * 100 for g in grades if g.get("max_score")]
+        avg_grade = round(sum(scores) / len(scores), 1) if scores else 0
+        pass_rate = round(len([s for s in scores if s >= 50]) / len(scores) * 100, 1) if scores else 0
+    else:
+        avg_grade = 0
+        pass_rate = 0
+
+    behavior = await db.behavior_records.find({}, {"_id": 0, "type": 1}).to_list(50000)
+    pos = len([b for b in behavior if b.get("type") == "positive"])
+    behavior_rate = round((pos / len(behavior)) * 100, 1) if behavior else 100
+
+    ratio = round(total_students / total_teachers, 1) if total_teachers else 0
+
+    schools_with_settings = await db.school_settings.count_documents({})
+    compliance_rate = round((schools_with_settings / total_schools) * 100, 1) if total_schools else 0
+
+    return {
+        "kpis": [
+            {"key": "attendance_rate", "label": "معدل الحضور العام", "value": attendance_rate, "unit": "%", "target": 95, "status": "good" if attendance_rate >= 90 else "warning" if attendance_rate >= 75 else "critical"},
+            {"key": "avg_grade", "label": "متوسط الدرجات", "value": avg_grade, "unit": "%", "target": 75, "status": "good" if avg_grade >= 70 else "warning" if avg_grade >= 50 else "critical"},
+            {"key": "pass_rate", "label": "نسبة النجاح", "value": pass_rate, "unit": "%", "target": 90, "status": "good" if pass_rate >= 80 else "warning" if pass_rate >= 60 else "critical"},
+            {"key": "behavior", "label": "السلوك الإيجابي", "value": behavior_rate, "unit": "%", "target": 85, "status": "good" if behavior_rate >= 80 else "warning" if behavior_rate >= 60 else "critical"},
+            {"key": "student_teacher_ratio", "label": "نسبة الطلاب للمعلمين", "value": ratio, "unit": ":1", "target": 20, "status": "good" if ratio <= 25 else "warning" if ratio <= 35 else "critical"},
+            {"key": "compliance", "label": "نسبة الامتثال", "value": compliance_rate, "unit": "%", "target": 100, "status": "good" if compliance_rate >= 90 else "warning" if compliance_rate >= 70 else "critical"},
+            {"key": "total_schools", "label": "إجمالي المدارس", "value": total_schools, "unit": "", "target": None, "status": "info"},
+            {"key": "total_students", "label": "إجمالي الطلاب", "value": total_students, "unit": "", "target": None, "status": "info"},
+        ]
+    }
+
+
 # ============== REPORTS EXPORT API (CSV) ==============
 @api_router.get("/reports/export/csv")
 async def export_report_csv(
