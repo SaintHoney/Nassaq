@@ -39,8 +39,9 @@ export default function TeacherSchedulePage() {
   const [schedule, setSchedule] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [view, setView] = useState('weekly');
-  const getDayIndex = (jsDay) => (jsDay >= 0 && jsDay <= 4) ? jsDay : 0;
-  const [selectedDay, setSelectedDay] = useState(DAYS[getDayIndex(new Date().getDay())]?.key || 'sunday');
+  const getDayIndex = (jsDay) => (jsDay >= 0 && jsDay <= 4) ? jsDay : -1;
+  const isWeekend = getDayIndex(new Date().getDay()) === -1;
+  const [selectedDay, setSelectedDay] = useState(DAYS[isWeekend ? 0 : getDayIndex(new Date().getDay())]?.key || 'sunday');
   const [selectedSession, setSelectedSession] = useState(null);
 
   const teacherId = user?.teacher_id || user?.id;
@@ -77,7 +78,7 @@ export default function TeacherSchedulePage() {
     return SUBJECT_COLORS[subjectName] || SUBJECT_COLORS.default;
   };
 
-  const todayKey = DAYS[getDayIndex(new Date().getDay())]?.key;
+  const todayKey = isWeekend ? null : DAYS[getDayIndex(new Date().getDay())]?.key;
 
   const isCurrentPeriod = (dayKey, slot) => {
     if (dayKey !== todayKey) return false;
