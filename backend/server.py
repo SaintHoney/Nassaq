@@ -17850,7 +17850,23 @@ async def export_report_pdf(
     def esc(val):
         return html_mod.escape(str(val)) if val else ""
 
+    user_role = current_user.get("role", "")
+    platform_only_types = {"schools", "users"}
+    if report_type in platform_only_types and user_role not in ("platform_admin", "ministry_rep"):
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لتصدير هذا التقرير")
+
     tenant_id = current_user.get("tenant_id")
+
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "report_export_pdf",
+        "report_type": report_type,
+        "user_id": current_user.get("id"),
+        "user_role": user_role,
+        "tenant_id": tenant_id,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
 
     rows = []
@@ -17929,37 +17945,66 @@ async def export_report_pdf(
         for u in users:
             rows.append([u.get("full_name", ""), u.get("email", ""), u.get("role", ""), u.get("tenant_id", ""), "نشط" if u.get("is_active") else "معطل"])
 
-    table_rows = ""
-    for row in rows:
-        cells = "".join(f"<td style='border:1px solid #ddd;padding:8px 12px;text-align:right;'>{esc(c)}</td>" for c in row)
-        table_rows += f"<tr>{cells}</tr>"
-    header_cells = "".join(f"<th style='border:1px solid #ccc;padding:10px 12px;text-align:right;background:#1C3D74;color:white;'>{esc(h)}</th>" for h in headers)
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
 
-    html = f"""<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head><meta charset="UTF-8"><title>{title}</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-body{{font-family:'Cairo',sans-serif;margin:40px;color:#312E2F;direction:rtl;}}
-h1{{color:#1C3D74;border-bottom:3px solid #46C1BE;padding-bottom:10px;}}
-.meta{{color:#888;font-size:14px;margin-bottom:20px;}}
-table{{width:100%;border-collapse:collapse;margin-top:20px;}}
-tr:nth-child(even){{background:#f8f9fa;}}
-.footer{{margin-top:40px;text-align:center;color:#888;font-size:12px;border-top:1px solid #eee;padding-top:15px;}}
-@media print{{body{{margin:20px;}}}}
-</style></head>
-<body>
-<h1>نسّق — {title}</h1>
-<div class="meta">تاريخ التقرير: {now}</div>
-<table><thead><tr>{header_cells}</tr></thead><tbody>{table_rows}</tbody></table>
-<div class="footer">تم إنشاء هذا التقرير بواسطة منصة نسّق — NASSAQ Platform</div>
-</body></html>"""
+    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    font_bold_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    if "DejaVuSans" not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont("DejaVuSans", font_path))
+    if "DejaVuSans-Bold" not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", font_bold_path))
 
-    html_bytes = html.encode("utf-8")
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=50, bottomMargin=40)
+
+    title_style = ParagraphStyle("TitleAr", fontName="DejaVuSans-Bold", fontSize=18, alignment=1, spaceAfter=10)
+    meta_style = ParagraphStyle("MetaAr", fontName="DejaVuSans", fontSize=10, alignment=1, textColor=colors.grey, spaceAfter=20)
+    footer_style = ParagraphStyle("FooterAr", fontName="DejaVuSans", fontSize=8, alignment=1, textColor=colors.grey, spaceBefore=30)
+
+    elements = []
+    elements.append(Paragraph(f"NASSAQ — {esc(title)}", title_style))
+    elements.append(Paragraph(f"{now} :تاريخ التقرير", meta_style))
+    elements.append(Spacer(1, 12))
+
+    if headers and rows:
+        table_data = [headers] + rows
+        col_count = len(headers)
+        col_width = (A4[0] - 80) / col_count
+        t = Table(table_data, colWidths=[col_width] * col_count)
+        style_cmds = [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1C3D74")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
+            ("FONTNAME", (0, 1), (-1, -1), "DejaVuSans"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8f9fa")]),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]
+        t.setStyle(TableStyle(style_cmds))
+        elements.append(t)
+    else:
+        no_data_style = ParagraphStyle("NoData", fontName="DejaVuSans", fontSize=12, alignment=1, spaceBefore=40)
+        elements.append(Paragraph("لا توجد بيانات متاحة", no_data_style))
+
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph("NASSAQ Platform — تم إنشاء هذا التقرير بواسطة منصة نسّق", footer_style))
+
+    doc.build(elements)
+    buf.seek(0)
+    pdf_bytes = buf.getvalue()
+
     return StreamingResponse(
-        iter([html_bytes]),
-        media_type="text/html; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename=nassaq_report_{report_type}.html"}
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=nassaq_report_{report_type}.pdf"}
     )
 
 
@@ -17972,8 +18017,23 @@ async def export_report_csv(
     import io
     import csv
     from starlette.responses import StreamingResponse
-    
+
+    user_role = current_user.get("role", "")
+    platform_only_types = {"schools", "users"}
+    if report_type in platform_only_types and user_role not in ("platform_admin", "ministry_rep"):
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لتصدير هذا التقرير")
+
     tenant_id = current_user.get("tenant_id")
+
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "report_export_csv",
+        "report_type": report_type,
+        "user_id": current_user.get("id"),
+        "user_role": user_role,
+        "tenant_id": tenant_id,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
     output = io.StringIO()
     writer = csv.writer(output)
     

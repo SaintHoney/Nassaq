@@ -171,15 +171,16 @@ export const SchoolReportsPage = () => {
 
       if (format === 'PDF') {
         const response = await api.get(`/reports/export/pdf?report_type=${activeTab}`, { responseType: 'blob' });
-        const blob = new Blob([response.data], { type: 'text/html; charset=utf-8' });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
-        const printWindow = window.open(url, '_blank');
-        if (printWindow) {
-          printWindow.onload = () => {
-            printWindow.print();
-          };
-        }
-        toast.success(isRTL ? 'تم فتح التقرير للطباعة' : 'Report opened for printing');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nassaq_report_${activeTab}_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success(isRTL ? 'تم تحميل التقرير بصيغة PDF' : 'PDF report downloaded');
       } else if (format === 'CSV') {
         const reportMap = { overview: 'overview', attendance: 'attendance', grades: 'grades', behavior: 'behavior' };
         const csvType = reportMap[activeTab] || 'overview';
