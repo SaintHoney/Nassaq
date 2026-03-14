@@ -860,3 +860,73 @@ async def seed_demo_operational_data(db):
 
     logger.info(f"Operational demo data seeded: attendance={att_count}, assessments={assess_count}, grades={grade_count}, behavior={behavior_count}")
     return {"attendance": att_count, "assessments": assess_count, "grades": grade_count, "behavior": behavior_count}
+
+
+async def seed_notifications_and_messages(db):
+    """Seed demo notifications and message templates"""
+    import uuid
+    from datetime import datetime, timezone, timedelta
+    
+    existing = await db.notifications.count_documents({})
+    if existing > 0:
+        print(f"Notifications already seeded ({existing})")
+        return
+    
+    now = datetime.now(timezone.utc)
+    
+    notifications = []
+    users_cursor = db.users.find({"tenant_id": "SCH-001"}, {"_id": 0, "id": 1, "role": 1})
+    users = await users_cursor.to_list(100)
+    
+    notification_templates = [
+        {"type": "system", "title": "تحديث النظام", "title_en": "System Update", "message": "تم تحديث نظام نَسَّق إلى الإصدار 2.1 بنجاح", "message_en": "NASSAQ system updated to version 2.1 successfully", "priority": "low"},
+        {"type": "attendance", "title": "تنبيه حضور", "title_en": "Attendance Alert", "message": "تم تسجيل حضور جميع الطلاب في الصف 1/أ", "message_en": "All students in class 1/A marked present", "priority": "medium"},
+        {"type": "schedule", "title": "تغيير في الجدول", "title_en": "Schedule Change", "message": "تم تعديل جدول الحصص ليوم الأربعاء", "message_en": "Wednesday schedule has been modified", "priority": "high"},
+        {"type": "assessment", "title": "نتائج الاختبار", "title_en": "Test Results", "message": "تم رصد درجات اختبار الرياضيات للصف الأول", "message_en": "Math test grades for first grade have been recorded", "priority": "medium"},
+        {"type": "behaviour", "title": "ملاحظة سلوكية", "title_en": "Behavior Note", "message": "تم تسجيل ملاحظة سلوكية إيجابية للطالب أحمد", "message_en": "Positive behavior note recorded for student Ahmed", "priority": "low"},
+        {"type": "communication", "title": "رسالة جديدة", "title_en": "New Message", "message": "لديك رسالة جديدة من إدارة المدرسة", "message_en": "You have a new message from school administration", "priority": "medium"},
+        {"type": "announcement", "title": "إعلان مهم", "title_en": "Important Announcement", "message": "اجتماع أولياء الأمور يوم الخميس القادم الساعة 4 مساءً", "message_en": "Parent meeting next Thursday at 4 PM", "priority": "high"},
+    ]
+    
+    for user in users:
+        for i, tmpl in enumerate(notification_templates):
+            notifications.append({
+                "id": f"NOTIF-{user['id']}-{i+1}",
+                "recipient_id": user["id"],
+                "recipient_role": user.get("role", ""),
+                "tenant_id": "SCH-001",
+                "notification_type": tmpl["type"],
+                "title": tmpl["title"],
+                "title_en": tmpl["title_en"],
+                "message": tmpl["message"],
+                "message_en": tmpl["message_en"],
+                "priority": tmpl["priority"],
+                "read_status": i > 3,
+                "created_at": (now - timedelta(hours=i*3)).isoformat(),
+            })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+        print(f"Seeded {len(notifications)} notifications")
+    
+    existing_templates = await db.message_templates.count_documents({})
+    if existing_templates == 0:
+        templates = [
+            {"id": "TMPL-001", "name": "إشعار غياب", "name_en": "Absence Notice", "content_template": "نود إبلاغكم بغياب الطالب/ة {student_name} عن المدرسة يوم {date}. يرجى التواصل مع إدارة المدرسة.", "icon": "bell", "school_id": "SCH-001", "created_at": now.isoformat()},
+            {"id": "TMPL-002", "name": "دعوة اجتماع", "name_en": "Meeting Invitation", "content_template": "يسرنا دعوتكم لحضور اجتماع {meeting_type} يوم {date} الساعة {time} في {location}.", "icon": "calendar", "school_id": "SCH-001", "created_at": now.isoformat()},
+            {"id": "TMPL-003", "name": "نتائج الاختبارات", "name_en": "Test Results", "content_template": "تم إصدار نتائج اختبار {subject} للصف {class_name}. يمكنكم الاطلاع عليها من خلال بوابة ولي الأمر.", "icon": "graduation-cap", "school_id": "SCH-001", "created_at": now.isoformat()},
+            {"id": "TMPL-004", "name": "تنبيه سلوكي", "name_en": "Behavior Alert", "content_template": "نود إعلامكم بأنه تم تسجيل ملاحظة سلوكية للطالب/ة {student_name}: {note}.", "icon": "user-check", "school_id": "SCH-001", "created_at": now.isoformat()},
+        ]
+        await db.message_templates.insert_many(templates)
+        print(f"Seeded {len(templates)} message templates")
+    
+    existing_msgs = await db.messages.count_documents({})
+    if existing_msgs == 0:
+        messages = [
+            {"id": "MSG-001", "title": "ترحيب بالفصل الدراسي الجديد", "content": "أهلاً بكم في الفصل الدراسي الثاني. نتمنى لكم فصلاً دراسياً مليئاً بالنجاح والتفوق.", "audience": "all", "status": "sent", "sent_count": 40, "recipient_count": 40, "school_id": "SCH-001", "created_by": "USR-ADMIN-001", "created_at": (now - timedelta(days=5)).isoformat(), "sent_at": (now - timedelta(days=5)).isoformat()},
+            {"id": "MSG-002", "title": "اجتماع أولياء الأمور", "content": "ندعوكم لحضور اجتماع أولياء الأمور يوم الخميس القادم الساعة 4 مساءً في قاعة الاجتماعات.", "audience": "parents", "status": "sent", "sent_count": 15, "recipient_count": 15, "school_id": "SCH-001", "created_by": "USR-ADMIN-001", "created_at": (now - timedelta(days=2)).isoformat(), "sent_at": (now - timedelta(days=2)).isoformat()},
+            {"id": "MSG-003", "title": "تذكير بالاختبارات", "content": "نذكركم بأن اختبارات منتصف الفصل تبدأ الأسبوع القادم. يرجى الاستعداد جيداً.", "audience": "students", "status": "scheduled", "sent_count": 0, "recipient_count": 30, "school_id": "SCH-001", "created_by": "USR-ADMIN-001", "created_at": now.isoformat(), "scheduled_at": (now + timedelta(days=2)).isoformat()},
+        ]
+        await db.messages.insert_many(messages)
+        print(f"Seeded {len(messages)} demo messages")
+

@@ -4790,6 +4790,13 @@ async def get_subjects(
         query["school_id"] = current_user.get("tenant_id")
     
     subjects = await db.subjects.find(query, {"_id": 0}).to_list(1000)
+    if not subjects:
+        official = await db.official_curriculum_subjects.find({}, {"_id": 0}).to_list(200)
+        for s in official:
+            s.setdefault("school_id", current_user.get("tenant_id", ""))
+            s.setdefault("name", s.get("name_ar", ""))
+            s.setdefault("code", s.get("id", ""))
+        subjects = official
     return [SubjectResponse(**s) for s in subjects]
 
 @api_router.get("/subjects/{subject_id}", response_model=SubjectResponse)
@@ -4954,18 +4961,18 @@ class TeacherAssignmentCreate(BaseModel):
 class TeacherAssignmentResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    school_id: str
+    school_id: Optional[str] = None
     teacher_id: str
     teacher_name: Optional[str] = None
-    class_id: Optional[str] = None  # Made optional for general subject assignment
+    class_id: Optional[str] = None
     class_name: Optional[str] = None
-    subject_id: str
+    subject_id: Optional[str] = None
     subject_name: Optional[str] = None
-    weekly_sessions: int
-    academic_year: str
-    semester: int
-    is_active: bool
-    created_at: str
+    weekly_sessions: Optional[int] = 0
+    academic_year: Optional[str] = None
+    semester: Optional[int] = None
+    is_active: Optional[bool] = True
+    created_at: Optional[str] = None
 
 # Schedule Models
 class SchoolScheduleCreate(BaseModel):
@@ -5171,15 +5178,21 @@ async def get_teacher_assignments(
     teachers = await db.teachers.find({"id": {"$in": teacher_ids}}, {"_id": 0}).to_list(100)
     classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(100)
     
-    # Try both subjects collection and reference_subjects
-    subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
-    if not subjects:
-        subjects = await db.reference_subjects.find({"id": {"$in": subject_ids}}, {"_id": 0}).to_list(100)
+    subject_map = {}
+    resolved_ids = set()
+    for coll in [db.subjects, db.official_curriculum_subjects, db.reference_subjects]:
+        remaining = [sid for sid in subject_ids if sid and sid not in resolved_ids]
+        if not remaining:
+            break
+        found = await coll.find({"id": {"$in": remaining}}, {"_id": 0}).to_list(200)
+        for s in found:
+            sid = s.get("id")
+            if sid and sid not in resolved_ids:
+                subject_map[sid] = s.get("name") or s.get("name_ar")
+                resolved_ids.add(sid)
     
-    # Support both naming conventions
     teacher_map = {t.get("id"): t.get("full_name") or t.get("full_name_ar") for t in teachers}
     class_map = {c.get("id"): c.get("name") or c.get("name_ar") for c in classes}
-    subject_map = {s.get("id"): s.get("name") or s.get("name_ar") for s in subjects}
     
     result = []
     for a in assignments:
@@ -14167,12 +14180,16 @@ async def get_teacher_dashboard(
     class_ids = list(set(a.get("class_id") for a in assignments if a.get("class_id")))
     subject_ids = list(set(a.get("subject_id") for a in assignments if a.get("subject_id")))
     
-    # Get classes and students count
-    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0, "id": 1, "name": 1, "student_count": 1}).to_list(50)
-    total_students = sum(c.get("student_count", 0) for c in classes)
+    classes = await db.classes.find({"id": {"$in": class_ids}}, {"_id": 0}).to_list(50)
+    total_students = 0
+    for c in classes:
+        cnt = await db.students.count_documents({"class_id": c.get("id")})
+        c["student_count"] = cnt
+        total_students += cnt
     
-    # Get subjects
     subjects = await db.subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1}).to_list(50)
+    if not subjects and subject_ids:
+        subjects = await db.official_curriculum_subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "id": 1, "name_ar": 1, "name_en": 1}).to_list(50)
     
     # Get today's schedule
     today_day = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][datetime.now().weekday()]
@@ -16132,11 +16149,17 @@ async def get_teacher_classes(
             subjects = await db.official_curriculum_subjects.find({"id": {"$in": subject_ids}}, {"_id": 0, "name_ar": 1, "name_en": 1}).to_list(20)
         subject_names = [s.get("name_ar") or s.get("name_en") or "مادة" for s in subjects]
         
+        total_att = await db.attendance.count_documents({"class_id": cls.get("id")})
+        present_att = await db.attendance.count_documents({"class_id": cls.get("id"), "status": "present"})
+        att_rate = round(present_att / total_att * 100) if total_att > 0 else 0
+        
         enriched_classes.append({
             **cls,
             "student_count": student_count,
             "subjects": subject_names,
-            "weekly_periods": sum(a.get("weekly_sessions", 0) for a in class_assignments)
+            "weekly_periods": sum(a.get("weekly_sessions", 0) for a in class_assignments),
+            "attendance_rate": att_rate,
+            "progress": 65
         })
     
     return enriched_classes
@@ -16182,9 +16205,11 @@ async def get_teacher_schedule(
         if assignment:
             cls = await db.classes.find_one({"id": assignment.get("class_id")}, {"_id": 0, "name": 1})
             subject = await db.subjects.find_one({"id": assignment.get("subject_id")}, {"_id": 0, "name_ar": 1, "name_en": 1})
+            if not subject:
+                subject = await db.official_curriculum_subjects.find_one({"id": assignment.get("subject_id")}, {"_id": 0, "name_ar": 1, "name_en": 1})
             session["class_name"] = cls.get("name") if cls else "غير محدد"
             session["class_id"] = assignment.get("class_id")
-            session["subject_name"] = subject.get("name_ar") or subject.get("name_en") if subject else "غير محدد"
+            session["subject_name"] = (subject.get("name_ar") or subject.get("name_en")) if subject else "غير محدد"
         
         # Get time slot info
         slot = await db.time_slots.find_one({"id": session.get("time_slot_id")}, {"_id": 0, "slot_number": 1, "start_time": 1, "end_time": 1})
@@ -16287,18 +16312,25 @@ async def get_student_grades(
     current_user: dict = Depends(get_current_user)
 ):
     """Get all grades for a student"""
-    grades = await db.grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
+    grades = await db.assessment_grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
+    if not grades:
+        grades = await db.grades.find({"student_id": student_id}, {"_id": 0}).to_list(100)
     
-    # Enrich with assessment info
     for grade in grades:
         assessment = await db.assessments.find_one(
             {"id": grade.get("assessment_id")}, 
-            {"_id": 0, "name": 1, "type": 1, "max_score": 1}
+            {"_id": 0, "title": 1, "name": 1, "assessment_type": 1, "max_score": 1, "subject_id": 1}
         )
         if assessment:
-            grade["assessment_name"] = assessment.get("name")
-            grade["type"] = assessment.get("type")
-            grade["max_score"] = assessment.get("max_score", 100)
+            grade["assessment_name"] = assessment.get("title") or assessment.get("name")
+            grade["type"] = assessment.get("assessment_type") or assessment.get("type")
+            grade["max_score"] = grade.get("max_score") or assessment.get("max_score", 100)
+            subj_id = assessment.get("subject_id")
+            if subj_id:
+                subj = await db.subjects.find_one({"id": subj_id})
+                if not subj:
+                    subj = await db.official_curriculum_subjects.find_one({"id": subj_id})
+                grade["subject_name"] = subj.get("name_ar", subj_id) if subj else subj_id
     
     return grades
 
@@ -17207,7 +17239,7 @@ async def seed_essential_accounts():
 
 @app.on_event("startup")
 async def seed_curriculum_and_demo_data():
-    from seed_curriculum import seed_official_curriculum, seed_demo_school_data, seed_demo_operational_data
+    from seed_curriculum import seed_official_curriculum, seed_demo_school_data, seed_demo_operational_data, seed_notifications_and_messages
     try:
         curriculum_result = await seed_official_curriculum(db)
         logger.info(f"Curriculum seeding: {curriculum_result}")
@@ -17215,6 +17247,8 @@ async def seed_curriculum_and_demo_data():
         logger.info(f"Demo data seeding: {demo_result}")
         ops_result = await seed_demo_operational_data(db)
         logger.info(f"Operational data seeding: {ops_result}")
+        await seed_notifications_and_messages(db)
+        logger.info("Notifications and messages seeded")
     except Exception as e:
         logger.error(f"Seed error: {e}")
 
