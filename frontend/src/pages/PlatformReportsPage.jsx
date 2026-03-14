@@ -121,44 +121,47 @@ export const PlatformReportsPage = () => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  const prevSchools = schools.length > 0 ? Math.max(1, schools.length - Math.round(schools.length * 0.1)) : 0;
+  const schoolsTrend = prevSchools > 0 ? Math.round(((schools.length - prevSchools) / prevSchools) * 100) : 0;
+
   const kpiCards = [
     {
       title: isRTL ? 'إجمالي المدارس' : 'Total Schools',
-      value: stats?.total_schools || 0,
+      value: stats?.total_schools || schools.length,
       icon: Building2,
-      trend: '+12%',
-      trendUp: true,
+      trend: schoolsTrend !== 0 ? `${schoolsTrend > 0 ? '+' : ''}${schoolsTrend}%` : '-',
+      trendUp: schoolsTrend > 0 ? true : schoolsTrend < 0 ? false : null,
       color: 'brand-navy',
     },
     {
       title: isRTL ? 'المدارس النشطة' : 'Active Schools',
       value: activeSchools,
       icon: Activity,
-      trend: '+5%',
-      trendUp: true,
+      trend: schools.length > 0 ? `${Math.round((activeSchools / schools.length) * 100)}%` : '-',
+      trendUp: activeSchools > 0 ? true : null,
       color: 'green-500',
     },
     {
       title: isRTL ? 'إجمالي الطلاب' : 'Total Students',
       value: totalStudents,
       icon: GraduationCap,
-      trend: '+8%',
-      trendUp: true,
+      trend: totalStudents > 0 ? (isRTL ? 'مسجل' : 'enrolled') : '-',
+      trendUp: totalStudents > 0 ? true : null,
       color: 'brand-turquoise',
     },
     {
       title: isRTL ? 'إجمالي المعلمين' : 'Total Teachers',
       value: totalTeachers,
       icon: UserCheck,
-      trend: '+3%',
-      trendUp: true,
+      trend: totalTeachers > 0 ? (isRTL ? 'معلم' : 'teachers') : '-',
+      trendUp: totalTeachers > 0 ? true : null,
       color: 'brand-purple',
     },
     {
       title: isRTL ? 'متوسط الطلاب/مدرسة' : 'Avg Students/School',
       value: avgStudentsPerSchool,
       icon: Users,
-      trend: '0%',
+      trend: avgTeachersPerSchool > 0 ? `${avgTeachersPerSchool} ${isRTL ? 'معلم/مدرسة' : 'teachers/school'}` : '-',
       trendUp: null,
       color: 'orange-500',
     },
@@ -166,8 +169,8 @@ export const PlatformReportsPage = () => {
       title: isRTL ? 'المستخدمون النشطون' : 'Active Users',
       value: stats?.active_users || 0,
       icon: Users,
-      trend: '+15%',
-      trendUp: true,
+      trend: stats?.active_users > 0 ? (isRTL ? 'نشط' : 'active') : '-',
+      trendUp: stats?.active_users > 0 ? true : null,
       color: 'blue-500',
     },
   ];

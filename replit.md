@@ -78,8 +78,12 @@ Smart Multi-Tenant School Management System
 - Ministry: `/api/ministry/dashboard`, `/api/ministry/schools-comparison`, `/api/ministry/compliance-report`, `/api/ministry/teacher-performance`, `/api/ministry/student-performance`, `/api/ministry/academic-activity`, `/api/ministry/strategic-kpis`
 - Admin Command Center: `/api/admin/command-center/stats` (supports filters: school_id, city, region, school_type, scope, status)
 - Reports: `/api/reports/export/csv?report_type=students|teachers|attendance|grades|schools|users|behavior|overview`
-- Reports PDF: `/api/reports/export/pdf?report_type=overview|attendance|grades|behavior|schools|users` (styled HTML for print-to-PDF)
+- Reports PDF: `/api/reports/export/pdf?report_type=overview|attendance|grades|behavior|schools|users` (reportlab PDF with tables)
 - Reports School: `/api/reports/school/overview|attendance|grades|behavior` (dashboard data)
+- Analytics: `/api/analytics/overview` (stats, monthly_data, city_distribution), `/api/analytics/insights` (AI insights), `/api/analytics/reports` (report listing)
+- Analytics Reports: `POST/GET /api/analytics/reports/scheduled`, `GET /api/analytics/reports/recent`, `POST /api/analytics/reports/generate`, `POST /api/analytics/reports/share`
+- Analytics Compare: `GET /api/analytics/compare-schools?school_ids=`, `GET /api/analytics/compare-periods?period1=&period2=`
+- DB collections for analytics: `scheduled_reports`, `generated_reports`, `shared_reports`
 
 ## Important Notes
 - `emergentintegrations` package is not publicly available; it is used lazily (inside a function) for LLM features only
