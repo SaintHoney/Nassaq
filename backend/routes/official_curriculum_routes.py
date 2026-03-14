@@ -438,3 +438,65 @@ async def get_complete_curriculum():
         "is_locked": True,
         "source": "وزارة التعليم - المملكة العربية السعودية"
     }
+
+
+@router.get("/bell-schedules")
+async def get_bell_schedules(stage_id: Optional[str] = None):
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    query = {}
+    if stage_id:
+        query["applicable_stages"] = stage_id
+    schedules = await db.official_bell_schedules.find(query, {"_id": 0}).to_list(20)
+    return {"bell_schedules": schedules, "is_official": True, "is_locked": True}
+
+
+@router.get("/bell-schedules/{schedule_id}")
+async def get_bell_schedule_detail(schedule_id: str):
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    schedule = await db.official_bell_schedules.find_one({"id": schedule_id}, {"_id": 0})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="جدول الحصص غير موجود")
+    return schedule
+
+
+@router.get("/academic-years")
+async def get_academic_years():
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    years = await db.academic_years.find({}, {"_id": 0}).to_list(20)
+    for year in years:
+        terms = await db.academic_terms.find(
+            {"academic_year_id": year["id"]}, {"_id": 0}
+        ).sort("term_number", 1).to_list(10)
+        year["terms"] = terms
+    return {"academic_years": years, "is_official": True}
+
+
+@router.get("/academic-years/{year_id}")
+async def get_academic_year_detail(year_id: str):
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    year = await db.academic_years.find_one({"id": year_id}, {"_id": 0})
+    if not year:
+        raise HTTPException(status_code=404, detail="العام الدراسي غير موجود")
+    terms = await db.academic_terms.find(
+        {"academic_year_id": year_id}, {"_id": 0}
+    ).sort("term_number", 1).to_list(10)
+    year["terms"] = terms
+    return year
+
+
+@router.get("/academic-years/current/active")
+async def get_current_academic_year():
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    year = await db.academic_years.find_one({"is_current": True}, {"_id": 0})
+    if not year:
+        raise HTTPException(status_code=404, detail="لا يوجد عام دراسي حالي")
+    terms = await db.academic_terms.find(
+        {"academic_year_id": year["id"]}, {"_id": 0}
+    ).sort("term_number", 1).to_list(10)
+    year["terms"] = terms
+    return year

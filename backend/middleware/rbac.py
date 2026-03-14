@@ -226,6 +226,57 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
         Permission.NOTIFICATIONS_VIEW.value,
     ],
     
+    "school_sub_admin": [
+        Permission.USERS_VIEW.value,
+        Permission.USERS_CREATE.value,
+        Permission.USERS_EDIT.value,
+        Permission.ACADEMIC_VIEW.value,
+        Permission.ACADEMIC_MANAGE_SECTIONS.value,
+        Permission.ACADEMIC_MANAGE_SUBJECTS.value,
+        Permission.SCHEDULE_VIEW.value,
+        Permission.SCHEDULE_CREATE.value,
+        Permission.SCHEDULE_EDIT.value,
+        Permission.ATTENDANCE_VIEW.value,
+        Permission.ATTENDANCE_RECORD.value,
+        Permission.ATTENDANCE_REPORTS.value,
+        Permission.ATTENDANCE_APPROVE_EXCUSE.value,
+        Permission.ASSESSMENTS_VIEW.value,
+        Permission.BEHAVIOUR_VIEW.value,
+        Permission.BEHAVIOUR_REVIEW.value,
+        Permission.BEHAVIOUR_DISCIPLINARY.value,
+        Permission.NOTIFICATIONS_SEND.value,
+        Permission.NOTIFICATIONS_BULK.value,
+        Permission.ANALYTICS_VIEW.value,
+    ],
+    
+    "ministry_rep": [
+        Permission.TENANTS_VIEW.value,
+        Permission.USERS_VIEW.value,
+        Permission.ACADEMIC_VIEW.value,
+        Permission.SCHEDULE_VIEW.value,
+        Permission.ATTENDANCE_VIEW.value,
+        Permission.ATTENDANCE_REPORTS.value,
+        Permission.ASSESSMENTS_VIEW.value,
+        Permission.BEHAVIOUR_VIEW.value,
+        Permission.ANALYTICS_VIEW.value,
+        Permission.ANALYTICS_EXPORT.value,
+        Permission.AUDIT_VIEW.value,
+    ],
+    
+    "driver": [
+        Permission.SCHEDULE_VIEW.value,
+        Permission.ATTENDANCE_VIEW.value,
+        Permission.ATTENDANCE_RECORD.value,
+        Permission.NOTIFICATIONS_VIEW.value,
+    ],
+    
+    "gatekeeper": [
+        Permission.ATTENDANCE_VIEW.value,
+        Permission.ATTENDANCE_RECORD.value,
+        Permission.NOTIFICATIONS_VIEW.value,
+        Permission.NOTIFICATIONS_SEND.value,
+    ],
+    
     "testing_account": [
         Permission.USERS_VIEW.value,
         Permission.TENANTS_VIEW.value,

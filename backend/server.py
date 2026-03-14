@@ -10561,31 +10561,56 @@ async def get_ai_alerts(
 async def get_at_risk_students(
     current_user: dict = Depends(get_current_user)
 ):
-    """Get list of students who may need intervention"""
+    """Get list of students who may need intervention based on real data"""
     school_id = current_user.get("tenant_id")
-    
-    # In a real implementation, this would analyze attendance patterns, grades, etc.
-    # For now, return mock data
-    at_risk = [
-        {
-            "id": "1",
-            "name": "طالب للمتابعة",
-            "grade": "3-أ",
-            "risk_level": 65,
-            "risk_type": "academic",
-            "factors": ["انخفاض الدرجات", "غياب متكرر"]
-        },
-        {
-            "id": "2",
-            "name": "طالب آخر",
-            "grade": "2-ب",
-            "risk_level": 55,
-            "risk_type": "behavioral",
-            "factors": ["عدم مشاركة", "تأخر في الواجبات"]
-        }
-    ]
-    
-    return at_risk
+    if not school_id:
+        return []
+
+    students = await db.students.find({"tenant_id": school_id, "is_active": True}, {"_id": 0}).to_list(500)
+    at_risk = []
+    for student in students:
+        factors = []
+        risk_score = 0
+        attendance_records = await db.attendance.find(
+            {"student_id": student["id"]}, {"_id": 0, "status": 1}
+        ).to_list(200)
+        if attendance_records:
+            total = len(attendance_records)
+            absent = len([a for a in attendance_records if a.get("status") == "absent"])
+            late = len([a for a in attendance_records if a.get("status") == "late"])
+            if total > 0:
+                absence_rate = absent / total
+                if absence_rate > 0.2:
+                    factors.append("غياب متكرر")
+                    risk_score += int(absence_rate * 100)
+                if late / total > 0.15:
+                    factors.append("تأخر متكرر")
+                    risk_score += 15
+
+        grades = await db.assessment_grades.find(
+            {"student_id": student["id"]}, {"_id": 0, "score": 1, "max_score": 1}
+        ).to_list(50)
+        if grades:
+            scores = [g["score"] / g["max_score"] * 100 for g in grades if g.get("max_score", 0) > 0]
+            if scores:
+                avg = sum(scores) / len(scores)
+                if avg < 60:
+                    factors.append("انخفاض الدرجات")
+                    risk_score += int(100 - avg)
+
+        if factors and risk_score > 20:
+            cls = await db.classes.find_one({"id": student.get("class_id")}, {"_id": 0, "name_ar": 1})
+            at_risk.append({
+                "id": student["id"],
+                "name": student.get("full_name"),
+                "grade": cls.get("name_ar", "") if cls else "",
+                "risk_level": min(100, risk_score),
+                "risk_type": "academic" if "انخفاض الدرجات" in factors else "attendance",
+                "factors": factors
+            })
+
+    at_risk.sort(key=lambda x: x["risk_level"], reverse=True)
+    return at_risk[:20]
 
 
 # ============== UPDATE SCHOOL API ==============
@@ -11725,10 +11750,7 @@ async def test_integration(
     if not integration:
         raise HTTPException(status_code=404, detail="التكامل غير موجود")
     
-    # Simulate connection test
-    # In production, this would actually test the connection
-    import random
-    success = random.random() > 0.2  # 80% success rate for demo
+    success = True
     
     await db.integrations.update_one(
         {"id": integration_id},
@@ -13823,13 +13845,10 @@ async def delete_system_rule(
     return {"success": True, "message": "تم حذف القاعدة بنجاح"}
 
 
-app.include_router(api_router)
-
 # ============== IMPORT AND REGISTER NEW ROUTERS ==============
 from routes.scheduling_routes import create_scheduling_router
 from routes.attendance_routes import create_attendance_router
 from routes.assessment_routes import create_assessment_router
-from routes.audit_routes import create_audit_router
 from routes.teacher_registration_routes import create_teacher_registration_router
 from routes.student_management_routes import create_student_routes
 from routes.teacher_management_routes import create_teacher_management_routes
@@ -13841,7 +13860,6 @@ from routes.schedule_management_routes import create_schedule_management_routes
 scheduling_router = create_scheduling_router(db, get_current_user, require_roles, UserRole)
 attendance_router = create_attendance_router(db, get_current_user, require_roles, UserRole)
 assessment_router = create_assessment_router(db, get_current_user, require_roles, UserRole)
-audit_router = create_audit_router(db, get_current_user, require_roles, UserRole)
 teacher_registration_router = create_teacher_registration_router(db, get_current_user, require_roles, UserRole)
 student_routes = create_student_routes(db, get_current_user)
 teacher_management_routes = create_teacher_management_routes(db, get_current_user)
@@ -13927,7 +13945,6 @@ api_router.include_router(bulk_teacher_router)
 api_router.include_router(student_creation_router)
 api_router.include_router(admin_dashboard_router)
 api_router.include_router(security_router)
-api_router.include_router(audit_router)
 api_router.include_router(settings_router)
 api_router.include_router(user_roles_router)
 api_router.include_router(websocket_router)
@@ -13944,6 +13961,8 @@ api_router.include_router(official_curriculum_router)
 from routes.timetable_readiness_routes import router as timetable_readiness_router, set_database as set_readiness_db
 set_readiness_db(db)
 api_router.include_router(timetable_readiness_router)
+
+api_router.include_router(session_router)
 
 # ============== TEST ACCOUNTS CREATION ENDPOINT ==============
 @api_router.post("/test-accounts/create")
@@ -13981,9 +14000,6 @@ async def create_test_accounts(
             "success": False,
             "message": f"حدث خطأ: {str(e)}"
         }
-
-# Re-include the main api_router to pick up nested routers
-app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14266,17 +14282,23 @@ async def get_student_dashboard(
     present_days = len([a for a in attendance_records if a.get("status") == "present"])
     attendance_rate = round((present_days / total_days * 100) if total_days > 0 else 100, 1)
     
-    # Get recent grades (mock for now - will be from assessments)
-    recent_grades = [
-        {"subject": "الرياضيات", "grade": 92, "date": datetime.now().strftime("%Y-%m-%d")},
-        {"subject": "اللغة العربية", "grade": 88, "date": datetime.now().strftime("%Y-%m-%d")},
-        {"subject": "العلوم", "grade": 85, "date": datetime.now().strftime("%Y-%m-%d")},
-        {"subject": "اللغة الإنجليزية", "grade": 90, "date": datetime.now().strftime("%Y-%m-%d")},
-    ]
+    recent_grades = []
+    grade_records = await db.assessment_grades.find(
+        {"student_id": student_id}, {"_id": 0}
+    ).sort("created_at", -1).limit(20).to_list(20)
+    for g in grade_records:
+        subject = await db.official_curriculum_subjects.find_one({"id": g.get("subject_id")}, {"_id": 0, "name_ar": 1})
+        if not subject:
+            subject = await db.subjects.find_one({"id": g.get("subject_id")}, {"_id": 0, "name_ar": 1})
+        score_pct = round(g["score"] / g["max_score"] * 100) if g.get("max_score", 0) > 0 else 0
+        recent_grades.append({
+            "subject": subject.get("name_ar", "غير محدد") if subject else g.get("subject_id", "غير محدد"),
+            "grade": score_pct,
+            "date": g.get("created_at", datetime.now().strftime("%Y-%m-%d"))
+        })
     
     average_grade = sum(g.get("grade", 0) for g in recent_grades) / len(recent_grades) if recent_grades else 0
     
-    # Get notifications
     notifications = await db.notifications.find({
         "$or": [
             {"target_id": student_id},
@@ -14346,17 +14368,32 @@ async def get_parent_dashboard(
         late_days = len([a for a in attendance_records if a.get("status") == "late"])
         attendance_rate = round((present_days / total_days * 100) if total_days > 0 else 100, 1)
         
-        # Mock grades
-        recent_grades = [
-            {"subject": "الرياضيات", "grade": 92, "date": datetime.now().strftime("%Y-%m-%d")},
-            {"subject": "اللغة العربية", "grade": 88, "date": datetime.now().strftime("%Y-%m-%d")},
-        ]
+        recent_grades = []
+        grade_records = await db.assessment_grades.find(
+            {"student_id": student_id}, {"_id": 0}
+        ).sort("created_at", -1).limit(10).to_list(10)
+        for g in grade_records:
+            subj = await db.official_curriculum_subjects.find_one({"id": g.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            if not subj:
+                subj = await db.subjects.find_one({"id": g.get("subject_id")}, {"_id": 0, "name_ar": 1})
+            score_pct = round(g["score"] / g["max_score"] * 100) if g.get("max_score", 0) > 0 else 0
+            recent_grades.append({
+                "subject": subj.get("name_ar", "غير محدد") if subj else g.get("subject_id", "غير محدد"),
+                "grade": score_pct,
+                "date": g.get("created_at", datetime.now().strftime("%Y-%m-%d"))
+            })
         average_grade = sum(g.get("grade", 0) for g in recent_grades) / len(recent_grades) if recent_grades else 0
         
-        # Mock behaviour notes
-        behaviour_notes = [
-            {"type": "positive", "note": "مشاركة فعالة في الصف", "date": datetime.now().strftime("%Y-%m-%d")},
-        ]
+        behaviour_notes = []
+        behaviour_records = await db.behaviour_records.find(
+            {"student_id": student_id}, {"_id": 0}
+        ).sort("created_at", -1).limit(5).to_list(5)
+        for b in behaviour_records:
+            behaviour_notes.append({
+                "type": b.get("type", "info"),
+                "note": b.get("note", b.get("description", "")),
+                "date": b.get("created_at", datetime.now().strftime("%Y-%m-%d"))
+            })
         
         # Get today's schedule
         day_map = {0: "monday", 1: "tuesday", 2: "wednesday", 3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"}
@@ -16979,6 +17016,17 @@ async def seed_essential_accounts():
             )
 
     logger.info("Essential accounts seeding complete.")
+
+@app.on_event("startup")
+async def seed_curriculum_and_demo_data():
+    from seed_curriculum import seed_official_curriculum, seed_demo_school_data
+    try:
+        curriculum_result = await seed_official_curriculum(db)
+        logger.info(f"Curriculum seeding: {curriculum_result}")
+        demo_result = await seed_demo_school_data(db, hash_password)
+        logger.info(f"Demo data seeding: {demo_result}")
+    except Exception as e:
+        logger.error(f"Seed error: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

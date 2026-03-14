@@ -40,10 +40,18 @@ Smart Multi-Tenant School Management System
 - Platform Admin: `admin@nassaq.com` / `Admin@123`
 - Principal (مدرسة النور): `principal1@nassaq.com` / `Principal@123`
 - Principal (مدرسة الأحساء): `principal4@nassaq.com` / `Principal@123`
+- Teachers: `teacher1@nassaq.com` through `teacher10@nassaq.com` / `Teacher@123`
+- Students: `student1@nassaq.com` through `student30@nassaq.com` / `Student@123`
+- Parents: `parent1@nassaq.com` through `parent30@nassaq.com` / `Parent@123`
 
 ## Test Data
 - 2 schools: مدرسة النور (SCH-001), مدرسة الأحساء (SCH-002)
-- Curriculum data can be seeded via `backend/scripts/run_complete_seed.py` (needs migration to PostgreSQL)
+- Official curriculum: 6 stages, 7 tracks, 29 grades, 74 subjects, 390 grade-subject mappings (verbatim from MOE)
+- Teacher rank loads: 6 ranks with official weekly period counts
+- Bell schedules: 2 templates (Primary/Intermediate 45min, Secondary 50min)
+- Academic year: 1446-1447H with 3 terms
+- Demo school data for SCH-001: 10 teachers, 30 students, 6 classes, 30 parent accounts
+- All curriculum data auto-seeded on startup via `backend/seed_curriculum.py`
 
 ## Important Notes
 - `emergentintegrations` package is not publicly available; it is used lazily (inside a function) for LLM features only
