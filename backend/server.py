@@ -10343,13 +10343,13 @@ async def get_school_behavior_report(
     if not school_id:
         raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
     
-    # Get all behavior records for the school
-    behavior_records = await db.behavior.find(
-        {"school_id": school_id},
+    school_classes = await db.classes.find({"school_id": school_id}, {"_id": 0, "id": 1}).to_list(100)
+    school_class_ids = [c.get("id") for c in school_classes]
+    behavior_records = await db.behavior_records.find(
+        {"$or": [{"school_id": school_id}, {"class_id": {"$in": school_class_ids}}]},
         {"_id": 0}
     ).sort("created_at", -1).to_list(1000)
     
-    # Count by type
     positive_count = len([b for b in behavior_records if b.get("type") == "positive" or b.get("behavior_type") == "positive"])
     negative_count = len([b for b in behavior_records if b.get("type") == "negative" or b.get("behavior_type") == "negative"])
     warning_count = len([b for b in behavior_records if b.get("type") == "warning" or b.get("behavior_type") == "warning"])
@@ -10409,7 +10409,7 @@ async def get_top_performing_classes(
         attendance_rate = round((present_count / total_attendance) * 100, 1) if total_attendance > 0 else 0
         
         # Get positive behavior count
-        positive_behavior = await db.behavior.count_documents({
+        positive_behavior = await db.behavior_records.count_documents({
             "class_id": class_id,
             "$or": [
                 {"type": "positive"},
@@ -10462,7 +10462,7 @@ async def export_school_report(
         attendance_rate = round((present / len(attendance)) * 100, 1) if attendance else 0
         
         # Get positive behavior
-        positive_behavior = await db.behavior.count_documents({
+        positive_behavior = await db.behavior_records.count_documents({
             "school_id": school_id,
             "$or": [{"type": "positive"}, {"behavior_type": "positive"}]
         })
@@ -10509,17 +10509,19 @@ async def export_school_report(
         }
     
     elif report_type == "behavior":
-        behavior_records = await db.behavior.find({"school_id": school_id}, {"_id": 0}).to_list(1000)
+        school_classes_b = await db.classes.find({"school_id": school_id}, {"_id": 0, "id": 1}).to_list(100)
+        school_class_ids_b = [c.get("id") for c in school_classes_b]
+        behavior_records = await db.behavior_records.find({"$or": [{"school_id": school_id}, {"class_id": {"$in": school_class_ids_b}}]}, {"_id": 0}).to_list(1000)
         
         data = {
             "report_type": "تقرير السلوك",
             "school_id": school_id,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "stats": {
-                "positive": len([b for b in behavior_records if b.get("type") == "positive"]),
-                "negative": len([b for b in behavior_records if b.get("type") == "negative"]),
-                "warning": len([b for b in behavior_records if b.get("type") == "warning"]),
-                "appreciation": len([b for b in behavior_records if b.get("type") == "appreciation"])
+                "positive": len([b for b in behavior_records if b.get("type") == "positive" or b.get("behavior_type") == "positive"]),
+                "negative": len([b for b in behavior_records if b.get("type") == "negative" or b.get("behavior_type") == "negative"]),
+                "warning": len([b for b in behavior_records if b.get("type") == "warning" or b.get("behavior_type") == "warning"]),
+                "appreciation": len([b for b in behavior_records if b.get("type") == "appreciation" or b.get("behavior_type") == "appreciation"])
             },
             "records": behavior_records[:100]
         }
@@ -16428,16 +16430,14 @@ async def get_behavior_records(
     if student_id:
         query["student_id"] = student_id
     
-    records = await db.behavior.find(query, {"_id": 0}).sort("date", -1).to_list(200)
-    if not records:
-        records = await db.behavior_records.find(query, {"_id": 0}).sort("date", -1).to_list(200)
-        for r in records:
-            bt_id = r.get("behavior_type_id")
-            if bt_id:
-                bt = await db.behavior_types.find_one({"id": bt_id})
-                if bt:
-                    r["behavior_type"] = bt.get("name_ar", "")
-                    r["type"] = bt.get("category", r.get("type", "positive"))
+    records = await db.behavior_records.find(query, {"_id": 0}).sort("date", -1).to_list(200)
+    for r in records:
+        bt_id = r.get("behavior_type_id")
+        if bt_id:
+            bt = await db.behavior_types.find_one({"id": bt_id})
+            if bt:
+                r["behavior_type"] = bt.get("name_ar", "")
+                r["type"] = bt.get("category", r.get("type", "positive"))
     return records
 
 
@@ -16454,7 +16454,7 @@ async def create_behavior_record(
         "created_by": current_user["id"]
     }
     
-    await db.behavior.insert_one(record)
+    await db.behavior_records.insert_one(record)
     record.pop("_id", None)
     
     return {"message": "تم تسجيل الملاحظة السلوكية", "record": record}
@@ -17922,7 +17922,12 @@ async def export_report_pdf(
     elif report_type == "behavior":
         title = "تقرير السلوك"
         headers = ["النوع", "العدد"]
-        beh = await db.behavior_records.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(1000)
+        if tenant_id:
+            beh_classes = await db.classes.find({"school_id": tenant_id}, {"_id": 0, "id": 1}).to_list(100)
+            beh_cids = [c.get("id") for c in beh_classes]
+            beh = await db.behavior_records.find({"$or": [{"school_id": tenant_id}, {"class_id": {"$in": beh_cids}}]}, {"_id": 0}).to_list(1000)
+        else:
+            beh = await db.behavior_records.find({}, {"_id": 0}).to_list(1000)
         pos = len([b for b in beh if b.get("type") == "positive" or b.get("behavior_type") == "positive"])
         neg = len([b for b in beh if b.get("type") == "negative" or b.get("behavior_type") == "negative"])
         warn = len([b for b in beh if b.get("type") == "warning" or b.get("behavior_type") == "warning"])
@@ -18080,7 +18085,12 @@ async def export_report_csv(
             writer.writerow([u.get("full_name", ""), u.get("email", ""), u.get("role", ""), u.get("tenant_id", ""), "نشط" if u.get("is_active") else "معطل"])
     elif report_type == "behavior":
         writer.writerow(["الطالب", "النوع", "الوصف", "التاريخ", "النقاط"])
-        beh = await db.behavior_records.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(1000)
+        if tenant_id:
+            beh_cls_csv = await db.classes.find({"school_id": tenant_id}, {"_id": 0, "id": 1}).to_list(100)
+            beh_cids_csv = [c.get("id") for c in beh_cls_csv]
+            beh = await db.behavior_records.find({"$or": [{"school_id": tenant_id}, {"class_id": {"$in": beh_cids_csv}}]}, {"_id": 0}).to_list(1000)
+        else:
+            beh = await db.behavior_records.find({}, {"_id": 0}).to_list(1000)
         for b in beh:
             writer.writerow([b.get("student_id", ""), b.get("type") or b.get("behavior_type", ""), b.get("description", ""), b.get("date", ""), b.get("points", "")])
     elif report_type == "overview":

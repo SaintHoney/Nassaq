@@ -744,6 +744,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/reports"
+        element={
+          <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin', 'platform_admin', 'ministry_rep']}>
+            <SchoolReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/principal/ai-insights"
         element={
           <ProtectedRoute allowedRoles={['school_principal', 'school_sub_admin']}>

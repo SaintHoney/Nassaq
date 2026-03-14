@@ -24,6 +24,7 @@ class ExportType(str, Enum):
     STUDENTS = "students"
     TEACHERS = "teachers"
     SCHEDULE = "schedule"
+    SCHEDULES = "schedules"
     ATTENDANCE = "attendance"
     GRADES = "grades"
 
@@ -240,7 +241,7 @@ def setup_bulk_routes(db, get_current_user, require_roles, UserRole):
                 df, filename = await _export_students(db, school_id, grade, class_name)
             elif export_type == ExportType.TEACHERS:
                 df, filename = await _export_teachers(db, school_id)
-            elif export_type == ExportType.SCHEDULE:
+            elif export_type in (ExportType.SCHEDULE, ExportType.SCHEDULES):
                 df, filename = await _export_schedule(db, school_id)
             elif export_type == ExportType.ATTENDANCE:
                 df, filename = await _export_attendance(db, school_id, grade, class_name)
