@@ -36,6 +36,31 @@ class DuplicateKeyError(Exception):
     pass
 
 
+def _apply_projection(doc: dict, projection: Optional[dict]) -> dict:
+    if not projection or not doc:
+        return doc
+    has_inclusion = any(v == 1 for k, v in projection.items() if k != "_id")
+    has_exclusion = any(v == 0 for k, v in projection.items() if k != "_id")
+
+    if has_inclusion:
+        result = {}
+        if projection.get("_id", 1) != 0:
+            result["_id"] = doc.get("_id")
+        for key, val in projection.items():
+            if key == "_id":
+                continue
+            if val == 1 and key in doc:
+                result[key] = doc[key]
+        return result
+    elif has_exclusion:
+        result = dict(doc)
+        for key, val in projection.items():
+            if val == 0 and key in result:
+                del result[key]
+        return result
+    return doc
+
+
 def _serialize_value(v: Any) -> Any:
     if isinstance(v, datetime):
         return v.isoformat()
@@ -94,7 +119,7 @@ class PostgresCursor:
         for row in rows:
             doc = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
             doc["_id"] = doc.get("_id")
-            results.append(doc)
+            results.append(_apply_projection(doc, self._projection))
         return results
 
     def _build_order(self) -> str:
@@ -207,7 +232,12 @@ class PostgresCollection:
                 else:
                     safe_key = _sanitize_field(key)
                     params.append(str(value))
-                    conditions.append(f"data->>'{safe_key}' = ${len(params)}")
+                    params.append(json.dumps([value]))
+                    conditions.append(
+                        f"(data->>'{safe_key}' = ${len(params)-1} OR "
+                        f"(jsonb_typeof(data->'{safe_key}') = 'array' AND "
+                        f"data->'{safe_key}' @> ${len(params)}::jsonb))"
+                    )
 
     def _build_operator_condition(self, key: str, ops: dict, conditions: list, params: list):
         safe_key = _sanitize_field(key) if key != "_id" else key
@@ -370,7 +400,7 @@ class PostgresCollection:
         if not rows:
             return None
         doc = json.loads(rows[0]["data"]) if isinstance(rows[0]["data"], str) else rows[0]["data"]
-        return doc
+        return _apply_projection(doc, projection)
 
     def find(self, filter_query: Optional[dict] = None,
              projection: Optional[dict] = None) -> PostgresCursor:
@@ -483,9 +513,10 @@ class PostgresCollection:
 
     async def find_one_and_update(self, filter_query: dict, update: dict,
                                   upsert: bool = False,
-                                  return_document: Optional[str] = None) -> Optional[dict]:
+                                  return_document=None) -> Optional[dict]:
         await self._ensure_table()
-        if return_document == "after":
+        return_after = return_document in ("after", True)
+        if return_after:
             doc_before = await self.find_one(filter_query)
             result = await self.update_one(filter_query, update, upsert=upsert)
             if doc_before:
