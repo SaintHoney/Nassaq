@@ -16782,9 +16782,11 @@ async def get_current_session(
     current_user: dict = Depends(get_current_user)
 ):
     """Get current in-progress session by schedule session ID"""
+    teacher_id = _resolve_teacher_id(current_user)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     session = await db.class_sessions.find_one({
         "schedule_session_id": schedule_session_id,
+        "teacher_id": teacher_id,
         "date": today,
         "status": "in_progress"
     }, {"_id": 0})
@@ -16829,7 +16831,11 @@ async def get_session_by_schedule_id(
     current_user: dict = Depends(get_current_user)
 ):
     """Get session information by schedule session ID"""
-    session = await db.class_sessions.find_one({"schedule_session_id": schedule_session_id}, {"_id": 0})
+    teacher_id = _resolve_teacher_id(current_user)
+    session = await db.class_sessions.find_one(
+        {"schedule_session_id": schedule_session_id, "teacher_id": teacher_id},
+        {"_id": 0}
+    )
     if not session:
         raise HTTPException(status_code=404, detail="الجلسة غير موجودة")
     return session
