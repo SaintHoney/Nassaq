@@ -14337,19 +14337,22 @@ async def get_teacher_dashboard(
         if grade_count == 0:
             pending_assessments += 1
     
+    # Target teacher's user_id for queries (not caller when different)
+    teacher_user_id = teacher.get("user_id") or current_user.get("id")
+    
     # Recent activities
     recent_activities = await db.audit_log.find({
-        "user_id": current_user.get("id"),
+        "user_id": teacher_user_id,
         "school_id": school_id
     }, {"_id": 0}).sort("timestamp", -1).limit(5).to_list(5)
     
     # Notification and message counts
     unread_notifications = await db.notifications.count_documents({
-        "recipient_id": current_user.get("id"),
+        "recipient_id": teacher_user_id,
         "is_read": False
     })
     unread_messages = await db.messages.count_documents({
-        "recipient_id": current_user.get("id"),
+        "recipient_id": teacher_user_id,
         "is_read": False
     })
     

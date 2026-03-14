@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { HakimAssistant } from '../../components/hakim/HakimAssistant';
 
-// Get current Hijri date
 const getCurrentHijriDate = () => {
   const today = new Date();
   try {
@@ -29,7 +28,6 @@ const getCurrentHijriDate = () => {
   }
 };
 
-// Get time until lesson - with smarter end detection
 const getTimeUntilLesson = (lessonTime) => {
   if (!lessonTime) return null;
   
@@ -57,14 +55,11 @@ const getTimeUntilLesson = (lessonTime) => {
   return { status: 'upcoming', minutes: diffMinutes };
 };
 
-// Get card color based on time - matching reference design
 const getLessonCardStyle = (timeStatus, isFirst = false) => {
-  // First lesson should always be green unless explicitly ended
   if (isFirst) {
     if (timeStatus?.status === 'ended') {
       return 'border-gray-300 bg-gray-100 opacity-60';
     }
-    // Use !important equivalent by adding more specific classes
     return 'border-0 !bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200 [background:linear-gradient(to_bottom_right,#10b981,#059669)]';
   }
   
