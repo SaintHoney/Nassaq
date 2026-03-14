@@ -328,9 +328,13 @@ const INITIAL_VERSION_HISTORY = [];
 
 export const PlatformSettingsPage = () => {
   const { isRTL = true, isDark, toggleTheme, toggleLanguage } = useTheme();
-  const { user, logout, token } = useAuth();
+  const { user, logout, token, updateUser, updateToken, refreshUser } = useAuth();
   const navigate = useNavigate();
   const t = translations[isRTL ? 'ar' : 'en'];
+  
+  const profilePictureRef = React.useRef(null);
+  const logoFileRef = React.useRef(null);
+  const faviconFileRef = React.useRef(null);
   
   // Create API instance with auth token
   const api = React.useMemo(() => createApi(token), [token]);
@@ -348,6 +352,10 @@ export const PlatformSettingsPage = () => {
   const [copiedField, setCopiedField] = useState(null);
   const [versionHistory, setVersionHistory] = useState([]);
   const [activeSessions, setActiveSessions] = useState([]);
+  const [switchableUsers, setSwitchableUsers] = useState([]);
+  const [selectedSwitchUser, setSelectedSwitchUser] = useState('');
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [twoFACode, setTwoFACode] = useState('');
   
   // Account settings - using user data only
   const [accountData, setAccountData] = useState({
@@ -729,6 +737,8 @@ export const PlatformSettingsPage = () => {
         phone: accountData.phone,
         language: accountData.language,
       });
+      updateUser({ full_name: accountData.name, phone: accountData.phone, preferred_language: accountData.language, title: accountData.title });
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: { full_name: accountData.name, phone: accountData.phone } }));
       toast.success(t.savedSuccessfully);
     } catch (error) {
       console.error('Error saving account settings:', error);
@@ -748,11 +758,149 @@ export const PlatformSettingsPage = () => {
       });
       if (response.data?.profile_picture) {
         setAccountData(prev => ({ ...prev, profilePicture: response.data.profile_picture }));
+        updateUser({ avatar_url: response.data.profile_picture });
         toast.success(isRTL ? 'تم رفع الصورة بنجاح' : 'Picture uploaded successfully');
       }
     } catch (error) {
       console.error('Error uploading picture:', error);
       toast.error(isRTL ? 'فشل رفع الصورة' : 'Failed to upload picture');
+    }
+  };
+  
+  // Handle logo upload
+  const handleUploadLogo = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/settings/brand/upload-logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data?.logo_url) {
+        setBrandSettings(prev => ({ ...prev, logoUrl: response.data.logo_url }));
+      }
+      toast.success(isRTL ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      toast.error(isRTL ? 'فشل رفع الشعار' : 'Failed to upload logo');
+    }
+  };
+  
+  // Handle favicon upload
+  const handleUploadFavicon = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/settings/brand/upload-favicon', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data?.favicon_url) {
+        setBrandSettings(prev => ({ ...prev, faviconUrl: response.data.favicon_url }));
+      }
+      toast.success(isRTL ? 'تم رفع الأيقونة بنجاح' : 'Favicon uploaded successfully');
+    } catch (error) {
+      console.error('Favicon upload error:', error);
+      toast.error(isRTL ? 'فشل رفع الأيقونة' : 'Failed to upload favicon');
+    }
+  };
+  
+  // Handle 2FA toggle
+  const handleToggle2FA = async (enabled) => {
+    if (enabled) {
+      setShow2FASetup(true);
+    } else {
+      try {
+        await api.post('/settings/security/disable-2fa');
+        setSecuritySettings(prev => ({ ...prev, twoFactorEnabled: false }));
+        setShow2FASetup(false);
+        toast.success(isRTL ? 'تم تعطيل المصادقة الثنائية' : '2FA disabled');
+      } catch {
+        toast.error(isRTL ? 'فشل تعطيل المصادقة الثنائية' : 'Failed to disable 2FA');
+      }
+    }
+  };
+
+  // Confirm 2FA setup
+  const handleConfirm2FA = async () => {
+    if (!twoFACode || twoFACode.length < 6) {
+      toast.error(isRTL ? 'يرجى إدخال رمز التحقق المكون من 6 أرقام' : 'Please enter a 6-digit verification code');
+      return;
+    }
+    try {
+      await api.post('/settings/security/enable-2fa', { code: twoFACode });
+      setSecuritySettings(prev => ({ ...prev, twoFactorEnabled: true }));
+      setShow2FASetup(false);
+      setTwoFACode('');
+      toast.success(isRTL ? 'تم تفعيل المصادقة الثنائية بنجاح' : '2FA enabled successfully');
+    } catch (error) {
+      toast.error(isRTL ? 'رمز التحقق غير صحيح' : 'Invalid verification code');
+    }
+  };
+  
+  // Fetch switchable roles for switch user dialog
+  const handleOpenSwitchUserDialog = async () => {
+    setShowSwitchUserDialog(true);
+    try {
+      const response = await api.get('/user-roles/my-roles');
+      const roles = response.data?.available_roles || response.data?.roles || [];
+      const roleLabels = {
+        platform_admin: isRTL ? 'مدير المنصة' : 'Platform Admin',
+        school_principal: isRTL ? 'مدير المدرسة' : 'School Principal',
+        school_sub_admin: isRTL ? 'نائب المدير' : 'Sub Admin',
+        teacher: isRTL ? 'معلم' : 'Teacher',
+        student: isRTL ? 'طالب' : 'Student',
+        parent: isRTL ? 'ولي أمر' : 'Parent',
+        driver: isRTL ? 'سائق' : 'Driver',
+        gatekeeper: isRTL ? 'حارس بوابة' : 'Gatekeeper',
+        ministry_rep: isRTL ? 'ممثل وزارة' : 'Ministry Rep',
+      };
+      const switchOptions = roles
+        .filter(r => !r.is_current)
+        .map(r => ({
+          id: `${r.role}__${r.tenant_id || 'default'}`,
+          label: `${roleLabels[r.role] || r.role_name_ar || r.role}${r.tenant_name ? ' - ' + r.tenant_name : ''}`,
+          role: r.role,
+          tenant_id: r.tenant_id
+        }));
+      setSwitchableUsers(switchOptions);
+    } catch {
+      setSwitchableUsers([]);
+    }
+  };
+  
+  // Execute switch user
+  const handleSwitchUser = async () => {
+    if (!selectedSwitchUser) {
+      toast.error(isRTL ? 'يرجى اختيار المستخدم' : 'Please select a user');
+      return;
+    }
+    try {
+      const selected = switchableUsers.find(u => u.id === selectedSwitchUser);
+      if (selected) {
+        const response = await api.post('/user-roles/switch', {
+          target_role: selected.role,
+          target_tenant_id: selected.tenant_id
+        });
+        if (response.data?.access_token) {
+          await updateToken(response.data.access_token);
+          setShowSwitchUserDialog(false);
+          setSelectedSwitchUser('');
+          toast.success(isRTL ? `تم التبديل إلى ${selected.label}` : `Switched to ${selected.label}`);
+          const rolePaths = {
+            platform_admin: '/admin',
+            school_principal: '/principal',
+            teacher: '/teacher',
+            student: '/student',
+            parent: '/parent',
+            driver: '/driver',
+            gatekeeper: '/gatekeeper',
+            ministry_rep: '/ministry',
+          };
+          navigate(rolePaths[response.data.role] || '/admin');
+        }
+      }
+    } catch (error) {
+      console.error('Switch user error:', error);
+      toast.error(isRTL ? 'فشل تبديل المستخدم' : 'Failed to switch user');
     }
   };
   
@@ -999,7 +1147,7 @@ export const PlatformSettingsPage = () => {
                     
                     {/* Switch User */}
                     <button
-                      onClick={() => setShowSwitchUserDialog(true)}
+                      onClick={handleOpenSwitchUserDialog}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                       <Users className="h-5 w-5" />
@@ -1058,17 +1206,32 @@ export const PlatformSettingsPage = () => {
                     <CardContent className="space-y-6">
                       {/* Profile Picture */}
                       <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-navy to-brand-navy/70 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                          {accountData.name?.charAt(0) || 'م'}
+                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-navy to-brand-navy/70 flex items-center justify-center text-white text-3xl font-bold shadow-lg overflow-hidden">
+                          {accountData.profilePicture ? (
+                            <img src={accountData.profilePicture} alt="profile" className="w-full h-full object-cover" />
+                          ) : (
+                            accountData.name?.charAt(0) || 'م'
+                          )}
                         </div>
                         <div>
                           <h4 className="font-medium mb-2">{t.profilePicture}</h4>
+                          <input
+                            type="file"
+                            ref={profilePictureRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadProfilePicture(file);
+                              e.target.value = '';
+                            }}
+                          />
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="rounded-xl">
+                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => profilePictureRef.current?.click()}>
                               <Upload className="h-4 w-4 me-2" />
                               {t.uploadImage}
                             </Button>
-                            <Button variant="ghost" size="sm" className="rounded-xl">
+                            <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => profilePictureRef.current?.click()}>
                               <Camera className="h-4 w-4 me-2" />
                               {isRTL ? 'التقاط' : 'Capture'}
                             </Button>
@@ -1363,12 +1526,30 @@ export const PlatformSettingsPage = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <Label>{t.logo}</Label>
-                          <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-brand-navy/50 transition-colors cursor-pointer">
-                            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-brand-navy/10 flex items-center justify-center">
-                              <Building2 className="h-10 w-10 text-brand-navy" />
+                          <input
+                            type="file"
+                            ref={logoFileRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadLogo(file);
+                              e.target.value = '';
+                            }}
+                          />
+                          <div
+                            className="border-2 border-dashed rounded-xl p-8 text-center hover:border-brand-navy/50 transition-colors cursor-pointer"
+                            onClick={() => logoFileRef.current?.click()}
+                          >
+                            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-brand-navy/10 flex items-center justify-center overflow-hidden">
+                              {brandSettings.logoUrl ? (
+                                <img src={brandSettings.logoUrl} alt="logo" className="w-full h-full object-contain" />
+                              ) : (
+                                <Building2 className="h-10 w-10 text-brand-navy" />
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">{t.dragDrop}</p>
-                            <Button variant="outline" size="sm" className="mt-3 rounded-xl">
+                            <Button variant="outline" size="sm" className="mt-3 rounded-xl" onClick={(e) => { e.stopPropagation(); logoFileRef.current?.click(); }}>
                               <Upload className="h-4 w-4 me-2" />
                               {t.uploadLogo}
                             </Button>
@@ -1376,12 +1557,30 @@ export const PlatformSettingsPage = () => {
                         </div>
                         <div className="space-y-3">
                           <Label>{t.favicon}</Label>
-                          <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-brand-navy/50 transition-colors cursor-pointer">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-brand-navy/10 flex items-center justify-center">
-                              <Hash className="h-8 w-8 text-brand-navy" />
+                          <input
+                            type="file"
+                            ref={faviconFileRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadFavicon(file);
+                              e.target.value = '';
+                            }}
+                          />
+                          <div
+                            className="border-2 border-dashed rounded-xl p-8 text-center hover:border-brand-navy/50 transition-colors cursor-pointer"
+                            onClick={() => faviconFileRef.current?.click()}
+                          >
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-brand-navy/10 flex items-center justify-center overflow-hidden">
+                              {brandSettings.faviconUrl ? (
+                                <img src={brandSettings.faviconUrl} alt="favicon" className="w-full h-full object-contain" />
+                              ) : (
+                                <Hash className="h-8 w-8 text-brand-navy" />
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">32x32 px</p>
-                            <Button variant="outline" size="sm" className="mt-3 rounded-xl">
+                            <Button variant="outline" size="sm" className="mt-3 rounded-xl" onClick={(e) => { e.stopPropagation(); faviconFileRef.current?.click(); }}>
                               <Upload className="h-4 w-4 me-2" />
                               {t.uploadFavicon}
                             </Button>
@@ -1835,7 +2034,7 @@ export const PlatformSettingsPage = () => {
                         </div>
                         <Switch
                           checked={securitySettings.twoFactorEnabled}
-                          onCheckedChange={(v) => setSecuritySettings({ ...securitySettings, twoFactorEnabled: v })}
+                          onCheckedChange={(v) => handleToggle2FA(v)}
                         />
                       </div>
                       
@@ -2022,7 +2221,7 @@ export const PlatformSettingsPage = () => {
         </AlertDialog>
         
         {/* Switch User Dialog */}
-        <Dialog open={showSwitchUserDialog} onOpenChange={setShowSwitchUserDialog}>
+        <Dialog open={showSwitchUserDialog} onOpenChange={(open) => { setShowSwitchUserDialog(open); if (!open) { setSelectedSwitchUser(''); } }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -2036,14 +2235,16 @@ export const PlatformSettingsPage = () => {
             <div className="py-4">
               <div className="space-y-2">
                 <Label>{t.selectUser}</Label>
-                <Select>
+                <Select value={selectedSwitchUser} onValueChange={setSelectedSwitchUser}>
                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder={isRTL ? 'اختر المستخدم...' : 'Select user...'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user1">{isRTL ? 'أحمد محمد (مدير مدرسة)' : 'Ahmed Mohammed (School Admin)'}</SelectItem>
-                    <SelectItem value="user2">{isRTL ? 'سارة أحمد (معلمة)' : 'Sara Ahmed (Teacher)'}</SelectItem>
-                    <SelectItem value="user3">{isRTL ? 'محمد علي (ولي أمر)' : 'Mohammed Ali (Parent)'}</SelectItem>
+                    {switchableUsers.length > 0 ? switchableUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.label}</SelectItem>
+                    )) : (
+                      <SelectItem value="_none" disabled>{isRTL ? 'لا يوجد مستخدمون للتبديل' : 'No users available'}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -2065,10 +2266,55 @@ export const PlatformSettingsPage = () => {
               </div>
             </div>
             <DialogFooter className="flex-row-reverse gap-2">
-              <Button variant="outline" onClick={() => setShowSwitchUserDialog(false)}>{t.cancel}</Button>
-              <Button className="bg-brand-navy">
+              <Button variant="outline" onClick={() => { setShowSwitchUserDialog(false); setSelectedSwitchUser(''); }}>{t.cancel}</Button>
+              <Button className="bg-brand-navy" onClick={handleSwitchUser} disabled={!selectedSwitchUser}>
                 <Users className="h-4 w-4 me-2" />
                 {t.switchUser}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* 2FA Setup Dialog */}
+        <Dialog open={show2FASetup} onOpenChange={setShow2FASetup}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-brand-navy" />
+                {isRTL ? 'إعداد المصادقة الثنائية' : '2FA Setup'}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL ? 'أدخل رمز التحقق من تطبيق المصادقة' : 'Enter verification code from your authenticator app'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="p-4 bg-muted/30 rounded-xl text-center">
+                <div className="w-32 h-32 mx-auto mb-3 bg-white rounded-xl flex items-center justify-center border">
+                  <div className="text-center">
+                    <Shield className="h-12 w-12 text-brand-navy mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'رمز QR' : 'QR Code'}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {isRTL ? 'امسح الرمز بتطبيق المصادقة (Google Authenticator)' : 'Scan with authenticator app (Google Authenticator)'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>{isRTL ? 'رمز التحقق' : 'Verification Code'}</Label>
+                <Input
+                  value={twoFACode}
+                  onChange={(e) => setTwoFACode(e.target.value)}
+                  placeholder={isRTL ? 'أدخل الرمز المكون من 6 أرقام' : 'Enter 6-digit code'}
+                  className="rounded-xl text-center text-lg tracking-widest"
+                  maxLength={6}
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => { setShow2FASetup(false); setTwoFACode(''); }}>{t.cancel}</Button>
+              <Button className="bg-brand-navy" onClick={handleConfirm2FA} disabled={twoFACode.length < 6}>
+                <Shield className="h-4 w-4 me-2" />
+                {isRTL ? 'تفعيل' : 'Enable'}
               </Button>
             </DialogFooter>
           </DialogContent>

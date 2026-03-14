@@ -3,7 +3,7 @@ System Settings Routes - مسارات إعدادات النظام
 APIs for system settings, maintenance mode, terms & conditions, etc.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -467,9 +467,11 @@ def setup_settings_routes(db, get_current_user, require_roles, UserRole):
                 {
                     "$set": {
                         "name": settings.name,
+                        "full_name": settings.name,
                         "title": settings.title,
                         "phone": settings.phone,
                         "language": settings.language,
+                        "preferred_language": settings.language,
                         "updated_at": datetime.now(timezone.utc).isoformat()
                     }
                 }
@@ -557,5 +559,80 @@ def setup_settings_routes(db, get_current_user, require_roles, UserRole):
                 {"id": "sheikh", "label": "Sheikh"},
             ]
         }
+    
+    # ============= BRAND UPLOADS =============
+    
+    @router.post("/brand/upload-logo")
+    async def upload_brand_logo(
+        file: UploadFile = File(...),
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        try:
+            content = await file.read()
+            encoded = base64.b64encode(content).decode('utf-8')
+            data_url = f"data:{file.content_type};base64,{encoded}"
+            await db.platform_settings.update_one(
+                {"key": "brand"},
+                {"$set": {"logo_url": data_url, "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True
+            )
+            return {"success": True, "logo_url": data_url}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @router.post("/brand/upload-favicon")
+    async def upload_brand_favicon(
+        file: UploadFile = File(...),
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+    ):
+        try:
+            content = await file.read()
+            encoded = base64.b64encode(content).decode('utf-8')
+            data_url = f"data:{file.content_type};base64,{encoded}"
+            await db.platform_settings.update_one(
+                {"key": "brand"},
+                {"$set": {"favicon_url": data_url, "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True
+            )
+            return {"success": True, "favicon_url": data_url}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    # ============= 2FA ENDPOINTS =============
+    
+    @router.post("/security/enable-2fa")
+    async def enable_two_factor(
+        request: Request,
+        current_user: dict = Depends(get_current_user)
+    ):
+        try:
+            body = await request.json()
+            code = body.get("code", "")
+            if not code or len(str(code)) < 6:
+                raise HTTPException(status_code=400, detail="رمز التحقق غير صالح — يجب أن يكون 6 أرقام")
+            if not str(code).isdigit():
+                raise HTTPException(status_code=400, detail="رمز التحقق يجب أن يتكون من أرقام فقط")
+            await db.users.update_one(
+                {"id": current_user.get("id")},
+                {"$set": {"two_factor_enabled": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            return {"success": True, "message": "تم تفعيل المصادقة الثنائية"}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @router.post("/security/disable-2fa")
+    async def disable_two_factor(
+        current_user: dict = Depends(get_current_user)
+    ):
+        try:
+            await db.users.update_one(
+                {"id": current_user.get("id")},
+                {"$set": {"two_factor_enabled": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            return {"success": True, "message": "تم تعطيل المصادقة الثنائية"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
     
     return router
