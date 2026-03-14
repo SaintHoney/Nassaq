@@ -10901,9 +10901,9 @@ async def get_daily_activity(
     elif period == "24h":
         start_date = now - timedelta(hours=24)
     elif period == "week":
-        start_date = today - timedelta(days=7)
+        start_date = today - timedelta(days=today.weekday())
     elif period == "month":
-        start_date = today - timedelta(days=30)
+        start_date = today.replace(day=1)
     else:
         start_date = today
     
@@ -11003,13 +11003,41 @@ async def get_daily_activity(
         return {"chart_data": type_data, "period": period, "view_by": view_by}
 
 @api_router.get("/activity/summary")
-async def get_activity_summary(current_user: dict = Depends(get_current_user)):
+async def get_activity_summary(
+    current_user: dict = Depends(get_current_user),
+    school_id: Optional[str] = None,
+    school_ids: Optional[str] = None,
+    city: Optional[str] = None,
+    region: Optional[str] = None,
+    school_type: Optional[str] = None,
+    status: Optional[str] = None,
+    period: Optional[str] = None,
+    view_by: Optional[str] = None
+):
     """Get quick summary of today's activity"""
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
     
+    school_id_filter = None
+    if city or region or school_type or status or school_ids:
+        sf = {}
+        if city: sf["city"] = city
+        if region: sf["region"] = region
+        if school_type: sf["school_type"] = school_type
+        if status and status != 'all': sf["status"] = status
+        if school_ids:
+            sid_list = [s.strip() for s in school_ids.split(',') if s.strip()]
+            if sid_list: sf["id"] = {"$in": sid_list}
+        filtered = await db.schools.find(sf, {"_id": 0, "id": 1}).to_list(1000)
+        school_id_filter = [s["id"] for s in filtered]
+    
     today_query = {"timestamp": {"$gte": today.isoformat()}}
+    if school_id:
+        today_query["school_id"] = school_id
+    elif school_id_filter is not None:
+        today_query["school_id"] = {"$in": school_id_filter}
+    
     today_lessons = await db.activity_logs.count_documents({**today_query, "type": "lesson"})
     today_attendance = await db.activity_logs.count_documents({**today_query, "type": "attendance"})
     today_grades = await db.activity_logs.count_documents({**today_query, "type": "grade"})
@@ -11058,14 +11086,41 @@ async def get_activity_summary(current_user: dict = Depends(get_current_user)):
     }
 
 @api_router.get("/activity/alerts")
-async def get_activity_alerts(current_user: dict = Depends(get_current_user)):
+async def get_activity_alerts(
+    current_user: dict = Depends(get_current_user),
+    school_id: Optional[str] = None,
+    school_ids: Optional[str] = None,
+    city: Optional[str] = None,
+    region: Optional[str] = None,
+    school_type: Optional[str] = None,
+    status: Optional[str] = None,
+    period: Optional[str] = None,
+    view_by: Optional[str] = None
+):
     """Get smart activity alerts"""
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
+    base_query = {}
+    if city or region or school_type or status or school_ids:
+        sf = {}
+        if city: sf["city"] = city
+        if region: sf["region"] = region
+        if school_type: sf["school_type"] = school_type
+        if status and status != 'all': sf["status"] = status
+        if school_ids:
+            sid_list = [s.strip() for s in school_ids.split(',') if s.strip()]
+            if sid_list: sf["id"] = {"$in": sid_list}
+        filtered = await db.schools.find(sf, {"_id": 0, "id": 1}).to_list(1000)
+        allowed_ids = [s["id"] for s in filtered]
+        base_query["school_id"] = {"$in": allowed_ids}
+    elif school_id:
+        base_query["school_id"] = school_id
+    
     alerts = []
     
     today_attendance = await db.activity_logs.count_documents({
+        **base_query,
         "timestamp": {"$gte": today.isoformat()},
         "type": "attendance"
     })
@@ -11094,6 +11149,7 @@ async def get_activity_alerts(current_user: dict = Depends(get_current_user)):
             })
     
     today_total = await db.activity_logs.count_documents({
+        **base_query,
         "timestamp": {"$gte": today.isoformat()}
     })
     

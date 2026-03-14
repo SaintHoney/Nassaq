@@ -157,7 +157,9 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
             platform_accounts = await db.users.count_documents({"role": {"$in": platform_roles}})
             
             pending_requests = await db.registration_requests.count_documents({"status": "pending"})
-            pending_teacher_requests = 0
+            pending_teacher_requests = await db.registration_requests.count_documents({
+                "status": "pending", "type": {"$in": ["independent_teacher", "teacher_registration"]}
+            })
             
             ai_enabled_schools = await db.schools.count_documents({**school_filter, "ai_enabled": True})
             if ai_enabled_schools == 0:
@@ -177,7 +179,7 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
                 student_attendance_rate=round(student_attendance_rate, 1),
                 teacher_attendance_rate=round(teacher_attendance_rate, 1),
                 platform_accounts=platform_accounts,
-                pending_requests=pending_requests + pending_teacher_requests,
+                pending_requests=pending_requests,
                 ai_enabled_schools=ai_enabled_schools,
                 active_schools=active_schools,
                 suspended_schools=suspended_schools,

@@ -359,8 +359,8 @@ export const AdminDashboard = () => {
       
       setActivityData(Array.isArray(chartData) ? chartData : []);
       
-      // جلب ملخص النشاط
-      const summaryResponse = await api.get('/activity/summary');
+      const filterQS = queryParams.toString();
+      const summaryResponse = await api.get(`/activity/summary${filterQS ? `?${filterQS}` : ''}`);
       setActivitySummary(summaryResponse.data || {
         lessons: { count: 0, change: 0, status: 'normal' },
         attendance: { count: 0, change: 0, status: 'normal' },
@@ -368,8 +368,7 @@ export const AdminDashboard = () => {
         users: { count: 0, change: 0, status: 'normal' }
       });
       
-      // جلب التنبيهات
-      const alertsResponse = await api.get('/activity/alerts');
+      const alertsResponse = await api.get(`/activity/alerts${filterQS ? `?${filterQS}` : ''}`);
       setActivityAlerts(alertsResponse.data?.alerts || []);
     } catch (error) {
       console.error('Error fetching activity data:', error);
