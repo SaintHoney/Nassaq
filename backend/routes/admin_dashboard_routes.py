@@ -52,98 +52,112 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
     
     @router.get("/command-center/stats", response_model=CommandCenterStats)
     async def get_command_center_stats(
-        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN]))
+        current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN])),
+        school_id: Optional[str] = None,
+        school_ids: Optional[str] = None,
+        city: Optional[str] = None,
+        region: Optional[str] = None,
+        school_type: Optional[str] = None,
+        scope: Optional[str] = None,
+        time_window: Optional[str] = None,
+        status: Optional[str] = None,
     ):
         """
-        جلب إحصائيات مركز القيادة
-        Get Command Center statistics for Platform Admin
+        جلب إحصائيات مركز القيادة مع دعم الفلاتر
+        Get Command Center statistics for Platform Admin with filter support
         """
         try:
             now = datetime.now(timezone.utc)
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
             
-            # === عدد المدارس ===
-            registered_schools = await db.schools.count_documents({})
-            active_schools = await db.schools.count_documents({"status": "active"})
-            suspended_schools = await db.schools.count_documents({"status": "suspended"})
-            pending_schools = await db.schools.count_documents({"status": "pending"})
+            school_filter = {}
+            student_filter = {}
+            teacher_filter = {}
+            attendance_filter = {}
             
-            # === عدد الطلاب المسجلين ===
-            registered_students = await db.students.count_documents({})
+            if scope == 'single' and school_id:
+                school_filter["id"] = school_id
+                student_filter["school_id"] = school_id
+                teacher_filter["school_id"] = school_id
+                attendance_filter["school_id"] = school_id
+            elif scope == 'multi' and school_ids:
+                id_list = [s.strip() for s in school_ids.split(',') if s.strip()]
+                if id_list:
+                    school_filter["id"] = {"$in": id_list}
+                    student_filter["school_id"] = {"$in": id_list}
+                    teacher_filter["school_id"] = {"$in": id_list}
+                    attendance_filter["school_id"] = {"$in": id_list}
+            elif school_id:
+                school_filter["id"] = school_id
+                student_filter["school_id"] = school_id
+                teacher_filter["school_id"] = school_id
+                attendance_filter["school_id"] = school_id
             
-            # === المعلمين في المدارس (لديهم tenant_id) ===
-            teachers_in_schools = await db.teachers.count_documents({"school_id": {"$ne": None}})
+            if city:
+                school_filter["city"] = city
+            if region:
+                school_filter["region"] = region
+            if school_type:
+                school_filter["school_type"] = school_type
+            if status and status != 'all':
+                school_filter["status"] = status
+            
+            filtered_school_ids = None
+            if school_filter and not school_id:
+                filtered_schools = await db.schools.find(school_filter, {"id": 1})
+                filtered_school_ids = [s["id"] for s in filtered_schools]
+                if filtered_school_ids and not student_filter.get("school_id"):
+                    student_filter["school_id"] = {"$in": filtered_school_ids}
+                    teacher_filter["school_id"] = {"$in": filtered_school_ids}
+                    attendance_filter["school_id"] = {"$in": filtered_school_ids}
+            
+            registered_schools = await db.schools.count_documents(school_filter)
+            active_schools = await db.schools.count_documents({**school_filter, "status": "active"})
+            suspended_schools = await db.schools.count_documents({**school_filter, "status": "suspended"})
+            pending_schools = await db.schools.count_documents({**school_filter, "status": "pending"})
+            
+            registered_students = await db.students.count_documents(student_filter if student_filter else {})
+            
+            teachers_in_schools = await db.teachers.count_documents(teacher_filter if teacher_filter else {"school_id": {"$ne": None}})
             if teachers_in_schools == 0:
-                teachers_in_schools = await db.users.count_documents({
-                    "role": "teacher",
-                    "tenant_id": {"$ne": None}
-                })
+                user_teacher_filter = {"role": "teacher", "tenant_id": {"$ne": None}}
+                if teacher_filter.get("school_id"):
+                    user_teacher_filter["tenant_id"] = teacher_filter["school_id"]
+                teachers_in_schools = await db.users.count_documents(user_teacher_filter)
             
-            # === المعلمين المستقلين (بدون tenant_id) ===
             independent_teachers = await db.users.count_documents({
                 "role": "teacher",
                 "$or": [{"tenant_id": None}, {"tenant_id": ""}]
             })
-            # Also check registration requests for independent teachers
-            pending_teacher_requests = await db.registration_requests.count_documents({
-                "type": "independent_teacher",
-                "status": "pending"
-            })
             
-            # === نسبة حضور الطلاب ===
-            total_student_attendance = await db.attendance.count_documents({
-                "user_type": "student",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-            present_students = await db.attendance.count_documents({
-                "user_type": "student",
-                "status": "present",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-            student_attendance_rate = (present_students / max(total_student_attendance, 1)) * 100 if total_student_attendance > 0 else 92.5
+            att_student_filter = {**attendance_filter, "user_type": "student", "date": {"$gte": today_start.isoformat()[:10]}}
+            total_student_attendance = await db.attendance.count_documents(att_student_filter)
+            present_students = await db.attendance.count_documents({**att_student_filter, "status": "present"})
+            student_attendance_rate = (present_students / total_student_attendance) * 100 if total_student_attendance > 0 else 0.0
             
-            # === نسبة حضور المعلمين ===
-            total_teacher_attendance = await db.attendance.count_documents({
-                "user_type": "teacher",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-            present_teachers = await db.attendance.count_documents({
-                "user_type": "teacher",
-                "status": "present",
-                "date": {"$gte": today_start.isoformat()[:10]}
-            })
-            teacher_attendance_rate = (present_teachers / max(total_teacher_attendance, 1)) * 100 if total_teacher_attendance > 0 else 96.0
+            att_teacher_filter = {**attendance_filter, "user_type": "teacher", "date": {"$gte": today_start.isoformat()[:10]}}
+            total_teacher_attendance = await db.attendance.count_documents(att_teacher_filter)
+            present_teachers = await db.attendance.count_documents({**att_teacher_filter, "status": "present"})
+            teacher_attendance_rate = (present_teachers / total_teacher_attendance) * 100 if total_teacher_attendance > 0 else 0.0
             
-            # === حسابات المنصة (المديرين والنواب) ===
             platform_roles = [
-                "platform_admin",
-                "platform_operations_manager",
-                "platform_technical_admin",
-                "platform_support_specialist",
-                "platform_data_analyst",
-                "platform_security_officer"
+                "platform_admin", "platform_operations_manager", "platform_technical_admin",
+                "platform_support_specialist", "platform_data_analyst", "platform_security_officer"
             ]
-            platform_accounts = await db.users.count_documents({
-                "role": {"$in": platform_roles}
-            })
+            platform_accounts = await db.users.count_documents({"role": {"$in": platform_roles}})
             
-            # === الطلبات المعلقة ===
             pending_requests = await db.registration_requests.count_documents({"status": "pending"})
-            
-            # === المدارس التي تستخدم الذكاء الاصطناعي ===
-            ai_enabled_schools = await db.schools.count_documents({
-                "ai_enabled": True
+            pending_teacher_requests = await db.registration_requests.count_documents({
+                "type": "independent_teacher", "status": "pending"
             })
-            # If no field exists, estimate from schools with AI operations
+            
+            ai_enabled_schools = await db.schools.count_documents({**school_filter, "ai_enabled": True})
             if ai_enabled_schools == 0:
                 ai_enabled_schools = await db.schools.count_documents({
-                    "$or": [
-                        {"ai_features_enabled": True},
-                        {"hakim_enabled": True}
-                    ]
+                    **school_filter,
+                    "$or": [{"ai_features_enabled": True}, {"hakim_enabled": True}]
                 })
             
-            # === التاريخ الهجري ===
             hijri_date = get_hijri_date(now)
             gregorian_date = now.strftime("%Y/%m/%d")
             
@@ -167,7 +181,8 @@ def setup_admin_routes(db, get_current_user, require_roles, UserRole):
             
         except Exception as e:
             print(f"Error getting command center stats: {e}")
-            # Return zeros on error
+            import traceback
+            traceback.print_exc()
             return CommandCenterStats(
                 registered_schools=0,
                 registered_students=0,

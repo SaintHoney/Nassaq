@@ -75,7 +75,8 @@ Smart Multi-Tenant School Management System
 - Admin: `/api/dashboard/stats`, `/api/school/dashboard`
 - Driver: `/api/driver/dashboard`, `/api/driver/routes`, `/api/driver/routes/{id}`, `POST /api/driver/bus-attendance`, `POST /api/driver/bus-attendance/bulk`
 - Gatekeeper: `/api/gatekeeper/dashboard`, `/api/gatekeeper/logs`, `POST /api/gatekeeper/entry-exit`, `POST /api/gatekeeper/search`
-- Ministry: `/api/ministry/dashboard`, `/api/ministry/schools-comparison`, `/api/ministry/compliance-report`
+- Ministry: `/api/ministry/dashboard`, `/api/ministry/schools-comparison`, `/api/ministry/compliance-report`, `/api/ministry/teacher-performance`, `/api/ministry/student-performance`, `/api/ministry/academic-activity`, `/api/ministry/strategic-kpis`
+- Admin Command Center: `/api/admin/command-center/stats` (supports filters: school_id, city, region, school_type, scope, status)
 - Reports: `/api/reports/export/csv?report_type=students|teachers|attendance|grades|schools|users|behavior|overview`
 - Reports PDF: `/api/reports/export/pdf?report_type=overview|attendance|grades|behavior|schools|users` (styled HTML for print-to-PDF)
 - Reports School: `/api/reports/school/overview|attendance|grades|behavior` (dashboard data)
