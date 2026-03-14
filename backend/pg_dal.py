@@ -80,6 +80,7 @@ class PostgresCursor:
         return self
 
     async def to_list(self, length: Optional[int] = None):
+        await self._collection._ensure_table()
         if length is not None and self._limit_val is None:
             self._limit_val = length
         where_clause, params = self._collection._build_where(self._filter)
@@ -425,8 +426,10 @@ class PostgresCollection:
                 doc.update(update["$set"])
             if "$setOnInsert" in update:
                 doc.update(update["$setOnInsert"])
-            await self.insert_one(doc)
-            return UpdateResult(0, 1, upserted_id=doc.get("_id"))
+            if "_id" not in doc:
+                doc["_id"] = self._generate_id()
+            result_insert = await self.insert_one(doc)
+            return UpdateResult(0, 1, upserted_id=result_insert.inserted_id)
         return UpdateResult(matched, 0)
 
     async def update_many(self, filter_query: dict, update: dict,
@@ -439,6 +442,19 @@ class PostgresCollection:
         sql = f"UPDATE {self._table_name} SET {update_clause}{where_clause}"
         result = await self._db._execute(sql, params)
         matched = int(result.split(" ")[-1]) if result else 0
+        if matched == 0 and upsert:
+            doc = {}
+            for key, value in filter_query.items():
+                if not key.startswith("$"):
+                    doc[key] = value
+            if "$set" in update:
+                doc.update(update["$set"])
+            if "$setOnInsert" in update:
+                doc.update(update["$setOnInsert"])
+            if "_id" not in doc:
+                doc["_id"] = self._generate_id()
+            result_insert = await self.insert_one(doc)
+            return UpdateResult(0, 1, upserted_id=result_insert.inserted_id)
         return UpdateResult(matched, 0)
 
     async def delete_one(self, filter_query: dict) -> "DeleteResult":
