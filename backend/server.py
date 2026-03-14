@@ -682,7 +682,8 @@ async def set_active_role_context(
         raise HTTPException(status_code=400, detail="الدور غير متوفر للمستخدم")
     
     # Determine school_id
-    school_id = context.school_id or valid_role.get("tenant_id") or current_user.get("tenant_id")
+    raw_school_id = context.school_id or valid_role.get("tenant_id") or current_user.get("tenant_id")
+    school_id: Optional[str] = str(raw_school_id) if raw_school_id and isinstance(raw_school_id, str) else None
     
     # Get school name if school_id provided
     school_name = None
