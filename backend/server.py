@@ -17495,6 +17495,39 @@ async def get_ministry_dashboard(
             "status": school.get("status", "active")
         })
     
+    curriculum_aligned = 0
+    reporting_complete = 0
+    total_fields_filled = 0
+    total_fields_expected = 0
+
+    for ss in school_stats:
+        sid = ss["school_id"]
+        has_settings = await db.school_settings.find_one({"school_id": sid})
+        has_schedule = await db.schedules.find_one({"school_id": sid})
+        has_assignments = await db.teacher_assignments.find_one({"school_id": sid, "is_active": True})
+
+        if has_settings and has_assignments:
+            curriculum_aligned += 1
+        if has_settings and has_schedule and ss["teachers"] > 0 and ss["students"] > 0:
+            reporting_complete += 1
+
+        filled = 0
+        expected = 5
+        if has_settings:
+            filled += 1
+        if has_schedule:
+            filled += 1
+        if ss["teachers"] > 0:
+            filled += 1
+        if ss["students"] > 0:
+            filled += 1
+        if has_assignments:
+            filled += 1
+        total_fields_filled += filled
+        total_fields_expected += expected
+
+    data_quality = round((total_fields_filled / total_fields_expected) * 100, 1) if total_fields_expected else 0
+
     return {
         "overview": {
             "total_schools": total_schools,
@@ -17505,9 +17538,9 @@ async def get_ministry_dashboard(
         },
         "schools": school_stats,
         "compliance": {
-            "curriculum_aligned": total_schools,
-            "reporting_on_time": total_schools,
-            "data_quality_score": 94.5
+            "curriculum_aligned": curriculum_aligned,
+            "reporting_on_time": reporting_complete,
+            "data_quality_score": data_quality
         }
     }
 
@@ -17570,6 +17603,23 @@ async def get_compliance_report(
         teacher_count = await db.teachers.count_documents({"school_id": sid})
         student_count = await db.students.count_documents({"school_id": sid})
         
+        has_assignments = await db.teacher_assignments.find_one({"school_id": sid, "is_active": True})
+        has_classes = await db.classes.find_one({"school_id": sid})
+        has_attendance = await db.attendance.find_one({"school_id": sid})
+
+        completeness_checks = [
+            bool(has_settings),
+            bool(has_schedule),
+            teacher_count > 0,
+            student_count > 0,
+            bool(has_assignments),
+            bool(has_classes),
+            bool(has_attendance),
+        ]
+        data_completeness = round((sum(completeness_checks) / len(completeness_checks)) * 100)
+
+        all_ready = has_settings and has_schedule and teacher_count > 0 and student_count > 0
+
         compliance.append({
             "school_id": sid,
             "school_name": school.get("name", school.get("name_ar", "")),
@@ -17577,8 +17627,8 @@ async def get_compliance_report(
             "has_schedule": bool(has_schedule),
             "teacher_count": teacher_count,
             "student_count": student_count,
-            "data_completeness": 90 if has_settings and teacher_count > 0 else 60,
-            "status": "مكتمل" if has_settings and has_schedule else "غير مكتمل"
+            "data_completeness": data_completeness,
+            "status": "مكتمل" if all_ready else "غير مكتمل"
         })
     
     return {"schools": compliance}
