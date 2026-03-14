@@ -167,42 +167,28 @@ export const SchoolReportsPage = () => {
 
   const handleExport = async (format) => {
     try {
-      toast.info(isRTL ? `جاري تحضير التقرير...` : `Preparing report...`);
-      
-      // Get report data from API
-      const response = await api.get(`/reports/school/export?report_type=${activeTab}&format=json`);
-      const data = response.data;
-      
+      toast.info(isRTL ? 'جاري تحضير التقرير...' : 'Preparing report...');
+
       if (format === 'PDF') {
-        // For PDF, we'll create a simple text representation
-        const textContent = JSON.stringify(data, null, 2);
-        const blob = new Blob([textContent], { type: 'application/json' });
+        const response = await api.get(`/reports/export/pdf?report_type=${activeTab}`, { responseType: 'blob' });
+        const blob = new Blob([response.data], { type: 'text/html; charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report_${activeTab}_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.success(isRTL ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully');
-      } else if (format === 'CSV') {
-        // Convert to CSV
-        let csv = '';
-        if (activeTab === 'attendance' && data.attendance) {
-          csv = 'الفصل,حاضر,غائب,متأخر,النسبة\n';
-          data.attendance.forEach(row => {
-            csv += `${row.class},${row.present},${row.absent},${row.late},${row.rate}%\n`;
-          });
-        } else if (data.summary) {
-          csv = Object.entries(data.summary).map(([k, v]) => `${k},${v}`).join('\n');
+        const printWindow = window.open(url, '_blank');
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
         }
-        
-        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        toast.success(isRTL ? 'تم فتح التقرير للطباعة' : 'Report opened for printing');
+      } else if (format === 'CSV') {
+        const reportMap = { overview: 'overview', attendance: 'attendance', grades: 'grades', behavior: 'behavior' };
+        const csvType = reportMap[activeTab] || 'overview';
+        const response = await api.get(`/reports/export/csv?report_type=${csvType}`, { responseType: 'blob' });
+        const blob = new Blob([response.data], { type: 'text/csv; charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `report_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `nassaq_report_${csvType}_${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -282,9 +268,13 @@ export const SchoolReportsPage = () => {
                 </SelectContent>
               </Select>
               
+              <Button variant="outline" onClick={() => handleExport('CSV')} className="rounded-xl">
+                <FileText className="h-4 w-4 me-2" />
+                CSV
+              </Button>
               <Button variant="outline" onClick={() => handleExport('PDF')} className="rounded-xl">
                 <Download className="h-4 w-4 me-2" />
-                {isRTL ? 'تصدير' : 'Export'}
+                PDF
               </Button>
               
               <Button variant="ghost" size="icon" onClick={toggleLanguage} className="rounded-xl">

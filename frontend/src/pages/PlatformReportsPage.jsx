@@ -67,15 +67,28 @@ export const PlatformReportsPage = () => {
     fetchData();
   }, []);
 
-  const handleExport = (reportType) => {
-    toast.promise(
-      new Promise(resolve => setTimeout(resolve, 2000)),
-      {
-        loading: isRTL ? 'جاري تصدير التقرير...' : 'Exporting report...',
-        success: isRTL ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully',
-        error: isRTL ? 'فشل تصدير التقرير' : 'Failed to export report',
-      }
-    );
+  const handleExport = async (reportType) => {
+    try {
+      toast.info(isRTL ? 'جاري تحضير التقرير...' : 'Preparing report...');
+
+      const csvTypeMap = { schools: 'schools', users: 'users', performance: 'attendance', activity: 'grades' };
+      const csvType = csvTypeMap[reportType] || 'students';
+
+      const response = await api.get(`/reports/export/csv?report_type=${csvType}`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'text/csv; charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nassaq_${reportType}_report_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(isRTL ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(isRTL ? 'فشل تصدير التقرير' : 'Failed to export report');
+    }
   };
 
   // Calculate statistics

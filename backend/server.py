@@ -10268,48 +10268,68 @@ async def get_school_grades_report(
     subject_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get grades report by subject"""
+    """Get grades report by subject — aggregated from assessment_grades"""
     school_id = current_user.get("tenant_id")
     if not school_id:
         raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
-    
-    # Get all subjects
-    subject_query = {"school_id": school_id}
-    if subject_id:
-        subject_query["id"] = subject_id
-    
-    subjects = await db.subjects.find(subject_query, {"_id": 0}).to_list(100)
-    
+
+    assessments_list = await db.assessments.find({"school_id": school_id}, {"_id": 0}).to_list(500)
+    assessment_title_map = {a.get("id"): a.get("title") or a.get("name") or a.get("id") for a in assessments_list}
+
+    grade_query = {"school_id": school_id}
+    all_grades = await db.assessment_grades.find(grade_query, {"_id": 0}).to_list(10000)
+
+    subject_map = {}
+    for g in all_grades:
+        aid = g.get("assessment_id", "unknown")
+        if subject_id and aid != subject_id:
+            continue
+        sname = assessment_title_map.get(aid) or g.get("subject_name") or aid
+        if aid not in subject_map:
+            subject_map[aid] = {"name": sname, "scores": []}
+        score = g.get("score", 0)
+        max_score = g.get("max_score", 100)
+        pct = round((score / max_score) * 100, 1) if max_score > 0 else 0
+        subject_map[aid]["scores"].append(pct)
+
+    if not subject_map:
+        for a in assessments_list:
+            aid = a.get("id")
+            aname = a.get("title") or a.get("name") or aid
+            a_grades = await db.assessment_grades.find({"assessment_id": aid, "school_id": school_id}, {"_id": 0}).to_list(10000)
+            if a_grades:
+                scores = []
+                for g in a_grades:
+                    score = g.get("score", 0)
+                    max_score = g.get("max_score", 100)
+                    pct = round((score / max_score) * 100, 1) if max_score > 0 else 0
+                    scores.append(pct)
+                subject_map[aid] = {"name": aname, "scores": scores}
+
     report_data = []
-    for subject in subjects:
-        # Get grades for this subject
-        grades = await db.grades.find({
-            "subject_id": subject.get("id"),
-            "school_id": school_id
-        }, {"_id": 0, "grade": 1}).to_list(10000)
-        
-        if grades:
-            grade_values = [g.get("grade", 0) for g in grades]
-            avg = round(sum(grade_values) / len(grade_values), 1)
-            highest = max(grade_values)
-            lowest = min(grade_values)
-            passed = len([g for g in grade_values if g >= 50])
-            pass_rate = round((passed / len(grades)) * 100, 0)
+    for sid, info in subject_map.items():
+        scores = info["scores"]
+        if scores:
+            avg = round(sum(scores) / len(scores), 1)
+            highest = round(max(scores), 1)
+            lowest = round(min(scores), 1)
+            passed = len([s for s in scores if s >= 50])
+            pass_rate = round((passed / len(scores)) * 100, 0)
         else:
-            avg = 0
-            highest = 0
-            lowest = 0
+            avg = highest = lowest = 0
             pass_rate = 0
-        
+
         report_data.append({
-            "subject": subject.get("name_ar") or subject.get("name"),
-            "subject_en": subject.get("name_en") or subject.get("name_ar") or subject.get("name"),
+            "subject": info["name"],
+            "subject_en": info["name"],
             "avg": avg,
             "highest": highest,
             "lowest": lowest,
-            "pass_rate": pass_rate
+            "pass_rate": pass_rate,
+            "count": len(scores)
         })
-    
+
+    report_data.sort(key=lambda x: x["avg"], reverse=True)
     return report_data
 
 
@@ -17817,6 +17837,132 @@ async def get_ministry_strategic_kpis(
     }
 
 
+# ============== REPORTS EXPORT API (PDF) ==============
+@api_router.get("/reports/export/pdf")
+async def export_report_pdf(
+    report_type: str = "overview",
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.MINISTRY_REP, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    import io
+    import html as html_mod
+    from starlette.responses import StreamingResponse
+
+    def esc(val):
+        return html_mod.escape(str(val)) if val else ""
+
+    tenant_id = current_user.get("tenant_id")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+
+    rows = []
+    title = "تقرير نسّق"
+    headers = []
+
+    if report_type == "overview":
+        title = "نظرة عامة على المدرسة"
+        total_students = await db.students.count_documents({"school_id": tenant_id} if tenant_id else {})
+        total_teachers = await db.teachers.count_documents({"school_id": tenant_id} if tenant_id else {})
+        total_classes = await db.classes.count_documents({"school_id": tenant_id} if tenant_id else {})
+        attendance = await db.attendance.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
+        present = len([a for a in attendance if a.get("status") == "present"])
+        rate = round((present / len(attendance)) * 100, 1) if attendance else 0
+        headers = ["المؤشر", "القيمة"]
+        rows = [
+            ["إجمالي الطلاب", str(total_students)],
+            ["إجمالي المعلمين", str(total_teachers)],
+            ["إجمالي الفصول", str(total_classes)],
+            ["نسبة الحضور", f"{rate}%"],
+        ]
+    elif report_type == "attendance":
+        title = "تقرير الحضور حسب الفصل"
+        headers = ["الفصل", "حاضر", "غائب", "متأخر", "النسبة"]
+        classes = await db.classes.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(100)
+        for cls in classes:
+            att = await db.attendance.find({"class_id": cls.get("id")}, {"_id": 0}).to_list(10000)
+            p = len([a for a in att if a.get("status") == "present"])
+            ab = len([a for a in att if a.get("status") == "absent"])
+            lt = len([a for a in att if a.get("status") == "late"])
+            t = len(att)
+            r = round((p / t) * 100, 1) if t > 0 else 0
+            rows.append([cls.get("name_ar") or cls.get("name", ""), str(p), str(ab), str(lt), f"{r}%"])
+    elif report_type == "grades":
+        title = "تقرير الدرجات"
+        headers = ["المادة / التقييم", "المتوسط", "الأعلى", "الأدنى", "نسبة النجاح"]
+        assessments_list = await db.assessments.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(500)
+        atm = {a.get("id"): a.get("title") or a.get("name") or a.get("id") for a in assessments_list}
+        all_grades = await db.assessment_grades.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
+        subject_map = {}
+        for g in all_grades:
+            aid = g.get("assessment_id", "unknown")
+            sname = atm.get(aid) or g.get("subject_name") or aid
+            if aid not in subject_map:
+                subject_map[aid] = {"name": sname, "scores": []}
+            sc = g.get("score", 0)
+            mx = g.get("max_score", 100)
+            subject_map[aid]["scores"].append(round((sc / mx) * 100, 1) if mx > 0 else 0)
+        for sid, info in subject_map.items():
+            scores = info["scores"]
+            if scores:
+                rows.append([info["name"], f"{round(sum(scores)/len(scores),1)}%", f"{round(max(scores),1)}%", f"{round(min(scores),1)}%", f"{round(len([s for s in scores if s>=50])/len(scores)*100)}%"])
+    elif report_type == "behavior":
+        title = "تقرير السلوك"
+        headers = ["النوع", "العدد"]
+        beh = await db.behavior_records.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(1000)
+        pos = len([b for b in beh if b.get("type") == "positive" or b.get("behavior_type") == "positive"])
+        neg = len([b for b in beh if b.get("type") == "negative" or b.get("behavior_type") == "negative"])
+        warn = len([b for b in beh if b.get("type") == "warning" or b.get("behavior_type") == "warning"])
+        appr = len([b for b in beh if b.get("type") == "appreciation" or b.get("behavior_type") == "appreciation"])
+        rows = [["إيجابي", str(pos)], ["سلبي", str(neg)], ["تحذير", str(warn)], ["تقدير", str(appr)], ["الإجمالي", str(len(beh))]]
+    elif report_type == "schools":
+        title = "تقرير المدارس الشامل"
+        headers = ["المدرسة", "الطلاب", "المعلمين", "الفصول", "الحالة"]
+        schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+        for s in schools:
+            sid = s.get("id")
+            st_count = await db.students.count_documents({"school_id": sid})
+            te_count = await db.teachers.count_documents({"school_id": sid})
+            cl_count = await db.classes.count_documents({"school_id": sid})
+            rows.append([s.get("name", ""), str(st_count), str(te_count), str(cl_count), s.get("status", "active")])
+    elif report_type == "users":
+        title = "تقرير المستخدمين"
+        headers = ["الاسم", "البريد الإلكتروني", "الدور", "المدرسة", "الحالة"]
+        users = await db.users.find({}, {"_id": 0, "full_name": 1, "email": 1, "role": 1, "tenant_id": 1, "is_active": 1}).to_list(500)
+        for u in users:
+            rows.append([u.get("full_name", ""), u.get("email", ""), u.get("role", ""), u.get("tenant_id", ""), "نشط" if u.get("is_active") else "معطل"])
+
+    table_rows = ""
+    for row in rows:
+        cells = "".join(f"<td style='border:1px solid #ddd;padding:8px 12px;text-align:right;'>{esc(c)}</td>" for c in row)
+        table_rows += f"<tr>{cells}</tr>"
+    header_cells = "".join(f"<th style='border:1px solid #ccc;padding:10px 12px;text-align:right;background:#1C3D74;color:white;'>{esc(h)}</th>" for h in headers)
+
+    html = f"""<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head><meta charset="UTF-8"><title>{title}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+body{{font-family:'Cairo',sans-serif;margin:40px;color:#312E2F;direction:rtl;}}
+h1{{color:#1C3D74;border-bottom:3px solid #46C1BE;padding-bottom:10px;}}
+.meta{{color:#888;font-size:14px;margin-bottom:20px;}}
+table{{width:100%;border-collapse:collapse;margin-top:20px;}}
+tr:nth-child(even){{background:#f8f9fa;}}
+.footer{{margin-top:40px;text-align:center;color:#888;font-size:12px;border-top:1px solid #eee;padding-top:15px;}}
+@media print{{body{{margin:20px;}}}}
+</style></head>
+<body>
+<h1>نسّق — {title}</h1>
+<div class="meta">تاريخ التقرير: {now}</div>
+<table><thead><tr>{header_cells}</tr></thead><tbody>{table_rows}</tbody></table>
+<div class="footer">تم إنشاء هذا التقرير بواسطة منصة نسّق — NASSAQ Platform</div>
+</body></html>"""
+
+    html_bytes = html.encode("utf-8")
+    return StreamingResponse(
+        iter([html_bytes]),
+        media_type="text/html; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=nassaq_report_{report_type}.html"}
+    )
+
+
 # ============== REPORTS EXPORT API (CSV) ==============
 @api_router.get("/reports/export/csv")
 async def export_report_csv(
@@ -17847,11 +17993,49 @@ async def export_report_csv(
         for a in attendance:
             writer.writerow([a.get("date"), a.get("student_id"), a.get("status"), a.get("class_id")])
     elif report_type == "grades":
-        writer.writerow(["الطالب", "المادة", "الدرجة", "الدرجة القصوى", "التقييم"])
+        writer.writerow(["الطالب", "التقييم", "الدرجة", "الدرجة القصوى", "النسبة"])
+        assessments_csv = await db.assessments.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(500)
+        atm_csv = {a.get("id"): a.get("title") or a.get("name") or a.get("id") for a in assessments_csv}
+        students_csv = await db.students.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(500)
+        stm_csv = {s.get("id"): s.get("full_name") or s.get("name") or s.get("id") for s in students_csv}
         grades = await db.assessment_grades.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
         for g in grades:
-            writer.writerow([g.get("student_id"), g.get("subject_name", ""), g.get("score"), g.get("max_score"), g.get("assessment_id")])
-    
+            sc = g.get("score", 0)
+            mx = g.get("max_score", 100)
+            pct = round((sc / mx) * 100, 1) if mx > 0 else 0
+            writer.writerow([stm_csv.get(g.get("student_id"), g.get("student_id")), atm_csv.get(g.get("assessment_id"), g.get("assessment_id")), sc, mx, f"{pct}%"])
+    elif report_type == "schools":
+        writer.writerow(["المدرسة", "الطلاب", "المعلمين", "الفصول", "الحالة"])
+        schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+        for s in schools:
+            sid = s.get("id")
+            st_count = await db.students.count_documents({"school_id": sid})
+            te_count = await db.teachers.count_documents({"school_id": sid})
+            cl_count = await db.classes.count_documents({"school_id": sid})
+            writer.writerow([s.get("name", ""), st_count, te_count, cl_count, s.get("status", "active")])
+    elif report_type == "users":
+        writer.writerow(["الاسم", "البريد الإلكتروني", "الدور", "المدرسة", "الحالة"])
+        users = await db.users.find({}, {"_id": 0, "full_name": 1, "email": 1, "role": 1, "tenant_id": 1, "is_active": 1}).to_list(500)
+        for u in users:
+            writer.writerow([u.get("full_name", ""), u.get("email", ""), u.get("role", ""), u.get("tenant_id", ""), "نشط" if u.get("is_active") else "معطل"])
+    elif report_type == "behavior":
+        writer.writerow(["الطالب", "النوع", "الوصف", "التاريخ", "النقاط"])
+        beh = await db.behavior_records.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(1000)
+        for b in beh:
+            writer.writerow([b.get("student_id", ""), b.get("type") or b.get("behavior_type", ""), b.get("description", ""), b.get("date", ""), b.get("points", "")])
+    elif report_type == "overview":
+        writer.writerow(["المؤشر", "القيمة"])
+        total_students = await db.students.count_documents({"school_id": tenant_id} if tenant_id else {})
+        total_teachers = await db.teachers.count_documents({"school_id": tenant_id} if tenant_id else {})
+        total_classes = await db.classes.count_documents({"school_id": tenant_id} if tenant_id else {})
+        att = await db.attendance.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
+        present = len([a for a in att if a.get("status") == "present"])
+        rate = round((present / len(att)) * 100, 1) if att else 0
+        writer.writerow(["إجمالي الطلاب", total_students])
+        writer.writerow(["إجمالي المعلمين", total_teachers])
+        writer.writerow(["إجمالي الفصول", total_classes])
+        writer.writerow(["نسبة الحضور", f"{rate}%"])
+
     output.seek(0)
     bom = '\ufeff'
     csv_content = bom + output.getvalue()

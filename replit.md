@@ -76,7 +76,9 @@ Smart Multi-Tenant School Management System
 - Driver: `/api/driver/dashboard`, `/api/driver/routes`, `/api/driver/routes/{id}`, `POST /api/driver/bus-attendance`, `POST /api/driver/bus-attendance/bulk`
 - Gatekeeper: `/api/gatekeeper/dashboard`, `/api/gatekeeper/logs`, `POST /api/gatekeeper/entry-exit`, `POST /api/gatekeeper/search`
 - Ministry: `/api/ministry/dashboard`, `/api/ministry/schools-comparison`, `/api/ministry/compliance-report`
-- Reports: `/api/reports/export/csv?report_type=students|teachers|attendance|grades`
+- Reports: `/api/reports/export/csv?report_type=students|teachers|attendance|grades|schools|users|behavior|overview`
+- Reports PDF: `/api/reports/export/pdf?report_type=overview|attendance|grades|behavior|schools|users` (styled HTML for print-to-PDF)
+- Reports School: `/api/reports/school/overview|attendance|grades|behavior` (dashboard data)
 
 ## Important Notes
 - `emergentintegrations` package is not publicly available; it is used lazily (inside a function) for LLM features only
