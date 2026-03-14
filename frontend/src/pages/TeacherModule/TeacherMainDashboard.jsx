@@ -9,9 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { toast } from 'sonner';
 import {
   BookOpen, Users, Calendar, ClipboardCheck, Bell,
-  GraduationCap, Clock, AlertCircle,
+  GraduationCap, Clock, AlertCircle, ChevronLeft, CheckCircle2,
   BarChart3, FileText, Star, CalendarDays, RefreshCw,
-  MessageSquare, FolderOpen, Play
+  MessageSquare, FolderOpen, Play, Settings
 } from 'lucide-react';
 import { HakimAssistant } from '../../components/hakim/HakimAssistant';
 
@@ -55,6 +55,7 @@ export default function TeacherMainDashboard() {
   const [schoolStage, setSchoolStage] = useState('');
   const [currentSession, setCurrentSession] = useState(null);
   const [nextSession, setNextSession] = useState(null);
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
   const [countdown, setCountdown] = useState('');
   const countdownRef = useRef(null);
 
@@ -97,6 +98,7 @@ export default function TeacherMainDashboard() {
         setSchoolStage(data.stage || '');
         setCurrentSession(data.current_session || null);
         setNextSession(data.next_session || null);
+        setTeacherSubjects((data.subjects || []).map(s => s.name).filter(Boolean));
         setClasses(data.classes || []);
         
         setRecentActivities(data.recent_activities?.map(a => ({
@@ -153,6 +155,20 @@ export default function TeacherMainDashboard() {
 
   const quickActions = [
     { 
+      icon: Calendar, 
+      label: isRTL ? 'جدولي' : 'My Schedule', 
+      path: '/teacher/schedule', 
+      color: 'bg-brand-turquoise hover:bg-brand-turquoise/90',
+      description: isRTL ? 'عرض جدول الحصص' : 'View class schedule'
+    },
+    { 
+      icon: GraduationCap, 
+      label: isRTL ? 'فصولي' : 'My Classes', 
+      path: '/teacher/classes', 
+      color: 'bg-brand-navy hover:bg-brand-navy/90',
+      description: isRTL ? 'إدارة الفصول الدراسية' : 'Manage your classes'
+    },
+    { 
       icon: ClipboardCheck, 
       label: isRTL ? 'تسجيل الحضور' : 'Attendance', 
       path: '/teacher/attendance', 
@@ -160,25 +176,11 @@ export default function TeacherMainDashboard() {
       description: isRTL ? 'تسجيل حضور وغياب الطلاب' : 'Record student attendance'
     },
     { 
-      icon: FileText, 
-      label: isRTL ? 'التقييمات' : 'Assessments', 
-      path: '/teacher/assessments', 
-      color: 'bg-blue-500 hover:bg-blue-600',
-      description: isRTL ? 'إضافة وإدارة التقييمات' : 'Add and manage assessments'
-    },
-    { 
       icon: Star, 
-      label: isRTL ? 'السلوك' : 'Behavior', 
-      path: '/teacher/behavior', 
+      label: isRTL ? 'الإنجازات' : 'Achievements', 
+      path: '/teacher/reports', 
       color: 'bg-purple-500 hover:bg-purple-600',
-      description: isRTL ? 'تسجيل الملاحظات السلوكية' : 'Record behavior notes'
-    },
-    { 
-      icon: MessageSquare, 
-      label: isRTL ? 'التواصل' : 'Communication', 
-      path: '/teacher/communication', 
-      color: 'bg-amber-500 hover:bg-amber-600',
-      description: isRTL ? 'التواصل مع أولياء الأمور' : 'Communicate with parents'
+      description: isRTL ? 'عرض الإنجازات والتقارير' : 'View achievements and reports'
     },
   ];
 
@@ -258,6 +260,12 @@ export default function TeacherMainDashboard() {
                       {schoolName || (isRTL ? 'المدرسة' : 'School')}
                       {schoolStage ? ` · ${schoolStage}` : ''}
                     </p>
+                    {teacherSubjects.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {teacherSubjects.slice(0, 3).join(' · ')}
+                        {teacherSubjects.length > 3 ? ` +${teacherSubjects.length - 3}` : ''}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -408,35 +416,49 @@ export default function TeacherMainDashboard() {
                     <p>{isRTL ? 'لا توجد حصص اليوم' : 'No lessons today'}</p>
                   </div>
                 ) : (
-                  stats.upcomingLessons.map((lesson, index) => (
-                    <div 
-                      key={index} 
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
-                        index === 0 ? 'bg-brand-turquoise/10 border-brand-turquoise' : 'bg-gray-50 hover:bg-gray-100'
-                      } cursor-pointer transition-all`}
-                      onClick={() => lesson.class_id && navigate(`/teacher/class/${lesson.class_id}`)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          index === 0 ? 'bg-brand-turquoise text-white' : 'bg-gray-200'
-                        }`}>
-                          <span className="font-bold text-sm">{lesson.time}</span>
+                  stats.upcomingLessons.map((lesson, index) => {
+                    const now = new Date();
+                    const nowTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                    const isCurrent = lesson.time && lesson.end_time && lesson.time <= nowTime && nowTime <= lesson.end_time;
+                    const isCompleted = lesson.end_time && nowTime > lesson.end_time;
+                    const isUpcoming = !isCurrent && !isCompleted;
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                          isCurrent ? 'bg-green-50 border-green-400' :
+                          isCompleted ? 'bg-gray-50 border-gray-200 opacity-60' :
+                          'bg-brand-turquoise/5 border-brand-turquoise/30 hover:bg-brand-turquoise/10'
+                        }`}
+                        onClick={() => lesson.class_id && navigate(`/teacher/class/${lesson.class_id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            isCurrent ? 'bg-green-500 text-white' :
+                            isCompleted ? 'bg-gray-300' : 'bg-brand-turquoise text-white'
+                          }`}>
+                            <span className="font-bold text-sm">{lesson.time}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{lesson.subject}</p>
+                            <p className="text-sm text-muted-foreground">{lesson.class}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{lesson.subject}</p>
-                          <p className="text-sm text-muted-foreground">{lesson.class}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {index === 0 && (
-                          <Badge className="bg-brand-turquoise">
-                            {isRTL ? 'الحصة القادمة' : 'Next'}
+                        <div className="flex items-center gap-2">
+                          <Badge className={
+                            isCurrent ? 'bg-green-500' :
+                            isCompleted ? 'bg-gray-400' : 'bg-brand-turquoise'
+                          }>
+                            {isCurrent ? (isRTL ? 'الآن' : 'Now') :
+                             isCompleted ? (isRTL ? 'انتهت' : 'Done') :
+                             (isRTL ? 'قادمة' : 'Upcoming')}
                           </Badge>
-                        )}
-                        <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                          <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
                 <Button variant="outline" className="w-full mt-2" onClick={() => navigate('/teacher/schedule')}>
                   {isRTL ? 'عرض الجدول الكامل' : 'View Full Schedule'}
@@ -538,7 +560,14 @@ export default function TeacherMainDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                {sidebarLinks.map((link, index) => (
+                {[
+                  { icon: Calendar, label: isRTL ? 'جدولي' : 'My Schedule', path: '/teacher/schedule' },
+                  { icon: GraduationCap, label: isRTL ? 'فصولي' : 'My Classes', path: '/teacher/classes' },
+                  { icon: Users, label: isRTL ? 'طلابي' : 'My Students', path: '/teacher/students' },
+                  { icon: BarChart3, label: isRTL ? 'التقارير' : 'Reports', path: '/teacher/reports' },
+                  { icon: FolderOpen, label: isRTL ? 'المصادر' : 'Resources', path: '/teacher/resources' },
+                  { icon: Settings, label: isRTL ? 'الإعدادات' : 'Settings', path: '/teacher/settings' },
+                ].map((link, index) => (
                   <Button
                     key={index}
                     variant="outline"
