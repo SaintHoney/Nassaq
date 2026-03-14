@@ -161,6 +161,18 @@ export default function TeacherClassesPage() {
                       </Badge>
                     </div>
 
+                    {cls.next_session && (
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-brand-turquoise/5 border border-brand-turquoise/20">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-brand-turquoise" />
+                          <span className="text-sm">{isRTL ? 'الحصة القادمة' : 'Next Session'}</span>
+                        </div>
+                        <span className="text-sm font-medium font-mono">
+                          {cls.next_session.day} · {cls.next_session.time}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Subjects Tags */}
                     {cls.subjects && cls.subjects.length > 0 && (
                       <div className="flex flex-wrap gap-1">

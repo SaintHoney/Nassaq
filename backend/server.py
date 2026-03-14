@@ -14176,22 +14176,19 @@ async def get_teacher_dashboard(
     caller_role = current_user.get("role", "")
     caller_id = current_user.get("id", "")
     caller_teacher_id = current_user.get("teacher_id", "")
+    caller_tenant = current_user.get("tenant_id", "")
     privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
     if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
     
-    # First try to find in teachers collection by id
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0})
     
-    # If not found, try to find by user_id
     if not teacher:
         teacher = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0})
     
-    # If still not found, try to find in users and then match to teachers
     if not teacher:
         user = await db.users.find_one({"id": teacher_id, "role": "teacher"}, {"_id": 0})
         if user:
-            # Find teacher by email or full_name
             teacher = await db.teachers.find_one({
                 "$or": [
                     {"email": user.get("email")},
@@ -14199,9 +14196,12 @@ async def get_teacher_dashboard(
                 ]
             }, {"_id": 0})
     
+    if caller_role in {"school_principal", "school_sub_admin"} and caller_tenant:
+        teacher_school = (teacher or {}).get("school_id", "")
+        if teacher_school and teacher_school != caller_tenant:
+            raise HTTPException(status_code=403, detail="لا يمكنك الوصول لبيانات معلم من مدرسة أخرى")
+    
     if not teacher:
-        # Return default data if teacher not found in teachers collection
-        # This allows the dashboard to work even if data is only in users collection
         user = await db.users.find_one({"id": teacher_id}, {"_id": 0})
         if user and user.get("role") == "teacher":
             return {
@@ -16230,17 +16230,20 @@ async def get_teacher_classes(
     caller_role = current_user.get("role", "")
     caller_id = current_user.get("id", "")
     caller_teacher_id = current_user.get("teacher_id", "")
+    caller_tenant = current_user.get("tenant_id", "")
     privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
     if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
     
-    # Resolve teacher_id: if not found directly, try user_id mapping
     actual_teacher_id = teacher_id
-    teacher_doc = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "id": 1})
+    teacher_doc = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "id": 1, "school_id": 1})
     if not teacher_doc:
-        teacher_doc = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0, "id": 1})
+        teacher_doc = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0, "id": 1, "school_id": 1})
         if teacher_doc:
             actual_teacher_id = teacher_doc.get("id", teacher_id)
+    if caller_role in {"school_principal", "school_sub_admin"} and caller_tenant and teacher_doc:
+        if teacher_doc.get("school_id") and teacher_doc["school_id"] != caller_tenant:
+            raise HTTPException(status_code=403, detail="لا يمكنك الوصول لبيانات معلم من مدرسة أخرى")
     
     # Get teacher assignments
     assignments = await db.teacher_assignments.find({
@@ -16274,13 +16277,31 @@ async def get_teacher_classes(
         present_att = await db.attendance.count_documents({"class_id": cls.get("id"), "status": "present"})
         att_rate = round(present_att / total_att * 100) if total_att > 0 else 0
         
+        total_sessions = await db.schedule_sessions.count_documents({"class_id": cls.get("id"), "status": "scheduled"})
+        completed_sessions = await db.schedule_sessions.count_documents({"class_id": cls.get("id"), "status": "completed"})
+        progress = round(completed_sessions / (total_sessions + completed_sessions) * 100) if (total_sessions + completed_sessions) > 0 else 0
+        
+        next_session_info = None
+        if teacher_doc:
+            ns = await db.schedule_sessions.find_one(
+                {"class_id": cls.get("id"), "teacher_id": actual_teacher_id, "status": "scheduled"},
+                {"_id": 0, "day_of_week": 1, "time_slot_id": 1}
+            )
+            if ns:
+                ts = await db.time_slots.find_one({"id": ns.get("time_slot_id")}, {"_id": 0, "start_time": 1})
+                next_session_info = {
+                    "day": ns.get("day_of_week", ""),
+                    "time": ts.get("start_time", "")[:5] if ts else ""
+                }
+        
         enriched_classes.append({
             **cls,
             "student_count": student_count,
             "subjects": subject_names,
             "weekly_periods": sum(a.get("weekly_sessions", 0) for a in class_assignments),
             "attendance_rate": att_rate,
-            "progress": 0
+            "progress": progress,
+            "next_session": next_session_info
         })
     
     return enriched_classes
@@ -16298,16 +16319,19 @@ async def get_teacher_schedule(
     caller_role = current_user.get("role", "")
     caller_id = current_user.get("id", "")
     caller_teacher_id = current_user.get("teacher_id", "")
+    caller_tenant = current_user.get("tenant_id", "")
     privileged_roles = {"platform_admin", "school_principal", "school_sub_admin", "ministry_rep"}
     if caller_role not in privileged_roles and caller_id != teacher_id and caller_teacher_id != teacher_id:
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية الوصول لهذه البيانات")
     
-    # Resolve teacher_id: try direct, then user_id mapping
     teacher = await db.teachers.find_one({"id": teacher_id}, {"_id": 0, "school_id": 1, "id": 1})
     if not teacher:
         teacher = await db.teachers.find_one({"user_id": teacher_id}, {"_id": 0, "school_id": 1, "id": 1})
     if not teacher:
         return []
+    if caller_role in {"school_principal", "school_sub_admin"} and caller_tenant:
+        if teacher.get("school_id") and teacher["school_id"] != caller_tenant:
+            raise HTTPException(status_code=403, detail="لا يمكنك الوصول لبيانات معلم من مدرسة أخرى")
     actual_schedule_teacher_id = teacher.get("id", teacher_id)
     
     school_id = teacher.get("school_id")

@@ -54,6 +54,16 @@ export default function TeacherClassDetailPage() {
         ? (presentCount / attendanceRecords.length * 100) 
         : 0;
 
+      const gradesRes = await api.get(`/grades?class_id=${classId}`).catch(() => ({ data: [] }));
+      const gradesList = gradesRes.data || [];
+      const classAvg = gradesList.length > 0
+        ? Math.round(gradesList.reduce((sum, g) => sum + (g.score || 0), 0) / gradesList.length)
+        : 0;
+
+      const totalScheduled = classSchedule.length;
+      const completedCount = classSchedule.filter(s => s.status === 'completed').length;
+      const currProgress = totalScheduled > 0 ? Math.round(completedCount / totalScheduled * 100) : 0;
+
       const enrichedStudents = studentsList.map(student => ({
         ...student,
         attendance_rate: student.attendance_rate || 0,
@@ -64,11 +74,11 @@ export default function TeacherClassDetailPage() {
       setClassData({
         ...(classRes?.data || {}),
         id: classId,
-        name: classRes?.data?.name || `الفصل`,
+        name: classRes?.data?.name || (isRTL ? 'الفصل' : 'Class'),
         student_count: studentsList.length,
         attendance_rate: Math.round(attendanceRate),
-        average_grade: 0,
-        curriculum_progress: 0
+        average_grade: classAvg,
+        curriculum_progress: currProgress
       });
       
       setStudents(enrichedStudents);

@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { TeacherLayout } from '../../components/layout/TeacherLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import {
   Calendar, Clock, ChevronRight, ChevronLeft, BookOpen,
-  Users, Loader2, RefreshCw, Printer, Download, Play
+  Users, Loader2, RefreshCw, Play, X
 } from 'lucide-react';
 import { HakimAssistant } from '../../components/hakim/HakimAssistant';
 
@@ -33,11 +34,13 @@ const SUBJECT_COLORS = {
 
 export default function TeacherSchedulePage() {
   const { user, api, isRTL } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [schedule, setSchedule] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [view, setView] = useState('weekly');
   const [selectedDay, setSelectedDay] = useState(DAYS[new Date().getDay() === 0 ? 0 : new Date().getDay() - 1]?.key || 'sunday');
+  const [selectedSession, setSelectedSession] = useState(null);
 
   const teacherId = user?.teacher_id || user?.id;
 
@@ -47,12 +50,12 @@ export default function TeacherSchedulePage() {
     setLoading(true);
     try {
       const [scheduleRes, slotsRes] = await Promise.all([
-        api.get(`/teacher/schedule/${teacherId}`).catch(() => ({ data: [] })),
-        api.get('/time-slots').catch(() => ({ data: [] }))
+        api.get(`/teacher/schedule/${teacherId}`),
+        api.get('/time-slots')
       ]);
       
       setSchedule(scheduleRes.data || []);
-      setTimeSlots(slotsRes.data?.filter(s => !s.is_break) || []);
+      setTimeSlots((slotsRes.data || []).filter(s => !s.is_break));
     } catch (error) {
       console.error('Error fetching schedule:', error);
       toast.error(isRTL ? 'خطأ في تحميل الجدول' : 'Error loading schedule');
@@ -75,10 +78,125 @@ export default function TeacherSchedulePage() {
 
   const todayKey = DAYS[new Date().getDay() === 0 ? 0 : new Date().getDay() - 1]?.key;
 
+  const handleStartClass = (session, slot) => {
+    const lessonData = {
+      lesson: { ...session, time: slot?.start_time?.slice(0, 5), end_time: slot?.end_time?.slice(0, 5) },
+      schedule_session_id: session.id,
+      class_id: session.class_id,
+      subject_id: session.subject_id
+    };
+    sessionStorage.setItem('current_lesson', JSON.stringify(lessonData));
+    navigate('/teacher/session/start', { state: lessonData });
+  };
+
+  const getMonthWeeks = () => {
+    const weeks = [];
+    for (let w = 0; w < 4; w++) {
+      weeks.push({ week: w + 1, label: isRTL ? `الأسبوع ${w + 1}` : `Week ${w + 1}` });
+    }
+    return weeks;
+  };
+
+  const renderScheduleGrid = (daysToShow) => (
+    <Card className="overflow-hidden" data-testid="schedule-grid">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="p-3 text-start border-b min-w-[80px]">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  {isRTL ? 'الحصة' : 'Period'}
+                </div>
+              </th>
+              {daysToShow.map(day => (
+                <th 
+                  key={day.key} 
+                  className={`p-3 text-center border-b border-s min-w-[150px] ${
+                    day.key === todayKey ? 'bg-brand-turquoise/10' : ''
+                  }`}
+                >
+                  <span className={day.key === todayKey ? 'font-bold text-brand-turquoise' : ''}>
+                    {isRTL ? day.ar : day.en}
+                  </span>
+                  {day.key === todayKey && (
+                    <Badge variant="outline" className="ms-2 text-xs bg-brand-turquoise text-white">
+                      {isRTL ? 'اليوم' : 'Today'}
+                    </Badge>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {timeSlots.map((slot, idx) => (
+              <tr key={slot.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
+                <td className="p-3 border-b">
+                  <div className="text-sm font-medium">{isRTL ? `الحصة ${slot.slot_number}` : `Period ${slot.slot_number}`}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {slot.start_time?.slice(0, 5)} - {slot.end_time?.slice(0, 5)}
+                  </div>
+                </td>
+                {daysToShow.map(day => {
+                  const sessions = getSessionsForCell(day.key, slot.id);
+                  return (
+                    <td 
+                      key={`${day.key}-${slot.id}`} 
+                      className={`p-2 border-b border-s min-h-[80px] ${
+                        day.key === todayKey ? 'bg-brand-turquoise/5' : ''
+                      }`}
+                    >
+                      {sessions.length > 0 ? (
+                        <div className="space-y-1">
+                          {sessions.map(session => (
+                            <div
+                              key={session.id}
+                              className={`p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getSubjectColor(session.subject_name)}`}
+                              onClick={() => setSelectedSession({ ...session, slot })}
+                              data-testid={`session-${session.id}`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm truncate">{session.subject_name}</p>
+                                  <div className="flex items-center gap-1 text-xs opacity-70">
+                                    <Users className="h-3 w-3" />
+                                    <span className="truncate">{session.class_name}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              {day.key === todayKey && (
+                                <Button 
+                                  size="sm" 
+                                  className="w-full mt-2 h-7 text-xs bg-brand-navy hover:bg-brand-navy/90"
+                                  onClick={(e) => { e.stopPropagation(); handleStartClass(session, slot); }}
+                                >
+                                  <Play className="h-3 w-3 me-1" />
+                                  {isRTL ? 'ابدأ الحصة' : 'Start Class'}
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-16 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center text-muted-foreground/50 text-xs">
+                          {isRTL ? 'فارغ' : 'Empty'}
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+
   return (
     <TeacherLayout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
-        {/* Header */}
         <div className="sticky top-0 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b p-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -94,21 +212,15 @@ export default function TeacherSchedulePage() {
                 <RefreshCw className={`h-4 w-4 me-1 ${loading ? 'animate-spin' : ''}`} />
                 {isRTL ? 'تحديث' : 'Refresh'}
               </Button>
-              <Button variant="outline" size="sm">
-                <Printer className="h-4 w-4 me-1" />
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Calendar className="h-4 w-4 me-1" />
                 {isRTL ? 'طباعة' : 'Print'}
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 me-1" />
-                {isRTL ? 'تصدير' : 'Export'}
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-4 space-y-4">
-          {/* View Toggle */}
           <div className="flex items-center justify-between">
             <Tabs value={view} onValueChange={setView}>
               <TabsList>
@@ -117,6 +229,9 @@ export default function TeacherSchedulePage() {
                 </TabsTrigger>
                 <TabsTrigger value="daily" data-testid="daily-view-btn">
                   {isRTL ? 'يومي' : 'Daily'}
+                </TabsTrigger>
+                <TabsTrigger value="monthly" data-testid="monthly-view-btn">
+                  {isRTL ? 'شهري' : 'Monthly'}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -146,106 +261,27 @@ export default function TeacherSchedulePage() {
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-brand-turquoise" />
             </div>
-          ) : timeSlots.length === 0 ? (
+          ) : timeSlots.length === 0 && schedule.length === 0 ? (
             <Card>
               <CardContent className="text-center py-16">
                 <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-                <p className="text-muted-foreground">{isRTL ? 'لا يوجد جدول حالياً' : 'No schedule available'}</p>
+                <p className="text-lg font-medium text-muted-foreground">{isRTL ? 'لا يوجد جدول حالياً' : 'No schedule available'}</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">{isRTL ? 'لم يتم تعيين حصص بعد' : 'No sessions have been assigned yet'}</p>
               </CardContent>
             </Card>
+          ) : view === 'monthly' ? (
+            <div className="space-y-6">
+              {getMonthWeeks().map((week) => (
+                <div key={week.week}>
+                  <h3 className="font-cairo font-bold text-lg text-brand-navy mb-3">{week.label}</h3>
+                  {renderScheduleGrid(DAYS)}
+                </div>
+              ))}
+            </div>
           ) : (
-            <Card className="overflow-hidden" data-testid="schedule-grid">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="p-3 text-start border-b min-w-[80px]">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          {isRTL ? 'الحصة' : 'Period'}
-                        </div>
-                      </th>
-                      {(view === 'weekly' ? DAYS : [DAYS.find(d => d.key === selectedDay)]).map(day => (
-                        <th 
-                          key={day.key} 
-                          className={`p-3 text-center border-b border-s min-w-[150px] ${
-                            day.key === todayKey ? 'bg-brand-turquoise/10' : ''
-                          }`}
-                        >
-                          <span className={day.key === todayKey ? 'font-bold text-brand-turquoise' : ''}>
-                            {isRTL ? day.ar : day.en}
-                          </span>
-                          {day.key === todayKey && (
-                            <Badge variant="outline" className="ms-2 text-xs bg-brand-turquoise text-white">
-                              {isRTL ? 'اليوم' : 'Today'}
-                            </Badge>
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {timeSlots.map((slot, idx) => (
-                      <tr key={slot.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
-                        <td className="p-3 border-b">
-                          <div className="text-sm font-medium">{isRTL ? `الحصة ${slot.slot_number}` : `Period ${slot.slot_number}`}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {slot.start_time?.slice(0, 5)} - {slot.end_time?.slice(0, 5)}
-                          </div>
-                        </td>
-                        {(view === 'weekly' ? DAYS : [DAYS.find(d => d.key === selectedDay)]).map(day => {
-                          const sessions = getSessionsForCell(day.key, slot.id);
-                          return (
-                            <td 
-                              key={`${day.key}-${slot.id}`} 
-                              className={`p-2 border-b border-s min-h-[80px] ${
-                                day.key === todayKey ? 'bg-brand-turquoise/5' : ''
-                              }`}
-                            >
-                              {sessions.length > 0 ? (
-                                <div className="space-y-1">
-                                  {sessions.map(session => (
-                                    <div
-                                      key={session.id}
-                                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getSubjectColor(session.subject_name)}`}
-                                      data-testid={`session-${session.id}`}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <BookOpen className="h-4 w-4 flex-shrink-0" />
-                                        <div className="min-w-0 flex-1">
-                                          <p className="font-medium text-sm truncate">{session.subject_name}</p>
-                                          <div className="flex items-center gap-1 text-xs opacity-70">
-                                            <Users className="h-3 w-3" />
-                                            <span className="truncate">{session.class_name}</span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      {day.key === todayKey && new Date().getHours() >= parseInt(slot.start_time?.split(':')[0]) && (
-                                        <Button size="sm" className="w-full mt-2 h-7 text-xs bg-brand-navy hover:bg-brand-navy/90">
-                                          <Play className="h-3 w-3 me-1" />
-                                          {isRTL ? 'ابدأ الحصة' : 'Start Class'}
-                                        </Button>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="h-16 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center text-muted-foreground/50 text-xs">
-                                  {isRTL ? 'فارغ' : 'Empty'}
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+            renderScheduleGrid(view === 'weekly' ? DAYS : [DAYS.find(d => d.key === selectedDay)])
           )}
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
@@ -280,6 +316,82 @@ export default function TeacherSchedulePage() {
           </div>
         </div>
       </div>
+
+      {selectedSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedSession(null)}>
+          <Card className="w-full max-w-md mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-cairo text-lg">{isRTL ? 'تفاصيل الحصة' : 'Session Details'}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedSession(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className={`p-4 rounded-xl border-2 ${getSubjectColor(selectedSession.subject_name)}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <BookOpen className="h-6 w-6" />
+                  <div>
+                    <h3 className="font-bold text-lg">{selectedSession.subject_name}</h3>
+                    <p className="text-sm opacity-70">{selectedSession.class_name}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'اليوم' : 'Day'}</p>
+                  <p className="font-medium">
+                    {DAYS.find(d => d.key === selectedSession.day_of_week)?.[isRTL ? 'ar' : 'en']}
+                  </p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'الحصة' : 'Period'}</p>
+                  <p className="font-medium">
+                    {selectedSession.slot?.slot_number ? (isRTL ? `الحصة ${selectedSession.slot.slot_number}` : `Period ${selectedSession.slot.slot_number}`) : '-'}
+                  </p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</p>
+                  <p className="font-mono font-medium">{selectedSession.slot?.start_time?.slice(0, 5) || '-'}</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</p>
+                  <p className="font-mono font-medium">{selectedSession.slot?.end_time?.slice(0, 5) || '-'}</p>
+                </div>
+              </div>
+
+              {selectedSession.room && (
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'الفصل' : 'Room'}</p>
+                  <p className="font-medium">{selectedSession.room}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  className="flex-1 bg-brand-navy hover:bg-brand-navy/90"
+                  onClick={() => handleStartClass(selectedSession, selectedSession.slot)}
+                >
+                  <Play className="h-4 w-4 me-2" />
+                  {isRTL ? 'ابدأ الحصة' : 'Start Class'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    if (selectedSession.class_id) navigate(`/teacher/class/${selectedSession.class_id}`);
+                  }}
+                >
+                  {isRTL ? 'عرض الفصل' : 'View Class'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <HakimAssistant />
     </TeacherLayout>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { TeacherLayout } from '../../components/layout/TeacherLayout';
@@ -6,12 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { Progress } from '../../components/ui/progress';
 import { toast } from 'sonner';
 import {
-  BookOpen, Users, Calendar, ClipboardCheck, Bell, Settings,
-  GraduationCap, Clock, CheckCircle2, AlertCircle, ChevronLeft,
-  BarChart3, FileText, Star, TrendingUp, CalendarDays, RefreshCw,
+  BookOpen, Users, Calendar, ClipboardCheck, Bell,
+  GraduationCap, Clock, AlertCircle,
+  BarChart3, FileText, Star, CalendarDays, RefreshCw,
   MessageSquare, FolderOpen, Play
 } from 'lucide-react';
 import { HakimAssistant } from '../../components/hakim/HakimAssistant';
@@ -56,6 +55,8 @@ export default function TeacherMainDashboard() {
   const [schoolStage, setSchoolStage] = useState('');
   const [currentSession, setCurrentSession] = useState(null);
   const [nextSession, setNextSession] = useState(null);
+  const [countdown, setCountdown] = useState('');
+  const countdownRef = useRef(null);
 
   const teacherId = user?.teacher_id || user?.id;
 
@@ -116,6 +117,32 @@ export default function TeacherMainDashboard() {
   useEffect(() => {
     fetchTeacherData();
   }, [fetchTeacherData]);
+
+  useEffect(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    const activeSession = currentSession || nextSession;
+    if (!activeSession?.time) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const [h, m] = (currentSession ? activeSession.end_time : activeSession.time)?.split(':').map(Number) || [];
+      if (h === undefined) return;
+      const target = new Date(now);
+      target.setHours(h, m, 0, 0);
+      const diff = target - now;
+      if (diff <= 0) {
+        setCountdown(currentSession ? (isRTL ? 'انتهت' : 'Ended') : (isRTL ? 'الآن' : 'Now'));
+        return;
+      }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${mins}:${secs.toString().padStart(2, '0')}`);
+    };
+
+    updateCountdown();
+    countdownRef.current = setInterval(updateCountdown, 1000);
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, [currentSession, nextSession, isRTL]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -206,15 +233,6 @@ export default function TeacherMainDashboard() {
     },
   ];
 
-  const sidebarLinks = [
-    { icon: Calendar, label: isRTL ? 'جدولي' : 'My Schedule', path: '/teacher/schedule' },
-    { icon: GraduationCap, label: isRTL ? 'فصولي' : 'My Classes', path: '/teacher/classes' },
-    { icon: Users, label: isRTL ? 'طلابي' : 'My Students', path: '/teacher/students' },
-    { icon: BarChart3, label: isRTL ? 'التقارير' : 'Reports', path: '/teacher/reports' },
-    { icon: FolderOpen, label: isRTL ? 'المصادر' : 'Resources', path: '/teacher/resources' },
-    { icon: Settings, label: isRTL ? 'الإعدادات' : 'Settings', path: '/teacher/settings' },
-  ];
-
   return (
     <TeacherLayout>
         <div className="p-4 md:p-6 space-y-6">
@@ -241,12 +259,6 @@ export default function TeacherMainDashboard() {
                       {schoolStage ? ` · ${schoolStage}` : ''}
                     </p>
                   </div>
-                </div>
-
-                {/* Semester Info */}
-                <div className="text-center px-6 py-2 bg-brand-turquoise/10 rounded-xl border border-brand-turquoise/20">
-                  <p className="text-xs text-muted-foreground font-medium">{isRTL ? 'الفصل الدراسي' : 'Semester'}</p>
-                  <p className="font-cairo font-bold text-brand-turquoise text-lg">{isRTL ? 'الثاني 1446-1447' : '2nd 1446-1447'}</p>
                 </div>
 
                 {/* Date & Refresh */}
@@ -344,6 +356,14 @@ export default function TeacherMainDashboard() {
                       <p className="font-mono font-bold text-lg text-brand-navy">{(currentSession || nextSession)?.time}</p>
                       <p className="text-xs text-muted-foreground">{(currentSession || nextSession)?.end_time}</p>
                     </div>
+                    {countdown && (
+                      <div className={`px-4 py-2 rounded-xl font-mono font-bold text-lg ${currentSession ? 'bg-green-100 text-green-700' : 'bg-brand-turquoise/10 text-brand-turquoise'}`}>
+                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
+                          {currentSession ? (isRTL ? 'متبقي' : 'Remaining') : (isRTL ? 'تبدأ بعد' : 'Starts in')}
+                        </p>
+                        {countdown}
+                      </div>
+                    )}
                     <Button
                       className={`h-12 px-6 ${currentSession ? 'bg-green-500 hover:bg-green-600' : 'bg-brand-turquoise hover:bg-brand-turquoise/90'}`}
                       onClick={() => {
