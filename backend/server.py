@@ -17856,6 +17856,8 @@ async def export_report_pdf(
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية لتصدير هذا التقرير")
 
     tenant_id = current_user.get("tenant_id")
+    if user_role in ("school_principal", "school_sub_admin") and not tenant_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
 
     await db.audit_logs.insert_one({
         "id": str(uuid.uuid4()),
@@ -18029,6 +18031,8 @@ async def export_report_csv(
         raise HTTPException(status_code=403, detail="ليس لديك صلاحية لتصدير هذا التقرير")
 
     tenant_id = current_user.get("tenant_id")
+    if user_role in ("school_principal", "school_sub_admin") and not tenant_id:
+        raise HTTPException(status_code=400, detail="المستخدم غير مرتبط بمدرسة")
 
     await db.audit_logs.insert_one({
         "id": str(uuid.uuid4()),
