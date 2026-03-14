@@ -43,6 +43,9 @@ Smart Multi-Tenant School Management System
 - Teachers: `teacher1@nassaq.com` through `teacher10@nassaq.com` / `Teacher@123`
 - Students: `student1@nassaq.com` through `student30@nassaq.com` / `Student@123`
 - Parents: `parent1@nassaq.com` through `parent30@nassaq.com` / `Parent@123`
+- Driver: `driver1@nassaq.com`, `driver2@nassaq.com` / `Driver@123`
+- Gatekeeper: `gatekeeper1@nassaq.com` / `Gate@123`
+- Ministry Rep: `ministry1@nassaq.com` / `Ministry@123`
 
 ## Test Data
 - 2 schools: مدرسة النور (SCH-001), مدرسة الأحساء (SCH-002)
@@ -52,7 +55,8 @@ Smart Multi-Tenant School Management System
 - Academic year: 1446-1447H with 3 terms
 - Demo school data for SCH-001: 10 teachers, 30 students, 6 classes, 30 parent accounts
 - Operational demo data: 10+ days of attendance, 6+ assessments with grades, 20+ behavior incidents, teacher assignments
-- All curriculum data auto-seeded on startup via `backend/seed_curriculum.py`
+- Driver/Gatekeeper data: 2 bus routes with stops, 5 days of gate logs (100 entries), driver/gatekeeper/ministry accounts
+- All curriculum data auto-seeded on startup via `backend/seed_curriculum.py` (including `seed_driver_gatekeeper_data`)
 
 ## Data Architecture Notes
 - `pg_dal.py` `aggregate()` is `async def` returning a list directly — do NOT chain `.to_list()` on it
@@ -69,6 +73,10 @@ Smart Multi-Tenant School Management System
 - Attendance: `GET /api/attendance?class_id=&date=`, `POST /api/attendance/batch`, `POST /api/attendance/bulk`
 - Behavior: `GET /api/behavior?class_id=`, `POST /api/behavior`
 - Admin: `/api/dashboard/stats`, `/api/school/dashboard`
+- Driver: `/api/driver/dashboard`, `/api/driver/routes`, `/api/driver/routes/{id}`, `POST /api/driver/bus-attendance`, `POST /api/driver/bus-attendance/bulk`
+- Gatekeeper: `/api/gatekeeper/dashboard`, `/api/gatekeeper/logs`, `POST /api/gatekeeper/entry-exit`, `POST /api/gatekeeper/search`
+- Ministry: `/api/ministry/dashboard`, `/api/ministry/schools-comparison`, `/api/ministry/compliance-report`
+- Reports: `/api/reports/export/csv?report_type=students|teachers|attendance|grades`
 
 ## Important Notes
 - `emergentintegrations` package is not publicly available; it is used lazily (inside a function) for LLM features only

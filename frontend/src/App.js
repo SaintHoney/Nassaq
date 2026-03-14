@@ -67,6 +67,11 @@ import { CommunicationCenterPage } from "./pages/CommunicationCenterPage";
 import TenantsManagement from "./pages/TenantsManagement";
 import TeacherClassAssignmentPage from "./pages/TeacherClassAssignmentPage";
 
+// Driver / Gatekeeper / Ministry Pages
+import DriverDashboard from "./pages/DriverPortal/DriverDashboard";
+import GatekeeperDashboard from "./pages/GatekeeperPortal/GatekeeperDashboard";
+import MinistryDashboard from "./pages/MinistryDashboard";
+
 // School Principal Pages
 import SchoolSettingsPagePro from "./pages/SchoolSettingsPagePro";
 import { SchoolReportsPage } from "./pages/SchoolReportsPage";
@@ -132,6 +137,12 @@ const ProtectedRoute = ({ children, allowedRoles, skipPasswordCheck = false }) =
         return <Navigate to="/student" replace />;
       case 'parent':
         return <Navigate to="/parent" replace />;
+      case 'driver':
+        return <Navigate to="/driver" replace />;
+      case 'gatekeeper':
+        return <Navigate to="/gatekeeper" replace />;
+      case 'ministry_rep':
+        return <Navigate to="/ministry" replace />;
       default:
         return <Navigate to="/" replace />;
     }
@@ -167,6 +178,12 @@ const PublicRoute = ({ children }) => {
         return <Navigate to="/student" replace />;
       case 'parent':
         return <Navigate to="/parent" replace />;
+      case 'driver':
+        return <Navigate to="/driver" replace />;
+      case 'gatekeeper':
+        return <Navigate to="/gatekeeper" replace />;
+      case 'ministry_rep':
+        return <Navigate to="/ministry" replace />;
       default:
         return <Navigate to="/" replace />;
     }
@@ -739,8 +756,38 @@ function AppRoutes() {
       <Route
         path="/account/settings"
         element={
-          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher', 'student', 'parent']}>
+          <ProtectedRoute allowedRoles={['platform_admin', 'school_principal', 'school_sub_admin', 'teacher', 'student', 'parent', 'driver', 'gatekeeper', 'ministry_rep']}>
             <AccountSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Driver Portal */}
+      <Route
+        path="/driver"
+        element={
+          <ProtectedRoute allowedRoles={['driver']}>
+            <DriverDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Gatekeeper Portal */}
+      <Route
+        path="/gatekeeper"
+        element={
+          <ProtectedRoute allowedRoles={['gatekeeper']}>
+            <GatekeeperDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Ministry Rep Portal */}
+      <Route
+        path="/ministry"
+        element={
+          <ProtectedRoute allowedRoles={['ministry_rep']}>
+            <MinistryDashboard />
           </ProtectedRoute>
         }
       />

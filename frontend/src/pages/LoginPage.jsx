@@ -108,6 +108,15 @@ export const LoginPage = () => {
           case 'parent':
             navigate('/parent');
             break;
+          case 'driver':
+            navigate('/driver');
+            break;
+          case 'gatekeeper':
+            navigate('/gatekeeper');
+            break;
+          case 'ministry_rep':
+            navigate('/ministry');
+            break;
           default:
             navigate('/dashboard');
         }
@@ -434,10 +443,52 @@ export const LoginPage = () => {
                     </p>
                     <p className="text-[10px] text-muted-foreground font-mono">parent1@nor.edu.sa / Parent@123</p>
                   </div>
+
+                  {/* Driver */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('driver1@nassaq.com');
+                      setPassword('Driver@123');
+                    }}
+                  >
+                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                      {isRTL ? 'سائق' : 'Driver'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">driver1@nassaq.com</p>
+                  </div>
+
+                  {/* Gatekeeper */}
+                  <div 
+                    className="p-2.5 rounded-xl bg-orange-500/5 border border-orange-500/20 cursor-pointer hover:bg-orange-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('gatekeeper1@nassaq.com');
+                      setPassword('Gate@123');
+                    }}
+                  >
+                    <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                      {isRTL ? 'حارس البوابة' : 'Gatekeeper'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">gatekeeper1@nassaq.com</p>
+                  </div>
+
+                  {/* Ministry Rep */}
+                  <div 
+                    className="col-span-2 p-2.5 rounded-xl bg-rose-500/5 border border-rose-500/20 cursor-pointer hover:bg-rose-500/10 transition-colors"
+                    onClick={() => {
+                      setEmail('ministry1@nassaq.com');
+                      setPassword('Ministry@123');
+                    }}
+                  >
+                    <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                      {isRTL ? 'ممثل الوزارة' : 'Ministry Rep'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono">ministry1@nassaq.com / Ministry@123</p>
+                  </div>
                 </div>
                 
                 <p className="text-[10px] text-muted-foreground font-tajawal text-center mt-3">
-                  {isRTL ? '💡 كلمات المرور: Principal@123 | Teacher@123 | Student@123 | Parent@123' : '💡 Passwords: Principal@123 | Teacher@123 | Student@123 | Parent@123'}
+                  {isRTL ? '💡 كلمات المرور: Principal@123 | Teacher@123 | Student@123 | Parent@123 | Driver@123 | Gate@123 | Ministry@123' : '💡 Passwords: Principal@123 | Teacher@123 | Student@123 | Parent@123 | Driver@123 | Gate@123 | Ministry@123'}
                 </p>
               </div>
             </CardContent>

@@ -1,0 +1,92 @@
+Replit Plan
+Here's the complete updated phase map with all 18 active tasks and the role interactions between them:
+
+Phase 1: FOUNDATION (No Dependencies — Start Here)
+Task	Title	What It Does
+#9	أساس المنصة: بيانات المنهج + تنظيف الباكند + بيانات تجريبية	Fixes the broken backend (dual tables, triple router, missing RBAC), seeds ALL curriculum data, seeds demo school data (10 teachers, 30 students, 6 classes, parents), creates academic year/terms
+#13	تطوير لوحة تحكم مدير المنصة بالكامل	Platform Admin: manages schools, users, system settings (T&C, security, maintenance). Independent — no curriculum dependency
+These two run in parallel. #9 unblocks everything school-related. #13 is independent.
+
+Phase 2: SCHOOL CONFIGURATION (Depends on #9)
+Task	Title	What It Does
+#21	إعدادات المدرسة — المصدر الأساسي الموحد للبيانات	School Settings: 7 sections configuring what the school uses from the national curriculum. Single Source of Truth for timetable + all operations
+#20	نظام استيراد البيانات	Data import (CSV/Excel) so schools can bulk-load teachers, students, classes instead of entering one by one
+#22	بوابة السائق وحارس البوابة	Driver + Gatekeeper portals: bus routes, gate logs, entry/exit tracking. Independent from other school modules
+#21, #20, #22 all depend only on #9 — they can run in parallel.
+
+Phase 3: TIMETABLE CHAIN (Depends on #9 + #21, Sequential)
+Order	Task	Title
+3a	#6	جداول قاعدة بيانات الجدول المدرسي
+3b	#7	محرك الذكاء الاصطناعي للجدول المدرسي
+3c	#8	صفحة الجدول المدرسي
+Sequential chain: #6 → #7 → #8. Can start as soon as #9 and #21 are done.
+
+Phase 4: CORE OPERATIONS (Depend on #9, Parallel)
+Task	Title	Who Creates Data	Who Consumes It
+#10	الحضور والغياب	Teacher records, Gatekeeper supplements	Student sees, Parent sees, Principal reviews
+#11	الدرجات والتقييم	Teacher enters grades	Student sees, Parent sees, Principal reviews, Ministry aggregates
+#12	السلوك والانضباط	Teacher/Principal records	Student sees, Parent gets notified, Ministry reviews
+#19	الاتصالات والإشعارات	Teacher/Principal sends	Parent receives, Student receives
+All 4 depend only on #9 — they run in parallel with Phase 3.
+
+Phase 5: ROLE DASHBOARDS (Depend on Core Operations)
+Task	Title	Dependencies	Role Journey
+#14	مدير المدرسة ونائبه — مركز القيادة	#9, #10, #11, #12, #21	Principal sees live KPIs from attendance + grades + behavior. Sub-Admin sees same minus settings/AI
+#15	وحدة المعلم — تجربة التدريس	#10, #11, #12	Teacher records attendance → grades → behavior. All flows to student/parent portals
+Phase 6: USER PORTALS (Depend on Core Operations)
+Task	Title	Dependencies	Data Sources
+#16	بوابة الطالب	#10, #11	Reads: schedule ← timetable, grades ← teacher, attendance ← teacher+gatekeeper
+#17	بوابة ولي الأمر	#10, #11, #12	Reads: children's grades, attendance, behavior. Writes: excuse requests, messages to teachers
+Phase 7: ANALYTICS & OVERSIGHT (Depend on Phases 4-5)
+Task	Title	Dependencies	Purpose
+#23	التقارير والتحليلات	#10, #11, #12	Report engine: PDF/Excel export for student report cards, class performance, ministry compliance
+#18	لوحة ممثل الوزارة	#10, #11, #13, #23	Ministry Rep: cross-school analytics, compliance monitoring, aggregated benchmarks
+
+Visual: Complete Dependency Flow
+PHASE 1 (parallel):
+  #9 (Foundation) ──────────────────────────┐
+  #13 (Platform Admin) [independent]        │
+                                            │
+PHASE 2 (parallel, after #9):              │
+  #21 (School Settings) ──┐                │
+  #20 (Data Import)       │                │
+  #22 (Driver+Gatekeeper) │                │
+                          │                │
+PHASE 3 (sequential, after #9+#21):       │
+  #6 → #7 → #8 (Timetable)               │
+                                           │
+PHASE 4 (parallel, after #9):             │
+  #10 (Attendance) ───┐                    │
+  #11 (Grades) ───────┤                    │
+  #12 (Behavior) ─────┤                    │
+  #19 (Notifications) ─┤                    │
+                       │                    │
+PHASE 5 (after #10+#11+#12+#21):          │
+  #14 (Principal+SubAdmin) ◄───────────────┘
+  #15 (Teacher)
+PHASE 6 (after #10+#11):
+  #16 (Student Portal)
+  #17 (Parent Portal)
+PHASE 7 (after #10+#11+#12):
+  #23 (Reports+Analytics)
+  #18 (Ministry Rep) ← depends on #23
+Data Flow Between All 9 Roles
+Platform Admin ──creates──→ Schools, Users
+         │
+Ministry Rep ◄──aggregates── All school data via Reports (#23)
+         │
+Principal ──configures──→ Settings, Timetable, Classes
+    │    ◄──receives──── Alerts from Gatekeeper, Driver, Teacher
+    │
+Sub-Admin ──operates──→ Same as Principal (minus settings/AI)
+    │
+Teacher ──records──→ Attendance, Grades, Behavior
+    │   ──sends──→ Messages to Parents
+    │
+    ├──→ Student Portal (reads teacher's data)
+    ├──→ Parent Portal (reads children's data)
+    │
+Driver ──records──→ Bus attendance → Parent notified
+Gatekeeper ──logs──→ Entry/exit → supplements attendance
+Summary: 18 tasks, 7 phases, 9 roles fully covered
+Every role has a complete journey from login to daily operations, and every piece of data flows naturally between roles — teacher enters a grade, student sees it, parent gets notified, principal reviews it in reports, ministry aggregates it across schools.

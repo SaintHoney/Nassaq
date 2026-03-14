@@ -17182,6 +17182,455 @@ async def get_student_behavior_history(
         "records": records,
     }
 
+# ============== DRIVER PORTAL APIs ==============
+@api_router.get("/driver/dashboard")
+async def get_driver_dashboard(
+    current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN]))
+):
+    driver_id = current_user.get("id")
+    tenant_id = current_user.get("tenant_id")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    routes = await db.bus_routes.find({"driver_id": driver_id}, {"_id": 0}).to_list(20)
+    if not routes:
+        routes = await db.bus_routes.find({"school_id": tenant_id}, {"_id": 0}).to_list(20)
+    
+    total_students_on_routes = 0
+    for route in routes:
+        total_students_on_routes += len(route.get("student_ids", []))
+    
+    today_logs = await db.bus_attendance.find({"driver_id": driver_id, "date": today}, {"_id": 0}).to_list(200)
+    boarded = len([l for l in today_logs if l.get("status") == "boarded"])
+    
+    return {
+        "driver_id": driver_id,
+        "total_routes": len(routes),
+        "total_students": total_students_on_routes,
+        "today_boarded": boarded,
+        "routes": routes,
+        "today_logs": today_logs,
+        "alerts": []
+    }
+
+@api_router.get("/driver/routes")
+async def get_driver_routes(
+    current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    driver_id = current_user.get("id")
+    tenant_id = current_user.get("tenant_id")
+    
+    query = {"driver_id": driver_id}
+    if current_user.get("role") in [UserRole.PLATFORM_ADMIN.value, UserRole.SCHOOL_PRINCIPAL.value]:
+        query = {"school_id": tenant_id} if tenant_id else {}
+    
+    routes = await db.bus_routes.find(query, {"_id": 0}).to_list(50)
+    
+    for route in routes:
+        student_ids = route.get("student_ids", [])
+        if student_ids:
+            students = await db.students.find({"id": {"$in": student_ids}}, {"_id": 0, "id": 1, "full_name": 1, "full_name_ar": 1, "class_id": 1}).to_list(100)
+            route["students"] = students
+        else:
+            route["students"] = []
+    
+    return routes
+
+@api_router.get("/driver/routes/{route_id}")
+async def get_driver_route_detail(
+    route_id: str,
+    current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    driver_id = current_user.get("id")
+    role = current_user.get("role")
+    query = {"id": route_id}
+    if role == "driver":
+        query["driver_id"] = driver_id
+    route = await db.bus_routes.find_one(query, {"_id": 0})
+    if not route:
+        raise HTTPException(status_code=404, detail="المسار غير موجود")
+    
+    student_ids = route.get("student_ids", [])
+    students = []
+    if student_ids:
+        students = await db.users.find({"id": {"$in": student_ids}}, {"_id": 0, "id": 1, "full_name": 1, "full_name_ar": 1}).to_list(100)
+    
+    route["students"] = students
+    return route
+
+@api_router.post("/driver/bus-attendance")
+async def record_bus_attendance(
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN]))
+):
+    driver_id = current_user.get("id")
+    role = current_user.get("role")
+    now = datetime.now(timezone.utc)
+    
+    route_id = data.get("route_id")
+    student_id = data.get("student_id")
+    if role == "driver" and route_id:
+        route = await db.bus_routes.find_one({"id": route_id, "driver_id": driver_id})
+        if not route:
+            raise HTTPException(status_code=403, detail="ليس لديك صلاحية لهذا المسار")
+        if student_id and student_id not in route.get("student_ids", []):
+            raise HTTPException(status_code=400, detail="الطالب غير مسجل في هذا المسار")
+    
+    record = {
+        "id": str(uuid.uuid4()),
+        "driver_id": driver_id,
+        "route_id": route_id,
+        "student_id": student_id,
+        "status": data.get("status", "boarded"),
+        "direction": data.get("direction", "to_school"),
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "school_id": current_user.get("tenant_id"),
+        "created_at": now.isoformat()
+    }
+    
+    await db.bus_attendance.insert_one(record)
+    record.pop("_id", None)
+    return {"message": "تم تسجيل حضور الباص بنجاح", "record": record}
+
+@api_router.post("/driver/bus-attendance/bulk")
+async def record_bus_attendance_bulk(
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.DRIVER, UserRole.PLATFORM_ADMIN]))
+):
+    driver_id = current_user.get("id")
+    now = datetime.now(timezone.utc)
+    records = data.get("records", [])
+    saved = []
+    
+    for r in records:
+        record = {
+            "id": str(uuid.uuid4()),
+            "driver_id": driver_id,
+            "route_id": r.get("route_id"),
+            "student_id": r.get("student_id"),
+            "status": r.get("status", "boarded"),
+            "direction": r.get("direction", "to_school"),
+            "date": now.strftime("%Y-%m-%d"),
+            "time": now.strftime("%H:%M:%S"),
+            "school_id": current_user.get("tenant_id"),
+            "created_at": now.isoformat()
+        }
+        await db.bus_attendance.insert_one(record)
+        record.pop("_id", None)
+        saved.append(record)
+    
+    return {"message": f"تم تسجيل {len(saved)} سجل حضور", "records": saved}
+
+
+# ============== GATEKEEPER PORTAL APIs ==============
+@api_router.get("/gatekeeper/dashboard")
+async def get_gatekeeper_dashboard(
+    current_user: dict = Depends(require_roles([UserRole.GATEKEEPER, UserRole.PLATFORM_ADMIN]))
+):
+    tenant_id = current_user.get("tenant_id")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    today_logs = await db.gate_logs.find({"school_id": tenant_id, "date": today}, {"_id": 0}).to_list(500)
+    entries = len([l for l in today_logs if l.get("type") == "entry"])
+    exits = len([l for l in today_logs if l.get("type") == "exit"])
+    
+    total_students = await db.students.count_documents({"school_id": tenant_id})
+    total_teachers = await db.teachers.count_documents({"school_id": tenant_id})
+    
+    late_entries = len([l for l in today_logs if l.get("is_late")])
+    
+    return {
+        "today": today,
+        "total_entries": entries,
+        "total_exits": exits,
+        "late_entries": late_entries,
+        "total_students": total_students,
+        "total_teachers": total_teachers,
+        "recent_logs": today_logs[-20:] if today_logs else [],
+        "alerts": []
+    }
+
+@api_router.get("/gatekeeper/logs")
+async def get_gate_logs(
+    date: Optional[str] = None,
+    type: Optional[str] = None,
+    person_type: Optional[str] = None,
+    current_user: dict = Depends(require_roles([UserRole.GATEKEEPER, UserRole.PLATFORM_ADMIN, UserRole.SCHOOL_PRINCIPAL]))
+):
+    tenant_id = current_user.get("tenant_id")
+    query = {}
+    if tenant_id:
+        query["school_id"] = tenant_id
+    if date:
+        query["date"] = date
+    if type:
+        query["type"] = type
+    if person_type:
+        query["person_type"] = person_type
+    
+    logs = await db.gate_logs.find(query, {"_id": 0}).to_list(500)
+    logs.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return logs
+
+@api_router.post("/gatekeeper/entry-exit")
+async def record_entry_exit(
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.GATEKEEPER, UserRole.PLATFORM_ADMIN]))
+):
+    now = datetime.now(timezone.utc)
+    tenant_id = current_user.get("tenant_id")
+    
+    person_id = data.get("person_id")
+    person_type = data.get("person_type", "student")
+    log_type = data.get("type", "entry")
+    
+    person_name = ""
+    if person_type == "student":
+        person = await db.students.find_one({"id": person_id}, {"_id": 0})
+        person_name = person.get("full_name", "") if person else person_id
+    elif person_type == "teacher":
+        person = await db.teachers.find_one({"id": person_id}, {"_id": 0})
+        person_name = person.get("full_name", "") if person else person_id
+    else:
+        person_name = data.get("person_name", person_id)
+    
+    is_late = False
+    if log_type == "entry" and now.hour >= 7 and now.minute > 30:
+        is_late = True
+    
+    log_record = {
+        "id": str(uuid.uuid4()),
+        "person_id": person_id,
+        "person_name": person_name,
+        "person_type": person_type,
+        "type": log_type,
+        "is_late": is_late,
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "school_id": tenant_id,
+        "recorded_by": current_user.get("id"),
+        "notes": data.get("notes", ""),
+        "created_at": now.isoformat()
+    }
+    
+    await db.gate_logs.insert_one(log_record)
+    log_record.pop("_id", None)
+    
+    if is_late and person_type == "student":
+        await db.attendance.update_one(
+            {"student_id": person_id, "date": now.strftime("%Y-%m-%d")},
+            {"$set": {"gate_entry_time": now.strftime("%H:%M:%S"), "is_late": True}},
+            upsert=False
+        )
+    
+    return {"message": "تم تسجيل الدخول/الخروج بنجاح", "log": log_record}
+
+@api_router.post("/gatekeeper/search")
+async def search_person_at_gate(
+    data: dict,
+    current_user: dict = Depends(require_roles([UserRole.GATEKEEPER, UserRole.PLATFORM_ADMIN]))
+):
+    tenant_id = current_user.get("tenant_id")
+    search_query = data.get("query", "")
+    
+    students = await db.students.find({
+        "school_id": tenant_id,
+        "$or": [
+            {"full_name": {"$regex": search_query}},
+            {"id": search_query},
+            {"national_id": search_query}
+        ]
+    }, {"_id": 0}).to_list(20)
+    
+    teachers = await db.teachers.find({
+        "school_id": tenant_id,
+        "$or": [
+            {"full_name": {"$regex": search_query}},
+            {"id": search_query}
+        ]
+    }, {"_id": 0}).to_list(20)
+    
+    results = []
+    for s in students:
+        results.append({"id": s["id"], "name": s.get("full_name", ""), "type": "student", "class_id": s.get("class_id")})
+    for t in teachers:
+        results.append({"id": t["id"], "name": t.get("full_name", ""), "type": "teacher"})
+    
+    return {"results": results}
+
+
+# ============== MINISTRY REP APIs ==============
+@api_router.get("/ministry/dashboard")
+async def get_ministry_dashboard(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+    total_schools = len(schools)
+    
+    total_students = await db.students.count_documents({})
+    total_teachers = await db.teachers.count_documents({})
+    total_classes = await db.classes.count_documents({})
+    
+    all_attendance = await db.attendance.find({}, {"_id": 0, "status": 1}).to_list(50000)
+    present_count = len([a for a in all_attendance if a.get("status") == "present"])
+    overall_attendance = round((present_count / len(all_attendance)) * 100, 1) if all_attendance else 0
+    
+    school_stats = []
+    for school in schools:
+        sid = school.get("id")
+        s_students = await db.students.count_documents({"school_id": sid})
+        s_teachers = await db.teachers.count_documents({"school_id": sid})
+        s_classes = await db.classes.count_documents({"school_id": sid})
+        s_attendance = await db.attendance.find({"school_id": sid}, {"_id": 0, "status": 1}).to_list(10000)
+        s_present = len([a for a in s_attendance if a.get("status") == "present"])
+        s_rate = round((s_present / len(s_attendance)) * 100, 1) if s_attendance else 0
+        
+        school_stats.append({
+            "school_id": sid,
+            "school_name": school.get("name", school.get("name_ar", "")),
+            "city": school.get("city", ""),
+            "students": s_students,
+            "teachers": s_teachers,
+            "classes": s_classes,
+            "attendance_rate": s_rate,
+            "status": school.get("status", "active")
+        })
+    
+    return {
+        "overview": {
+            "total_schools": total_schools,
+            "total_students": total_students,
+            "total_teachers": total_teachers,
+            "total_classes": total_classes,
+            "overall_attendance_rate": overall_attendance,
+        },
+        "schools": school_stats,
+        "compliance": {
+            "curriculum_aligned": total_schools,
+            "reporting_on_time": total_schools,
+            "data_quality_score": 94.5
+        }
+    }
+
+@api_router.get("/ministry/schools-comparison")
+async def get_schools_comparison(
+    metric: str = "attendance",
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+    comparison = []
+    
+    for school in schools:
+        sid = school.get("id")
+        entry = {
+            "school_id": sid,
+            "school_name": school.get("name", school.get("name_ar", "")),
+            "city": school.get("city", ""),
+        }
+        
+        if metric == "attendance":
+            attendance = await db.attendance.find({"school_id": sid}, {"_id": 0, "status": 1}).to_list(10000)
+            present = len([a for a in attendance if a.get("status") == "present"])
+            entry["value"] = round((present / len(attendance)) * 100, 1) if attendance else 0
+            entry["label"] = "نسبة الحضور"
+        elif metric == "grades":
+            grades = await db.assessment_grades.find({"school_id": sid}, {"_id": 0, "score": 1, "max_score": 1}).to_list(10000)
+            if grades:
+                avg = sum(g.get("score", 0) for g in grades) / len(grades)
+                max_avg = sum(g.get("max_score", 100) for g in grades) / len(grades)
+                entry["value"] = round((avg / max_avg) * 100, 1) if max_avg else 0
+            else:
+                entry["value"] = 0
+            entry["label"] = "متوسط الدرجات"
+        elif metric == "behavior":
+            positive = await db.behavior_records.count_documents({"school_id": sid, "type": "positive"})
+            negative = await db.behavior_records.count_documents({"school_id": sid, "type": "negative"})
+            total = positive + negative
+            entry["value"] = round((positive / total) * 100, 1) if total else 100
+            entry["label"] = "نسبة السلوك الإيجابي"
+        else:
+            entry["value"] = await db.students.count_documents({"school_id": sid})
+            entry["label"] = "عدد الطلاب"
+        
+        comparison.append(entry)
+    
+    comparison.sort(key=lambda x: x.get("value", 0), reverse=True)
+    return {"metric": metric, "schools": comparison}
+
+@api_router.get("/ministry/compliance-report")
+async def get_compliance_report(
+    current_user: dict = Depends(require_roles([UserRole.MINISTRY_REP, UserRole.PLATFORM_ADMIN]))
+):
+    schools = await db.schools.find({}, {"_id": 0}).to_list(100)
+    compliance = []
+    
+    for school in schools:
+        sid = school.get("id")
+        has_settings = await db.school_settings.find_one({"school_id": sid})
+        has_schedule = await db.schedules.find_one({"school_id": sid})
+        teacher_count = await db.teachers.count_documents({"school_id": sid})
+        student_count = await db.students.count_documents({"school_id": sid})
+        
+        compliance.append({
+            "school_id": sid,
+            "school_name": school.get("name", school.get("name_ar", "")),
+            "has_settings": bool(has_settings),
+            "has_schedule": bool(has_schedule),
+            "teacher_count": teacher_count,
+            "student_count": student_count,
+            "data_completeness": 90 if has_settings and teacher_count > 0 else 60,
+            "status": "مكتمل" if has_settings and has_schedule else "غير مكتمل"
+        })
+    
+    return {"schools": compliance}
+
+
+# ============== REPORTS EXPORT API (CSV) ==============
+@api_router.get("/reports/export/csv")
+async def export_report_csv(
+    report_type: str = "students",
+    current_user: dict = Depends(require_roles([UserRole.PLATFORM_ADMIN, UserRole.MINISTRY_REP, UserRole.SCHOOL_PRINCIPAL, UserRole.SCHOOL_SUB_ADMIN]))
+):
+    import io
+    import csv
+    from starlette.responses import StreamingResponse
+    
+    tenant_id = current_user.get("tenant_id")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    if report_type == "students":
+        writer.writerow(["الرقم", "الاسم", "البريد الإلكتروني", "الصف", "المدرسة"])
+        students = await db.students.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(1000)
+        for s in students:
+            writer.writerow([s.get("id"), s.get("full_name", ""), s.get("email", ""), s.get("class_id", ""), s.get("school_id", "")])
+    elif report_type == "teachers":
+        writer.writerow(["الرقم", "الاسم", "البريد الإلكتروني", "التخصص", "المدرسة"])
+        teachers = await db.teachers.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(500)
+        for t in teachers:
+            writer.writerow([t.get("id"), t.get("full_name", ""), t.get("email", ""), t.get("specialization", ""), t.get("school_id", "")])
+    elif report_type == "attendance":
+        writer.writerow(["التاريخ", "الطالب", "الحالة", "الصف"])
+        attendance = await db.attendance.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
+        for a in attendance:
+            writer.writerow([a.get("date"), a.get("student_id"), a.get("status"), a.get("class_id")])
+    elif report_type == "grades":
+        writer.writerow(["الطالب", "المادة", "الدرجة", "الدرجة القصوى", "التقييم"])
+        grades = await db.assessment_grades.find({"school_id": tenant_id} if tenant_id else {}, {"_id": 0}).to_list(10000)
+        for g in grades:
+            writer.writerow([g.get("student_id"), g.get("subject_name", ""), g.get("score"), g.get("max_score"), g.get("assessment_id")])
+    
+    output.seek(0)
+    bom = '\ufeff'
+    csv_content = bom + output.getvalue()
+    
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=nassaq_report_{report_type}.csv"}
+    )
+
+
 # Re-include api_router to pick up school settings routes
 app.include_router(api_router)
 
@@ -17278,7 +17727,7 @@ async def seed_essential_accounts():
 
 @app.on_event("startup")
 async def seed_curriculum_and_demo_data():
-    from seed_curriculum import seed_official_curriculum, seed_demo_school_data, seed_demo_operational_data, seed_notifications_and_messages
+    from seed_curriculum import seed_official_curriculum, seed_demo_school_data, seed_demo_operational_data, seed_notifications_and_messages, seed_driver_gatekeeper_data
     try:
         curriculum_result = await seed_official_curriculum(db)
         logger.info(f"Curriculum seeding: {curriculum_result}")
@@ -17288,6 +17737,8 @@ async def seed_curriculum_and_demo_data():
         logger.info(f"Operational data seeding: {ops_result}")
         await seed_notifications_and_messages(db)
         logger.info("Notifications and messages seeded")
+        await seed_driver_gatekeeper_data(db)
+        logger.info("Driver/Gatekeeper/Ministry data seeded")
     except Exception as e:
         logger.error(f"Seed error: {e}")
 

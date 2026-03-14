@@ -930,3 +930,109 @@ async def seed_notifications_and_messages(db):
         await db.messages.insert_many(messages)
         print(f"Seeded {len(messages)} demo messages")
 
+
+async def seed_driver_gatekeeper_data(db):
+    """Seed driver accounts, bus routes, gatekeeper accounts, and gate logs"""
+    import uuid
+    from datetime import datetime, timezone, timedelta
+    
+    existing_drivers = await db.users.count_documents({"role": "driver"})
+    if existing_drivers > 0:
+        print(f"Driver/Gatekeeper data already seeded ({existing_drivers} drivers)")
+        return
+    
+    now = datetime.now(timezone.utc)
+    
+    try:
+        from server import hash_password
+    except:
+        import bcrypt
+        def hash_password(pwd):
+            return bcrypt.hashpw(pwd.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    driver_users = [
+        {"id": "DRV-001", "email": "driver1@nassaq.com", "password_hash": hash_password("Driver@123"), "full_name": "سالم الحربي", "role": "driver", "tenant_id": "SCH-001", "is_active": True, "created_at": now.isoformat()},
+        {"id": "DRV-002", "email": "driver2@nassaq.com", "password_hash": hash_password("Driver@123"), "full_name": "فهد القحطاني", "role": "driver", "tenant_id": "SCH-001", "is_active": True, "created_at": now.isoformat()},
+    ]
+    for u in driver_users:
+        await db.users.update_one({"id": u["id"]}, {"$set": u}, upsert=True)
+    print(f"Seeded {len(driver_users)} driver accounts")
+    
+    gatekeeper_users = [
+        {"id": "GK-001", "email": "gatekeeper1@nassaq.com", "password_hash": hash_password("Gate@123"), "full_name": "عبدالله الشمري", "role": "gatekeeper", "tenant_id": "SCH-001", "is_active": True, "created_at": now.isoformat()},
+    ]
+    for u in gatekeeper_users:
+        await db.users.update_one({"id": u["id"]}, {"$set": u}, upsert=True)
+    print(f"Seeded {len(gatekeeper_users)} gatekeeper accounts")
+    
+    ministry_users = [
+        {"id": "MIN-001", "email": "ministry1@nassaq.com", "password_hash": hash_password("Ministry@123"), "full_name": "د. خالد العتيبي", "role": "ministry_rep", "is_active": True, "created_at": now.isoformat()},
+    ]
+    for u in ministry_users:
+        await db.users.update_one({"id": u["id"]}, {"$set": u}, upsert=True)
+    print(f"Seeded {len(ministry_users)} ministry rep accounts")
+    
+    bus_routes = [
+        {
+            "id": "ROUTE-001", "name": "مسار حي النور", "name_en": "Al-Noor District Route",
+            "driver_id": "DRV-001", "school_id": "SCH-001",
+            "student_ids": ["STD-001", "STD-002", "STD-003", "STD-004", "STD-005"],
+            "stops": [
+                {"name": "محطة حي النور 1", "time": "06:30", "lat": 24.7136, "lng": 46.6753},
+                {"name": "محطة حي النور 2", "time": "06:40", "lat": 24.7200, "lng": 46.6800},
+                {"name": "المدرسة", "time": "06:55", "lat": 24.7300, "lng": 46.6900},
+            ],
+            "is_active": True, "created_at": now.isoformat()
+        },
+        {
+            "id": "ROUTE-002", "name": "مسار حي السلام", "name_en": "Al-Salam District Route",
+            "driver_id": "DRV-002", "school_id": "SCH-001",
+            "student_ids": ["STD-006", "STD-007", "STD-008", "STD-009", "STD-010"],
+            "stops": [
+                {"name": "محطة حي السلام", "time": "06:25", "lat": 24.7000, "lng": 46.6600},
+                {"name": "محطة الملك فهد", "time": "06:35", "lat": 24.7100, "lng": 46.6700},
+                {"name": "المدرسة", "time": "06:50", "lat": 24.7300, "lng": 46.6900},
+            ],
+            "is_active": True, "created_at": now.isoformat()
+        },
+    ]
+    for route in bus_routes:
+        await db.bus_routes.update_one({"id": route["id"]}, {"$set": route}, upsert=True)
+    print(f"Seeded {len(bus_routes)} bus routes")
+    
+    gate_logs = []
+    for day_offset in range(5):
+        date = (now - timedelta(days=day_offset)).strftime("%Y-%m-%d")
+        for i in range(1, 11):
+            student_id = f"STD-{i:03d}"
+            gate_logs.append({
+                "id": str(uuid.uuid4()),
+                "person_id": student_id,
+                "person_name": f"طالب {i}",
+                "person_type": "student",
+                "type": "entry",
+                "is_late": i > 8,
+                "date": date,
+                "time": f"07:{15+i:02d}:00",
+                "school_id": "SCH-001",
+                "recorded_by": "GK-001",
+                "created_at": (now - timedelta(days=day_offset)).isoformat()
+            })
+            gate_logs.append({
+                "id": str(uuid.uuid4()),
+                "person_id": student_id,
+                "person_name": f"طالب {i}",
+                "person_type": "student",
+                "type": "exit",
+                "is_late": False,
+                "date": date,
+                "time": f"13:{30+i:02d}:00",
+                "school_id": "SCH-001",
+                "recorded_by": "GK-001",
+                "created_at": (now - timedelta(days=day_offset)).isoformat()
+            })
+    
+    for log in gate_logs:
+        await db.gate_logs.insert_one(log)
+    print(f"Seeded {len(gate_logs)} gate logs")
+
